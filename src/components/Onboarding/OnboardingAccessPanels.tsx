@@ -47,9 +47,13 @@ export const IdentityVerificationPanel: React.FC<
         }}
       />
       <h1
-        className="mx-auto max-w-full text-balance text-2xl font-bold tracking-wide sm:text-3xl"
+        className="mx-auto max-w-full text-balance text-2xl sm:text-3xl"
         style={{
           color: accentTextColor,
+          fontFamily:
+            '"Segoe UI Variable Display", Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+          fontWeight: 650,
+          letterSpacing: "-0.035em",
           textShadow: `0 0 18px ${hexToRgba(
             ambientThemeColor,
             isLightTheme ? 0.08 : 0.16,

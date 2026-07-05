@@ -54,7 +54,8 @@ export default defineConfig(({ mode }) => {
     ],
     base: isVercelRelease ? "/" : "./",
     server: {
-      port: 3000,
+      port: Number(process.env.VITE_DEV_PORT || 3000),
+      strictPort: true,
       host: "127.0.0.1",
       proxy: {
         "/api/agent": "http://127.0.0.1:8000", // Agent/AI → Cortex

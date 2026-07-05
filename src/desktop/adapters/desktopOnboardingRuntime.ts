@@ -26,6 +26,7 @@ import {
 import { settingsService } from "../../services/settingsService";
 import { soundService } from "../../services/soundService";
 import { realtimeVoiceUiBridge } from "../../services/voice/realtimeVoiceUiBridge";
+import { normalizeLucaSkinId } from "../../config/lucaSkins";
 
 export const desktopOnboardingRuntime: OnboardingRuntimeAdapter = {
   platform: "desktop",
@@ -35,6 +36,7 @@ export const desktopOnboardingRuntime: OnboardingRuntimeAdapter = {
     const general = settingsService.get("general");
     return {
       theme: (general.theme as string) || "PROFESSIONAL",
+      selectedSkinId: normalizeLucaSkinId(general.selectedSkinId),
       backgroundOpacity: general.backgroundOpacity ?? 0.3,
       backgroundBlur: general.backgroundBlur ?? 40,
       setupComplete: Boolean(general.setupComplete),

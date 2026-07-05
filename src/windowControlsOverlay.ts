@@ -1,15 +1,9 @@
 /**
  * Window-controls glue (Electron).
  *
- * The window is frameless (titleBarStyle 'hidden', no native overlay): the
- * controls are the shell's OWN ghost buttons in the header, driven over IPC
- * (window-minimize / window-maximize / window-close in main.cjs). That is the
- * only way the cluster can share the exact skin, size, and hover of the other
- * header controls on a translucent, skinnable surface.
- *
- * html.luca-wco is kept for the genuine PWA overlay case (installed web app
- * with a real windowControlsOverlay), where the OS paints controls we must
- * reserve room for.
+ * The window is frameless on Windows, so LucaOS renders its own min/max/close
+ * buttons and drives them through Electron IPC. macOS keeps native traffic
+ * lights; Linux keeps the native frame.
  */
 
 export function isElectronShell(): boolean {
@@ -20,23 +14,38 @@ function electronPlatform(): string | null {
   if (!isElectronShell()) return null;
   const p = (window as any)?.luca?.platform;
   if (typeof p === "string") return p;
-  // Older preloads without the platform bridge: infer from the UA.
+
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
   if (ua.includes("Mac")) return "darwin";
   if (ua.includes("Windows")) return "win32";
   return "linux";
 }
 
-/**
- * Windows-only: the frameless window has NO controls of its own, so the
- * shell renders its ghost buttons. macOS keeps native traffic lights and
- * Linux keeps its native frame — custom buttons there would double up.
- */
-export function rendersOwnWindowControls(): boolean {
-  return electronPlatform() === "win32";
+function isElectronRoute(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return new URLSearchParams(window.location.search).get("platform") === "electron";
+  } catch {
+    return false;
+  }
 }
 
-/** macOS: native traffic lights overlay the band's top-left — inset for them. */
+function isWindowsUserAgent(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return navigator.userAgent.includes("Windows");
+}
+
+export function rendersOwnWindowControls(options?: {
+  allowElectronRouteFallback?: boolean;
+}): boolean {
+  if (electronPlatform() === "win32") return true;
+  return (
+    options?.allowElectronRouteFallback === true &&
+    isElectronRoute() &&
+    isWindowsUserAgent()
+  );
+}
+
 export function hasMacTrafficLights(): boolean {
   return electronPlatform() === "darwin";
 }
@@ -53,17 +62,21 @@ export function setupWindowControlsOverlay(): void {
   try {
     overlay?.addEventListener?.("geometrychange", apply);
   } catch {
-    /* geometry events unavailable — the initial state stands */
+    /* geometry events unavailable; the initial state stands. */
   }
 }
 
-/** Drive the frameless window from the shell's own control buttons. */
 export function sendWindowControl(
   action: "minimize" | "maximize" | "close",
 ): void {
   try {
+    const lucaAction = (window as any).luca?.[action];
+    if (typeof lucaAction === "function") {
+      lucaAction();
+      return;
+    }
     (window as any).electron?.ipcRenderer?.send(`window-${action}`);
   } catch {
-    /* IPC unavailable (plain web) — the buttons are not rendered there */
+    /* IPC unavailable in plain web. */
   }
 }

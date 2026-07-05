@@ -20,36 +20,97 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            -webkit-app-region: drag;
+        }
+        .window-controls {
+            position: fixed;
+            top: 2px;
+            right: 2px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            -webkit-app-region: no-drag;
+        }
+        .window-control {
+            width: 28px;
+            height: 28px;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.72);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: pointer;
+            transition: color 160ms ease;
+        }
+        .window-control:hover {
+            color: rgba(255, 255, 255, 0.92);
+        }
+        .window-control.close:hover {
+            color: #f87171;
         }
         .stage {
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 14px;
+            justify-content: flex-end;
+            gap: 10px;
             width: 100%;
-            max-width: 360px;
-            padding: 0 28px;
+            max-width: 560px;
+            min-height: min(92vh, 420px);
+            padding: 0 28px 26px;
             text-align: center;
         }
-        /* The Luca face — the identity, shown the way Apple shows an app icon at boot. */
-        .face {
-            width: 148px;
-            height: auto;
-            opacity: 0;
-            transform: scale(0.78);
-            filter: drop-shadow(0 0 34px rgba(124, 168, 255, 0.28));
-            animation: face-in 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s forwards,
-                       face-breathe 6.4s ease-in-out 1.7s infinite;
+        .stage::after {
+            content: "";
+            position: absolute;
+            inset: auto 12% 12px;
+            height: 44%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(17, 20, 23, 0.72), rgba(17, 20, 23, 0) 70%);
+            z-index: 0;
+            pointer-events: none;
         }
-        .wordmark { font-size: 21px; letter-spacing: 0.01em; color: var(--ink); }
+        /* The Luca face sits fully visible behind the boot copy. */
+        .face {
+            position: absolute;
+            top: 54%;
+            left: 50%;
+            z-index: 0;
+            width: min(76vw, 340px);
+            height: auto;
+            opacity: 0.9;
+            transform: translate(-50%, -50%);
+            filter: drop-shadow(0 0 34px rgba(124, 168, 255, 0.28));
+            animation: none;
+            pointer-events: none;
+        }
+        .wordmark,
+        .headline,
+        .detail,
+        .track {
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 18px rgba(0, 0, 0, 0.72);
+        }
+        .wordmark {
+            font-family: "Segoe UI Variable Display", "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            font-size: 25px;
+            font-weight: 650;
+            letter-spacing: -0.025em;
+            color: var(--ink);
+        }
         .wordmark span { color: var(--faint); }
         .headline { font-size: 13px; color: var(--muted); min-height: 16px; }
         .detail { font-size: 11px; color: var(--faint); min-height: 14px; }
         .detail.alert { color: #f2b23e; }
         .track {
             margin-top: 6px;
-            width: 100%;
+            width: min(100%, 360px);
             height: 2px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 999px;
@@ -62,17 +123,33 @@
             box-shadow: 0 0 10px var(--accent);
             transition: width 0.6s ease;
         }
-        @keyframes face-in { to { opacity: 0.95; transform: scale(1); } }
-        @keyframes face-breathe {
-            0%, 100% { transform: scale(0.99); opacity: 0.9; }
-            50% { transform: scale(1.02); opacity: 1; }
-        }
         @media (prefers-reduced-motion: reduce) {
-            .face { animation: none; opacity: 0.95; transform: none; }
+            .face {
+                animation: none;
+                opacity: 0.9;
+                transform: translate(-50%, -50%);
+            }
         }
     </style>
 </head>
 <body>
+    <div class="window-controls" aria-label="Window controls">
+        <button class="window-control" type="button" aria-label="Minimize window" title="Minimize" data-window-action="minimize">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M3.5 8.5h9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" />
+            </svg>
+        </button>
+        <button class="window-control" type="button" aria-label="Maximize or restore window" title="Maximize" data-window-action="maximize">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                <rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none" />
+            </svg>
+        </button>
+        <button class="window-control close" type="button" aria-label="Close window" title="Close" data-window-action="close">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" />
+            </svg>
+        </button>
+    </div>
     <div class="stage">
         <img class="face" src="luca-hologram.png" alt="Luca" />
         <div class="wordmark">LucaOS</div>
@@ -86,6 +163,11 @@
         const progressBar = document.getElementById('progress');
         const statusText = document.getElementById('status');
         const detailText = document.getElementById('detail');
+        document.querySelectorAll('[data-window-action]').forEach((button) => {
+            button.addEventListener('click', () => {
+                ipcRenderer.send(`window-${button.dataset.windowAction}`);
+            });
+        });
 
         // Same IPC contract as before, expressed calmly. Raw boot-log lines
         // are developer telemetry (they still reach the console and Medic);

@@ -299,7 +299,17 @@ export const CompletePanel: React.FC<{ accentTextColor: string }> = ({
         appearance, and selected mode into the workspace.
       </p>
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-white/45">
-        Opening LucaOS
+        <span
+          style={{
+            fontFamily:
+              '"Segoe UI Variable Display", Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+            fontWeight: 650,
+            letterSpacing: "-0.02em",
+            textTransform: "none",
+          }}
+        >
+          Opening LucaOS
+        </span>
       </p>
     </div>
   </div>

@@ -3,7 +3,13 @@ import {
   LucaPresence,
   type LucaPresenceState,
 } from "../presence/LucaPresence";
-import type { LucaSkinHostKind, LucaSkinId } from "../../config/lucaSkins";
+import {
+  LUCA_SKINS,
+  isLucaSkinId,
+  type LucaSkinHostKind,
+  type LucaSkinId,
+} from "../../config/lucaSkins";
+import { getLucaSkinPreviewMetadata } from "../../config/lucaSkinPreviewMetadata";
 import {
   getPremiumOnboardingCopy,
   type PremiumOnboardingAudienceMode,
@@ -133,6 +139,12 @@ const textPrimary = "var(--luca-text-primary)";
 const textSecondary = "var(--luca-text-secondary)";
 const textTertiary = "var(--luca-text-tertiary)";
 const accent = "var(--luca-accent-primary)";
+const LUCA_BRAND_DISPLAY_STYLE: React.CSSProperties = {
+  fontFamily:
+    '"Segoe UI Variable Display", Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+  fontWeight: 650,
+  letterSpacing: "-0.035em",
+};
 
 function OptionCard({
   option,
@@ -235,6 +247,103 @@ function OptionCard({
  * screen so all surfaces are showcased in a compact grid that fits one screen.
  * Keeps radio semantics + the data-luca-onboarding-option hook.
  */
+function SkinOptionTile({
+  option,
+  checked,
+  onSelect,
+  onPreview,
+}: {
+  option: PremiumOnboardingOptionCopy;
+  checked: boolean;
+  onSelect?: (optionId: string) => void;
+  onPreview?: (optionId: string | null) => void;
+}): React.ReactElement {
+  if (!isLucaSkinId(option.id)) {
+    return (
+      <OptionCard
+        option={option}
+        checked={checked}
+        onSelect={onSelect}
+        onPreview={onPreview}
+      />
+    );
+  }
+
+  const skin = LUCA_SKINS[option.id];
+  const metadata = getLucaSkinPreviewMetadata(option.id);
+
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={checked}
+      data-luca-onboarding-option={option.id}
+      data-luca-onboarding-skin-option={option.id}
+      onClick={onSelect ? () => onSelect(option.id) : undefined}
+      onMouseEnter={onPreview ? () => onPreview(option.id) : undefined}
+      onMouseLeave={onPreview ? () => onPreview(null) : undefined}
+      style={{
+        display: "flex",
+        minHeight: 138,
+        flexDirection: "column",
+        gap: 10,
+        textAlign: "left",
+        cursor: onSelect ? "pointer" : "default",
+        padding: 12,
+        borderRadius: 16,
+        border: `1px solid ${checked ? accent : "var(--luca-surface-hover)"}`,
+        background: checked
+          ? "var(--luca-surface-hover)"
+          : "var(--luca-surface-glass)",
+        color: textPrimary,
+        boxShadow: checked ? "var(--luca-shadow-soft)" : "none",
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          display: "block",
+          height: 42,
+          width: "100%",
+          borderRadius: 12,
+          border: "1px solid var(--luca-surface-hover)",
+          background: skin.backgroundProfile.hero,
+          boxShadow: `inset 0 0 0 1px ${skin.accentProfile.glow}`,
+        }}
+      />
+      <span
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 7,
+          fontWeight: 700,
+          fontSize: 14,
+        }}
+      >
+        {metadata.shortLabel}
+        {option.recommended && (
+          <span
+            data-luca-onboarding-chip="recommended"
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              padding: "1px 7px",
+              borderRadius: 999,
+              color: accent,
+              border: `1px solid ${accent}`,
+            }}
+          >
+            Default
+          </span>
+        )}
+      </span>
+      <span style={{ fontSize: 12, lineHeight: 1.38, color: textSecondary }}>
+        {metadata.tagline}
+      </span>
+    </button>
+  );
+}
+
 function SurfaceMockupTile({
   option,
   checked,
@@ -643,7 +752,13 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
         // desktop; the connect_tools screen widens for its 2-up connector grid;
         // other text-led screens stay narrow for readability.
         maxWidth:
-          screenId === "presence" ? 980 : screenId === "connect_tools" ? 900 : 560,
+          screenId === "presence"
+            ? 980
+            : screenId === "environment"
+              ? 1040
+              : screenId === "connect_tools"
+                ? 900
+                : 560,
         margin: "0 auto",
         color: textPrimary,
         ...style,
@@ -671,8 +786,12 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
           margin: copy.eyebrow ? "6px 0 0" : 0,
           fontSize: 26,
           lineHeight: 1.15,
-          letterSpacing: "-0.02em",
-          fontWeight: 650,
+          ...(copy.title.includes("LucaOS")
+            ? LUCA_BRAND_DISPLAY_STYLE
+            : {
+                letterSpacing: "-0.02em",
+                fontWeight: 650,
+              }),
         }}
       >
         {copy.title}
@@ -782,7 +901,30 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
         </div>
       )}
 
-      {copy.options && copy.options.length > 0 && screenId === "presence" ? (
+      {copy.options && copy.options.length > 0 && screenId === "environment" ? (
+        <div
+          role={entry.accessibilityRole === "radiogroup" ? "radiogroup" : "group"}
+          aria-label={copy.detailsLabel ?? copy.title}
+          data-luca-onboarding-options
+          data-luca-onboarding-options-layout="skin-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+            gap: 12,
+            margin: "18px 0 0",
+          }}
+        >
+          {[...primaryOptions, ...advancedOptions].map((option) => (
+            <SkinOptionTile
+              key={option.id}
+              option={option}
+              checked={option.id === activeOptionId}
+              onSelect={onSelectOption}
+              onPreview={onPreviewOption}
+            />
+          ))}
+        </div>
+      ) : copy.options && copy.options.length > 0 && screenId === "presence" ? (
         // "Choose how Luca appears": showcase every surface as a compact
         // mockup tile in a responsive grid that fits one screen (no scroll, no
         // progressive disclosure). Radio semantics + option hooks are kept.

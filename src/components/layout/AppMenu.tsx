@@ -4,12 +4,11 @@ import {
   lucaShellClassNames,
   lucaShellHeaderGhostControlStyle,
 } from "../../styles/lucaShellStyles";
+import { isElectronShell, sendWindowControl } from "../../windowControlsOverlay";
 
 /**
- * AppMenu — the hamburger at the header's left edge (Claude Desktop
- * pattern). Replaces the native menu bar removed with the window chrome:
- * File / Edit / View / Help as calm submenus. Every item is a real action;
- * nothing here is decorative.
+ * AppMenu: the compact shell menu at the header's left edge. It replaces the
+ * removed native menu bar with File / Edit / View / Window command groups.
  */
 
 interface AppMenuProps {
@@ -19,19 +18,20 @@ interface AppMenuProps {
   onToggleRightPanel: () => void;
 }
 
-type SectionId = "file" | "edit" | "view" | "help";
+type SectionId = "file" | "edit" | "view" | "window";
 
 interface MenuItem {
   label: string;
   action: () => void;
 }
 
-const edit = (command: string) => () => {
+const edit = (command: string, after?: () => void) => () => {
   try {
     document.execCommand(command);
   } catch {
-    /* focused surface rejects the command — nothing to do */
+    /* focused surface rejects the command */
   }
+  after?.();
 };
 
 export const AppMenu: React.FC<AppMenuProps> = ({
@@ -71,26 +71,43 @@ export const AppMenu: React.FC<AppMenuProps> = ({
     setSection(null);
   };
 
+  const runWindowAction =
+    (action: "minimize" | "maximize" | "close") => () => {
+      sendWindowControl(action);
+      if (!isElectronShell() && action === "close") {
+        window.close();
+      }
+      close();
+    };
+
   const SECTIONS: Array<{ id: SectionId; label: string; items: MenuItem[] }> = [
     {
       id: "file",
       label: "File",
       items: [
         { label: "New session", action: () => { onNewSession(); close(); } },
-        { label: "Settings…", action: () => { onOpenSettings(); close(); } },
-        { label: "Close window", action: () => { close(); window.close(); } },
+        { label: "Settings...", action: () => { onOpenSettings(); close(); } },
+        {
+          label: "About LucaOS",
+          action: () => {
+            window.dispatchEvent(
+              new CustomEvent("luca:open-settings", { detail: { tab: "about" } }),
+            );
+            close();
+          },
+        },
       ],
     },
     {
       id: "edit",
       label: "Edit",
       items: [
-        { label: "Undo", action: edit("undo") },
-        { label: "Redo", action: edit("redo") },
-        { label: "Cut", action: edit("cut") },
-        { label: "Copy", action: edit("copy") },
-        { label: "Paste", action: edit("paste") },
-        { label: "Select all", action: edit("selectAll") },
+        { label: "Undo", action: edit("undo", close) },
+        { label: "Redo", action: edit("redo", close) },
+        { label: "Cut", action: edit("cut", close) },
+        { label: "Copy", action: edit("copy", close) },
+        { label: "Paste", action: edit("paste", close) },
+        { label: "Select all", action: edit("selectAll", close) },
       ],
     },
     {
@@ -103,18 +120,12 @@ export const AppMenu: React.FC<AppMenuProps> = ({
       ],
     },
     {
-      id: "help",
-      label: "Help",
+      id: "window",
+      label: "Window",
       items: [
-        {
-          label: "About LucaOS",
-          action: () => {
-            window.dispatchEvent(
-              new CustomEvent("luca:open-settings", { detail: { tab: "about" } }),
-            );
-            close();
-          },
-        },
+        { label: "Minimize", action: runWindowAction("minimize") },
+        { label: "Maximize or restore", action: runWindowAction("maximize") },
+        { label: "Close window", action: runWindowAction("close") },
       ],
     },
   ];

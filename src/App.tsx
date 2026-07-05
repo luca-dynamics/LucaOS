@@ -234,6 +234,21 @@ function AppContent() {
   // --- 1. PLATFORM & BASIC STATE ---
   const isCapacitor = Capacitor.isNativePlatform();
   const isElectron = checkElectron();
+  const desktopPlatformLabel =
+    typeof window !== "undefined" && (window as any).luca?.platform === "darwin"
+      ? "on macOS"
+      : typeof window !== "undefined" &&
+          (window as any).luca?.platform === "win32"
+        ? "on Windows"
+        : isElectron
+          ? "on desktop"
+          : "in browser";
+  const lucaBrandDisplayStyle: React.CSSProperties = {
+    fontFamily:
+      '"Segoe UI Variable Display", Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+    fontWeight: 650,
+    letterSpacing: "-0.025em",
+  };
   const bootDebugEnabled =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("bootDebug") === "1";
@@ -2561,8 +2576,8 @@ function AppContent() {
         {/* The window is never uncontrollable: the frameless shell keeps its
             own min/max/close through boot and onboarding, in the same zone
             they occupy once the header exists. */}
-        <div className="luca-window-drag absolute top-0 left-0 right-0 z-50 flex h-14 items-center justify-end gap-1 pr-2">
-          <WindowControls />
+        <div className="luca-window-drag absolute right-1 top-1 z-[70] flex items-center gap-0.5">
+          <WindowControls allowElectronRouteFallback />
         </div>
         {bootSequence === "ONBOARDING" ? (
           <div className="absolute inset-0 z-10">
@@ -2879,7 +2894,7 @@ function AppContent() {
         {/* Header dissolved into the shell (Phase 3): the status/controls
             cluster renders at the top of the CENTER column and the brand at the
             top of the LEFT rail, so all three panels rise to the very top
-            (Claude/Codex-style) instead of sitting under a full-width band. */}
+            as one desktop workspace instead of sitting under a full-width band. */}
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-hidden relative z-10 flex flex-col h-full gap-0 p-0">
@@ -2913,9 +2928,10 @@ function AppContent() {
                     </SafeComponent>
                     <span className="min-w-0 flex flex-col justify-center leading-none">
                       <span
-                        className="font-display text-[14px] font-semibold tracking-tight"
+                        className="text-[14px]"
                         style={{
                           color: "var(--luca-text-primary, var(--app-text-main))",
+                          ...lucaBrandDisplayStyle,
                         }}
                       >
                         LucaOS
@@ -2927,7 +2943,7 @@ function AppContent() {
                             "var(--luca-text-tertiary, var(--app-text-muted))",
                         }}
                       >
-                        on Windows · present
+                        {desktopPlatformLabel} · present
                       </span>
                     </span>
                   </span>

@@ -1,328 +1,278 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { Icon } from "../ui/Icon";
+import { setHexAlpha } from "../../config/themeColors";
+import type { UIThemeId } from "../../types/lucaPersonality";
 import {
-  THEME_PALETTE,
-  getDynamicContrast,
-  setHexAlpha,
-} from "../../config/themeColors";
-import { UIThemeId } from "../../types/lucaPersonality";
-import {
-  NORMAL_LUCA_THEME_OPTIONS,
-  getLucaThemeLabel,
-} from "../../config/lucaThemeLabels";
+  DEFAULT_LUCA_SKIN_ID,
+  LUCA_SKIN_IDS,
+  LUCA_SKINS,
+  normalizeLucaSkinId,
+  type LucaSkinId,
+} from "../../config/lucaSkins";
+import { getLucaSkinPreviewMetadata } from "../../config/lucaSkinPreviewMetadata";
+import { getLucaSkinMaterialVariables } from "../../styles/lucaSkinMaterialBridge";
 
 interface ThemeSelectionStepProps {
   onComplete: () => void;
   onThemeChange?: (themeName: UIThemeId) => void;
+  onSkinChange?: (skinId: LucaSkinId) => void;
   onOpacityChange?: (opacity: number) => void;
   initialTheme?: UIThemeId;
+  initialSkinId?: unknown;
   initialBackgroundOpacity?: number;
   initialBackgroundBlur?: number;
   showTransparencyControls?: boolean;
   onVisualSettingsChange?: (settings: {
     theme?: UIThemeId;
+    selectedSkinId?: LucaSkinId;
     backgroundOpacity?: number;
     backgroundBlur?: number;
   }) => void;
 }
 
-const THEMES = NORMAL_LUCA_THEME_OPTIONS;
+const LEGACY_THEME_BY_SKIN: Record<LucaSkinId, UIThemeId> = {
+  pearl: "FROST",
+  carbon: "PROFESSIONAL",
+  flow: "FROST",
+  canvas: "LIGHTCREAM",
+  graphite: "MASTER_SYSTEM",
+  onyx: "MASTER_SYSTEM",
+  dusk: "MASTER_SYSTEM",
+  mist: "FROST",
+};
 
 const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
   onComplete,
   onThemeChange,
+  onSkinChange,
   onOpacityChange,
   initialTheme = "PROFESSIONAL",
+  initialSkinId,
   initialBackgroundOpacity = 0.3,
   initialBackgroundBlur = 40,
   showTransparencyControls = false,
   onVisualSettingsChange,
 }) => {
-  const [selectedTheme, setSelectedTheme] = useState<UIThemeId>(
-    initialTheme,
+  const [selectedSkinId, setSelectedSkinId] = useState<LucaSkinId>(() =>
+    normalizeLucaSkinId(initialSkinId ?? DEFAULT_LUCA_SKIN_ID),
   );
   const [backgroundOpacity, setBackgroundOpacity] = useState(
     initialBackgroundOpacity,
   );
   const [backgroundBlur, setBackgroundBlur] = useState(initialBackgroundBlur);
-  const selectedThemeLabel = getLucaThemeLabel(selectedTheme);
-  const currentThemeHex =
-    THEMES.find(
-      (t) => t.canonicalThemeId === selectedThemeLabel.canonicalThemeId,
-    )?.hex || "#ffffff";
-  const currentContrast = getDynamicContrast(selectedTheme, backgroundOpacity);
-  const isLightSelection =
-    selectedThemeLabel.canonicalThemeId === "LIGHTCREAM" ||
-    selectedThemeLabel.canonicalThemeId === "PROFESSIONAL";
-  const headingColor = isLightSelection ? currentContrast.text : currentThemeHex;
 
-  // Dynamic Contrast logic - Now purely reactive logic
-  const updateVisualCoreVariables = (themeId: string, opacity: number) => {
-    const root = document.documentElement;
-    const theme =
-      THEME_PALETTE[themeId as keyof typeof THEME_PALETTE] ||
-      THEME_PALETTE.PROFESSIONAL;
-    root.style.setProperty("--app-primary", theme.primary);
+  const materialVariables = useMemo(
+    () =>
+      getLucaSkinMaterialVariables({
+        skinId: selectedSkinId,
+        hostKind: "desktop-app",
+        userMaterialOpacity: backgroundOpacity,
+        userMaterialBlurPx: backgroundBlur,
+      }),
+    [selectedSkinId, backgroundOpacity, backgroundBlur],
+  );
 
-    // Apply global dynamic contrast variables
-    const dynamicContrast = getDynamicContrast(themeId, opacity);
-    root.style.setProperty("--app-text-main", dynamicContrast.text);
-    root.style.setProperty("--app-text-muted", dynamicContrast.textMuted);
-    root.style.setProperty("--app-border-main", dynamicContrast.border);
-    root.style.setProperty("--app-bg-tint", dynamicContrast.bgTint);
+  const selectedSkin = LUCA_SKINS[selectedSkinId];
+  const textPrimary = materialVariables["--luca-text-primary"];
+  const textSecondary = materialVariables["--luca-text-secondary"];
+  const textTertiary = materialVariables["--luca-text-tertiary"];
+  const accent = materialVariables["--luca-accent-primary"];
+  const border = setHexAlpha(accent, 0.26);
+  const panelBg = `color-mix(in srgb, ${materialVariables["--luca-surface-glass"]} ${Math.round(
+    backgroundOpacity * 100,
+  )}%, transparent)`;
+
+  const handleSkinSelect = (skinId: LucaSkinId) => {
+    const legacyTheme = LEGACY_THEME_BY_SKIN[skinId] ?? initialTheme;
+    setSelectedSkinId(skinId);
+    onSkinChange?.(skinId);
+    onThemeChange?.(legacyTheme);
+    onVisualSettingsChange?.({ selectedSkinId: skinId, theme: legacyTheme });
   };
 
-  // Sync initial state and updates
-  useEffect(() => {
-    updateVisualCoreVariables(selectedTheme, backgroundOpacity);
-  }, [selectedTheme, backgroundOpacity]);
-
-  const handleThemeSelect = (themeId: UIThemeId) => {
-    setSelectedTheme(themeId);
-    if (onThemeChange) {
-      onThemeChange(themeId);
-    }
-    onVisualSettingsChange?.({ theme: themeId });
+  const handleOpacityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(event.target.value, 10) / 100;
+    setBackgroundOpacity(value);
+    onOpacityChange?.(value);
+    onVisualSettingsChange?.({ backgroundOpacity: value });
   };
 
-  const handleOpacityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value) / 100;
-    setBackgroundOpacity(val);
-    if (onOpacityChange) onOpacityChange(val);
-    onVisualSettingsChange?.({ backgroundOpacity: val });
-    // Live Preview
-    document.documentElement.style.setProperty(
-      "--app-bg-opacity",
-      val.toString(),
-    );
-  };
-
-  const handleBlurChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value);
-    setBackgroundBlur(val);
-    onVisualSettingsChange?.({ backgroundBlur: val });
-    // Live Preview
-    document.documentElement.style.setProperty("--app-bg-blur", `${val}px`);
+  const handleBlurChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(event.target.value, 10);
+    setBackgroundBlur(value);
+    onVisualSettingsChange?.({ backgroundBlur: value });
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 animate-fade-in-up overflow-hidden">
-      {/* Header */}
-      <div className="text-center space-y-1 mb-4 shrink-0">
+    <div
+      className="flex h-full min-h-0 flex-col overflow-hidden animate-fade-in-up"
+      style={materialVariables as React.CSSProperties}
+    >
+      <div className="shrink-0 space-y-1 text-center">
         <Icon
           name="Palette"
           variant="BoldDuotone"
           className="mx-auto mb-1 transition-colors duration-300"
           size={34}
-          style={{ color: headingColor }}
+          style={{ color: accent }}
         />
         <h1
-          className="text-[1.55rem] font-bold tracking-[0.16em] uppercase italic transition-colors duration-300"
-          style={{ color: headingColor }}
+          className="text-[1.55rem] font-bold tracking-[0.12em] uppercase transition-colors duration-300"
+          style={{ color: textPrimary }}
         >
-          Choose Luca’s atmosphere
+          Choose Luca's environment
         </h1>
-        <p className="text-xs uppercase tracking-wider font-bold text-[var(--app-text-main)] opacity-85">
-          Set the look of your personal AI OS
+        <p
+          className="text-xs font-semibold uppercase tracking-wider"
+          style={{ color: textSecondary }}
+        >
+          Pick the skin LucaOS will use across the app
         </p>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-hidden space-y-4 px-2">
-        {/* Theme Selection */}
-        <section className="space-y-2.5">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            {THEMES.slice(0, 6).map((t) => (
+      <div className="min-h-0 flex-1 overflow-auto px-2 pt-4">
+        <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          {LUCA_SKIN_IDS.map((skinId) => {
+            const skin = LUCA_SKINS[skinId];
+            const metadata = getLucaSkinPreviewMetadata(skinId);
+            const active = selectedSkinId === skinId;
+            const swatchBackground = skin.backgroundProfile.hero;
+            return (
               <button
-                key={t.id}
+                key={skinId}
                 type="button"
-                onClick={() => handleThemeSelect(t.canonicalThemeId)}
-                title={t.description}
-                aria-label={`${t.label}: ${t.description}`}
-                className="relative flex items-center gap-2 p-2 rounded-xl border transition-all text-left group backdrop-blur-md h-[62px]"
+                onClick={() => handleSkinSelect(skinId)}
+                title={metadata.description}
+                aria-pressed={active}
+                aria-label={`${metadata.shortLabel}: ${metadata.tagline}`}
+                className="group relative flex min-h-[104px] flex-col overflow-hidden rounded-xl border p-3 text-left transition-transform hover:-translate-y-0.5"
                 style={{
-                  borderColor:
-                    selectedThemeLabel.canonicalThemeId === t.canonicalThemeId
-                      ? setHexAlpha(t.hex, 0.42)
-                      : currentContrast.border,
-                  backgroundColor: setHexAlpha(t.hex, 0.12),
-                  backgroundImage:
-                    selectedThemeLabel.canonicalThemeId === t.canonicalThemeId
-                      ? `linear-gradient(135deg, ${setHexAlpha(
-                          t.hex,
-                          0.25,
-                        )} 0%, ${setHexAlpha(t.hex, 0.1)} 100%)`
-                      : `linear-gradient(135deg, ${setHexAlpha(
-                          t.hex,
-                          0.15,
-                        )} 0%, ${setHexAlpha(t.hex, 0.05)} 100%)`,
-                  boxShadow:
-                    selectedThemeLabel.canonicalThemeId === t.canonicalThemeId
-                      ? `0 4px 20px ${setHexAlpha(
-                          t.hex,
-                          0.2,
-                        )}, inset 0 1px 0 ${setHexAlpha(t.hex, 0.2)}`
-                      : `0 2px 10px ${setHexAlpha(t.hex, 0.06)}`,
+                  borderColor: active ? accent : setHexAlpha(accent, 0.18),
+                  background: active
+                    ? `linear-gradient(135deg, ${setHexAlpha(
+                        skin.accentProfile.primary,
+                        0.2,
+                      )}, ${panelBg})`
+                    : panelBg,
+                  boxShadow: active ? skin.materialProfile.shadowSoft : "none",
                 }}
               >
-                <div
-                  className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                <span
+                  aria-hidden="true"
+                  className="mb-3 h-8 w-full rounded-lg border"
                   style={{
-                    backgroundColor: currentContrast.bgTint,
-                    borderColor: currentContrast.border,
+                    background: swatchBackground,
+                    borderColor: setHexAlpha(skin.accentProfile.primary, 0.22),
                   }}
+                />
+                <span
+                  className="text-[11px] font-bold uppercase tracking-[0.12em]"
+                  style={{ color: active ? accent : textPrimary }}
                 >
-                  <div
-                    className="h-3.5 w-3.5 rounded-full transition-all"
+                  {metadata.shortLabel}
+                </span>
+                <span
+                  className="mt-1 text-[10px] leading-snug"
+                  style={{ color: textTertiary }}
+                >
+                  {metadata.tagline}
+                </span>
+                {skin.recommendedDefault && (
+                  <span
+                    className="mt-2 w-fit rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em]"
                     style={{
-                      backgroundColor: t.hex,
-                      boxShadow: `0 0 15px ${setHexAlpha(t.hex, 0.5)}`,
-                    }}
-                  />
-                  {selectedThemeLabel.canonicalThemeId === t.canonicalThemeId && (
-                    <div
-                      className="absolute inset-0 rounded-full border-2 animate-pulse"
-                      style={{ borderColor: t.hex, opacity: 0.5 }}
-                    />
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div
-                    className="text-[10px] font-bold uppercase tracking-[0.06em] transition-colors truncate leading-tight"
-                    style={{
-                      color:
-                        selectedThemeLabel.canonicalThemeId === t.canonicalThemeId
-                          ? t.canonicalThemeId === "LIGHTCREAM" ||
-                            t.canonicalThemeId === "PROFESSIONAL"
-                            ? currentContrast.text
-                            : t.hex
-                          : currentContrast.text,
+                      color: accent,
+                      background: setHexAlpha(accent, 0.12),
                     }}
                   >
-                    {t.label}
-                  </div>
-                  <div
-                    className="text-[9px] font-medium truncate leading-tight"
-                    style={{ color: currentContrast.textMuted }}
-                  >
-                    {t.description}
-                  </div>
-                </div>
+                    Default
+                  </span>
+                )}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </section>
 
-        {/* Transparency Controls */}
         {showTransparencyControls && (
           <section
-            className="space-y-2 pt-2 pb-1"
-            style={{ borderTop: `1px solid ${currentContrast.border}` }}
+            className="mt-4 space-y-3 rounded-xl border p-3"
+            style={{ borderColor: border, background: panelBg }}
           >
-            <div className="text-center mb-1">
+            <div>
               <h2
                 className="text-xs font-bold uppercase tracking-widest"
-                style={{ color: currentContrast.text }}
+                style={{ color: textPrimary }}
               >
-                Background depth
+                Background material
               </h2>
-              <p
-                className="text-[9px] mt-0.5"
-                style={{ color: currentContrast.textMuted }}
-              >
-                Shape the glass presence across LucaOS
+              <p className="mt-1 text-[10px]" style={{ color: textTertiary }}>
+                Fine tune {selectedSkin.shortName}'s blur and opacity using the
+                same material controls as Settings.
               </p>
             </div>
-            <div className="space-y-3 max-w-lg mx-auto">
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span
-                    className="text-[10px] font-mono"
-                    style={{ color: currentContrast.textMuted }}
-                  >
-                    Glow strength
-                  </span>
-                  <span
-                    className="text-[10px] font-mono"
-                    style={{ color: currentContrast.text }}
-                  >
-                    {Math.round(backgroundOpacity * 100)}%
-                  </span>
-                </div>
+            {[
+              {
+                key: "opacity" as const,
+                label: "Opacity",
+                display: `${Math.round(backgroundOpacity * 100)}%`,
+                min: 0,
+                max: 100,
+                value: Math.round(backgroundOpacity * 100),
+                onChange: handleOpacityChange,
+              },
+              {
+                key: "blur" as const,
+                label: "Blur",
+                display: `${backgroundBlur}px`,
+                min: 0,
+                max: 40,
+                value: backgroundBlur,
+                onChange: handleBlurChange,
+              },
+            ].map((slider) => (
+              <label key={slider.key} className="block">
+                <span
+                  className="mb-1 flex justify-between text-[10px] font-semibold uppercase tracking-[0.08em]"
+                  style={{ color: textSecondary }}
+                >
+                  <span>{slider.label}</span>
+                  <span>{slider.display}</span>
+                </span>
                 <input
                   type="range"
-                  min="0"
-                  max="100"
-                  value={Math.round(backgroundOpacity * 100)}
-                  onChange={handleOpacityChange}
-                  className="w-full h-1 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    accentColor: currentThemeHex,
-                    backgroundColor: currentContrast.bgTint,
-                  }}
+                  min={slider.min}
+                  max={slider.max}
+                  value={slider.value}
+                  onChange={slider.onChange}
+                  className="h-1 w-full cursor-pointer appearance-none rounded-lg"
+                  style={{ accentColor: accent, backgroundColor: border }}
                 />
-              </div>
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span
-                    className="text-[10px] font-mono"
-                    style={{ color: currentContrast.textMuted }}
-                  >
-                    Glass softness
-                  </span>
-                  <span
-                    className="text-[10px] font-mono"
-                    style={{ color: currentContrast.text }}
-                  >
-                    {backgroundBlur}px
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="40"
-                  value={backgroundBlur}
-                  onChange={handleBlurChange}
-                  className="w-full h-1 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    accentColor: currentThemeHex,
-                    backgroundColor: currentContrast.bgTint,
-                  }}
-                />
-              </div>
-            </div>
+              </label>
+            ))}
           </section>
         )}
       </div>
 
-      {/* Footer Actions */}
-      <div
-        className="mt-3 pt-2 pb-2 px-3 shrink-0"
-        style={{ borderTop: `1px solid ${currentContrast.border}` }}
-      >
+      <div className="shrink-0 px-3 pb-2 pt-3">
         <button
+          type="button"
           onClick={onComplete}
-          className="w-full border rounded-xl py-2 uppercase tracking-[0.22em] text-[13px] transition-all flex items-center justify-center gap-2 group backdrop-blur-md"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border py-2 text-[13px] font-semibold uppercase tracking-[0.18em] transition-opacity hover:opacity-90"
           style={{
-            borderColor: currentContrast.border,
-            backgroundColor: currentContrast.bgTint,
-            backgroundImage: `linear-gradient(135deg, ${currentContrast.bgTint} 0%, ${setHexAlpha(
-              currentThemeHex,
-              isLightSelection ? 0.05 : 0.1,
-            )} 100%)`,
-            boxShadow: `0 4px 20px ${setHexAlpha(
-              currentThemeHex,
-              isLightSelection ? 0.06 : 0.15,
-            )}, inset 0 1px 0 ${setHexAlpha(currentThemeHex, isLightSelection ? 0.08 : 0.2)}`,
-            color: currentContrast.text,
+            borderColor: border,
+            background: `linear-gradient(135deg, ${setHexAlpha(
+              accent,
+              0.18,
+            )}, ${panelBg})`,
+            color: textPrimary,
           }}
         >
-          Use this atmosphere
+          Use this environment
           <Icon
             name="ArrowRight"
             variant="BoldDuotone"
             size={16}
-            className="group-hover:translate-x-1 transition-transform"
+            className="transition-transform group-hover:translate-x-1"
           />
         </button>
       </div>

@@ -22,6 +22,7 @@ export type OnboardingSound =
 
 export interface OnboardingVisualSettings {
   theme: string;
+  selectedSkinId?: string;
   backgroundOpacity: number;
   backgroundBlur: number;
   setupComplete: boolean;
@@ -53,7 +54,7 @@ export interface OnboardingRuntimeAdapter {
     settings: Partial<
       Pick<
         OnboardingVisualSettings,
-        "theme" | "backgroundOpacity" | "backgroundBlur"
+        "theme" | "selectedSkinId" | "backgroundOpacity" | "backgroundBlur"
       >
     >,
   ): void;

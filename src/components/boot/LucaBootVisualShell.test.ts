@@ -190,8 +190,10 @@ describe("LucaBootVisualShell readiness model", () => {
     expect(html).toContain("/hologram.png");
     expect(html).not.toContain("loader-face");
     expect(html).not.toContain("loader-host-grid");
-    expect(html).toContain("Entering browser host");
+    expect(html).toContain("Starting LucaOS");
+    expect(html).toContain("Preparing the app");
     expect(html).toContain("Host-native AI operating system");
+    expect(html).toContain("Segoe UI Variable Display");
     expect(html).not.toMatch(
       /loader-orb|loader-host-grid|loader-face|Preparing web-safe interface|yellow|gold|status::before/i,
     );

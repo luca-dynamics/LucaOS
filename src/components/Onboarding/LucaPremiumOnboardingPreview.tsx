@@ -257,6 +257,7 @@ export const LucaPremiumOnboardingPreview: React.FC<
     reducedMotion,
     reducedTransparency,
   } as const;
+  const reserveWindowControls = hostKind === "desktop-app";
 
   return (
     <LucaOnboardingShell
@@ -302,7 +303,7 @@ export const LucaPremiumOnboardingPreview: React.FC<
           minHeight: "100%",
           display: "flex",
           flexDirection: "column",
-          padding: "28px 24px 32px",
+          padding: reserveWindowControls ? "36px 24px 32px" : "28px 24px 32px",
         }}
       >
         {activeTailStep ? (
@@ -334,6 +335,7 @@ export const LucaPremiumOnboardingPreview: React.FC<
             alignItems: "center",
             justifyContent: "space-between",
             marginBottom: 18,
+            paddingRight: reserveWindowControls ? 88 : 0,
           }}
         >
           {canBack ? (
@@ -367,7 +369,16 @@ export const LucaPremiumOnboardingPreview: React.FC<
           </span>
         </div>
 
-        <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            maxWidth: screenId === "environment" ? 1100 : undefined,
+            margin: "0 auto",
+          }}
+        >
           <LucaOnboardingMotion
             key={screenId}
             reducedMotion={motionReduced}

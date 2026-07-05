@@ -1,3 +1,5 @@
+import { getLucaSkinPreviewMetadataList } from "../../config/lucaSkinPreviewMetadata";
+
 export type PremiumOnboardingAudienceMode = "basic" | "pro" | "creator";
 
 export type PremiumOnboardingScreenId =
@@ -61,29 +63,13 @@ export const premiumOnboardingBasicBannedTerms = [
   "command center",
 ] as const;
 
-const environmentOptions: PremiumOnboardingOptionCopy[] = [
-  {
-    id: "pearl",
-    title: "Pearl",
-    description: "I'll keep the space bright, quiet, and easy to read.",
-    recommended: true,
-  },
-  {
-    id: "carbon",
-    title: "Carbon",
-    description: "I'll keep the space dark, focused, and comfortable for longer sessions.",
-  },
-  {
-    id: "flow",
-    title: "Flow",
-    description: "I'll add gentle depth while staying behind your work.",
-  },
-  {
-    id: "canvas",
-    title: "Canvas",
-    description: "I'll make the space feel warm for writing, planning, and making things.",
-  },
-];
+const environmentOptions: PremiumOnboardingOptionCopy[] =
+  getLucaSkinPreviewMetadataList().map((skin) => ({
+    id: skin.id,
+    title: skin.shortLabel,
+    description: skin.tagline,
+    recommended: skin.capabilities.includes("recommended-default"),
+  }));
 
 const presenceOptions: PremiumOnboardingOptionCopy[] = [
   {

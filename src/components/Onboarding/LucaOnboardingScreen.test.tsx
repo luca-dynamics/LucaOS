@@ -26,8 +26,10 @@ describe("LucaOnboardingScreen", () => {
       <LucaOnboardingScreen screenId="environment" />,
     );
     expect(markup).toContain('role="radiogroup"');
+    expect(markup).toContain('data-luca-onboarding-options-layout="skin-grid"');
     for (const option of copy.options ?? []) {
       expect(markup).toContain(`data-luca-onboarding-option="${option.id}"`);
+      expect(markup).toContain(`data-luca-onboarding-skin-option="${option.id}"`);
       expect(markup).toContain(option.title);
     }
     // Carbon is the recommended environment option.

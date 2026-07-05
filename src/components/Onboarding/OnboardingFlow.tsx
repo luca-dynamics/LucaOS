@@ -43,6 +43,12 @@ import type { OnboardingModelReadiness } from "../../services/onboarding/Onboard
 import type { OnboardingRuntimeAdapter } from "./OnboardingRuntimeAdapter";
 import { LucaCanvasPresenceOrb } from "../visual/LucaCanvasPresenceOrb";
 import { LucaHologramShaderPresence } from "../visual/LucaHologramShaderPresence";
+import {
+  DEFAULT_LUCA_SKIN_ID,
+  LUCA_SKINS,
+  normalizeLucaSkinId,
+  type LucaSkinId,
+} from "../../config/lucaSkins";
 
 type Step = OnboardingStep;
 
@@ -117,13 +123,21 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   const [step, setStep] = useState<Step>("KERNEL_AWAKENING");
   const isMobile = useMobile();
   const initialVisualSettings = useRef(runtime.getVisualSettings()).current;
+  const initialSelectedSkinId = normalizeLucaSkinId(
+    initialVisualSettings.selectedSkinId ?? DEFAULT_LUCA_SKIN_ID,
+  );
   const ConversationComponent = runtime.ConversationComponent;
 
   // Form State
   const [name, setName] = useState("");
-  const [currentThemeHex, setCurrentThemeHex] = useState(theme.hex);
+  const [currentThemeHex, setCurrentThemeHex] = useState(
+    LUCA_SKINS[initialSelectedSkinId].accentProfile.primary || theme.hex,
+  );
   const [currentThemeName, setCurrentThemeName] = useState<string>(
     initialVisualSettings.theme || "PROFESSIONAL",
+  );
+  const [selectedSkinId, setSelectedSkinId] = useState<LucaSkinId>(() =>
+    initialSelectedSkinId,
   );
   const [backgroundOpacity, setBackgroundOpacity] = useState(
     initialVisualSettings.backgroundOpacity,
@@ -280,6 +294,14 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     runtime.saveVisualSettings({ theme: themeId });
   };
 
+  const handleSkinChange = (skinId: LucaSkinId) => {
+    runtime.playSound("HOVER");
+    const normalizedSkinId = normalizeLucaSkinId(skinId);
+    setSelectedSkinId(normalizedSkinId);
+    setCurrentThemeHex(LUCA_SKINS[normalizedSkinId].accentProfile.primary);
+    runtime.saveVisualSettings({ selectedSkinId: normalizedSkinId });
+  };
+
   const handleShowByok = () => {
     runtime.playSound("KEYSTROKE");
     setShowByok(true);
@@ -412,14 +434,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     resumeChecked,
     runtime,
   ]);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty("--app-text-main", currentContrast.text);
-    root.style.setProperty("--app-text-muted", currentContrast.textMuted);
-    root.style.setProperty("--app-border-main", currentContrast.border);
-    root.style.setProperty("--app-bg-tint", currentContrast.bgTint);
-  }, [currentContrast, currentThemeName, step]);
 
   // Sync theme with parent props when changed from tray menu
   useEffect(() => {
@@ -698,7 +712,17 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   ]);
 
   return (
-    <div className="absolute inset-0 z-10 flex min-h-dvh flex-col items-center justify-center overflow-hidden font-mono">
+    <div
+      className="absolute inset-0 z-10 flex min-h-dvh flex-col items-center justify-center overflow-hidden font-mono"
+      style={
+        {
+          "--app-text-main": currentContrast.text,
+          "--app-text-muted": currentContrast.textMuted,
+          "--app-border-main": currentContrast.border,
+          "--app-bg-tint": currentContrast.bgTint,
+        } as React.CSSProperties
+      }
+    >
       {/* Background handled by App.tsx (LiquidBackground) */}
 
       <div
@@ -738,7 +762,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             : step === "THEME"
               ? isMobile
                 ? "w-[92vw] h-[88vh] max-h-[88vh] justify-start pt-6"
-                : "w-full max-w-2xl h-[min(88vh,860px)] max-h-[88vh] px-4 justify-start pt-8"
+                : "w-full max-w-4xl h-[min(88vh,860px)] max-h-[88vh] px-6 justify-start pt-8"
               : isMobile
                 ? "w-full justify-center px-5"
                 : "w-[min(90vw,1000px)] justify-center"
@@ -763,7 +787,15 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               state="preparing"
               themeColor={ambientThemeColor}
             />
-            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            <h1
+              className="mt-2 text-3xl text-white sm:text-4xl"
+              style={{
+                fontFamily:
+                  '"Segoe UI Variable Display", Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                fontWeight: 650,
+                letterSpacing: "-0.035em",
+              }}
+            >
               Preparing LucaOS
             </h1>
             <p className="mt-3 max-w-md text-sm leading-6 text-white/60 sm:text-base">
@@ -817,11 +849,17 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           <ThemeSelectionStep
             onComplete={handleThemeStepComplete}
             onThemeChange={handleThemeChange}
+            onSkinChange={handleSkinChange}
             initialTheme={normalizeUIThemeId(currentThemeName)}
+            initialSkinId={selectedSkinId}
             initialBackgroundOpacity={backgroundOpacity}
             initialBackgroundBlur={backgroundBlur}
             showTransparencyControls={runtime.platform === "desktop"}
             onVisualSettingsChange={(next) => {
+              if (next.selectedSkinId !== undefined) {
+                setSelectedSkinId(next.selectedSkinId);
+                setCurrentThemeHex(LUCA_SKINS[next.selectedSkinId].accentProfile.primary);
+              }
               if (next.backgroundOpacity !== undefined) {
                 setBackgroundOpacity(next.backgroundOpacity);
               }

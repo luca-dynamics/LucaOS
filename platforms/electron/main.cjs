@@ -223,7 +223,7 @@ const CORTEX_PORT = process.env.CORTEX_PORT || 8000;      // Python Cortex (dyna
 // Note: WS_PORT (3003) is only used by backend server.js, not in this Electron main process
 
 // Default UI zoom (native webContents zoom, reflows the viewport). The shell's
-// fixed-px sizing renders small at 1.0; ~1.1 gives Claude-comfortable scale.
+// fixed-px sizing renders small at 1.0; ~1.1 gives a comfortable desktop scale.
 const UI_ZOOM_FACTOR = Number(process.env.LUCA_UI_ZOOM) || 1.1;
 
 
@@ -241,7 +241,7 @@ function createBootWindow() {
         backgroundColor: '#000000',
         show: false, // Don't show until content is ready
         center: true,
-        resizable: false,
+        resizable: true,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -565,6 +565,8 @@ function createWindow() {
         show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
         backgroundColor: '#111417', // Carbon theme base (matches boot.html splash) — never flashes a see-through/empty frame
         transparent: false,
+        frame: process.platform === 'win32' ? false : true,
+        autoHideMenuBar: true,
         // Premium window chrome: no native titlebar. Per platform:
         // - Windows: NO native overlay — the window controls are the
         //   renderer's own ghost buttons at the far right of the header
@@ -575,7 +577,7 @@ function createWindow() {
         // - macOS: the traffic lights ARE the platform language — keep them
         //   native, vertically centered in the 56px band; the renderer
         //   insets the band's left edge to give them their zone.
-        titleBarStyle: 'hidden',
+        titleBarStyle: process.platform === 'darwin' ? 'hidden' : 'default',
         ...(process.platform === 'darwin'
             ? { trafficLightPosition: { x: 16, y: 21 } }
             : {}),

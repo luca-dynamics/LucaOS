@@ -11,6 +11,7 @@ if platform.machine() in ('x86_64', 'AMD64'):
 import sys
 import platform
 import asyncio
+import traceback
 import nest_asyncio
 from typing import Optional, List, Dict, Any, Union
 import warnings

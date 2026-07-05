@@ -32,10 +32,11 @@ describe("OnboardingFlow WebBridge UX", () => {
     expect(onboardingConversationSurfaceSource).toContain("Back / Change mode");
   });
 
-  it("keeps theme selection framed as premium LucaOS personalization", () => {
-    expect(themeSelectionSource).toContain("Choose Luca’s atmosphere");
-    expect(themeSelectionSource).toContain("Set the look of your personal AI OS");
-    expect(themeSelectionSource).toContain("Use this atmosphere");
+  it("keeps skin selection framed as LucaOS environment personalization", () => {
+    expect(themeSelectionSource).toContain("Choose Luca's environment");
+    expect(themeSelectionSource).toContain("Pick the skin LucaOS will use across the app");
+    expect(themeSelectionSource).toContain("Use this environment");
+    expect(themeSelectionSource).toContain("selectedSkinId");
     expect(themeSelectionSource).not.toContain("Interface Calibration");
     expect(themeSelectionSource).not.toContain("Configure visual style");
   });

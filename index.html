@@ -151,6 +151,40 @@
         color: #f8fafc;
         transition: opacity 0.5s ease-out;
         overflow: hidden;
+        -webkit-app-region: drag;
+      }
+      .root-window-controls {
+        position: fixed;
+        top: 2px;
+        right: 2px;
+        z-index: 10000;
+        display: none;
+        align-items: center;
+        gap: 2px;
+        -webkit-app-region: no-drag;
+      }
+      html.luca-electron-win .root-window-controls {
+        display: flex;
+      }
+      .root-window-control {
+        width: 28px;
+        height: 28px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.7);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+        transition: color 160ms ease;
+      }
+      .root-window-control:hover {
+        color: rgba(255, 255, 255, 0.94);
+      }
+      .root-window-control.close:hover {
+        color: #f87171;
       }
       #root-loader::after {
         content: "";
@@ -172,7 +206,6 @@
         display: grid;
         place-items: center;
         margin-bottom: clamp(-34px, -4dvh, -10px);
-        animation: luca-loader-breathe 6.4s ease-in-out infinite;
       }
       .loader-presence::after {
         content: "";
@@ -197,17 +230,6 @@
         filter: brightness(1.05) contrast(1.08) saturate(0.88)
           drop-shadow(0 0 52px rgba(203, 244, 255, 0.18));
       }
-      @keyframes luca-loader-breathe {
-        0%,
-        100% {
-          transform: translateY(0) scale(0.99);
-          opacity: 0.88;
-        }
-        50% {
-          transform: translateY(-5px) scale(1.015);
-          opacity: 1;
-        }
-      }
       .loader-text {
         position: relative;
         z-index: 1;
@@ -215,8 +237,16 @@
         flex-direction: column;
         align-items: center;
         gap: 8px;
+        font-family:
+          "Segoe UI Variable Display",
+          Inter,
+          "Segoe UI",
+          -apple-system,
+          BlinkMacSystemFont,
+          system-ui,
+          sans-serif;
         font-size: clamp(32px, min(12vw, 10dvh), 74px);
-        letter-spacing: -0.075em;
+        letter-spacing: -0.045em;
         font-weight: 650;
         line-height: 0.92;
       }
@@ -322,6 +352,23 @@
   </head>
 
   <body>
+    <div class="root-window-controls" aria-label="Window controls">
+      <button class="root-window-control" type="button" aria-label="Minimize window" title="Minimize" data-root-window-action="minimize">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M3.5 8.5h9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" />
+        </svg>
+      </button>
+      <button class="root-window-control" type="button" aria-label="Maximize or restore window" title="Maximize" data-root-window-action="maximize">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none" />
+        </svg>
+      </button>
+      <button class="root-window-control close" type="button" aria-label="Close window" title="Close" data-root-window-action="close">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" />
+        </svg>
+      </button>
+    </div>
     <div id="root-loader">
       <div class="loader-presence" aria-hidden="true">
         <img class="loader-hologram-face" src="/hologram.png" alt="" />
@@ -335,6 +382,26 @@
     <div id="root"></div>
     <script>
       (() => {
+        const isElectronRoute =
+          new URLSearchParams(window.location.search).get("platform") ===
+          "electron";
+        const isWindowsHost = navigator.userAgent.includes("Windows");
+        if (isElectronRoute && isWindowsHost) {
+          document.documentElement.classList.add("luca-electron-win");
+        }
+        document.querySelectorAll("[data-root-window-action]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const action = button.dataset.rootWindowAction;
+            if (!action) return;
+            const lucaAction = window.luca && window.luca[action];
+            if (typeof lucaAction === "function") {
+              lucaAction();
+              return;
+            }
+            window.electron?.ipcRenderer?.send?.(`window-${action}`);
+          });
+        });
+
         const debugEnabled =
           new URLSearchParams(window.location.search).get("bootDebug") === "1";
         const readinessStatuses = [

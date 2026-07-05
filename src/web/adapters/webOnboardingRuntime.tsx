@@ -6,11 +6,13 @@ import type { OnboardingModelReadiness } from "../../services/onboarding/Onboard
 import type { LocalRecoveryStep } from "../../services/onboarding/LocalProvisioningService";
 import { OnboardingConversationSurface } from "../../components/Onboarding/OnboardingConversationSurface";
 import { WebVoiceOnboardingSurface } from "../voice/WebVoiceOnboardingSurface";
+import { DEFAULT_LUCA_SKIN_ID, normalizeLucaSkinId } from "../../config/lucaSkins";
 
 const VISUAL_SETTINGS_KEY = "lucaos.web.onboarding.visual-settings";
 
 const defaultVisualSettings: OnboardingVisualSettings = {
   theme: "PROFESSIONAL",
+  selectedSkinId: DEFAULT_LUCA_SKIN_ID,
   backgroundOpacity: 0.3,
   backgroundBlur: 40,
   setupComplete: false,
@@ -20,9 +22,13 @@ const readVisualSettings = (): OnboardingVisualSettings => {
   if (typeof window === "undefined") return defaultVisualSettings;
   try {
     const stored = window.localStorage.getItem(VISUAL_SETTINGS_KEY);
-    return stored
-      ? { ...defaultVisualSettings, ...JSON.parse(stored) }
-      : defaultVisualSettings;
+    if (!stored) return defaultVisualSettings;
+    const parsed = JSON.parse(stored);
+    return {
+      ...defaultVisualSettings,
+      ...parsed,
+      selectedSkinId: normalizeLucaSkinId(parsed?.selectedSkinId),
+    };
   } catch {
     return defaultVisualSettings;
   }

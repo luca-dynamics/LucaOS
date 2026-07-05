@@ -29,6 +29,13 @@ type BootTheme = {
   isLight?: boolean;
 };
 
+const LUCA_BRAND_DISPLAY_STYLE: React.CSSProperties = {
+  fontFamily:
+    '"Segoe UI Variable Display", Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+  fontWeight: 650,
+  letterSpacing: "-0.045em",
+};
+
 // Boot reads as Luca incarnating into this host: reasoning about the machine,
 // then acting, then settling — ready to meet you.
 const BOOT_INTENT: Partial<Record<BootSequence, PresenceIntent>> = {
@@ -141,8 +148,11 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
 
         <div className="relative -mt-8 flex flex-col items-center gap-2 sm:-mt-10">
           <h1
-            className="text-5xl font-semibold tracking-[-0.075em] sm:text-7xl"
-            style={lucaShellPrimaryTextStyle}
+            className="text-5xl sm:text-7xl"
+            style={{
+              ...lucaShellPrimaryTextStyle,
+              ...LUCA_BRAND_DISPLAY_STYLE,
+            }}
           >
             LucaOS
           </h1>
