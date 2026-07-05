@@ -68,14 +68,12 @@ export const settingsSectionArchitectureMap = [
     tabId: "general",
     tabLabel: "General",
     sectionId: "persona-appearance",
-    sectionTitle: "Persona & Appearance",
+    sectionTitle: "Persona",
     currentPurpose:
-      "Select Luca persona, theme, and persona/theme synchronization.",
-    controls: ["sync theme toggle", "persona selector", "theme selector"],
+      "Select Luca persona behavior while visual environment lives in Appearance.",
+    controls: ["persona selector"],
     settingsKeysOrState: [
-      "general.syncThemeWithPersona",
       "general.persona",
-      "general.theme",
     ],
     classificationLabels: [
       "standard-user",
@@ -87,9 +85,9 @@ export const settingsSectionArchitectureMap = [
     placementAssessment: "keep-visible-with-refinement",
     integrationAssessment: "well-integrated",
     benchmarkComparison:
-      "Aligns with common Appearance/Personalization settings, though persona capability language is more LucaOS-specific than mainstream AI apps.",
+      "Aligns with common Personalization settings while LucaOS Skin remains the dedicated visual environment control in Appearance.",
     recommendedFutureAction:
-      "Keep in General for now; later separate simple appearance from deeper persona capability routing.",
+      "Keep persona behavior in General and keep visual skin/material controls in Appearance.",
   },
   {
     tabId: "general",

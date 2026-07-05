@@ -109,10 +109,6 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                 onChange={(e) => {
                   const val = parseInt(e.target.value) / 100;
                   onUpdate("general", "fontScale", val);
-                  document.documentElement.style.setProperty(
-                    "--app-font-scale",
-                    val.toString(),
-                  );
                 }}
                 className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"
                 style={{
@@ -152,20 +148,6 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                       detail: { opacity: val },
                     }),
                   );
-                  document.documentElement.style.setProperty(
-                    "--app-bg-opacity",
-                    val.toString(),
-                  );
-                  document.documentElement.style.setProperty(
-                    "--luca-material-opacity",
-                    val.toString(),
-                  );
-                  // Keep tint-strength at 1: opacity is already in the glass
-                  // token so setting this lower would double-apply it.
-                  document.documentElement.style.setProperty(
-                    "--luca-material-tint-strength",
-                    "1",
-                  );
                 }}
                 className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"
                 style={{
@@ -194,14 +176,6 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                     new CustomEvent("luca:material-preview", {
                       detail: { blur: val },
                     }),
-                  );
-                  document.documentElement.style.setProperty(
-                    "--app-bg-blur",
-                    `${val}px`,
-                  );
-                  document.documentElement.style.setProperty(
-                    "--luca-material-blur",
-                    `${val}px`,
                   );
                 }}
                 className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"

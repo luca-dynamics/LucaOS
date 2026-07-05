@@ -12,7 +12,7 @@ import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 /**
  * Local skin card for Settings.
  *
- * This component renders a compact operating-environment card for a single
+ * This component renders a compact operating-environment chooser for a single
  * LucaOS skin. It is intentionally scoped:
  *
  * - It lets the parent persist selection and change the active appearance.
@@ -61,7 +61,7 @@ export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
   const isRecommended = metadata.capabilities.includes("recommended-default");
 
   // Local-only: scope skin variables to the sample box subtree. Static and
-  // reduced-motion-safe — no animation is introduced in this preview.
+  // reduced-motion-safe — no animation is introduced in this sample.
   const sampleVariables = getLucaSkinMaterialVariables({
     skinId: metadata.id,
     reducedMotion: true,
