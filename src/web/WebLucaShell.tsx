@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { LucaDashboardSurface } from "../components/dashboard/LucaDashboardSurface";
-import { Icon } from "../components/ui/Icon";
 import type { WebCapability } from "./browserHostCapabilities";
 import { WebRealChatPanel } from "./chat/WebRealChatPanel";
 import { resolveLucaDashboardSkinBoundary } from "../styles/lucaDashboardSkinBoundary";
 import { readWebPremiumPreferences } from "./webLifecycleStorage";
-import { webAppRuntime } from "./runtime/webAppRuntime";
 import {
   RIGHT_PANEL_LABELS,
   type RightPanelMode,
@@ -15,6 +13,7 @@ import {
   readInitialWebSettingsOpen,
   WebRealHeader,
 } from "./shell/WebRealHeader";
+import { WebRealOperationsSidebar } from "./shell/WebRealOperationsSidebar";
 import { WebRealSettingsSurface } from "./shell/WebRealSettingsSurface";
 
 interface WebLucaShellProps {
@@ -24,9 +23,15 @@ interface WebLucaShellProps {
   guardedNativeCapabilities: WebCapability[];
 }
 
-const RIGHT_PANEL_WEB_MODES: RightPanelMode[] = ["CONTROL", "ACTIVITY", "MEMORY"];
+const RIGHT_PANEL_WEB_MODES: RightPanelMode[] = [
+  "CONTROL",
+  "ACTIVITY",
+  "MEMORY",
+];
 
-export function WebLucaShell({ lucaLinkStatus: _lucaLinkStatus }: WebLucaShellProps) {
+export function WebLucaShell({
+  lucaLinkStatus: _lucaLinkStatus,
+}: WebLucaShellProps) {
   // Honor the skin chosen during onboarding (stored as the `environment`
   // selection in the web premium preferences). Resolved at this local shell
   // boundary only — never mutates document / body / html. Mirrors the desktop
@@ -44,7 +49,6 @@ export function WebLucaShell({ lucaLinkStatus: _lucaLinkStatus }: WebLucaShellPr
   const [isSettingsOpen, setIsSettingsOpen] = useState(
     readInitialWebSettingsOpen,
   );
-  const workspaceState = webAppRuntime.getWorkspaceState();
 
   return (
     <section className="absolute inset-0 z-10 p-3 sm:p-5">
@@ -60,32 +64,7 @@ export function WebLucaShell({ lucaLinkStatus: _lucaLinkStatus }: WebLucaShellPr
             onOpenSettings={() => setIsSettingsOpen(true)}
           />
         }
-        leftPanel={
-          <div className="h-full p-4 text-[var(--app-text-main)]">
-            <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.2em]">
-              Workspace
-            </p>
-            <div className="space-y-2">
-              {workspaceState.sessions.map((session) => (
-                <div
-                  key={session.id}
-                  data-luca-web-workspace-session={session.id}
-                  className={`rounded-xl border p-3 text-xs text-[var(--app-text-main)] ${
-                    session.active
-                      ? "border-[var(--app-primary)] bg-[var(--luca-accent-soft)]"
-                      : "border-[var(--app-border-main)]"
-                  }`}
-                >
-                  <Icon name="ChatRound" size={16} color="currentColor" />
-                  <span className="mt-2 block font-bold">{session.title}</span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-6 text-[10px] leading-5 text-[var(--app-text-muted)]">
-              {workspaceState.emptyMessage}
-            </p>
-          </div>
-        }
+        leftPanel={<WebRealOperationsSidebar />}
         chatSurface={<WebRealChatPanel />}
         rightPanel={<WebRealRightPanel mode={rightMode} />}
         rightPanelModes={RIGHT_PANEL_WEB_MODES}
