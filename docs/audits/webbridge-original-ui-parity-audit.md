@@ -6,7 +6,7 @@ WebBridge currently contains regenerated web-only UI in these surfaces:
 
 - **Voice onboarding / voice setup:** `src/web/voice/WebVoiceOnboardingSurface.tsx` creates a browser-specific voice setup panel instead of rendering the original Luca VoiceHUD presentation.
 - **Dashboard shell:** `src/web/WebLucaShell.tsx` builds a new browser dashboard frame, status rail, and workspace layout instead of mounting the original LucaOS dashboard presentation.
-- **Chat surface:** `src/web/chat/WebChatSurface.tsx` builds a new chat panel with WebBridge-specific runtime failure handling rather than reusing the original MiniChat/chat presentation.
+- **Chat surface:** `src/web/chat/WebRealChatPanel.tsx` builds a new chat panel with WebBridge-specific runtime failure handling rather than reusing the original MiniChat/chat presentation.
 - **Ready / capability transition UI:** `src/web/WebReadyState.tsx` exposes host class, LucaLink status, and route/capability language that should remain adapter/internal state, not normal user UI.
 - **Conversational onboarding:** `src/web/adapters/WebSafeConversationalOnboarding.tsx` recreates message bubbles, prompts, typing state, and completion capture instead of sharing the original onboarding presentation primitives.
 
@@ -14,7 +14,7 @@ These should be migrated to shared original LucaOS presentation components:
 
 - `src/components/voice/VoiceHudPresentation.tsx` extracted from `src/components/VoiceHud.tsx`, `src/components/voice/VoiceVisualizer.tsx`, `src/components/voice/VoiceStatusOrb.tsx`, `src/components/voice/VoiceControls.tsx`, `src/components/HologramMode.tsx`, and `src/components/WidgetVisualizer.tsx`.
 - `src/components/dashboard/LucaDashboardPresentation.tsx` extracted from `src/App.tsx`, dashboard components, `src/components/SettingsModal.tsx`, `src/components/ChatWidgetMode.tsx`, `src/components/Hologram/HologramWidget.tsx`, `src/components/NetworkMap.tsx`, and `src/components/VisualCore.tsx`.
-- `src/components/chat/LucaChatPresentation.tsx` extracted from `src/components/ChatWidgetMode.tsx`, `src/components/ChatWidgetHeader.tsx`, `src/components/ChatWidgetHistory.tsx`, `src/components/ChatWidgetInput.tsx`, `src/components/ChatMessageBubble.tsx`, `src/components/SuggestionChips.tsx`, and safe `src/components/ui/*` primitives.
+- `src/components/layout/ChatPanel.tsx` extracted from `src/components/ChatWidgetMode.tsx`, `src/components/ChatWidgetHeader.tsx`, `src/components/ChatWidgetHistory.tsx`, `src/components/ChatWidgetInput.tsx`, `src/components/ChatMessageBubble.tsx`, `src/components/SuggestionChips.tsx`, and safe `src/components/ui/*` primitives.
 - `src/components/onboarding/LucaOnboardingPresentation.tsx` extracted from `src/components/Onboarding/OnboardingFlow.tsx` and its presentation-only children.
 - A boot/presence presentation source that keeps the current fast canvas/static path but replaces `/icon.png` with the best original Luca face/orb asset once that source is confirmed.
 
@@ -22,26 +22,26 @@ PR #324 should be treated as **temporary stabilization**, not final WebBridge UI
 
 ## 2. Original UI inventory
 
-| Surface | Current original file(s) | Runtime dependencies | Presentation pieces | Safe to reuse directly? | Needs extraction? |
-| --- | --- | --- | --- | --- | --- |
-| Onboarding | `src/components/Onboarding/OnboardingFlow.tsx`, `ModeSelect.tsx`, `ThemeSelectionStep.tsx`, `ConversationalOnboarding.tsx`, `MessageBubble.tsx`, `MessageInput.tsx`, `HologramFace.tsx`, `HologramFace2D.tsx`, `LucaCanvas.tsx`, `OnboardingAccessPanels.tsx`, `OnboardingSystemPanels.tsx`, `OnboardingProvisioningPanel.tsx`, `OnboardingRuntimeAdapter.ts` | `OnboardingFlow.tsx` imports mobile detection, API URL configuration, `onboardingController`, onboarding lifecycle services, provisioning/model readiness service types, and runtime adapter callbacks. BYOK provider state exists in-flow. | Mode selection, conversation message UI, text/voice setup framing, theme selection, model/local plan panels, constitutional alignment, completion panel, Luca face/canvas visual language. | **Partly.** Many child components look reusable, but the top-level flow is not pure presentation because lifecycle/provisioning/runtime logic is mixed into `OnboardingFlow.tsx`. | **Yes.** Extract flow presentation/state rendering and let desktop/web/mobile pass runtime adapters. |
-| VoiceHUD | `src/components/VoiceHud.tsx`, `src/components/voice/VoiceVisualizer.tsx`, `src/components/voice/VoiceControls.tsx`, `src/components/voice/VoiceStatusOrb.tsx`, `src/components/HologramMode.tsx`, `src/components/WidgetVisualizer.tsx` | `VoiceHud.tsx` imports `lucaService`, `toolRegistry`, `useTheme`, `eventBus`, voice display utilities, and `voiceSessionOrchestrator`; `VoiceVisualizer.tsx` subscribes directly to `eventBus`; `HologramMode.tsx` imports `settingsService`, `awarenessService`, and calls `window.electron.ipcRenderer`. | Premium VoiceHUD layout, voice orb/visualizer, status orb, transcript/assistant text treatment, voice controls, hologram/widget visual language, theme/persona color handling. | **No** for direct WebBridge import. The visual language is correct, but runtime subscriptions and Electron/service calls must be removed from the shared presentation. | **Yes.** Extract `VoiceHudPresentation` with props-only state and callback API. |
-| Dashboard shell | `src/App.tsx`, `src/components/Dashboard*`, `src/components/SettingsModal.tsx`, `src/components/ChatWidgetMode.tsx`, `src/components/Hologram/HologramWidget.tsx`, `src/components/NetworkMap.tsx`, `src/components/VisualCore.tsx`, `src/components/VisualCore*`, major `src/components/*` dashboard panels | `App.tsx` imports Capacitor, services (`liveService`, `soundService`, `settingsService`, `voiceSessionOrchestrator`, `eventBus`), LucaLink managers, Electron IPC calls, conversation/model services, task queues, and device/system features. | Main LucaOS shell, dock/mode hierarchy, settings entry, Luca status, panels, visual core, chat container, right panel disclosure, network/status widgets. | **No** for direct WebBridge import. `App.tsx` is the product source but is also the desktop/mobile runtime container. | **Yes.** Extract `LucaDashboardPresentation` and keep host runtime in adapters. |
-| Chat/MiniChat | `src/components/ChatWidgetMode.tsx`, `ChatWidgetHeader.tsx`, `ChatWidgetHistory.tsx`, `ChatWidgetInput.tsx`, `ChatMessageBubble.tsx`, `SuggestionChips.tsx`, `src/components/chat/ChatModeToggle.tsx`, `src/components/chat/ChatModelSwitcher.tsx`, `src/components/layout/ChatPanel.tsx`, safe `src/components/ui/*` | `ChatWidgetMode.tsx` imports `useVoiceInput`, `lucaService`, `useLucaLinkDelegation`, `lucaLinkManager`, `ToolRegistry`, `conversationService`, `awarenessService`, `settingsService`, presence bridges/messages, `ScreenShare`, `SecurityGate`, and heavy Electron IPC. | Header, message history, input composer, message bubbles, suggestion chips, approval prompt visual treatment, voice visualizer region, model/mode controls. | **Partly.** Leaf components may be reusable; `ChatWidgetMode.tsx` itself is desktop runtime-heavy. | **Yes.** Extract `LucaChatPresentation` and let desktop/web/mobile provide send/voice/approval/screen callbacks. |
-| Post-boot/boot visuals | `src/web/postBoot/WebPostBootLoading.tsx`, `src/web/postBoot/WebPostBootTransition.tsx`, `src/components/visual/LucaStaticFacePresence.tsx`, `src/components/visual/LucaCanvasPresenceOrb.tsx`, `src/components/visual/LucaPresenceOrb.tsx`, `src/components/visual/LucaHologramPresence.tsx`, `src/components/visual/LucaHologramShaderPresence.tsx`, `src/components/HolographicFaceIcon.tsx`, onboarding face/canvas files | Web post-boot components are mostly presentation and state/callback props; `WebPostBootTransition.tsx` uses browser timers and `window.matchMedia`. Tests verify shader-heavy imports are not reintroduced. `LucaStaticFacePresence.tsx` currently uses `/icon.png`. | Fast static Luca face, low-power canvas orb, loading/transition copy, setup attention actions. | **Acceptable temporarily.** This path is product-stable and avoids slow shader loading after boot, but `/icon.png` should be replaced with the confirmed original static face asset if a better source exists. | **Light extraction only.** Keep fast path; audit original asset source before changing. |
+| Surface                | Current original file(s)                                                                                                                                                                                                                                                                                                                                                                                                      | Runtime dependencies                                                                                                                                                                                                                                                                                       | Presentation pieces                                                                                                                                                                        | Safe to reuse directly?                                                                                                                                                                                        | Needs extraction?                                                                                     |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Onboarding             | `src/components/Onboarding/OnboardingFlow.tsx`, `ModeSelect.tsx`, `ThemeSelectionStep.tsx`, `ConversationalOnboarding.tsx`, `MessageBubble.tsx`, `MessageInput.tsx`, `HologramFace.tsx`, `HologramFace2D.tsx`, `LucaCanvas.tsx`, `OnboardingAccessPanels.tsx`, `OnboardingSystemPanels.tsx`, `OnboardingProvisioningPanel.tsx`, `OnboardingRuntimeAdapter.ts`                                                                 | `OnboardingFlow.tsx` imports mobile detection, API URL configuration, `onboardingController`, onboarding lifecycle services, provisioning/model readiness service types, and runtime adapter callbacks. BYOK provider state exists in-flow.                                                                | Mode selection, conversation message UI, text/voice setup framing, theme selection, model/local plan panels, constitutional alignment, completion panel, Luca face/canvas visual language. | **Partly.** Many child components look reusable, but the top-level flow is not pure presentation because lifecycle/provisioning/runtime logic is mixed into `OnboardingFlow.tsx`.                              | **Yes.** Extract flow presentation/state rendering and let desktop/web/mobile pass runtime adapters.  |
+| VoiceHUD               | `src/components/VoiceHud.tsx`, `src/components/voice/VoiceVisualizer.tsx`, `src/components/voice/VoiceControls.tsx`, `src/components/voice/VoiceStatusOrb.tsx`, `src/components/HologramMode.tsx`, `src/components/WidgetVisualizer.tsx`                                                                                                                                                                                      | `VoiceHud.tsx` imports `lucaService`, `toolRegistry`, `useTheme`, `eventBus`, voice display utilities, and `voiceSessionOrchestrator`; `VoiceVisualizer.tsx` subscribes directly to `eventBus`; `HologramMode.tsx` imports `settingsService`, `awarenessService`, and calls `window.electron.ipcRenderer`. | Premium VoiceHUD layout, voice orb/visualizer, status orb, transcript/assistant text treatment, voice controls, hologram/widget visual language, theme/persona color handling.             | **No** for direct WebBridge import. The visual language is correct, but runtime subscriptions and Electron/service calls must be removed from the shared presentation.                                         | **Yes.** Extract `VoiceHudPresentation` with props-only state and callback API.                       |
+| Dashboard shell        | `src/App.tsx`, `src/components/Dashboard*`, `src/components/SettingsModal.tsx`, `src/components/ChatWidgetMode.tsx`, `src/components/Hologram/HologramWidget.tsx`, `src/components/NetworkMap.tsx`, `src/components/VisualCore.tsx`, `src/components/VisualCore*`, major `src/components/*` dashboard panels                                                                                                                  | `App.tsx` imports Capacitor, services (`liveService`, `soundService`, `settingsService`, `voiceSessionOrchestrator`, `eventBus`), LucaLink managers, Electron IPC calls, conversation/model services, task queues, and device/system features.                                                             | Main LucaOS shell, dock/mode hierarchy, settings entry, Luca status, panels, visual core, chat container, right panel disclosure, network/status widgets.                                  | **No** for direct WebBridge import. `App.tsx` is the product source but is also the desktop/mobile runtime container.                                                                                          | **Yes.** Extract `LucaDashboardPresentation` and keep host runtime in adapters.                       |
+| Chat/MiniChat          | `src/components/ChatWidgetMode.tsx`, `ChatWidgetHeader.tsx`, `ChatWidgetHistory.tsx`, `ChatWidgetInput.tsx`, `ChatMessageBubble.tsx`, `SuggestionChips.tsx`, `src/components/chat/ChatModeToggle.tsx`, `src/components/chat/ChatModelSwitcher.tsx`, `src/components/layout/ChatPanel.tsx`, safe `src/components/ui/*`                                                                                                         | `ChatWidgetMode.tsx` imports `useVoiceInput`, `lucaService`, `useLucaLinkDelegation`, `lucaLinkManager`, `ToolRegistry`, `conversationService`, `awarenessService`, `settingsService`, presence bridges/messages, `ScreenShare`, `SecurityGate`, and heavy Electron IPC.                                   | Header, message history, input composer, message bubbles, suggestion chips, approval prompt visual treatment, voice visualizer region, model/mode controls.                                | **Partly.** Leaf components may be reusable; `ChatWidgetMode.tsx` itself is desktop runtime-heavy.                                                                                                             | **Yes.** Extract `ChatPanel` and let desktop/web/mobile provide send/voice/approval/screen callbacks. |
+| Post-boot/boot visuals | `src/web/postBoot/WebPostBootLoading.tsx`, `src/web/postBoot/WebPostBootTransition.tsx`, `src/components/visual/LucaStaticFacePresence.tsx`, `src/components/visual/LucaCanvasPresenceOrb.tsx`, `src/components/visual/LucaPresenceOrb.tsx`, `src/components/visual/LucaHologramPresence.tsx`, `src/components/visual/LucaHologramShaderPresence.tsx`, `src/components/HolographicFaceIcon.tsx`, onboarding face/canvas files | Web post-boot components are mostly presentation and state/callback props; `WebPostBootTransition.tsx` uses browser timers and `window.matchMedia`. Tests verify shader-heavy imports are not reintroduced. `LucaStaticFacePresence.tsx` currently uses `/icon.png`.                                       | Fast static Luca face, low-power canvas orb, loading/transition copy, setup attention actions.                                                                                             | **Acceptable temporarily.** This path is product-stable and avoids slow shader loading after boot, but `/icon.png` should be replaced with the confirmed original static face asset if a better source exists. | **Light extraction only.** Keep fast path; audit original asset source before changing.               |
 
 ## 3. WebBridge generated UI inventory
 
-| WebBridge file | What it duplicates | Why it is wrong/temporary | Replacement target |
-| --- | --- | --- | --- |
-| `src/web/voice/WebVoiceOnboardingSurface.tsx` | VoiceHUD/voice setup presentation, microphone readiness UI, voice-first controls, Luca orb visual. | It creates a WebBridge-only voice setup design, includes copy about browser live voice/runtime enablement, and does not render the original VoiceHUD visual language. | `src/components/voice/VoiceHudPresentation.tsx` rendered with browser-safe mic/request/continue props. |
-| `src/web/WebLucaShell.tsx` | Main Luca dashboard shell, workspace/status rails, chat container, app header. | It is a separate browser dashboard with generated status rail/capability counts. WebBridge should mount original LucaOS shell presentation with web adapters, not a browser product shell. | `src/components/dashboard/LucaDashboardPresentation.tsx`. |
-| `src/web/chat/WebChatSurface.tsx` | Original MiniChat/chat panel, message history, composer, Luca response states. | It reimplements chat presentation and contains WebBridge-specific failure/copy paths. User-facing copy should remain Luca-native and runtime status should stay adapter-side. | `src/components/chat/LucaChatPresentation.tsx` plus `src/web/chat/webChatRuntime.ts` adapter. |
-| `src/web/WebReadyState.tsx` | Product boot/ready transition and dashboard entry. | It exposes host class, LucaLink, route counts, and capability details as normal UI. This is useful for diagnostics but not for product flow. | Product boot/transition presentation or a diagnostics-only route/panel hidden from normal users. |
-| `src/web/adapters/WebSafeConversationalOnboarding.tsx` | Original onboarding conversation UI, prompt sequencing, message bubble styling, completion capture. | It regenerates onboarding message UI under a browser-safe name; the browser-safe concern belongs in runtime adapters, not in the visible presentation surface. | `src/components/onboarding/LucaOnboardingPresentation.tsx` or presentation-only onboarding message primitives. |
-| `src/web/adapters/webOnboardingRuntime.tsx` | Onboarding runtime composition. | Adapter file is valid in concept, but it currently points WebBridge to regenerated WebBridge-specific presentation components. | Keep as adapter/composition layer; replace rendered surfaces with shared presentation components. |
-| `src/components/Onboarding/OnboardingFlow.tsx` when used directly by WebBridge | Desktop/mobile original onboarding flow. | This is the right source of product UI but currently has lifecycle/runtime concerns mixed into presentation. | Split into shared presentation plus host runtime controller. |
-| `src/web/postBoot/WebPostBootLoading.tsx` / `WebPostBootTransition.tsx` | Boot/post-boot product transition. | Acceptable temporary stabilization because it avoids slow shader loading and uses shared lightweight visual components; still should align asset source with original Luca face/orb assets. | Keep short term; migrate only after original asset source is confirmed. |
+| WebBridge file                                                                 | What it duplicates                                                                                  | Why it is wrong/temporary                                                                                                                                                                   | Replacement target                                                                                             |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `src/web/voice/WebVoiceOnboardingSurface.tsx`                                  | VoiceHUD/voice setup presentation, microphone readiness UI, voice-first controls, Luca orb visual.  | It creates a WebBridge-only voice setup design, includes copy about browser live voice/runtime enablement, and does not render the original VoiceHUD visual language.                       | `src/components/voice/VoiceHudPresentation.tsx` rendered with browser-safe mic/request/continue props.         |
+| `src/web/WebLucaShell.tsx`                                                     | Main Luca dashboard shell, workspace/status rails, chat container, app header.                      | It is a separate browser dashboard with generated status rail/capability counts. WebBridge should mount original LucaOS shell presentation with web adapters, not a browser product shell.  | `src/components/dashboard/LucaDashboardPresentation.tsx`.                                                      |
+| `src/web/chat/WebRealChatPanel.tsx`                                            | Original MiniChat/chat panel, message history, composer, Luca response states.                      | It reimplements chat presentation and contains WebBridge-specific failure/copy paths. User-facing copy should remain Luca-native and runtime status should stay adapter-side.               | `src/components/layout/ChatPanel.tsx` plus `src/web/runtime/webAppRuntime.ts` adapter.                         |
+| `src/web/WebReadyState.tsx`                                                    | Product boot/ready transition and dashboard entry.                                                  | It exposes host class, LucaLink, route counts, and capability details as normal UI. This is useful for diagnostics but not for product flow.                                                | Product boot/transition presentation or a diagnostics-only route/panel hidden from normal users.               |
+| `src/web/adapters/WebSafeConversationalOnboarding.tsx`                         | Original onboarding conversation UI, prompt sequencing, message bubble styling, completion capture. | It regenerates onboarding message UI under a browser-safe name; the browser-safe concern belongs in runtime adapters, not in the visible presentation surface.                              | `src/components/onboarding/LucaOnboardingPresentation.tsx` or presentation-only onboarding message primitives. |
+| `src/web/adapters/webOnboardingRuntime.tsx`                                    | Onboarding runtime composition.                                                                     | Adapter file is valid in concept, but it currently points WebBridge to regenerated WebBridge-specific presentation components.                                                              | Keep as adapter/composition layer; replace rendered surfaces with shared presentation components.              |
+| `src/components/Onboarding/OnboardingFlow.tsx` when used directly by WebBridge | Desktop/mobile original onboarding flow.                                                            | This is the right source of product UI but currently has lifecycle/runtime concerns mixed into presentation.                                                                                | Split into shared presentation plus host runtime controller.                                                   |
+| `src/web/postBoot/WebPostBootLoading.tsx` / `WebPostBootTransition.tsx`        | Boot/post-boot product transition.                                                                  | Acceptable temporary stabilization because it avoids slow shader loading and uses shared lightweight visual components; still should align asset source with original Luca face/orb assets. | Keep short term; migrate only after original asset source is confirmed.                                        |
 
 ## 4. Shared presentation extraction plan
 
@@ -52,7 +52,13 @@ PR #324 should be treated as **temporary stabilization**, not final WebBridge UI
 
 ```ts
 type VoiceHudPresentationProps = {
-  state: "idle" | "requesting" | "listening" | "thinking" | "speaking" | "unavailable";
+  state:
+    | "idle"
+    | "requesting"
+    | "listening"
+    | "thinking"
+    | "speaking"
+    | "unavailable";
   transcript?: string;
   assistantText?: string;
   micAvailable?: boolean;
@@ -81,7 +87,13 @@ type LucaDashboardPresentationProps = {
   chat?: React.ReactNode;
   visualCore?: React.ReactNode;
   rightPanel?: React.ReactNode;
-  dockItems?: Array<{ id: string; label: string; active?: boolean; disabled?: boolean; onSelect?: () => void }>;
+  dockItems?: Array<{
+    id: string;
+    label: string;
+    active?: boolean;
+    disabled?: boolean;
+    onSelect?: () => void;
+  }>;
   onOpenSettings?: () => void;
   onOpenVoice?: () => void;
   onOpenChat?: () => void;
@@ -93,14 +105,19 @@ type LucaDashboardPresentationProps = {
 - **Web adapter usage:** `WebLucaShell` becomes a thin browser host adapter that passes browser-safe capability-derived booleans/callbacks and embeds web chat adapter output.
 - **Mobile adapter usage:** Mobile shell passes mobile-safe navigation, permissions, and layout capability props.
 
-### `src/components/chat/LucaChatPresentation.tsx`
+### `src/components/layout/ChatPanel.tsx`
 
 - **Source files to extract from:** `src/components/ChatWidgetMode.tsx`, `ChatWidgetHeader.tsx`, `ChatWidgetHistory.tsx`, `ChatWidgetInput.tsx`, `ChatMessageBubble.tsx`, `SuggestionChips.tsx`, `src/components/chat/ChatModeToggle.tsx`, `src/components/chat/ChatModelSwitcher.tsx`, `src/components/layout/ChatPanel.tsx`.
 - **Proposed props interface:**
 
 ```ts
-type LucaChatPresentationProps = {
-  messages: Array<{ id: string; sender: "user" | "luca" | "system"; text: string; isStreaming?: boolean }>;
+type ChatPanelProps = {
+  messages: Array<{
+    id: string;
+    sender: "user" | "luca" | "system";
+    text: string;
+    isStreaming?: boolean;
+  }>;
   inputValue: string;
   pending?: boolean;
   statusLabel?: string;
@@ -114,8 +131,8 @@ type LucaChatPresentationProps = {
 ```
 
 - **Forbidden imports:** `conversationService`, `lucaService`, `lucaLinkManager`, `settingsService`, `awarenessService`, `ScreenShare`, Electron IPC, provider SDKs.
-- **Desktop adapter usage:** `ChatWidgetMode` keeps runtime and IPC, then renders `LucaChatPresentation`.
-- **Web adapter usage:** `WebChatSurface` keeps `webChatRuntime` send adapter and maps messages/errors to Luca-native presentation state.
+- **Desktop adapter usage:** `ChatWidgetMode` keeps runtime and IPC, then renders `ChatPanel`.
+- **Web adapter usage:** `WebRealChatPanel` keeps `webChatRuntime` send adapter and maps messages/errors to Luca-native presentation state.
 - **Mobile adapter usage:** Mobile chat runtime supplies safe send/voice callbacks and mobile input affordances.
 
 ### `src/components/onboarding/LucaOnboardingPresentation.tsx`
@@ -130,7 +147,12 @@ type LucaOnboardingPresentationProps = {
   userName?: string;
   theme?: { primary: string; hex: string };
   messages?: Array<{ id: string; role: "luca" | "user"; content: string }>;
-  modelOptions?: Array<{ id: string; label: string; selected?: boolean; disabled?: boolean }>;
+  modelOptions?: Array<{
+    id: string;
+    label: string;
+    selected?: boolean;
+    disabled?: boolean;
+  }>;
   onSelectMode?: (mode: "text" | "voice") => void;
   onSelectTheme?: (themeId: string) => void;
   onSelectModel?: (modelId: string) => void;
@@ -201,9 +223,9 @@ Allowed patterns:
 
 ### PR C: Chat/MiniChat presentation extraction
 
-- Extract original chat UI presentation into `src/components/chat/LucaChatPresentation.tsx`.
+- Extract original chat UI presentation into `src/components/layout/ChatPanel.tsx`.
 - Keep desktop `ChatWidgetMode` runtime/IPC as adapter wiring.
-- Change `src/web/chat/WebChatSurface.tsx` to use `LucaChatPresentation` while retaining `webChatRuntime.ts`.
+- Change `src/web/chat/WebRealChatPanel.tsx` to use `ChatPanel` while retaining `webAppRuntime.chat`.
 - Remove browser/debug/runtime-adapter copy from normal chat flow.
 
 ### PR D: Onboarding parity cleanup
@@ -245,8 +267,8 @@ Allowed patterns:
 - `npx tsc -p tsconfig.web.json --noEmit`
 - `npm run build:web`
 - `node scripts/verify-web-import-boundaries.mjs`
-- Unit/import test: `src/web/chat/WebChatSurface.tsx` renders `LucaChatPresentation` and keeps `webChatRuntime.ts` as adapter.
-- Unit/import test: desktop `ChatWidgetMode` renders `LucaChatPresentation` while retaining desktop runtime outside the presentation.
+- Unit/import test: `src/web/chat/WebRealChatPanel.tsx` renders `ChatPanel` and keeps `webAppRuntime.chat` as adapter.
+- Unit/import test: desktop `ChatWidgetMode` renders `ChatPanel` while retaining desktop runtime outside the presentation.
 - String test: chat normal UI does not contain `browser-safe mode`, `runtime adapter`, `model execution adapter not connected`, `native routes guarded`, or `debug route status`.
 
 ### PR D tests

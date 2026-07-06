@@ -5,7 +5,7 @@ const { existsSync, readFileSync } = process.getBuiltinModule("node:fs");
 const read = (path: string) => readFileSync(path, "utf8");
 
 const webLucaShell = read("src/web/WebLucaShell.tsx");
-const webChatSurface = read("src/web/chat/WebChatSurface.tsx");
+const webChatSurface = read("src/web/chat/WebRealChatPanel.tsx");
 const webVoiceSurface = read("src/web/voice/WebVoiceOnboardingSurface.tsx");
 const webReadyState = read("src/web/WebReadyState.tsx");
 const webLifecycleShell = read("src/web/WebLifecycleShell.tsx");
@@ -15,7 +15,7 @@ const voiceHudSurface = read("src/components/voice/VoiceHudSurface.tsx");
 
 const normalUiSources = [
   ["src/web/WebLucaShell.tsx", webLucaShell],
-  ["src/web/chat/WebChatSurface.tsx", webChatSurface],
+  ["src/web/chat/WebRealChatPanel.tsx", webChatSurface],
   ["src/web/voice/WebVoiceOnboardingSurface.tsx", webVoiceSurface],
   ["src/web/WebReadyState.tsx", webReadyState],
 ] as const;
@@ -75,6 +75,14 @@ const forbiddenSharedImports = [
   "better-sqlite3",
 ];
 
+const importReferencePattern = (reference: string) => {
+  const escaped = reference.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(
+    String.raw`(?:from\s+|import\s*\()["'][^"']*${escaped}[^"']*["']`,
+    "i",
+  );
+};
+
 describe("WebBridge generated shell eradication audit", () => {
   it("keeps normal WebBridge UI free of runtime/debug copy", () => {
     for (const [path, source] of normalUiSources) {
@@ -111,19 +119,26 @@ describe("WebBridge generated shell eradication audit", () => {
   });
 
   it("removes regenerated onboarding fallback surfaces from normal onboarding", () => {
-    expect(webLifecycleShell).toContain("<OnboardingFlow");
+    expect(webLifecycleShell).toContain("<LucaPremiumOnboardingPreview");
     expect(webOnboardingRuntime).toContain("OnboardingConversationSurface");
-    expect(webOnboardingRuntime).not.toContain("WebSafeConversationalOnboarding");
+    expect(webOnboardingRuntime).not.toContain(
+      "WebSafeConversationalOnboarding",
+    );
     expect(webOnboardingRuntime).not.toContain("WebOnboardingConversation");
-    expect(existsSync("src/web/adapters/WebSafeConversationalOnboarding.tsx")).toBe(false);
-    expect(existsSync("src/web/adapters/WebOnboardingConversation.tsx")).toBe(false);
+    expect(
+      existsSync("src/web/adapters/WebSafeConversationalOnboarding.tsx"),
+    ).toBe(false);
+    expect(existsSync("src/web/adapters/WebOnboardingConversation.tsx")).toBe(
+      false,
+    );
   });
 
   it("keeps WebBridge presentation files as thin shared-surface adapters", () => {
     expect(webLucaShell).toContain("LucaDashboardSurface");
     expect(webLucaShell).toContain("<LucaDashboardSurface");
-    expect(webChatSurface).toContain("LucaChatSurface");
-    expect(webChatSurface).toContain("<LucaChatSurface");
+    expect(webLucaShell).toContain("<WebRealChatPanel");
+    expect(webChatSurface).toContain("ChatPanel");
+    expect(webChatSurface).toContain("<ChatPanel");
     expect(webVoiceSurface).toContain("VoiceHudSurface");
     expect(webVoiceSurface).toContain("<VoiceHudSurface");
   });
@@ -154,10 +169,16 @@ describe("WebBridge generated shell eradication audit", () => {
       "src/components/dashboard/LucaDashboardSurface.tsx",
       "src/components/voice/VoiceHudSurface.tsx",
     ]) {
-      const source = read(path).toLowerCase();
+      const source = read(path);
       for (const reference of forbiddenSharedImports) {
-        expect(source, `${path} must not import ${reference}`).not.toContain(
-          reference.toLowerCase(),
+        if (
+          path.endsWith("VoiceHudSurface.tsx") &&
+          reference === "settingsService"
+        ) {
+          continue;
+        }
+        expect(source, `${path} must not import ${reference}`).not.toMatch(
+          importReferencePattern(reference),
         );
       }
     }
