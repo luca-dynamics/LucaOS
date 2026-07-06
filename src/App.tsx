@@ -3082,6 +3082,7 @@ function AppContent() {
                     setShowHackingTerminal={setShowHackingTerminal}
                     connectionTier={effectiveConnectionTier}
                     onLockdown={() => setIsLockdown(true)}
+                    onPlaySound={(sound) => soundService.play(sound)}
                     setShowAgentMode={setShowAgentMode}
                     setShowThoughtProcess={setShowThoughtProcess}
                   />
@@ -3142,6 +3143,7 @@ function AppContent() {
                 setShowHackingTerminal={setShowHackingTerminal}
                 connectionTier={effectiveConnectionTier}
                 onLockdown={() => setIsLockdown(true)}
+                onPlaySound={(sound) => soundService.play(sound)}
                 setShowAgentMode={setShowAgentMode}
                 setShowThoughtProcess={setShowThoughtProcess}
               />

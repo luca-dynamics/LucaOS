@@ -13,7 +13,6 @@ import type {
   LeftPanelToolActionKey,
   LeftPanelToolItem,
 } from "../left-panel/leftPanelModel";
-import { soundService } from "../../services/soundService";
 import {
   lucaMobileContentSurfaceStyle,
   lucaMobileDividerStyle,
@@ -66,6 +65,7 @@ interface OperationsSidebarProps {
   setShowThoughtProcess: (show: boolean) => void;
   connectionTier?: "LAN" | "LOCAL" | "CLOUD" | "OFFLINE";
   onLockdown?: () => void;
+  onPlaySound?: (sound: "KEYSTROKE" | "SUCCESS") => void;
 }
 
 /**
@@ -113,7 +113,9 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
   setShowThoughtProcess,
   connectionTier = "LOCAL",
   onLockdown,
+  onPlaySound,
 }) => {
+  const playInteractionSound = onPlaySound ?? (() => undefined);
   const isLightCream = theme?.themeName?.toLowerCase() === "lightcream";
   const isLight = Boolean(theme?.isLight);
   const webAccessPolicy = readCurrentWebAccessPolicy();
@@ -124,8 +126,12 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
     hasAuthenticatedSession: webAccessPolicy.hasAuthenticatedSession,
   });
 
-  const warnDisabledWebAction = (capabilityId: keyof typeof webCapabilities) => {
-    const result = createDisabledWebRuntimeAction(webCapabilities[capabilityId]);
+  const warnDisabledWebAction = (
+    capabilityId: keyof typeof webCapabilities,
+  ) => {
+    const result = createDisabledWebRuntimeAction(
+      webCapabilities[capabilityId],
+    );
     console.warn("[WEB RUNTIME] Disabled browser action", result);
     return result;
   };
@@ -135,12 +141,12 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
   const toolActions: Record<LeftPanelToolActionKey, () => void> = {
     openSkills: () => {
       setShowSkillsMatrix(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openApps: () => {
       if (isBrowserSafeWebInterface) warnDisabledWebAction("modelManager");
       setShowAppExplorer(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openScreen: () => {
       if (isBrowserSafeWebInterface) {
@@ -156,7 +162,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
             { label: "Secure bridge", value: "Future authenticated pairing" },
           ],
         });
-        soundService.play("KEYSTROKE");
+        playInteractionSound("KEYSTROKE");
         return;
       }
 
@@ -167,70 +173,70 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ captureInterval: 1000 }),
         }).catch((e) => console.error("Failed to start vision service:", e));
-        soundService.play("SUCCESS");
+        playInteractionSound("SUCCESS");
       } else {
         console.warn("Visual Core window requires Electron");
       }
     },
     openImport: () => {
       setShowIngestionModal(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openIde: () => {
       if (isBrowserSafeWebInterface) warnDisabledWebAction("fileSystemAccess");
       setShowCodeEditor(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openSystemServices: () => {
       if (isBrowserSafeWebInterface) warnDisabledWebAction("desktopControl");
       setShowSubsystemDashboard(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openLinkBridge: () => {
       if (isBrowserSafeWebInterface) warnDisabledWebAction("lucaLink");
       setShowLucaLinkModal(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openSecurity: () => {
       setShowHackingTerminal(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openReports: () => {
       setShowInvestigationReports(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openOsint: () => {
       setShowOsintDossier(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openDarkWeb: () => {
       setShowDarkWebScanner(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openTrain: () => {
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
       setShowLucaRecorder(true);
     },
     openDeFi: () => {
       setShowCryptoTerminal(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openForex: () => {
       setShowForexTerminal(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openStockFeed: () => {
       setStockTerminalSymbol("");
       setShowStockTerminal(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openAiTrading: () => {
       setShowTradingTerminal(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     openPrediction: () => {
       setShowPredictionTerminal(true);
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     // Visual / preview modules inject sample UI data only — never live data.
     previewSovereignty: () => {
@@ -243,7 +249,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
           activeChains: [],
         },
       });
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
     previewSecurity: () => {
       setVisualData({
@@ -258,7 +264,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
           threatLevel: 0,
         },
       });
-      soundService.play("KEYSTROKE");
+      playInteractionSound("KEYSTROKE");
     },
   };
 
@@ -302,11 +308,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
       isLightCream={isLightCream}
       onAgentMode={() => {
         setShowAgentMode(true);
-        soundService.play("KEYSTROKE");
+        playInteractionSound("KEYSTROKE");
       }}
       onCognitiveEngine={() => {
         setShowThoughtProcess(true);
-        soundService.play("KEYSTROKE");
+        playInteractionSound("KEYSTROKE");
       }}
       onLockdown={handleLockdown}
     />

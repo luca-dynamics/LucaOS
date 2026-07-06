@@ -5,6 +5,14 @@ import { act } from "react-dom/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { WebLucaShell } from "../WebLucaShell";
 
+vi.mock("../../services/lucaLink/manager", () => ({
+  lucaLinkManager: {
+    on: vi.fn(),
+    off: vi.fn(),
+    sendSessionHandoff: vi.fn(),
+  },
+}));
+
 function mount(ui: React.ReactElement) {
   const container = document.createElement("div");
   document.body.appendChild(container);
@@ -41,7 +49,9 @@ describe("WebLucaShell right panel (real desktop components)", () => {
       'button[aria-label="Open settings"]',
     );
     expect(settingsButton).not.toBeNull();
-    expect(container.querySelector("[data-luca-web-real-settings-surface]")).toBeNull();
+    expect(
+      container.querySelector("[data-luca-web-real-settings-surface]"),
+    ).toBeNull();
 
     act(() => settingsButton!.click());
 
@@ -50,15 +60,21 @@ describe("WebLucaShell right panel (real desktop components)", () => {
     );
     expect(settingsSurface).not.toBeNull();
     expect(container.textContent ?? "").toContain("Settings");
-    expect(settingsSurface!.style.getPropertyValue("--app-bg-blur")).toBeTruthy();
-    expect(document.documentElement.style.getPropertyValue("--app-bg-blur")).toBe("");
+    expect(
+      settingsSurface!.style.getPropertyValue("--app-bg-blur"),
+    ).toBeTruthy();
+    expect(
+      document.documentElement.style.getPropertyValue("--app-bg-blur"),
+    ).toBe("");
 
     const cancelButton = Array.from(container.querySelectorAll("button")).find(
       (button) => button.textContent?.trim() === "Cancel",
     );
     expect(cancelButton).toBeTruthy();
     act(() => cancelButton!.click());
-    expect(container.querySelector("[data-luca-web-real-settings-surface]")).toBeNull();
+    expect(
+      container.querySelector("[data-luca-web-real-settings-surface]"),
+    ).toBeNull();
 
     cleanup();
     vi.unstubAllGlobals();
@@ -66,11 +82,11 @@ describe("WebLucaShell right panel (real desktop components)", () => {
 
   it("mounts the real desktop ControlPanel in Overview", () => {
     const { container, cleanup } = mount(<WebLucaShell {...props} />);
-    // ControlPanel renders its governed-control content (permission center,
-    // execution readiness), not the old hand-coded rows.
+    // ControlPanel renders its real current overview content, not old
+    // hand-coded WebBridge rows.
     const text = container.textContent ?? "";
-    expect(text).toContain("Permission center");
-    expect(text).toContain("Execution readiness");
+    expect(text).toContain("Luca is ready");
+    expect(text).toContain("Right now");
     cleanup();
   });
 
@@ -86,14 +102,14 @@ describe("WebLucaShell right panel (real desktop components)", () => {
     cleanup();
   });
 
-  it("renders the left workspace sessions from the app runtime", () => {
+  it("renders the real desktop operations sidebar in the left panel", () => {
     const { container, cleanup } = mount(<WebLucaShell {...props} />);
-    const session = container.querySelector('[data-luca-web-workspace-session="chat"]');
-    expect(session).not.toBeNull();
-    expect(session?.textContent ?? "").toContain("Chat");
-    expect(container.textContent ?? "").toContain(
-      "Luca is ready. Ask anything or open a workspace.",
+    const sidebar = container.querySelector(
+      "[data-luca-web-real-operations-sidebar]",
     );
+    expect(sidebar).not.toBeNull();
+    expect(sidebar?.textContent ?? "").toContain("Quick actions");
+    expect(sidebar?.textContent ?? "").toContain("Skills");
     cleanup();
   });
 });
