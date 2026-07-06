@@ -14,7 +14,7 @@ import {
   normalizeLucaSkinId,
 } from "../../config/lucaSkins";
 
-describe("LucaOS skin settings preview section", () => {
+describe("LucaOS skin settings section", () => {
   it("normalizes missing and invalid selected skin IDs to the default skin", () => {
     expect(normalizeLucaSkinId(undefined)).toBe(DEFAULT_LUCA_SKIN_ID);
     expect(normalizeLucaSkinId("not-a-skin")).toBe(DEFAULT_LUCA_SKIN_ID);
@@ -67,7 +67,7 @@ describe("LucaOS skin settings preview section", () => {
 
   it("presents skins as the primary visual environment", () => {
     const markup = renderToStaticMarkup(<SkinPreviewSection />);
-    expect(markup).toContain("visual operating environments");
+    expect(markup).toContain("active LucaOS visual environment");
     expect(markup).not.toContain("applies to the dashboard shell only");
     expect(markup).not.toContain("not skinned yet");
     expect(SKIN_PREVIEW_HELPER_COPY).toContain("visual operating environment");

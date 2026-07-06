@@ -8,8 +8,8 @@ import { SkinPreviewCard } from "./SkinPreviewCard";
 /**
  * Settings section for the LucaOS Skin System.
  *
- * This section renders the four launch skins (Pearl, Carbon, Flow, Canvas) as
- * local-only "operating environment samples".
+ * This section renders every registered skin as a local operating environment
+ * chooser.
  *
  * - The selected skin ID is persisted through Settings.
  * - App surfaces consume the selected skin at their local boundaries.
@@ -34,13 +34,13 @@ export const SkinPreviewSection: React.FC<SkinPreviewSectionProps> = ({
   selectedSkinId,
   onSelectedSkinChange,
 }) => {
-  // Launch order is defined by the metadata list (Pearl, Carbon, Flow, Canvas).
+  // Display order is defined by the skin metadata registry.
   const skins = getLucaSkinPreviewMetadataList();
   const currentSkinId = normalizeLucaSkinId(selectedSkinId);
 
   return (
     <SettingsSection
-      title="LucaOS Skins"
+      title="LucaOS Skin"
       description={SKIN_PREVIEW_HELPER_COPY}
       icon="Palette"
       accentColor={accentColor}
@@ -50,8 +50,8 @@ export const SkinPreviewSection: React.FC<SkinPreviewSectionProps> = ({
         className="text-xs leading-relaxed"
         style={{ color: settingsSurfaceTokens.textTertiary }}
       >
-        Skins are LucaOS visual operating environments. Choose the one that
-        best fits how you want the app to feel while you work.
+        The selected skin is the active LucaOS visual environment across
+        Settings, boot, onboarding, dashboard, and mobile-safe surfaces.
       </p>
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {skins.map((metadata) => (

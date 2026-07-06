@@ -30,6 +30,12 @@ describe("settings skin integration", () => {
     expect(generalTabSource).not.toContain("<SkinPreviewSection");
   });
 
+  it("keeps Appearance material controls off the document root", () => {
+    expect(appearanceTabSource).toContain("luca:material-preview");
+    expect(appearanceTabSource).not.toContain("document.documentElement");
+    expect(appearanceTabSource).not.toContain("style.setProperty");
+  });
+
   it("presents skins as the active visual environment, not a dashboard-only preview", () => {
     expect(skinSectionSource).toContain("visual operating environment");
     expect(skinSectionSource).not.toContain("Preview only");
