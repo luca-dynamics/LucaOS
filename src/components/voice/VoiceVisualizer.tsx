@@ -22,6 +22,10 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
   lowPower = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const viewportWidth =
+    typeof window === "undefined" ? 1024 : window.innerWidth;
+  const viewportHeight =
+    typeof window === "undefined" ? 768 : window.innerHeight;
   const internalAmplitude = useRef(0);
   const amplitudeRef = useRef(amplitude);
   const isVadActiveRef = useRef(isVadActive);
@@ -213,8 +217,8 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
     <div className="relative w-full h-full flex items-center justify-center z-20 pointer-events-none">
       <canvas
         ref={canvasRef}
-        width={window.innerWidth}
-        height={window.innerHeight}
+        width={viewportWidth}
+        height={viewportHeight}
         className="absolute inset-0 w-full h-full"
       />
       {/* Background Grid */}

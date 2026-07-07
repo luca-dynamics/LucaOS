@@ -35,11 +35,15 @@ export function readInitialWebSettingsOpen(): boolean {
 interface WebRealHeaderProps {
   isSettingsOpen?: boolean;
   onOpenSettings?: () => void;
+  showVoiceHud?: boolean;
+  setShowVoiceHud?: (show: boolean) => void;
 }
 
 export function WebRealHeader({
   isSettingsOpen: controlledSettingsOpen,
   onOpenSettings,
+  showVoiceHud = false,
+  setShowVoiceHud,
 }: WebRealHeaderProps = {}) {
   const [isSettingsOpen, setIsSettingsOpenState] = useState(
     readInitialWebSettingsOpen,
@@ -84,7 +88,8 @@ export function WebRealHeader({
         isAdminMode={false}
         ambientVisionActive={ambientVisionActive}
         setAmbientVisionActive={setAmbientVisionActive}
-        showVoiceHud={false}
+        showVoiceHud={showVoiceHud}
+        setShowVoiceHud={setShowVoiceHud}
         setAmbientSuggestions={setAmbientSuggestions}
         setShowSuggestionChips={setShowSuggestionChips}
         hostPlatform="Web"

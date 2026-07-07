@@ -15,6 +15,7 @@ import {
 } from "./shell/WebRealHeader";
 import { WebRealOperationsSidebar } from "./shell/WebRealOperationsSidebar";
 import { WebRealSettingsSurface } from "./shell/WebRealSettingsSurface";
+import { WebRealVoiceSurface } from "./shell/WebRealVoiceSurface";
 
 interface WebLucaShellProps {
   hostClass: string;
@@ -49,6 +50,7 @@ export function WebLucaShell({
   const [isSettingsOpen, setIsSettingsOpen] = useState(
     readInitialWebSettingsOpen,
   );
+  const [showVoiceHud, setShowVoiceHud] = useState(false);
 
   return (
     <section className="absolute inset-0 z-10 p-3 sm:p-5">
@@ -62,6 +64,8 @@ export function WebLucaShell({
           <WebRealHeader
             isSettingsOpen={isSettingsOpen}
             onOpenSettings={() => setIsSettingsOpen(true)}
+            showVoiceHud={showVoiceHud}
+            setShowVoiceHud={setShowVoiceHud}
           />
         }
         leftPanel={<WebRealOperationsSidebar />}
@@ -76,7 +80,11 @@ export function WebLucaShell({
             <WebRealSettingsSurface onClose={() => setIsSettingsOpen(false)} />
           ) : null
         }
-        voiceSurface={null}
+        voiceSurface={
+          showVoiceHud ? (
+            <WebRealVoiceSurface onClose={() => setShowVoiceHud(false)} />
+          ) : null
+        }
         hologramSurface={null}
         visualCoreSurface={null}
       />

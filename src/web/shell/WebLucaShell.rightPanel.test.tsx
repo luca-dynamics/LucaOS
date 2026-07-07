@@ -112,4 +112,34 @@ describe("WebLucaShell right panel (real desktop components)", () => {
     expect(sidebar?.textContent ?? "").toContain("Skills");
     cleanup();
   });
+
+  it("opens and closes the real VoiceHud surface from the Header voice control", () => {
+    const { container, cleanup } = mount(<WebLucaShell {...props} />);
+    expect(
+      container.querySelector("[data-luca-web-real-voice-surface]"),
+    ).toBeNull();
+
+    const voiceButton = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Open voice"]',
+    );
+    expect(voiceButton).not.toBeNull();
+
+    act(() => voiceButton!.click());
+    const voiceSurface = container.querySelector(
+      "[data-luca-web-real-voice-surface]",
+    );
+    expect(voiceSurface).not.toBeNull();
+    expect(voiceSurface?.textContent ?? "").toContain("Enable microphone");
+    expect(voiceSurface?.textContent ?? "").toContain("Waiting for your voice");
+
+    const closeButton = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Close voice"]',
+    );
+    expect(closeButton).not.toBeNull();
+    act(() => closeButton!.click());
+    expect(
+      container.querySelector("[data-luca-web-real-voice-surface]"),
+    ).toBeNull();
+    cleanup();
+  });
 });

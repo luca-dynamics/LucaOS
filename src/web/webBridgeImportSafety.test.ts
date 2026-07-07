@@ -502,12 +502,22 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
       "src/web/voice/WebVoiceOnboardingSurface.tsx",
       "utf8",
     );
+    const realVoiceSurfaceSource = readFileSync(
+      "src/web/shell/WebRealVoiceSurface.tsx",
+      "utf8",
+    );
     const presentationSource = readFileSync(
       "src/components/voice/VoiceHudSurface.tsx",
       "utf8",
     );
     expect(voiceSurfaceSource).toContain("VoiceHudSurface");
+    expect(realVoiceSurfaceSource).toContain("VoiceHudSurface");
+    expect(webShellSource).toContain("<WebRealVoiceSurface");
+    expect(webShellSource).not.toContain("voiceSurface={null}");
     expect(voiceSurfaceSource).not.toMatch(
+      /from\s+["'][^"']*components\/VoiceHud["']/i,
+    );
+    expect(realVoiceSurfaceSource).not.toMatch(
       /from\s+["'][^"']*components\/VoiceHud["']/i,
     );
     for (const reference of [
@@ -520,6 +530,9 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
       "electron",
     ]) {
       expect(voiceSurfaceSource.toLowerCase()).not.toContain(
+        reference.toLowerCase(),
+      );
+      expect(realVoiceSurfaceSource.toLowerCase()).not.toContain(
         reference.toLowerCase(),
       );
     }
