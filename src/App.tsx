@@ -2987,6 +2987,7 @@ function AppContent() {
                     ambientVisionActive={ambientVisionActive}
                     setAmbientVisionActive={setAmbientVisionActive}
                     showVoiceHud={showVoiceHud}
+                    setShowVoiceHud={setShowVoiceHud}
                     setAmbientSuggestions={setAmbientSuggestions}
                     setShowSuggestionChips={setShowSuggestionChips}
                     hostPlatform={hostPlatform}

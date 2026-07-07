@@ -8,7 +8,12 @@ import RuntimeContinuityBootstrap from "../runtime/RuntimeContinuityBootstrap";
 import { awarenessService } from "../../services/awarenessService";
 import { soundService } from "../../services/soundService";
 import { useCredits } from "../../hooks/useCredits";
-import { lucaMaterialControlStyle, lucaMaterialMobileControlStyle, lucaMaterialMobilePanelChromeStyle, lucaMaterialPanelStyle } from "../../styles/lucaMaterialSystem";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialMobileControlStyle,
+  lucaMaterialMobilePanelChromeStyle,
+  lucaMaterialPanelStyle,
+} from "../../styles/lucaMaterialSystem";
 
 interface HeaderProps {
   theme: any;
@@ -23,6 +28,7 @@ interface HeaderProps {
   ambientVisionActive: boolean;
   setAmbientVisionActive: (active: boolean) => void;
   showVoiceHud: boolean;
+  setShowVoiceHud?: (show: boolean) => void;
   setAmbientSuggestions: (suggestions: any[]) => void;
   setShowSuggestionChips: (show: boolean) => void;
   hostPlatform: string;
@@ -58,9 +64,7 @@ function wordmark(tier: "BASIC" | "PRO" | "CREATOR"): {
   return { text: "LucaOS", stylized: false };
 }
 
-function connectionLabel(
-  tier: "LAN" | "LOCAL" | "CLOUD" | "OFFLINE",
-): string {
+function connectionLabel(tier: "LAN" | "LOCAL" | "CLOUD" | "OFFLINE"): string {
   switch (tier) {
     case "LAN":
       return "LAN";
@@ -82,6 +86,7 @@ const Header: React.FC<HeaderProps> = ({
   ambientVisionActive,
   setAmbientVisionActive,
   showVoiceHud,
+  setShowVoiceHud,
   setAmbientSuggestions,
   setShowSuggestionChips,
   hostPlatform,
@@ -127,7 +132,9 @@ const Header: React.FC<HeaderProps> = ({
     : isMobile
       ? lucaMaterialMobilePanelChromeStyle
       : lucaMaterialPanelStyle;
-  const surfaceStyle = isMobile ? lucaMaterialMobileControlStyle : lucaMaterialControlStyle;
+  const surfaceStyle = isMobile
+    ? lucaMaterialMobileControlStyle
+    : lucaMaterialControlStyle;
 
   return (
     <header
@@ -142,49 +149,56 @@ const Header: React.FC<HeaderProps> = ({
           controls right-aligned via justify-between. */}
       {hideBrand && <div aria-hidden="true" />}
       {!hideBrand && (
-      <div className="flex items-center gap-3 app-region-no-drag min-w-0">
-        <div
-          className={`relative ${
-            isMobile ? "w-8 h-8" : "w-9 h-9"
-          } group cursor-pointer flex items-center justify-center flex-none`}
-          onClick={() => soundService.play("HOVER")}
-        >
-          <img
-            src={
-              theme.themeName?.toLowerCase() === "lucagent"
-                ? "/icon_dark.png"
-                : "/icon.png"
-            }
-            alt="Luca"
-            className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-          />
-        </div>
-        <h1
-          className={`font-display ${
-            isMobile ? "text-base" : "text-lg"
-          } font-semibold ${
-            brand.stylized ? "tracking-[0.18em]" : "tracking-tight"
-          } leading-none whitespace-nowrap`}
-          style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
-        >
-          {brand.text}
-        </h1>
-
-        {isLockdown && (
-          <span
-            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
-            style={{
-              color: "var(--luca-warning)",
-              borderColor: "color-mix(in srgb, var(--luca-warning) 32%, transparent)",
-              backgroundColor: "color-mix(in srgb, var(--luca-warning) 10%, transparent)",
-            }}
-            title="Lockdown active"
+        <div className="flex items-center gap-3 app-region-no-drag min-w-0">
+          <div
+            className={`relative ${
+              isMobile ? "w-8 h-8" : "w-9 h-9"
+            } group cursor-pointer flex items-center justify-center flex-none`}
+            onClick={() => soundService.play("HOVER")}
           >
-            <Icon name="Lock" size={12} variant="Linear" color="currentColor" />
-            Locked
-          </span>
-        )}
-      </div>
+            <img
+              src={
+                theme.themeName?.toLowerCase() === "lucagent"
+                  ? "/icon_dark.png"
+                  : "/icon.png"
+              }
+              alt="Luca"
+              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+            />
+          </div>
+          <h1
+            className={`font-display ${
+              isMobile ? "text-base" : "text-lg"
+            } font-semibold ${
+              brand.stylized ? "tracking-[0.18em]" : "tracking-tight"
+            } leading-none whitespace-nowrap`}
+            style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
+          >
+            {brand.text}
+          </h1>
+
+          {isLockdown && (
+            <span
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
+              style={{
+                color: "var(--luca-warning)",
+                borderColor:
+                  "color-mix(in srgb, var(--luca-warning) 32%, transparent)",
+                backgroundColor:
+                  "color-mix(in srgb, var(--luca-warning) 10%, transparent)",
+              }}
+              title="Lockdown active"
+            >
+              <Icon
+                name="Lock"
+                size={12}
+                variant="Linear"
+                color="currentColor"
+              />
+              Locked
+            </span>
+          )}
+        </div>
       )}
 
       {/* System status + controls */}
@@ -192,7 +206,9 @@ const Header: React.FC<HeaderProps> = ({
         {isProcessing && (
           <span
             className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-medium"
-            style={{ color: "var(--luca-text-secondary, var(--app-text-muted))" }}
+            style={{
+              color: "var(--luca-text-secondary, var(--app-text-muted))",
+            }}
             title="Luca is working"
           >
             <span
@@ -208,12 +224,19 @@ const Header: React.FC<HeaderProps> = ({
             className={`${isMobile ? "hidden md:inline-flex" : "inline-flex"} items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border`}
             style={{
               color: "var(--luca-danger)",
-              borderColor: "color-mix(in srgb, var(--luca-danger) 32%, transparent)",
-              backgroundColor: "color-mix(in srgb, var(--luca-danger) 10%, transparent)",
+              borderColor:
+                "color-mix(in srgb, var(--luca-danger) 32%, transparent)",
+              backgroundColor:
+                "color-mix(in srgb, var(--luca-danger) 10%, transparent)",
             }}
             title="Admin mode active"
           >
-            <Icon name="Shield" size={12} variant="Linear" color="currentColor" />
+            <Icon
+              name="Shield"
+              size={12}
+              variant="Linear"
+              color="currentColor"
+            />
             Admin
           </span>
         )}
@@ -224,12 +247,7 @@ const Header: React.FC<HeaderProps> = ({
           style={surfaceStyle}
           title={`Credits${credits.isLocal ? " · running on local models" : credits.isBYOK ? " · using your own API key" : ""}`}
         >
-          <Icon
-            name="Wallet"
-            size={15}
-            variant="Linear"
-            color={creditColor}
-          />
+          <Icon name="Wallet" size={15} variant="Linear" color={creditColor} />
           <span
             className="text-[13px] font-semibold tabular-nums"
             style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
@@ -251,6 +269,33 @@ const Header: React.FC<HeaderProps> = ({
 
         {!isMobile && <RuntimeStatusChip compact />}
 
+        {/* Voice HUD toggle */}
+        {setShowVoiceHud && (
+          <button
+            type="button"
+            onClick={() => setShowVoiceHud(!showVoiceHud)}
+            aria-label={showVoiceHud ? "Close voice" : "Open voice"}
+            title={showVoiceHud ? "Close voice" : "Voice"}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all app-region-no-drag"
+            style={{
+              ...surfaceStyle,
+              color: showVoiceHud
+                ? "var(--luca-accent-primary)"
+                : "var(--luca-text-secondary, var(--app-text-muted))",
+            }}
+          >
+            <Icon
+              name="Microphone"
+              size={14}
+              variant="Linear"
+              color="currentColor"
+            />
+            <span className="text-[11px] font-medium">
+              {showVoiceHud ? "Voice on" : "Voice"}
+            </span>
+          </button>
+        )}
+
         {/* Ambient vision toggle */}
         <div className={isMobile ? "hidden sm:block" : "block"}>
           <AmbientVisionIndicator
@@ -264,7 +309,8 @@ const Header: React.FC<HeaderProps> = ({
                   mode: showVoiceHud ? "voice" : "text",
                   persona,
                   onScreenCapture: async (base64) => {
-                    const { liveService } = await import("../../services/liveService");
+                    const { liveService } =
+                      await import("../../services/liveService");
                     liveService.sendVideoFrame(base64);
                     liveService.sendText(
                       "[AMBIENT VISION] I just scanned the screen. Describe what you see briefly and suggest if there is anything you can help with. Keep it to 1-2 sentences.",
@@ -300,16 +346,31 @@ const Header: React.FC<HeaderProps> = ({
           style={{ color: connectionColor }}
           title={`Connection: ${connectionLabel(connectionTier)}${
             hostPlatform
-              ? ` · ${hostPlatform.replace(/\(.*\)/, "").trim().split(" ")[0]}`
+              ? ` · ${
+                  hostPlatform
+                    .replace(/\(.*\)/, "")
+                    .trim()
+                    .split(" ")[0]
+                }`
               : ""
           }`}
         >
           {connectionTier === "OFFLINE" ? (
             <Icon name="CloseCircle" size={14} color="currentColor" />
           ) : connectionTier === "CLOUD" ? (
-            <Icon name="Cloud" size={14} color="currentColor" variant="Linear" />
+            <Icon
+              name="Cloud"
+              size={14}
+              color="currentColor"
+              variant="Linear"
+            />
           ) : (
-            <Icon name="Server" size={14} color="currentColor" variant="Linear" />
+            <Icon
+              name="Server"
+              size={14}
+              color="currentColor"
+              variant="Linear"
+            />
           )}
           <span>{connectionLabel(connectionTier)}</span>
         </div>

@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(path, "utf8");
 const webLucaShell = read("src/web/WebLucaShell.tsx");
 const webChatSurface = read("src/web/chat/WebRealChatPanel.tsx");
 const webVoiceSurface = read("src/web/voice/WebVoiceOnboardingSurface.tsx");
+const webRealVoiceSurface = read("src/web/shell/WebRealVoiceSurface.tsx");
 const webReadyState = read("src/web/WebReadyState.tsx");
 const webLifecycleShell = read("src/web/WebLifecycleShell.tsx");
 const webOnboardingRuntime = read("src/web/adapters/webOnboardingRuntime.tsx");
@@ -17,6 +18,7 @@ const normalUiSources = [
   ["src/web/WebLucaShell.tsx", webLucaShell],
   ["src/web/chat/WebRealChatPanel.tsx", webChatSurface],
   ["src/web/voice/WebVoiceOnboardingSurface.tsx", webVoiceSurface],
+  ["src/web/shell/WebRealVoiceSurface.tsx", webRealVoiceSurface],
   ["src/web/WebReadyState.tsx", webReadyState],
 ] as const;
 
@@ -94,10 +96,12 @@ describe("WebBridge generated shell eradication audit", () => {
 
   it("keeps normal web voice UI free of tactical/debug console copy", () => {
     for (const copy of forbiddenNormalVoiceCopy) {
-      expect(
-        webVoiceSurface,
-        `web voice onboarding must not render ${copy}`,
-      ).not.toContain(copy);
+      for (const source of [webVoiceSurface, webRealVoiceSurface]) {
+        expect(
+          source,
+          `web voice surfaces must not render ${copy}`,
+        ).not.toContain(copy);
+      }
     }
 
     const showTechnicalPanelsIndex = voiceHudSurface.indexOf(
@@ -141,6 +145,10 @@ describe("WebBridge generated shell eradication audit", () => {
     expect(webChatSurface).toContain("<ChatPanel");
     expect(webVoiceSurface).toContain("VoiceHudSurface");
     expect(webVoiceSurface).toContain("<VoiceHudSurface");
+    expect(webLucaShell).toContain("<WebRealVoiceSurface");
+    expect(webLucaShell).not.toContain("voiceSurface={null}");
+    expect(webRealVoiceSurface).toContain("VoiceHudSurface");
+    expect(webRealVoiceSurface).toContain("<VoiceHudSurface");
   });
 
   it("keeps ready state debug-gated by lifecycle before it can render", () => {
