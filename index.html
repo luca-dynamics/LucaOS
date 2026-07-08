@@ -385,8 +385,13 @@
         const isElectronRoute =
           new URLSearchParams(window.location.search).get("platform") ===
           "electron";
+        // The preload bridge (window.luca / window.electron) is available before
+        // this script runs, so detect Electron directly instead of relying only
+        // on the ?platform=electron URL param — which Vite/HMR can drop, leaving
+        // the loader without its window controls even though it IS Electron.
+        const isElectronShell = !!(window.luca || window.electron);
         const isWindowsHost = navigator.userAgent.includes("Windows");
-        if (isElectronRoute && isWindowsHost) {
+        if ((isElectronRoute || isElectronShell) && isWindowsHost) {
           document.documentElement.classList.add("luca-electron-win");
         }
         document.querySelectorAll("[data-root-window-action]").forEach((button) => {

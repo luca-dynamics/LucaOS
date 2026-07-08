@@ -669,7 +669,13 @@ function createWindow() {
         logSystemResource('Window Unresponsive');
     });
 
+    // Catch soft blanks (renderer alive but nothing painted) — see armBlankWatchdog.
+    armBlankWatchdog();
+
     mainWindow.on('closed', function () {
+        if (blankWatch) { clearInterval(blankWatch); blankWatch = null; }
+        rendererWasAlive = false;
+        blankStrikes = 0;
         mainWindow = null;
     });
 
@@ -693,6 +699,45 @@ function logSystemResource(context = 'Regular Check') {
     } catch (e) {
         console.error('[MONITOR] Failed to log memory:', e);
     }
+}
+
+// --- Soft-blank watchdog ---------------------------------------------------
+// A renderer can go visually blank WITHOUT its process dying: an async error
+// wipes the React tree, or the liquid-glass GPU/canvas context is lost after
+// long idle. 'render-process-gone' never fires for that (the process is still
+// alive and heartbeating), so the window would sit blank forever. Once the app
+// has painted at least once, poll the real DOM; if #root stays empty across two
+// consecutive checks, reload to self-heal. Only acts AFTER content was seen, so
+// it never fights a slow boot or a legit navigation.
+let blankStrikes = 0;
+let rendererWasAlive = false;
+let blankWatch = null;
+function armBlankWatchdog() {
+    if (blankWatch) return;
+    blankWatch = setInterval(async () => {
+        if (!mainWindow || mainWindow.isDestroyed()) return;
+        const wc = mainWindow.webContents;
+        if (wc.isCrashed() || wc.isLoading()) return; // crash handled elsewhere; don't fight loads
+        let hasContent;
+        try {
+            hasContent = await wc.executeJavaScript(
+                'try{var r=document.getElementById("root");!!r&&r.childElementCount>0}catch(e){true}',
+                true,
+            );
+        } catch (e) {
+            return; // executeJavaScript can reject transiently during teardown
+        }
+        if (hasContent) { rendererWasAlive = true; blankStrikes = 0; return; }
+        if (!rendererWasAlive) return; // still booting — not a regression
+        blankStrikes += 1;
+        console.warn(`[MAIN] ⚠️ Renderer alive but #root is empty (strike ${blankStrikes}/2)`);
+        logSystemResource('Soft Blank Detected');
+        if (blankStrikes >= 2) {
+            blankStrikes = 0;
+            console.error('[MAIN] 🔁 Soft blank confirmed — reloading window to recover.');
+            try { wc.reload(); } catch (e) { /* ignore */ }
+        }
+    }, 20000); // every 20s → a real blank recovers within ~40s
 }
 
 // Start periodic monitoring
