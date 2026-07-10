@@ -625,11 +625,27 @@ describe("LucaLinkService guest inbound hardening", () => {
     const addIceCandidate = vi.fn();
     vi.stubGlobal(
       "RTCSessionDescription",
-      vi.fn((answer) => answer),
+      class RTCSessionDescriptionMock {
+        type: string;
+        sdp: string;
+
+        constructor(answer: { type: string; sdp: string }) {
+          this.type = answer.type;
+          this.sdp = answer.sdp;
+        }
+      },
     );
     vi.stubGlobal(
       "RTCIceCandidate",
-      vi.fn((candidate) => candidate),
+      class RTCIceCandidateMock {
+        candidate: string;
+        sdpMid: string;
+
+        constructor(candidate: { candidate: string; sdpMid: string }) {
+          this.candidate = candidate.candidate;
+          this.sdpMid = candidate.sdpMid;
+        }
+      },
     );
     (lucaLink as any).guestSessions.set("guest-1", {
       sessionId: "guest-1",

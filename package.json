@@ -161,6 +161,7 @@
     "electron-builder": "^26.8.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.37.5",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "^27.4.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",

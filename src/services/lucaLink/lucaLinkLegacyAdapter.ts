@@ -269,11 +269,18 @@ export function legacyMessageToEnvelope(
   if (type === "mission") return legacyMissionToEnvelope(message, options);
   if (type === "sensor_pulse" || type === "sensor-pulse") return legacySensorPulseToEnvelope(message, options);
   if (isToolLike(message)) {
+    const nestedPayload = isRecord(message.payload) ? message.payload : undefined;
     const payload: LucaLinkToolPayload = {
       kind: "tool-request",
-      toolId: stringField(message, ["toolId", "toolName"]),
-      permission: stringField(message, ["permission"]) as LucaLinkPermissionCategory | undefined,
-      args: isRecord(message.args) ? message.args : { legacyPayload: message },
+      toolId: stringField(message, ["toolId", "toolName"]) ??
+        (nestedPayload ? stringField(nestedPayload, ["toolId", "toolName"]) : undefined),
+      permission: (stringField(message, ["permission"]) ??
+        (nestedPayload ? stringField(nestedPayload, ["permission"]) : undefined)) as
+        | LucaLinkPermissionCategory
+        | undefined,
+      args: isRecord(message.args)
+        ? message.args
+        : nestedPayload ?? { legacyPayload: message },
     };
     return validationResult(
       { envelope: createAdaptedEnvelope("tool", "tool-request", payload, message, options), warnings, errors },
