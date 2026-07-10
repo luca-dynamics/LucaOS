@@ -9,6 +9,10 @@ import { lucaLinkManager } from "../../lucaLink/manager";
 
 export class LucaLinkSync {
   private readonly checkpoints = new Map<string, Checkpoint>();
+  private readonly pendingRequests = new Map<
+    string,
+    { workflowId: string; resolve: (checkpoint: Checkpoint | null) => void; timeout: ReturnType<typeof setTimeout> }
+  >();
   private readonly unsubscribe: () => void;
 
   constructor() {
@@ -16,7 +20,29 @@ export class LucaLinkSync {
       (message: LucaLinkMessage) => {
         if (message.type === "CHECKPOINT_SYNC") {
           const checkpoint = this.readCheckpoint(message.payload);
-          if (checkpoint) this.checkpoints.set(checkpoint.workflowId, checkpoint);
+          if (checkpoint) {
+            this.checkpoints.set(checkpoint.workflowId, checkpoint);
+            const requestId = this.readRequestId(message.payload);
+            const pending = requestId ? this.pendingRequests.get(requestId) : undefined;
+            if (pending && pending.workflowId === checkpoint.workflowId) {
+              clearTimeout(pending.timeout);
+              this.pendingRequests.delete(requestId!);
+              pending.resolve(checkpoint);
+            }
+          }
+        }
+
+        if (message.type === "CHECKPOINT_REQUEST") {
+          const workflowId = this.readWorkflowId(message.payload);
+          const checkpoint = workflowId
+            ? this.checkpoints.get(workflowId)
+            : undefined;
+          if (checkpoint) {
+            lucaLinkManager.sendRelayMessage(message.source ?? "all", "CHECKPOINT_SYNC", {
+              checkpoint,
+              requestId: this.readRequestId(message.payload),
+            });
+          }
         }
 
         if (message.type === "CHECKPOINT_DELETE") {
@@ -43,7 +69,28 @@ export class LucaLinkSync {
   }
 
   async fetchCheckpoint(workflowId: string): Promise<Checkpoint | null> {
-    return this.checkpoints.get(workflowId) ?? null;
+    const local = this.checkpoints.get(workflowId);
+    if (local || !this.isConnected()) return local ?? null;
+
+    const requestId = `checkpoint-request-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}`;
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        this.pendingRequests.delete(requestId);
+        resolve(null);
+      }, 1500);
+      this.pendingRequests.set(requestId, { workflowId, resolve, timeout });
+      const sent = lucaLinkManager.sendRelayMessage("all", "CHECKPOINT_REQUEST", {
+        workflowId,
+        requestId,
+      });
+      if (!sent) {
+        clearTimeout(timeout);
+        this.pendingRequests.delete(requestId);
+        resolve(null);
+      }
+    });
   }
 
   async deleteCheckpoint(checkpointId: string): Promise<boolean> {
@@ -58,6 +105,11 @@ export class LucaLinkSync {
   dispose(): void {
     this.unsubscribe();
     this.checkpoints.clear();
+    for (const pending of this.pendingRequests.values()) {
+      clearTimeout(pending.timeout);
+      pending.resolve(null);
+    }
+    this.pendingRequests.clear();
   }
 
   private readCheckpoint(payload: unknown): Checkpoint | null {
@@ -82,6 +134,18 @@ export class LucaLinkSync {
     if (!payload || typeof payload !== "object") return null;
     const checkpointId = (payload as { checkpointId?: unknown }).checkpointId;
     return typeof checkpointId === "string" ? checkpointId : null;
+  }
+
+  private readWorkflowId(payload: unknown): string | null {
+    if (!payload || typeof payload !== "object") return null;
+    const workflowId = (payload as { workflowId?: unknown }).workflowId;
+    return typeof workflowId === "string" ? workflowId : null;
+  }
+
+  private readRequestId(payload: unknown): string | null {
+    if (!payload || typeof payload !== "object") return null;
+    const requestId = (payload as { requestId?: unknown }).requestId;
+    return typeof requestId === "string" ? requestId : null;
   }
 }
 

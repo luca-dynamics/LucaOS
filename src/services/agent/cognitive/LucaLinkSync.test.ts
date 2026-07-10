@@ -65,4 +65,44 @@ describe("LucaLinkSync", () => {
     );
     await expect(sync.fetchCheckpoint("workflow-1")).resolves.toBeNull();
   });
+
+  it("requests a missing checkpoint and resolves when a linked host replies", async () => {
+    mocks.sendRelayMessage.mockImplementationOnce((_target, type, payload) => {
+      if (type === "CHECKPOINT_REQUEST") {
+        mocks.relayListener?.({
+          type: "CHECKPOINT_SYNC",
+          payload: { checkpoint, requestId: (payload as { requestId: string }).requestId },
+        });
+      }
+      return true;
+    });
+
+    const sync = new LucaLinkSync();
+    await expect(sync.fetchCheckpoint("workflow-1")).resolves.toEqual(
+      checkpoint,
+    );
+    expect(mocks.sendRelayMessage).toHaveBeenCalledWith(
+      "all",
+      "CHECKPOINT_REQUEST",
+      expect.objectContaining({ workflowId: "workflow-1" }),
+    );
+  });
+
+  it("answers a checkpoint request from its local continuity cache", async () => {
+    const sync = new LucaLinkSync();
+    await sync.syncCheckpoint(checkpoint);
+    mocks.sendRelayMessage.mockClear();
+
+    mocks.relayListener?.({
+      type: "CHECKPOINT_REQUEST",
+      source: "companion-1",
+      payload: { workflowId: "workflow-1", requestId: "request-1" },
+    });
+
+    expect(mocks.sendRelayMessage).toHaveBeenCalledWith(
+      "companion-1",
+      "CHECKPOINT_SYNC",
+      { checkpoint, requestId: "request-1" },
+    );
+  });
 });
