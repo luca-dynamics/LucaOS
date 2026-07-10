@@ -281,6 +281,12 @@ function decisionForInvalidToken(
   token: LucaLinkContinuationToken | undefined,
 ): LucaLinkContinuationBridgeDecision {
   if (!token) return "invalid-token";
+  if (requiresFreshConfirmationForContinuationBridge(token)) {
+    return "requires-fresh-confirmation";
+  }
+  if (requiresManualRetryForContinuationBridge(token)) {
+    return "requires-manual-retry";
+  }
   if (
     token.status === "blocked" ||
     token.status === "expired" ||
@@ -290,10 +296,6 @@ function decisionForInvalidToken(
   ) {
     return "blocked-risk";
   }
-  if (requiresFreshConfirmationForContinuationBridge(token)) {
-    return "requires-fresh-confirmation";
-  }
-  if (requiresManualRetryForContinuationBridge(token)) return "requires-manual-retry";
   return "invalid-token";
 }
 

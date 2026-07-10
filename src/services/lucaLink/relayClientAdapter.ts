@@ -13,6 +13,7 @@ import { sessionManager } from "./sessionManager";
 import { CryptoService } from "./crypto";
 import type { EncryptedMessage } from "./types";
 import { legacyDevicesToManifests } from "./lucaLinkLegacyAdapter";
+import { createDefaultHostManifest } from "./capabilityRegistry";
 import {
   evaluateSoftEnforcementForLegacyEvent,
   type LucaLinkSoftEnforcementMode,
@@ -286,6 +287,7 @@ class LucaLinkService {
   private runtimeEnforcementMode: LucaLinkRuntimeEnforcementMode = "disabled";
   private runtimeEnforcementAudit: LucaLinkRuntimeEnforcementAuditRecord[] = [];
   private readonly runtimeEnforcementAuditLimit = 100;
+  private localHostRole: "primary" | "guest" = "primary";
 
   // Persistent storage keys
   private readonly DEVICE_ID_KEY = "luca_link_device_id";
@@ -552,6 +554,7 @@ class LucaLinkService {
     token: string,
     localUrl?: string,
   ): Promise<void> {
+    this.localHostRole = deviceType === "desktop" ? "primary" : "guest";
     return new Promise((resolve, reject) => {
       // Async IIFE to handle the hybrid check logic within the promise
       (async () => {
@@ -1061,6 +1064,13 @@ class LucaLinkService {
   ): LucaLinkRuntimeEnforcementResult {
     const result = evaluateLucaLinkRuntimeEnforcement(input, {
       mode,
+      sourceManifest: createDefaultHostManifest({
+        deviceId: input.sourceDeviceId || this.state.deviceId || "local-runtime",
+        deviceName: input.sourceDeviceId || "Local LucaOS Runtime",
+        hostRole: this.localHostRole,
+        isPrimaryHost: this.localHostRole === "primary",
+        now: input.now,
+      }),
       candidates: this.getRuntimeShadowCandidateManifests(),
       queueApproval: (_gateResult, context) => {
         const softEnforcement = context.softEnforcement;
@@ -1708,6 +1718,14 @@ class LucaLinkService {
   }): LucaLinkSoftEnforcementResult {
     return evaluateSoftEnforcementForLegacyEvent(input, {
       ...this.softEnforcementOptions,
+      sourceManifest:
+        this.softEnforcementOptions.sourceManifest ??
+        createDefaultHostManifest({
+          deviceId: this.state.deviceId ?? "local-runtime",
+          deviceName: "Local LucaOS Runtime",
+          hostRole: this.localHostRole,
+          isPrimaryHost: this.localHostRole === "primary",
+        }),
       candidates: [
         ...(this.softEnforcementOptions.candidates ?? []),
         ...this.getRuntimeShadowCandidateManifests(),
