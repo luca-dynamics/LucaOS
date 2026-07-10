@@ -7,7 +7,13 @@ import { GrokAdapter } from "./GrokAdapter";
 import { DeepSeekAdapter } from "./DeepSeekAdapter";
 import { LucaSettings, settingsService } from "../settingsService";
 import { LOCAL_BRAIN_MODEL_IDS } from "../ModelManagerService";
-import { BRAIN_CONFIG } from "../../config/brain.config";
+import {
+  ANTHROPIC_MODEL_PRESETS,
+  BRAIN_CONFIG,
+  DEEPSEEK_MODEL_PRESETS,
+  OPENAI_MODEL_PRESETS,
+  XAI_MODEL_PRESETS,
+} from "../../config/brain.config";
 import { ollamaUrl } from "../../config/api";
 import {
   createProviderFactoryShadowSelection,
@@ -896,13 +902,13 @@ export class ProviderFactory {
     const bestCloud = settingsService.getBestAvailableCloudProvider();
     const fallbackSettings = { ...settings };
     if (bestCloud === "anthropic") {
-      fallbackSettings.model = "claude-3-5-sonnet-latest";
+      fallbackSettings.model = ANTHROPIC_MODEL_PRESETS.balanced;
     } else if (bestCloud === "openai") {
-      fallbackSettings.model = "gpt-4o";
+      fallbackSettings.model = OPENAI_MODEL_PRESETS.balanced;
     } else if (bestCloud === "xai") {
-      fallbackSettings.model = "grok-2-1212";
+      fallbackSettings.model = XAI_MODEL_PRESETS.balanced;
     } else if (bestCloud === "deepseek") {
-      fallbackSettings.model = "deepseek-chat";
+      fallbackSettings.model = DEEPSEEK_MODEL_PRESETS.balanced;
     } else {
       // Absolute last resort: Gemini with hardcoded default
       fallbackSettings.model = BRAIN_CONFIG.defaults.brain;

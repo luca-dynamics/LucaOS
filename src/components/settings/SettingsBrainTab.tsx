@@ -6,6 +6,23 @@ import { modelManager, LocalModel } from "../../services/ModelManagerService";
 import { SettingsAdvancedDisclosure } from "./SettingsLayout";
 import { lucaCapabilities } from "../../config/lucaReleaseTarget";
 import { WebUnavailableState } from "../ui/WebUnavailableState";
+import {
+  ANTHROPIC_CLAUDE_MODEL_IDS,
+  ANTHROPIC_CLAUDE_MODELS,
+  ANTHROPIC_MODEL_PRESETS,
+  DEEPSEEK_MODEL_IDS,
+  DEEPSEEK_MODELS,
+  DEEPSEEK_MODEL_PRESETS,
+  GEMINI_MODEL_IDS,
+  GEMINI_MODELS,
+  GEMINI_MODEL_PRESETS,
+  OPENAI_GPT_5_6_MODEL_IDS,
+  OPENAI_GPT_5_6_MODELS,
+  OPENAI_MODEL_PRESETS,
+  XAI_GROK_MODEL_IDS,
+  XAI_GROK_MODELS,
+  XAI_MODEL_PRESETS,
+} from "../../config/brain.config";
 
 interface SettingsBrainTabProps {
   settings: LucaSettings;
@@ -83,24 +100,24 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
     // 2. Map strategies to specific model IDs per provider
     const modelMap = {
       gemini: {
-        performance: "gemini-3.1-pro-preview",
-        balanced: "gemini-3-flash-preview",
+        performance: GEMINI_MODEL_PRESETS.performance,
+        balanced: GEMINI_MODEL_PRESETS.balanced,
       },
       anthropic: {
-        performance: "claude-4.5-sonnet-thinking",
-        balanced: "claude-4.5-sonnet",
+        performance: ANTHROPIC_MODEL_PRESETS.performance,
+        balanced: ANTHROPIC_MODEL_PRESETS.balanced,
       },
       openai: {
-        performance: "o1-preview",
-        balanced: "gpt-4o",
+        performance: OPENAI_MODEL_PRESETS.performance,
+        balanced: OPENAI_MODEL_PRESETS.balanced,
       },
       deepseek: {
-        performance: "deepseek-reasoner",
-        balanced: "deepseek-chat",
+        performance: DEEPSEEK_MODEL_PRESETS.performance,
+        balanced: DEEPSEEK_MODEL_PRESETS.balanced,
       },
       xai: {
-        performance: "grok-2-1212",
-        balanced: "grok-2-1212",
+        performance: XAI_MODEL_PRESETS.performance,
+        balanced: XAI_MODEL_PRESETS.balanced,
       },
     };
 
@@ -907,16 +924,16 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             <select
               value={(() => {
                 const knownModels = [
-                  "gemini-3.1-pro-preview",
-                  "gemini-3.1-flash-lite-preview",
-                  "gemini-3-flash-preview",
+                  ...GEMINI_MODEL_IDS,
                   "gemini-2.5-pro",
                   "gemini-2.5-flash",
                   "gemini-2.0-flash",
-                  "claude-4.5-sonnet",
-                  "claude-4.5-sonnet-thinking",
-                  "gpt-4o",
+                ...ANTHROPIC_CLAUDE_MODEL_IDS,
+                ...OPENAI_GPT_5_6_MODEL_IDS,
+                "gpt-4o",
+                  ...XAI_GROK_MODEL_IDS,
                   "grok-2-1212",
+                  ...DEEPSEEK_MODEL_IDS,
                   "deepseek-chat",
                   "deepseek-reasoner",
                 ];
@@ -934,23 +951,43 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 color: "var(--luca-text-primary, var(--app-text-main))",
               }}
             >
-              <optgroup label="Elite Intelligence (Latest / BYOK)">
-                <option value="gemini-3.1-pro-preview">
-                  Gemini 3.1 Pro (Elite)
-                </option>
-                <option value="gemini-3.1-flash-lite-preview">
-                  Gemini 3.1 Flash Lite
-                </option>
-                <option value="claude-4.5-sonnet">
-                  Claude 4.5 Sonnet (Elite)
-                </option>
-                <option value="claude-4.5-sonnet-thinking">
-                  Claude 4.5 (Thinking)
-                </option>
-                <option value="deepseek-reasoner">
-                  DeepSeek Reasoner (R1)
-                </option>
-                <option value="grok-2-1212">Grok 2 Ultra</option>
+              <optgroup label="Google Gemini (BYOK / Managed)">
+                {GEMINI_MODELS.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="DeepSeek (BYOK)">
+                {DEEPSEEK_MODELS.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
+                <option value="deepseek-chat">DeepSeek Chat (Compatibility)</option>
+                <option value="deepseek-reasoner">DeepSeek Reasoner (Compatibility)</option>
+              </optgroup>
+              <optgroup label="xAI Grok (BYOK)">
+                {XAI_GROK_MODELS.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
+                <option value="grok-2-1212">Grok 2 (Legacy)</option>
+              </optgroup>
+              <optgroup label="Anthropic Claude (BYOK)">
+                {ANTHROPIC_CLAUDE_MODELS.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="OpenAI GPT-5.6 (BYOK)">
+                {OPENAI_GPT_5_6_MODELS.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
               </optgroup>
               <optgroup label="Luca Prime (Managed)">
                 <option value="gemini-3-flash-preview">
@@ -980,16 +1017,16 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             {/* Custom Model Input Logic */}
             {(() => {
               const knownModels = [
-                "gemini-3.1-pro-preview",
-                "gemini-3.1-flash-lite-preview",
-                "gemini-3-flash-preview",
+                ...GEMINI_MODEL_IDS,
                 "gemini-2.5-pro",
                 "gemini-2.5-flash",
                 "gemini-2.0-flash",
-                "claude-4.5-sonnet",
-                "claude-4.5-sonnet-thinking",
-                "gpt-4o",
+                  ...ANTHROPIC_CLAUDE_MODEL_IDS,
+                  ...OPENAI_GPT_5_6_MODEL_IDS,
+                  "gpt-4o",
+                ...XAI_GROK_MODEL_IDS,
                 "grok-2-1212",
+                ...DEEPSEEK_MODEL_IDS,
                 "deepseek-chat",
                 "deepseek-reasoner",
                 "custom",
