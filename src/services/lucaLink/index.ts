@@ -4,8 +4,8 @@
  *
  * One import surface for the pure LucaLink modules so consumers stop
  * reaching into the deprecated 2,730-line lucaLinkService for registry and
- * policy logic. Namespace exports by design: the pure modules share names
- * (create*/list*/summarize*) and `export *` would collide.
+ * policy logic. Namespace exports by design: the pure modules share common
+ * create, list, and summarize names, and `export *` would collide.
  *
  * Transport lives in ./manager (live client) — re-exported last. Nothing
  * here executes; every namespace is pure model/policy code.
