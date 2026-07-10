@@ -21,13 +21,15 @@ export class LucaLinkSync {
         if (message.type === "CHECKPOINT_SYNC") {
           const checkpoint = this.readCheckpoint(message.payload);
           if (checkpoint) {
-            this.checkpoints.set(checkpoint.workflowId, checkpoint);
+            if (this.shouldAcceptCheckpoint(checkpoint)) {
+              this.checkpoints.set(checkpoint.workflowId, checkpoint);
+            }
             const requestId = this.readRequestId(message.payload);
             const pending = requestId ? this.pendingRequests.get(requestId) : undefined;
             if (pending && pending.workflowId === checkpoint.workflowId) {
               clearTimeout(pending.timeout);
               this.pendingRequests.delete(requestId!);
-              pending.resolve(checkpoint);
+              pending.resolve(this.checkpoints.get(checkpoint.workflowId) ?? checkpoint);
             }
           }
         }
@@ -62,7 +64,9 @@ export class LucaLinkSync {
   }
 
   async syncCheckpoint(checkpoint: Checkpoint): Promise<boolean> {
-    this.checkpoints.set(checkpoint.workflowId, checkpoint);
+    const accepted = this.shouldAcceptCheckpoint(checkpoint);
+    if (accepted) this.checkpoints.set(checkpoint.workflowId, checkpoint);
+    if (!accepted) return false;
     return lucaLinkManager.sendRelayMessage("all", "CHECKPOINT_SYNC", {
       checkpoint,
     });
@@ -146,6 +150,15 @@ export class LucaLinkSync {
     if (!payload || typeof payload !== "object") return null;
     const requestId = (payload as { requestId?: unknown }).requestId;
     return typeof requestId === "string" ? requestId : null;
+  }
+
+  private shouldAcceptCheckpoint(checkpoint: Checkpoint): boolean {
+    const current = this.checkpoints.get(checkpoint.workflowId);
+    if (!current) return true;
+    if (checkpoint.timestamp !== current.timestamp) {
+      return checkpoint.timestamp > current.timestamp;
+    }
+    return checkpoint.id > current.id;
   }
 }
 

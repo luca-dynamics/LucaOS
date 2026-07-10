@@ -105,4 +105,32 @@ describe("LucaLinkSync", () => {
       { checkpoint, requestId: "request-1" },
     );
   });
+
+  it("keeps the newest checkpoint when updates arrive out of order", async () => {
+    const sync = new LucaLinkSync();
+    const newer = { ...checkpoint, id: "checkpoint-newer", timestamp: 200 };
+    const older = { ...checkpoint, id: "checkpoint-older", timestamp: 100 };
+
+    await sync.syncCheckpoint(newer);
+    mocks.relayListener?.({
+      type: "CHECKPOINT_SYNC",
+      payload: { checkpoint: older },
+    });
+
+    await expect(sync.fetchCheckpoint("workflow-1")).resolves.toEqual(newer);
+  });
+
+  it("uses checkpoint ID as a deterministic tie-breaker", async () => {
+    const sync = new LucaLinkSync();
+    const first = { ...checkpoint, id: "checkpoint-a", timestamp: 200 };
+    const second = { ...checkpoint, id: "checkpoint-b", timestamp: 200 };
+
+    await sync.syncCheckpoint(first);
+    mocks.relayListener?.({
+      type: "CHECKPOINT_SYNC",
+      payload: { checkpoint: second },
+    });
+
+    await expect(sync.fetchCheckpoint("workflow-1")).resolves.toEqual(second);
+  });
 });
