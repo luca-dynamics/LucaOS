@@ -147,11 +147,8 @@ export const scanAndConnect = async (): Promise<boolean> => {
 
   console.log("[QRScanner] Scanned content:", content);
 
-  // Parse the pairing URL
-  // Use static parser from service if available, otherwise local fallback
-  const parsed = (lucaLinkManager.relay.constructor as any).parsePairingUrl
-    ? (lucaLinkManager.relay.constructor as any).parsePairingUrl(content)
-    : parsePairingUrl(content);
+  // Parse the pairing URL using the local, side-effect-free parser.
+  const parsed = parsePairingUrl(content);
 
   if (!parsed || !parsed.token) {
     alert("Invalid QR code. Please scan the QR code from Luca Desktop.");
@@ -160,7 +157,7 @@ export const scanAndConnect = async (): Promise<boolean> => {
 
   // Connect to the room
   try {
-    await lucaLinkManager.relay.joinWithToken(parsed.token, parsed.local);
+    await lucaLinkManager.joinRelayWithToken(parsed.token, parsed.local);
     return true;
   } catch (e) {
     console.error("[QRScanner] Failed to connect after scan:", e);

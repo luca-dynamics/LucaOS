@@ -108,7 +108,7 @@ class MeshObservationService extends EventEmitter {
     const devices = deviceRegistry.getAllDevices().filter(d => d.status === "online");
     
     for (const device of devices) {
-      await lucaLinkManager.relay.beamPacket(device.id, {
+      await lucaLinkManager.beamRelayPacket(device.id, {
         type: "SENSOR_ALERT_LEVEL",
         payload: { level }
       });

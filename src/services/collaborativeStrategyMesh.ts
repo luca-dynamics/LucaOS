@@ -184,7 +184,7 @@ class CollaborativeStrategyMesh {
     const votePromises = assignments.map(async (lobe) => {
       try {
         // Beam the proposal to each lobe and await their vote
-        const result = await lucaLinkManager.relay.beamPacket(lobe.deviceId, {
+        const result = await lucaLinkManager.beamRelayPacket(lobe.deviceId, {
           type: "STRATEGY_VOTE_REQUEST",
           payload: {
             proposalId: proposal.id,

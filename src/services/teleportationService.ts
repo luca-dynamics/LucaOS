@@ -71,7 +71,7 @@ class TeleportationService {
       const packet = await this.captureConsciousness();
       console.log(`[TELEPORT] 🚀 Beaming Consciousness to Node: ${targetDeviceId}...`);
 
-      const result = await lucaLinkManager.relay.beamPacket(targetDeviceId, {
+      const result = await lucaLinkManager.beamRelayPacket(targetDeviceId, {
         type: "NEURAL_TRANSUBSTANTIATION",
         payload: packet,
       });
