@@ -217,7 +217,7 @@ class NeuralSelfRepairService {
 
     for (const device of onlineDevices) {
       try {
-        const result = await lucaLinkManager.relay.beamPacket(device.id, {
+        const result = await lucaLinkManager.beamRelayPacket(device.id, {
           type: "INTEGRITY_CHECK",
           payload: { expectedVersion: "2.0.50-ORIGIN" },
         });

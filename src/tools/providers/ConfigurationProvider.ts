@@ -360,14 +360,14 @@ export const ConfigurationProvider = {
               await fetch(cortexUrl("/api/remote-access/clear-pin"), { method: "POST" });
               return "✓ Remote Access PIN removed. Guest access is now open.";
             case "link-guest-generate": {
-              const result = await lucaLinkManager.relay.generateGuestSession();
+              const result = await lucaLinkManager.generateRelayGuestSession();
               return result ? `✓ Guest link generated: ${result.guestUrl}` : "ERROR: Failed to generate guest link. Ensure Luca Link is connected to relay.";
             }
             case "link-room-create":
-              await lucaLinkManager.relay.createRoom();
+              await lucaLinkManager.createRelayRoom();
               return "✓ Luca Link room created. Standing by for mobile client connection...";
             case "link-join-token":
-              await lucaLinkManager.relay.joinWithToken(payload.token);
+              await lucaLinkManager.joinRelayWithToken(payload.token);
               return `✓ Joining Luca Link room with token ${payload.token}...`;
 
             // --- MCP & SKILLS ---

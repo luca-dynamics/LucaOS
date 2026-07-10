@@ -29,7 +29,7 @@ class KernelOrchestrationService {
     const packet = await teleportationService.captureConsciousness();
     const partitionedPacket = this.partitionForSubstrate(packet, tier);
 
-    await lucaLinkManager.relay.beamPacket(kernel.id, {
+    await lucaLinkManager.beamRelayPacket(kernel.id, {
       type: "NEURAL_INHABITATION",
       payload: {
         tier,

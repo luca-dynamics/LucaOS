@@ -183,7 +183,7 @@ export const useSatelliteState = (
       }
     };
 
-    const unsubscribe = lucaLinkManager.relay.onMessage(handleLinkMessage);
+    const unsubscribe = lucaLinkManager.onRelayMessage(handleLinkMessage);
     return () => unsubscribe();
   }, []);
 

@@ -499,11 +499,9 @@ export const useAppIPC = ({
         window.electron.ipcRenderer.send("widget-voice-data", {
           amplitude: data.amplitude,
         });
-        if (lucaLinkManager.relay.getState().connected) {
-          lucaLinkManager.relay.send("all", "UI_STATE_SYNC", {
-            amplitude: data.amplitude,
-          });
-        }
+        lucaLinkManager.sendRelayMessage("all", "UI_STATE_SYNC", {
+          amplitude: data.amplitude,
+        });
         setVoiceAmplitude(data.amplitude);
         if (isCapacitor) {
           watchGateway.updateWatchState({

@@ -197,14 +197,14 @@ class UbiquitousPresenceService {
 
       // Notify previous device to release display
       if (previousDisplay) {
-        await lucaLinkManager.relay.beamPacket(previousDisplay, {
+        await lucaLinkManager.beamRelayPacket(previousDisplay, {
           type: "PRESENCE_RELEASE",
           payload: { component: "display" },
         });
       }
 
       // Notify new device to activate display
-      await lucaLinkManager.relay.beamPacket(displayDevice.deviceId, {
+      await lucaLinkManager.beamRelayPacket(displayDevice.deviceId, {
         type: "PRESENCE_ACTIVATE",
         payload: {
           component: "display",
@@ -260,13 +260,13 @@ class UbiquitousPresenceService {
 
     const previous = this.presenceState.activeDisplayDevice;
     if (previous) {
-      await lucaLinkManager.relay.beamPacket(previous, {
+      await lucaLinkManager.beamRelayPacket(previous, {
         type: "PRESENCE_RELEASE",
         payload: { component: "display" },
       });
     }
 
-    await lucaLinkManager.relay.beamPacket(deviceId, {
+    await lucaLinkManager.beamRelayPacket(deviceId, {
       type: "PRESENCE_ACTIVATE",
       payload: {
         component: "display",

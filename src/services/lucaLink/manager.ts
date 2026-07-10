@@ -147,6 +147,9 @@ export type LucaLinkRelayFacade = Pick<
 export type LucaLinkRelayGuestHandler = Parameters<
   LucaLinkRelayFacade["initGuestHandler"]
 >;
+export type LucaLinkRelayMessageListener = Parameters<
+  LucaLinkRelayFacade["onMessage"]
+>[0];
 import { CryptoService } from "./crypto";
 import { deviceRegistry, DeviceRegistryService } from "./deviceRegistry";
 import { sessionManager, SessionManager } from "./sessionManager";
@@ -478,6 +481,38 @@ export class LucaLinkManager {
 
   getRelayState(): ReturnType<LucaLinkRelayFacade["getState"]> {
     return legacyRelayClient.getState();
+  }
+
+  onRelayMessage(listener: LucaLinkRelayMessageListener): () => void {
+    return legacyRelayClient.onMessage(listener);
+  }
+
+  onRelayStateChange(
+    listener: Parameters<LucaLinkRelayFacade["onStateChange"]>[0],
+  ): ReturnType<LucaLinkRelayFacade["onStateChange"]> {
+    return legacyRelayClient.onStateChange(listener);
+  }
+
+  beamRelayPacket(
+    ...args: Parameters<LucaLinkRelayFacade["beamPacket"]>
+  ): ReturnType<LucaLinkRelayFacade["beamPacket"]> {
+    return legacyRelayClient.beamPacket(...args);
+  }
+
+  async createRelayRoom(): ReturnType<LucaLinkRelayFacade["createRoom"]> {
+    return legacyRelayClient.createRoom();
+  }
+
+  async joinRelayWithToken(
+    ...args: Parameters<LucaLinkRelayFacade["joinWithToken"]>
+  ): ReturnType<LucaLinkRelayFacade["joinWithToken"]> {
+    return legacyRelayClient.joinWithToken(...args);
+  }
+
+  async generateRelayGuestSession(): ReturnType<
+    LucaLinkRelayFacade["generateGuestSession"]
+  > {
+    return legacyRelayClient.generateGuestSession();
   }
 
   initRelayGuestHandler(...args: LucaLinkRelayGuestHandler): void {
