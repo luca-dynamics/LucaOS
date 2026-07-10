@@ -575,4 +575,31 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
       );
     }
   });
+
+  it("keeps WebBridge hologram on a passive shared presence layer", () => {
+    const realHologramSurfaceSource = readFileSync(
+      "src/web/shell/WebRealHologramSurface.tsx",
+      "utf8",
+    );
+    expect(webShellSource).toContain("<WebRealHologramSurface");
+    expect(webShellSource).not.toContain("hologramSurface={null}");
+    expect(realHologramSurfaceSource).toContain("LucaHologramPresence");
+    expect(realHologramSurfaceSource).toContain(
+      "data-luca-web-real-hologram-surface",
+    );
+    for (const reference of [
+      "HologramWidget",
+      "HologramScene",
+      "LucaHologramShaderPresence",
+      "VisualCore",
+      "electron",
+      "ipcRenderer",
+      "eventBus",
+      "lucaService",
+    ]) {
+      expect(realHologramSurfaceSource.toLowerCase()).not.toContain(
+        reference.toLowerCase(),
+      );
+    }
+  });
 });

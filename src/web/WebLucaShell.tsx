@@ -14,6 +14,7 @@ import {
   WebRealHeader,
 } from "./shell/WebRealHeader";
 import { WebRealOperationsSidebar } from "./shell/WebRealOperationsSidebar";
+import { WebRealHologramSurface } from "./shell/WebRealHologramSurface";
 import { WebRealSettingsSurface } from "./shell/WebRealSettingsSurface";
 import { WebRealVoiceSurface } from "./shell/WebRealVoiceSurface";
 
@@ -85,7 +86,7 @@ export function WebLucaShell({
             <WebRealVoiceSurface onClose={() => setShowVoiceHud(false)} />
           ) : null
         }
-        hologramSurface={null}
+        hologramSurface={<WebRealHologramSurface />}
         visualCoreSurface={null}
       />
     </section>

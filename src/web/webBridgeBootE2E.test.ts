@@ -17,6 +17,9 @@ const webVoiceSurfaceSource = read(
   "src/web/voice/WebVoiceOnboardingSurface.tsx",
 );
 const webRealVoiceSurfaceSource = read("src/web/shell/WebRealVoiceSurface.tsx");
+const webRealHologramSurfaceSource = read(
+  "src/web/shell/WebRealHologramSurface.tsx",
+);
 const chatRuntimeSource = read("src/web/chat/webChatRuntime.ts");
 
 const forbiddenDesktopImports = [
@@ -38,6 +41,7 @@ const productUiSources = [
   ["src/web/chat/WebRealChatPanel.tsx", webChatSurfaceSource],
   ["src/web/voice/WebVoiceOnboardingSurface.tsx", webVoiceSurfaceSource],
   ["src/web/shell/WebRealVoiceSurface.tsx", webRealVoiceSurfaceSource],
+  ["src/web/shell/WebRealHologramSurface.tsx", webRealHologramSurfaceSource],
   [
     "src/components/Onboarding/OnboardingConversationSurface.tsx",
     read("src/components/Onboarding/OnboardingConversationSurface.tsx"),
@@ -104,11 +108,14 @@ describe("WebBridge full boot, onboarding, chat, and voice runtime QA", () => {
     expect(webShellSource).toContain("chatSurface={<WebRealChatPanel />}");
     expect(webShellSource).toContain("<WebRealVoiceSurface");
     expect(webShellSource).not.toContain("voiceSurface={null}");
+    expect(webShellSource).toContain("<WebRealHologramSurface");
+    expect(webShellSource).not.toContain("hologramSurface={null}");
     expect(webChatSurfaceSource).toContain("<ChatPanel");
     expect(webChatSurfaceSource).toContain("webAppRuntime.chat.sendMessage");
     expect(chatRuntimeSource).toContain("sendMessage");
     expect(webVoiceSurfaceSource).toContain("<VoiceHudSurface");
     expect(webRealVoiceSurfaceSource).toContain("<VoiceHudSurface");
+    expect(webRealHologramSurfaceSource).toContain("LucaHologramPresence");
   });
 
   it("keeps deleted generated fallback files deleted and product UI free of debug wording", () => {

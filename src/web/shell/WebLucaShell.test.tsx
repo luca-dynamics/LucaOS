@@ -12,6 +12,10 @@ const voiceSource = readFileSync(
   "src/web/shell/WebRealVoiceSurface.tsx",
   "utf8",
 );
+const hologramSource = readFileSync(
+  "src/web/shell/WebRealHologramSurface.tsx",
+  "utf8",
+);
 
 describe("WebLucaShell dashboard presentation", () => {
   it("uses LucaOS dashboard-shell presentation copy instead of debug placeholder copy", () => {
@@ -22,6 +26,7 @@ describe("WebLucaShell dashboard presentation", () => {
     expect(shellSource).toContain("<WebRealHeader");
     expect(shellSource).toContain("<WebRealOperationsSidebar");
     expect(shellSource).toContain("<WebRealVoiceSurface");
+    expect(shellSource).toContain("<WebRealHologramSurface");
     expect(chatSource).toContain('from "../../components/layout/ChatPanel"');
     expect(headerSource).toContain('from "../../components/layout/Header"');
     expect(headerSource).toContain("setShowVoiceHud");
@@ -34,6 +39,9 @@ describe("WebLucaShell dashboard presentation", () => {
     );
     expect(voiceSource).toContain("<VoiceHudSurface");
     expect(shellSource).not.toContain("voiceSurface={null}");
+    expect(shellSource).not.toContain("hologramSurface={null}");
+    expect(hologramSource).toContain("LucaHologramPresence");
+    expect(hologramSource).toContain("data-luca-web-real-hologram-surface");
     expect(shellSource).not.toContain("data-luca-web-workspace-session");
     for (const source of [shellSource, chatSource, headerSource]) {
       expect(source).not.toContain("browser-safe mode");

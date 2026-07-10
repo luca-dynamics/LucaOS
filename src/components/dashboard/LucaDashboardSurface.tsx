@@ -194,7 +194,7 @@ export function LucaDashboardSurface({
         )}
         {!isMobile && (
           <div
-            className={`flex-1 h-full overflow-hidden flex flex-col ${lucaShellClassNames.workspace}`}
+            className={`relative flex-1 h-full overflow-hidden flex flex-col ${lucaShellClassNames.workspace}`}
             style={lucaMaterialWorkspaceStyle}
           >
             {chatSurface}
@@ -205,7 +205,7 @@ export function LucaDashboardSurface({
         )}
         {isMobile && activeMobileTab === "TERMINAL" && (
           <div
-            className={`flex w-full h-full ${lucaMobileClassNames.content}`}
+            className={`relative flex w-full h-full ${lucaMobileClassNames.content}`}
             style={lucaMaterialMobileContentStyle}
           >
             {chatSurface}

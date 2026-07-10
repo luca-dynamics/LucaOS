@@ -113,6 +113,16 @@ describe("WebLucaShell right panel (real desktop components)", () => {
     cleanup();
   });
 
+  it("mounts the passive real hologram surface in the workspace", () => {
+    const { container, cleanup } = mount(<WebLucaShell {...props} />);
+    const hologramSurface = container.querySelector(
+      "[data-luca-web-real-hologram-surface]",
+    );
+    expect(hologramSurface).not.toBeNull();
+    expect(hologramSurface?.getAttribute("aria-hidden")).toBe("true");
+    cleanup();
+  });
+
   it("opens and closes the real VoiceHud surface from the Header voice control", () => {
     const { container, cleanup } = mount(<WebLucaShell {...props} />);
     expect(
