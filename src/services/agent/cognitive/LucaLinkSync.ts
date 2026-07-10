@@ -1,35 +1,87 @@
 /**
  * Phase 10 - Luca Link Sync
- * Cross-device checkpoint synchronization (stub for future integration)
+ * Cross-device checkpoint synchronization over the LucaLink manager façade.
  */
 
 import type { Checkpoint } from "./types";
+import type { LucaLinkMessage } from "../../lucaLink/manager";
+import { lucaLinkManager } from "../../lucaLink/manager";
 
 export class LucaLinkSync {
-  private isEnabled: boolean = false;
+  private readonly checkpoints = new Map<string, Checkpoint>();
+  private readonly unsubscribe: () => void;
 
   constructor() {
-    this.isEnabled = false;
-    console.log("[LucaLinkSync] Offline mode (Luca Link not integrated yet)");
+    this.unsubscribe = lucaLinkManager.onRelayMessage(
+      (message: LucaLinkMessage) => {
+        if (message.type === "CHECKPOINT_SYNC") {
+          const checkpoint = this.readCheckpoint(message.payload);
+          if (checkpoint) this.checkpoints.set(checkpoint.workflowId, checkpoint);
+        }
+
+        if (message.type === "CHECKPOINT_DELETE") {
+          const checkpointId = this.readCheckpointId(message.payload);
+          if (checkpointId) {
+            for (const [workflowId, checkpoint] of this.checkpoints) {
+              if (checkpoint.id === checkpointId) this.checkpoints.delete(workflowId);
+            }
+          }
+        }
+      },
+    );
   }
 
   isConnected(): boolean {
-    return false;
+    return lucaLinkManager.getRelayState().connected;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async syncCheckpoint(checkpoint: Checkpoint): Promise<boolean> {
-    return false;
+    this.checkpoints.set(checkpoint.workflowId, checkpoint);
+    return lucaLinkManager.sendRelayMessage("all", "CHECKPOINT_SYNC", {
+      checkpoint,
+    });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async fetchCheckpoint(workflowId: string): Promise<Checkpoint | null> {
-    return null;
+    return this.checkpoints.get(workflowId) ?? null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deleteCheckpoint(checkpointId: string): Promise<boolean> {
-    return false;
+    for (const [workflowId, checkpoint] of this.checkpoints) {
+      if (checkpoint.id === checkpointId) this.checkpoints.delete(workflowId);
+    }
+    return lucaLinkManager.sendRelayMessage("all", "CHECKPOINT_DELETE", {
+      checkpointId,
+    });
+  }
+
+  dispose(): void {
+    this.unsubscribe();
+    this.checkpoints.clear();
+  }
+
+  private readCheckpoint(payload: unknown): Checkpoint | null {
+    if (!payload || typeof payload !== "object") return null;
+    const value = (payload as { checkpoint?: unknown }).checkpoint;
+    if (!value || typeof value !== "object") return null;
+    const checkpoint = value as Partial<Checkpoint>;
+    if (
+      typeof checkpoint.id !== "string" ||
+      typeof checkpoint.workflowId !== "string" ||
+      typeof checkpoint.timestamp !== "number" ||
+      typeof checkpoint.currentStep !== "number" ||
+      !Array.isArray(checkpoint.completedSteps) ||
+      !checkpoint.context
+    ) {
+      return null;
+    }
+    return checkpoint as Checkpoint;
+  }
+
+  private readCheckpointId(payload: unknown): string | null {
+    if (!payload || typeof payload !== "object") return null;
+    const checkpointId = (payload as { checkpointId?: unknown }).checkpointId;
+    return typeof checkpointId === "string" ? checkpointId : null;
   }
 }
 
