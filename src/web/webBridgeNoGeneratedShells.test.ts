@@ -8,6 +8,7 @@ const webLucaShell = read("src/web/WebLucaShell.tsx");
 const webChatSurface = read("src/web/chat/WebRealChatPanel.tsx");
 const webVoiceSurface = read("src/web/voice/WebVoiceOnboardingSurface.tsx");
 const webRealVoiceSurface = read("src/web/shell/WebRealVoiceSurface.tsx");
+const webRealHologramSurface = read("src/web/shell/WebRealHologramSurface.tsx");
 const webReadyState = read("src/web/WebReadyState.tsx");
 const webLifecycleShell = read("src/web/WebLifecycleShell.tsx");
 const webOnboardingRuntime = read("src/web/adapters/webOnboardingRuntime.tsx");
@@ -19,6 +20,7 @@ const normalUiSources = [
   ["src/web/chat/WebRealChatPanel.tsx", webChatSurface],
   ["src/web/voice/WebVoiceOnboardingSurface.tsx", webVoiceSurface],
   ["src/web/shell/WebRealVoiceSurface.tsx", webRealVoiceSurface],
+  ["src/web/shell/WebRealHologramSurface.tsx", webRealHologramSurface],
   ["src/web/WebReadyState.tsx", webReadyState],
 ] as const;
 
@@ -149,6 +151,12 @@ describe("WebBridge generated shell eradication audit", () => {
     expect(webLucaShell).not.toContain("voiceSurface={null}");
     expect(webRealVoiceSurface).toContain("VoiceHudSurface");
     expect(webRealVoiceSurface).toContain("<VoiceHudSurface");
+    expect(webLucaShell).toContain("<WebRealHologramSurface");
+    expect(webLucaShell).not.toContain("hologramSurface={null}");
+    expect(webRealHologramSurface).toContain("LucaHologramPresence");
+    expect(webRealHologramSurface).toContain(
+      "data-luca-web-real-hologram-surface",
+    );
   });
 
   it("keeps ready state debug-gated by lifecycle before it can render", () => {
