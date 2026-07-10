@@ -143,6 +143,10 @@ export type LucaLinkRelayFacade = Pick<
   | "syncMission"
   | "getPairingUrl"
 >;
+
+export type LucaLinkRelayGuestHandler = Parameters<
+  LucaLinkRelayFacade["initGuestHandler"]
+>;
 import { CryptoService } from "./crypto";
 import { deviceRegistry, DeviceRegistryService } from "./deviceRegistry";
 import { sessionManager, SessionManager } from "./sessionManager";
@@ -457,6 +461,27 @@ export class LucaLinkManager {
    */
   get relay(): LucaLinkRelayFacade {
     return legacyRelayClient;
+  }
+
+  /**
+   * Single manager-owned relay send path for application surfaces.
+   * The Socket.IO implementation remains behind this façade during the
+   * transport migration, so consumers do not hold or emit on raw sockets.
+   */
+  sendRelayMessage(
+    targetDeviceId: string | "all",
+    type: string,
+    payload: unknown,
+  ): boolean {
+    return legacyRelayClient.send(targetDeviceId, type, payload);
+  }
+
+  getRelayState(): ReturnType<LucaLinkRelayFacade["getState"]> {
+    return legacyRelayClient.getState();
+  }
+
+  initRelayGuestHandler(...args: LucaLinkRelayGuestHandler): void {
+    legacyRelayClient.initGuestHandler(...args);
   }
 
   /** Consolidation slice 3: the state-only governance surface (see type). */

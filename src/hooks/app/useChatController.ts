@@ -27,7 +27,7 @@ interface UseChatControllerProps {
   toolLogs: ToolExecutionLog[];
 
   // Broadcasting
-  lucaLinkSocketRef: React.MutableRefObject<any>;
+  sendLucaLinkMessage: (type: string, payload: unknown) => boolean;
   broadcastMessageToMobile: (text: string, sender: "user" | "luca") => void;
 
   // Scroll target
@@ -50,7 +50,7 @@ export function useChatController({
   executeTool,
   currentCwd,
   toolLogs,
-  lucaLinkSocketRef,
+  sendLucaLinkMessage,
   broadcastMessageToMobile,
   chatEndRef,
   bootSequence,
@@ -438,22 +438,15 @@ export function useChatController({
         }
 
         // BROADCAST TO LUCA LINK DEVICES
-        if (lucaLinkSocketRef.current && lucaLinkSocketRef.current.connected) {
-          if (messageSource !== "mobile") {
-            lucaLinkSocketRef.current.emit("client:message", {
-              id: crypto.randomUUID(),
-              type: "response",
-              source: "desktop",
-              target: "all",
-              response: {
-                success: true,
-                result: lucaResponse.text,
-                timestamp: lucaResponse.timestamp,
-              },
-              timestamp: Date.now(),
-            });
-            console.log("[LUCA LINK] Broadcasted response to mobile devices");
-          }
+        if (messageSource !== "mobile") {
+          sendLucaLinkMessage("response", {
+            response: {
+              success: true,
+              result: lucaResponse.text,
+              timestamp: lucaResponse.timestamp,
+            },
+          });
+          console.log("[LUCA LINK] Broadcasted response to mobile devices");
         }
 
         // TTS - Speak response naturally
@@ -473,13 +466,12 @@ export function useChatController({
               voiceConfig.name ? voiceConfig : undefined,
             );
 
-            if (audioBlob && lucaLinkSocketRef.current?.connected) {
+            if (audioBlob) {
               const reader = new FileReader();
               reader.readAsDataURL(audioBlob);
               reader.onloadend = () => {
                 const base64Audio = reader.result;
-                lucaLinkSocketRef.current?.emit("client:stream", {
-                  type: "tts_audio",
+                sendLucaLinkMessage("tts_audio", {
                   data: base64Audio,
                   timestamp: Date.now(),
                 });
@@ -509,7 +501,7 @@ export function useChatController({
       executeTool,
       currentCwd,
       toolLogs,
-      lucaLinkSocketRef,
+      sendLucaLinkMessage,
       broadcastMessageToMobile,
       turnLogsRef,
       visualData,
