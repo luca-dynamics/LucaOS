@@ -2,6 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { Icon } from "../ui/Icon";
 import { settingsService, LucaSettings } from "../../services/settingsService";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
+import {
+  ANTHROPIC_CLAUDE_MODELS,
+  DEEPSEEK_MODELS,
+  GEMINI_MODELS,
+  OPENAI_GPT_5_6_MODELS,
+  XAI_GROK_MODELS,
+} from "../../config/brain.config";
 
 interface ChatModelSwitcherProps {
   themeName?: string;
@@ -11,17 +18,20 @@ interface ChatModelSwitcherProps {
 // Map of core display models matching SettingsBrainTab
 const CLOUD_MODELS = [
   // Elite Intelligence
-  { id: "gemini-2.5-pro",          name: "Gemini 2.5 Pro (Elite)",          provider: "Google" },
-  { id: "gemini-2.5-flash",        name: "Gemini 2.5 Flash (Recommended)",  provider: "Google" },
-  { id: "claude-4.5-sonnet",       name: "Claude 4.5 Sonnet (Elite)",        provider: "Anthropic" },
-  { id: "claude-4.5-sonnet-thinking", name: "Claude 4.5 (Thinking)",        provider: "Anthropic" },
-  { id: "deepseek-reasoner",       name: "DeepSeek Reasoner (R1)",           provider: "DeepSeek" },
-  { id: "grok-2-1212",             name: "Grok 2 Ultra",                     provider: "xAI" },
+  ...OPENAI_GPT_5_6_MODELS.map((model) => ({ id: model.id, name: model.name, provider: "OpenAI" })),
+  ...ANTHROPIC_CLAUDE_MODELS.map((model) => ({ id: model.id, name: model.name, provider: "Anthropic" })),
+  ...GEMINI_MODELS.map((model) => ({ id: model.id, name: model.name, provider: "Google" })),
+  ...DEEPSEEK_MODELS.map((model) => ({ id: model.id, name: model.name, provider: "DeepSeek" })),
+  ...XAI_GROK_MODELS.map((model) => ({ id: model.id, name: model.name, provider: "xAI" })),
+  { id: "gemini-2.5-pro",          name: "Gemini 2.5 Pro (Legacy)",          provider: "Google" },
+  { id: "gemini-2.5-flash",        name: "Gemini 2.5 Flash (Legacy)",        provider: "Google" },
+  { id: "deepseek-reasoner",       name: "DeepSeek Reasoner (Compatibility)", provider: "DeepSeek" },
+  { id: "grok-2-1212",             name: "Grok 2 (Legacy)",                  provider: "xAI" },
+  { id: "gpt-4o",                  name: "GPT-4o (Legacy)",                  provider: "OpenAI" },
 
   // Luca Prime (Managed — enterprise key, no setup needed)
   { id: "gemini-2.0-flash",        name: "Gemini 2.0 Flash (Luca Prime ★)", provider: "Google" },
   { id: "deepseek-chat",           name: "DeepSeek Chat (V3)",               provider: "DeepSeek" },
-  { id: "gpt-4o",                  name: "GPT-4o",                           provider: "OpenAI" },
 ];
 
 
@@ -91,13 +101,19 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ themeName = "defa
   let activeDisplay = "Unknown Model";
   const isReasoningActive = [
     "gemini-2.5-pro",
-    "claude-4.5-sonnet-thinking",
+    "claude-fable-5",
+    "claude-opus-4-8",
+    "claude-sonnet-5",
     "deepseek-reasoner",
+    "deepseek-v4-pro",
+    "deepseek-v4-flash",
+    "grok-4.5",
     "grok-2-1212",
   ].includes(currentModel) ||
     currentModel.includes("thinking") ||
     currentModel.includes("reasoner") ||
     currentModel.includes("o1") ||
+    currentModel.startsWith("gpt-5.6") ||
     currentModel.includes("-pro");
 
                           

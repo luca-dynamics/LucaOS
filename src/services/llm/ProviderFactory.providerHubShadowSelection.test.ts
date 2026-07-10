@@ -7,6 +7,46 @@ beforeAll(() => {
 });
 
 describe("ProviderFactory shadow Provider Hub route diagnostics", () => {
+  it("routes GPT-5.6 models through OpenAI BYOK", async () => {
+    const { ProviderFactory } = await import("./ProviderFactory");
+    const brain = { model: "gpt-5.6-sol", provider: "byok", useCustomApiKey: true, openaiApiKey: "sk-secret-value" } as LucaSettings["brain"];
+
+    expect(ProviderFactory.resolveProvisioningRoute(brain)).toEqual({ kind: "BYOK", provider: "openai", model: "gpt-5.6-sol", apiKeySource: "user_settings" });
+  }, 45_000);
+
+  it("routes current Claude models through Anthropic BYOK", async () => {
+    const { ProviderFactory } = await import("./ProviderFactory");
+    const brain = { model: "claude-sonnet-5", provider: "byok", useCustomApiKey: true, anthropicApiKey: "sk-ant-secret-value" } as LucaSettings["brain"];
+
+    expect(ProviderFactory.resolveProvisioningRoute(brain)).toEqual({ kind: "BYOK", provider: "anthropic", model: "claude-sonnet-5", apiKeySource: "user_settings" });
+  }, 45_000);
+
+  it("routes current xAI and DeepSeek models through their BYOK adapters", async () => {
+    const { ProviderFactory } = await import("./ProviderFactory");
+    expect(ProviderFactory.resolveProvisioningRoute({
+      model: "grok-4.5",
+      provider: "byok",
+      useCustomApiKey: true,
+      xaiApiKey: "xai-secret-value",
+    } as LucaSettings["brain"])).toEqual({
+      kind: "BYOK",
+      provider: "xai",
+      model: "grok-4.5",
+      apiKeySource: "user_settings",
+    });
+    expect(ProviderFactory.resolveProvisioningRoute({
+      model: "deepseek-v4-pro",
+      provider: "byok",
+      useCustomApiKey: true,
+      deepseekApiKey: "deepseek-secret-value",
+    } as LucaSettings["brain"])).toEqual({
+      kind: "BYOK",
+      provider: "deepseek",
+      model: "deepseek-v4-pro",
+      apiKeySource: "user_settings",
+    });
+  }, 45_000);
+
   it("returns optional shadow diagnostics while preserving the selected route", async () => {
     const { ProviderFactory } = await import("./ProviderFactory");
     const brain = { model: "gpt-4o", provider: "byok", useCustomApiKey: true, openaiApiKey: "sk-secret-value" } as LucaSettings["brain"];
