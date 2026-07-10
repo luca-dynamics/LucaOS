@@ -417,7 +417,6 @@ function AppContent() {
   // --- 2. REFS ---
   const chatEndRef = useRef<HTMLDivElement>(null);
   const screenShareRef = useRef<ScreenShareHandle>(null);
-  const lucaLinkSocketRef = useRef<any>(null);
   const currentDeviceTypeRef = useRef<any>("desktop");
   const hasAnnouncedRef = useRef<boolean>(false);
   const hasInitializedRef = useRef<boolean>(false);
@@ -949,19 +948,17 @@ function AppContent() {
     },
     currentCwd,
     toolLogs,
-    lucaLinkSocketRef,
+    sendLucaLinkMessage: (type: string, payload: unknown) =>
+      lucaLinkManager.sendRelayMessage("all", type, payload),
     broadcastMessageToMobile: (text: string, sender: "user" | "luca") => {
-      if (lucaLinkSocketRef.current && lucaLinkSocketRef.current.connected) {
-        lucaLinkSocketRef.current.emit("client:message", {
-          type: "response",
-          target: "all",
-          command: {
-            tool: "chat",
-            args: { text, sender },
-          },
-          text: text,
-          timestamp: Date.now(),
-        });
+      if (lucaLinkManager.sendRelayMessage("all", "response", {
+        command: {
+          tool: "chat",
+          args: { text, sender },
+        },
+        text,
+        timestamp: Date.now(),
+      })) {
         console.log(`[LUCA LINK] Broadcasted ${sender} message to mobile`);
       }
     },
@@ -1403,9 +1400,7 @@ function AppContent() {
   // --- SATELLITE BROADCAST HELPER ---
   const broadcastToSatellites = useCallback((data: any) => {
     // Only broadcast if we are connected as a Desktop Core
-    if (lucaLinkManager.relay.getState().connected) {
-      lucaLinkManager.relay.send("all", "UI_STATE_SYNC", data);
-    }
+    lucaLinkManager.sendRelayMessage("all", "UI_STATE_SYNC", data);
   }, []);
 
   // --- HELPER: Dynamic Theme Colors ---
@@ -2276,7 +2271,7 @@ function AppContent() {
       }
     };
 
-    lucaLinkManager.relay.initGuestHandler(processGuestMessage, generateAudio);
+    lucaLinkManager.initRelayGuestHandler(processGuestMessage, generateAudio);
     console.log("[App] Luca Link guest handler initialized (Stable)");
   }, []); // Run ONCE on mount
 
@@ -2389,23 +2384,18 @@ function AppContent() {
 
   // --- THEME SYNC (LUCA LINK) ---
   useEffect(() => {
-    if (lucaLinkSocketRef.current?.connected) {
-      lucaLinkSocketRef.current.emit("client:message", {
-        type: "theme_update",
-        target: "all",
-        theme: {
-          hex: theme.hex,
-          primary: theme.primary,
-          bg: theme.bg,
-        },
-        timestamp: Date.now(),
-      });
-    }
+    lucaLinkManager.sendRelayMessage("all", "theme_update", {
+      theme: {
+        hex: theme.hex,
+        primary: theme.primary,
+        bg: theme.bg,
+      },
+      timestamp: Date.now(),
+    });
   }, [theme.hex, theme.primary, theme.bg]);
 
   // --- VISUAL CORE SYNC (TV/MIRROR) ---
   useEffect(() => {
-    if (lucaLinkSocketRef.current?.connected) {
       let currentMode = "IDLE";
       if (visualData?.topic === "DATA_ROOM") currentMode = "DATA_ROOM";
       else if (visualData?.topic === "CINEMA") currentMode = "CINEMA";
@@ -2413,9 +2403,7 @@ function AppContent() {
       else if (ghostBrowserUrl && ghostBrowserUrl !== "about:blank")
         currentMode = "BROWSER";
 
-      lucaLinkSocketRef.current.emit("client:message", {
-        type: "visual_core_sync",
-        target: "all",
+      lucaLinkManager.sendRelayMessage("all", "visual_core_sync", {
         data: {
           mode: currentMode,
           visualData: visualData,
@@ -2423,7 +2411,6 @@ function AppContent() {
         },
         timestamp: Date.now(),
       });
-    }
   }, [visualData, ghostBrowserUrl]);
 
   // --- THEME TOGGLE SHORTCUT (Shift+T) ---

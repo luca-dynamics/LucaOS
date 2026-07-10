@@ -63,4 +63,22 @@ describe("lucaLinkManager.relay (consolidation facade)", () => {
       expect(typeof (lucaLinkManager.relay as any)[method]).toBe("function");
     }
   });
+
+  it("routes application relay sends through manager-owned methods", () => {
+    const send = vi.spyOn(lucaLink, "send").mockReturnValue(true);
+    const getState = vi.spyOn(lucaLink, "getState");
+
+    expect(
+      lucaLinkManager.sendRelayMessage("all", "theme_update", {
+        theme: { hex: "#fff" },
+      }),
+    ).toBe(true);
+    expect(send).toHaveBeenCalledWith("all", "theme_update", {
+      theme: { hex: "#fff" },
+    });
+    expect(lucaLinkManager.getRelayState()).toBe(getState.mock.results[0]?.value);
+
+    send.mockRestore();
+    getState.mockRestore();
+  });
 });
