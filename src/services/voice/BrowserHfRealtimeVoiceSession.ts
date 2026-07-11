@@ -1,7 +1,7 @@
 import type { HybridVoiceConfig } from "../hybridVoiceService";
 import type { VoiceSessionRoute } from "../voiceSessionRouter";
 import { HfRealtimeVoiceRuntime } from "./HfRealtimeVoiceRuntime";
-import { createRealtimeVoiceSessionController } from "./createRealtimeVoiceSessionController";
+import { canonicalVoiceSessionBus } from "./CanonicalVoiceSessionBus";
 
 export interface BrowserHfRealtimeVoiceConfig extends Partial<HybridVoiceConfig> {
   endpoint: string;
@@ -61,7 +61,7 @@ export class BrowserHfRealtimeVoiceSession {
 
     const inputRate = config.inputSampleRate ?? 24000;
     const outputRate = config.outputSampleRate ?? 24000;
-    const controller = createRealtimeVoiceSessionController().controller;
+    const controller = canonicalVoiceSessionBus.controller;
     controller.subscribe((state) => {
       this.setStatus(state.status.toUpperCase());
       config.onVadChange?.(state.isListening);
@@ -85,11 +85,23 @@ export class BrowserHfRealtimeVoiceSession {
         interrupt: () => this.interruptPlayback(),
       },
       onToolCall: async (call) => {
+        canonicalVoiceSessionBus.publish({
+          type: "tool.requested",
+          route: "local_realtime",
+          name: call.name,
+          callId: call.callId,
+        });
         let args: Record<string, unknown> = {};
         try { args = JSON.parse(call.arguments) as Record<string, unknown>; } catch { args = {}; }
         const output = config.onToolCall
           ? await config.onToolCall(call.name, args)
           : { error: `Tool ${call.name} is unavailable` };
+        canonicalVoiceSessionBus.publish({
+          type: "tool.completed",
+          route: "local_realtime",
+          name: call.name,
+          callId: call.callId,
+        });
         this.runtime?.sendToolResult(call.callId, output);
       },
       onEvent: (event) => this.handleProtocolEvent(event),
@@ -110,6 +122,12 @@ export class BrowserHfRealtimeVoiceSession {
 
   sendText(text: string): void {
     this.runtime?.sendText(text);
+  }
+
+  sendImage(frame: string, createResponse = true): boolean {
+    if (!this.runtime?.getSnapshot().connected) return false;
+    this.runtime.sendImage(frame.startsWith("data:") ? frame : `data:image/jpeg;base64,${frame}`, createResponse);
+    return true;
   }
 
   async disconnect(): Promise<void> {

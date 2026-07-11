@@ -60,11 +60,11 @@ const WidgetMode: React.FC = () => {
         (payload: any) => {
           console.log("[Widget] Received trigger-voice-toggle", payload);
           if (payload?.mode === "DICTATION") {
-            setDictationState(true);
+            setDictationState(true, true);
           } else if (payload?.mode === "OFF") {
-            setDictationState(false);
+            setDictationState(false, true);
           } else {
-            setDictationState(!isDictating);
+            setDictationState(!isDictating, true);
           }
         },
       );
@@ -142,7 +142,8 @@ const WidgetMode: React.FC = () => {
   );
   const caption = getPresenceMarkCaption(markState, snapshot);
   const hintVisible = !caption && isHovered && markState === "idle";
-  const captionText = caption || (hintVisible ? "Talk to Luca" : "");
+  const captionText =
+    caption || (hintVisible ? (isDictating ? "Stop dictation" : "Start dictation") : "");
 
   return (
     <div
@@ -167,7 +168,7 @@ const WidgetMode: React.FC = () => {
         amplitude={dictationState.amplitude}
         identityColor={identityColor}
         onClick={toggleDictation}
-        title="Talk to Luca"
+        title={isDictating ? "Stop dictation" : "Start dictation"}
       />
 
       {/* Ephemeral caption — silent at rest, words only when light can't say it */}

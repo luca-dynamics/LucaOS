@@ -16,17 +16,31 @@ function createFakeIpcMain() {
     };
 }
 
-function createFakeWindow({ destroyed = false } = {}) {
+function createFakeWindow({ destroyed = false, minimized = false } = {}) {
     const sent = [];
+    const actions = [];
     return {
         sent,
+        actions,
         isDestroyed: () => destroyed,
+        isMinimized: () => minimized,
+        restore: () => actions.push('restore'),
+        show: () => actions.push('show'),
+        focus: () => actions.push('focus'),
         webContents: {
             send(channel, payload) {
                 sent.push({ channel, payload });
             }
         }
     };
+}
+
+{
+    const mainWindow = createFakeWindow({ minimized: true });
+    const { ipcMain } = registerWithWindows({ mainWindow });
+    assert.strictEqual(ipcMain.listeners('expand-dashboard').length, 1);
+    ipcMain.listeners('expand-dashboard')[0]();
+    assert.deepStrictEqual(mainWindow.actions, ['restore', 'show', 'focus']);
 }
 
 function registerWithWindows(windows = {}) {

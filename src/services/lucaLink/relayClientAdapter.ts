@@ -21,47 +21,23 @@ import {
   type LucaLinkSoftEnforcementResult,
 } from "./lucaLinkSoftEnforcement";
 import {
-  approveLucaLinkApprovalRequest,
-  cancelLucaLinkApprovalRequest,
-  clearLucaLinkApprovalQueue,
-  createLucaLinkApprovalQueue,
-  denyLucaLinkApprovalRequest,
-  enqueueApprovalForSoftEnforcementResult,
-  enqueueLucaLinkApprovalRequest,
-  getLucaLinkApprovalRequest,
-  getPendingLucaLinkApprovalRequests,
-  listLucaLinkApprovalRequests,
-  summarizeLucaLinkApprovalQueue,
   type LucaLinkApprovalDecisionInput,
   type LucaLinkApprovalMutationResult,
-  type LucaLinkApprovalQueueState,
   type LucaLinkApprovalQueueSummary,
   type LucaLinkApprovalRequest,
 } from "./lucaLinkApprovalQueue";
-import {
-  consumePreparedLucaLinkContinuation,
-  evaluateLucaLinkContinuationBridge,
-  prepareLucaLinkSafeContinuation,
-  type LucaLinkContinuationBridgeInput,
-  type LucaLinkContinuationBridgeResult,
+import { lucaLinkApprovalStore } from "./lucaLinkApprovalStore";
+import { lucaLinkContinuationStore } from "./lucaLinkContinuationStore";
+import type {
+  LucaLinkContinuationBridgeInput,
+  LucaLinkContinuationBridgeResult,
 } from "./lucaLinkContinuationBridge";
-import {
-  cancelLucaLinkContinuationToken,
-  clearLucaLinkContinuationRegistry,
-  consumeLucaLinkContinuationToken,
-  createLucaLinkContinuationRegistry,
-  expireLucaLinkContinuationTokens,
-  getValidLucaLinkContinuationTokens,
-  listLucaLinkContinuationTokens,
-  registerContinuationFromApprovalRequest,
-  summarizeLucaLinkContinuationRegistry,
-  validateLucaLinkContinuationToken,
-  type LucaLinkContinuationMutationResult,
-  type LucaLinkContinuationRegistryState,
-  type LucaLinkContinuationRegistrySummary,
-  type LucaLinkContinuationToken,
-  type LucaLinkContinuationValidationContext,
-  type LucaLinkContinuationValidationResult,
+import type {
+  LucaLinkContinuationMutationResult,
+  LucaLinkContinuationRegistrySummary,
+  LucaLinkContinuationToken,
+  LucaLinkContinuationValidationContext,
+  LucaLinkContinuationValidationResult,
 } from "./lucaLinkContinuation";
 import {
   clearLucaLinkShadowObservations,
@@ -94,25 +70,11 @@ import {
 } from "./lucaLinkGuestSessionPolicy";
 
 import {
-  blockTrustedDevice,
-  clearDeviceTrustAudit,
-  createLucaLinkDeviceTrustRegistry,
-  getDeviceTrustAudit,
-  listActiveTrustedDevices,
-  listTrustedDevices,
-  markTrustedDeviceConnected,
-  markTrustedDeviceDisconnected,
-  renameTrustedDevice,
-  revokeTrustedDevice,
-  setTrustedDeviceTrustLevel,
-  summarizeDeviceTrustRegistry,
-  unblockTrustedDevice,
-  upsertTrustedDevice,
   type LucaLinkDeviceTrustLevel,
   type LucaLinkDeviceTrustMutationOptions,
   type LucaLinkDeviceTrustMutationResult,
-  type LucaLinkDeviceTrustRegistryState,
 } from "./lucaLinkDeviceTrustRegistry";
+import { lucaLinkDeviceTrustStore } from "./lucaLinkDeviceTrustStore";
 
 import {
   approveLucaLinkHandoff,
@@ -267,12 +229,7 @@ class LucaLinkService {
   private messageListeners: Set<MessageListener> = new Set();
   private runtimeShadow: LucaLinkRuntimeShadowState =
     createLucaLinkRuntimeShadow({ enabled: false });
-  private approvalQueue: LucaLinkApprovalQueueState =
-    createLucaLinkApprovalQueue();
-  private continuationRegistry: LucaLinkContinuationRegistryState =
-    createLucaLinkContinuationRegistry();
-  private deviceTrustRegistry: LucaLinkDeviceTrustRegistryState =
-    createLucaLinkDeviceTrustRegistry();
+  private deviceTrustStore = lucaLinkDeviceTrustStore;
   private handoffRegistry: LucaLinkHandoffRegistryState =
     createLucaLinkHandoffRegistry();
   private hostConnectionRegistry: LucaLinkHostConnectionRegistryState =
@@ -913,7 +870,7 @@ class LucaLinkService {
    */
   disconnect(): void {
     this.state.connectedDevices.forEach((device) => {
-      markTrustedDeviceDisconnected(this.deviceTrustRegistry, device.deviceId);
+      this.deviceTrustStore.markDisconnected(device.deviceId);
     });
     if (this.socket) {
       this.socket.disconnect();
@@ -1181,14 +1138,10 @@ class LucaLinkService {
         summary: input.summary,
       });
     const targetDevice = input.targetDeviceId
-      ? this.deviceTrustRegistry.devices.find(
-          (device) => device.deviceId === input.targetDeviceId,
-        )
+      ? this.deviceTrustStore.get(input.targetDeviceId)
       : undefined;
     const sourceDevice = input.sourceDeviceId
-      ? this.deviceTrustRegistry.devices.find(
-          (device) => device.deviceId === input.sourceDeviceId,
-        )
+      ? this.deviceTrustStore.get(input.sourceDeviceId)
       : undefined;
     const initialRequest = createLucaLinkHandoffRequest(
       {
@@ -1228,7 +1181,7 @@ class LucaLinkService {
     );
 
     if (policy.requiresPrimaryHostApproval) {
-      const queued = enqueueLucaLinkApprovalRequest(this.approvalQueue, {
+      const queued = lucaLinkApprovalStore.enqueue({
         source: "manual",
         requestedByDeviceId: request.requestedByDeviceId,
         requestedTargetDeviceId: request.targetDeviceId,
@@ -1391,48 +1344,40 @@ class LucaLinkService {
   }
 
   getPendingApprovalRequests(): LucaLinkApprovalRequest[] {
-    return getPendingLucaLinkApprovalRequests(this.approvalQueue);
+    return lucaLinkApprovalStore.getPending();
   }
 
   getApprovalRequests(): LucaLinkApprovalRequest[] {
-    return listLucaLinkApprovalRequests(this.approvalQueue);
+    return lucaLinkApprovalStore.list();
   }
 
   getApprovalQueueSummary(): LucaLinkApprovalQueueSummary {
-    return summarizeLucaLinkApprovalQueue(this.approvalQueue);
+    return lucaLinkApprovalStore.summarize();
   }
 
   approveApprovalRequest(
     requestId: string,
     decision?: LucaLinkApprovalDecisionInput,
   ): LucaLinkApprovalMutationResult {
-    return approveLucaLinkApprovalRequest(
-      this.approvalQueue,
-      requestId,
-      decision,
-    );
+    return lucaLinkApprovalStore.approve(requestId, decision);
   }
 
   denyApprovalRequest(
     requestId: string,
     decision?: LucaLinkApprovalDecisionInput,
   ): LucaLinkApprovalMutationResult {
-    return denyLucaLinkApprovalRequest(this.approvalQueue, requestId, decision);
+    return lucaLinkApprovalStore.deny(requestId, decision);
   }
 
   cancelApprovalRequest(
     requestId: string,
     decision?: LucaLinkApprovalDecisionInput,
   ): LucaLinkApprovalMutationResult {
-    return cancelLucaLinkApprovalRequest(
-      this.approvalQueue,
-      requestId,
-      decision,
-    );
+    return lucaLinkApprovalStore.cancel(requestId, decision);
   }
 
   clearApprovalQueue(): LucaLinkApprovalMutationResult {
-    return clearLucaLinkApprovalQueue(this.approvalQueue);
+    return lucaLinkApprovalStore.clear();
   }
 
   getApprovalSurfaces(): LucaLinkApprovalSurfaceRecord[] {
@@ -1454,7 +1399,7 @@ class LucaLinkService {
   evaluateApprovalSurfacesForRequest(
     requestId: string,
   ): LucaLinkApprovalSurfaceEvaluation[] {
-    const request = getLucaLinkApprovalRequest(this.approvalQueue, requestId);
+    const request = lucaLinkApprovalStore.get(requestId);
     return this.getApprovalSurfaces().map((surface) =>
       evaluateLucaLinkApprovalSurfaceForRequest(surface, request),
     );
@@ -1465,7 +1410,7 @@ class LucaLinkService {
   ): LucaLinkApprovalSurfaceRecord[] {
     return rankEligibleApprovalSurfaces(
       this.getApprovalSurfaces(),
-      getLucaLinkApprovalRequest(this.approvalQueue, requestId),
+      lucaLinkApprovalStore.get(requestId),
     );
   }
 
@@ -1475,7 +1420,7 @@ class LucaLinkService {
     evaluations: LucaLinkApprovalSurfaceEvaluation[];
     summary: LucaLinkApprovalSurfaceSummary;
   } {
-    const request = getLucaLinkApprovalRequest(this.approvalQueue, requestId);
+    const request = lucaLinkApprovalStore.get(requestId);
     const surfaces = this.getApprovalSurfaces();
     return {
       request,
@@ -1591,25 +1536,25 @@ class LucaLinkService {
   }
 
   getContinuationTokens(): LucaLinkContinuationToken[] {
-    return listLucaLinkContinuationTokens(this.continuationRegistry);
+    return lucaLinkContinuationStore.list();
   }
 
   getValidContinuationTokens(): LucaLinkContinuationToken[] {
-    return getValidLucaLinkContinuationTokens(this.continuationRegistry);
+    return lucaLinkContinuationStore.listValid();
   }
 
   getContinuationRegistrySummary(): LucaLinkContinuationRegistrySummary {
-    return summarizeLucaLinkContinuationRegistry(this.continuationRegistry);
+    return lucaLinkContinuationStore.summarize();
   }
 
   clearContinuationRegistry(): LucaLinkContinuationMutationResult {
-    return clearLucaLinkContinuationRegistry(this.continuationRegistry);
+    return lucaLinkContinuationStore.clear();
   }
 
   createContinuationFromApprovalRequest(
     requestId: string,
   ): LucaLinkContinuationMutationResult {
-    const request = getLucaLinkApprovalRequest(this.approvalQueue, requestId);
+    const request = lucaLinkApprovalStore.get(requestId);
     if (!request) {
       return {
         valid: false,
@@ -1618,21 +1563,14 @@ class LucaLinkService {
       };
     }
 
-    return registerContinuationFromApprovalRequest(
-      this.continuationRegistry,
-      request,
-    );
+    return lucaLinkContinuationStore.createFromApprovalRequest(request);
   }
 
   validateContinuationToken(
     tokenId: string,
     context?: LucaLinkContinuationValidationContext,
   ): LucaLinkContinuationValidationResult {
-    return validateLucaLinkContinuationToken(
-      this.continuationRegistry,
-      tokenId,
-      context,
-    );
+    return lucaLinkContinuationStore.validate(tokenId, context);
   }
 
   consumeContinuationToken(
@@ -1642,40 +1580,28 @@ class LucaLinkService {
       reason?: string;
     },
   ): LucaLinkContinuationMutationResult {
-    return consumeLucaLinkContinuationToken(
-      this.continuationRegistry,
-      tokenId,
-      context,
-    );
+    return lucaLinkContinuationStore.consume(tokenId, context);
   }
 
   cancelContinuationToken(
     tokenId: string,
     reason?: string,
   ): LucaLinkContinuationMutationResult {
-    return cancelLucaLinkContinuationToken(this.continuationRegistry, tokenId, {
-      reason,
-    });
+    return lucaLinkContinuationStore.cancel(tokenId, reason);
   }
 
   evaluateContinuationBridge(
     tokenId: string,
     context: Omit<LucaLinkContinuationBridgeInput, "tokenId"> = {},
   ): LucaLinkContinuationBridgeResult {
-    return evaluateLucaLinkContinuationBridge(this.continuationRegistry, {
-      ...context,
-      tokenId,
-    });
+    return lucaLinkContinuationStore.evaluate(tokenId, context);
   }
 
   prepareSafeContinuation(
     tokenId: string,
     context: Omit<LucaLinkContinuationBridgeInput, "tokenId"> = {},
   ): LucaLinkContinuationBridgeResult {
-    return prepareLucaLinkSafeContinuation(this.continuationRegistry, {
-      ...context,
-      tokenId,
-    });
+    return lucaLinkContinuationStore.prepare(tokenId, context);
   }
 
   consumePreparedContinuation(
@@ -1685,25 +1611,11 @@ class LucaLinkService {
       reason?: string;
     } = {},
   ): LucaLinkContinuationBridgeResult {
-    const prepared = prepareLucaLinkSafeContinuation(
-      this.continuationRegistry,
-      {
-        ...context,
-        tokenId,
-      },
-    );
-
-    if (!prepared.preparedAction) return prepared;
-
-    return consumePreparedLucaLinkContinuation(
-      this.continuationRegistry,
-      prepared.preparedAction,
-      context,
-    );
+    return lucaLinkContinuationStore.consumePrepared(tokenId, context);
   }
 
   expireContinuationTokens(now?: number): LucaLinkContinuationMutationResult {
-    return expireLucaLinkContinuationTokens(this.continuationRegistry, now);
+    return lucaLinkContinuationStore.expire(now);
   }
 
   queueApprovalForSoftEnforcementResult(
@@ -1718,11 +1630,7 @@ class LucaLinkService {
       payload?: unknown;
     } = {},
   ): LucaLinkApprovalMutationResult {
-    return enqueueApprovalForSoftEnforcementResult(
-      this.approvalQueue,
-      result,
-      context,
-    );
+    return lucaLinkApprovalStore.enqueueSoftEnforcement(result, context);
   }
 
   /**
@@ -1771,23 +1679,23 @@ class LucaLinkService {
   }
 
   getTrustedDevices() {
-    return listTrustedDevices(this.deviceTrustRegistry);
+    return this.deviceTrustStore.list();
   }
 
   getActiveTrustedDevices() {
-    return listActiveTrustedDevices(this.deviceTrustRegistry);
+    return this.deviceTrustStore.listActive();
   }
 
   getDeviceTrustSummary() {
-    return summarizeDeviceTrustRegistry(this.deviceTrustRegistry);
+    return this.deviceTrustStore.summarize();
   }
 
   getDeviceTrustAudit() {
-    return getDeviceTrustAudit(this.deviceTrustRegistry);
+    return this.deviceTrustStore.getAudit();
   }
 
   clearDeviceTrustAudit(): void {
-    clearDeviceTrustAudit(this.deviceTrustRegistry);
+    this.deviceTrustStore.clearAudit();
   }
 
   renameTrustedDevice(
@@ -1795,12 +1703,7 @@ class LucaLinkService {
     displayName: string,
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
-    return renameTrustedDevice(
-      this.deviceTrustRegistry,
-      deviceId,
-      displayName,
-      options,
-    );
+    return this.deviceTrustStore.rename(deviceId, displayName, options);
   }
 
   setTrustedDeviceTrustLevel(
@@ -1808,33 +1711,28 @@ class LucaLinkService {
     trustLevel: LucaLinkDeviceTrustLevel,
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
-    return setTrustedDeviceTrustLevel(
-      this.deviceTrustRegistry,
-      deviceId,
-      trustLevel,
-      options,
-    );
+    return this.deviceTrustStore.setTrustLevel(deviceId, trustLevel, options);
   }
 
   revokeTrustedDevice(
     deviceId: string,
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
-    return revokeTrustedDevice(this.deviceTrustRegistry, deviceId, options);
+    return this.deviceTrustStore.revoke(deviceId, options);
   }
 
   blockTrustedDevice(
     deviceId: string,
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
-    return blockTrustedDevice(this.deviceTrustRegistry, deviceId, options);
+    return this.deviceTrustStore.block(deviceId, options);
   }
 
   unblockTrustedDevice(
     deviceId: string,
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
-    return unblockTrustedDevice(this.deviceTrustRegistry, deviceId, options);
+    return this.deviceTrustStore.unblock(deviceId, options);
   }
 
   getHostConnections(
@@ -1869,7 +1767,7 @@ class LucaLinkService {
 
   refreshHostConnectionsFromCurrentState(): LucaLinkHostConnectionRecord[] {
     const now = Date.now();
-    const trustedDevices = listTrustedDevices(this.deviceTrustRegistry);
+    const trustedDevices = this.deviceTrustStore.list();
     const trustByDeviceId = new Map(
       trustedDevices.map((device) => [device.deviceId, device]),
     );
@@ -2036,23 +1934,10 @@ class LucaLinkService {
 
   private updateState(partial: Partial<LucaLinkState>): void {
     if (partial.connectedDevices) {
-      this.syncDeviceTrustRegistryFromConnectedDevices(
+      this.deviceTrustStore.syncConnectedRuntimeDevices(
         partial.connectedDevices,
+        this.state.deviceId,
       );
-      const connectedIds = new Set(
-        partial.connectedDevices.map((device) => device.deviceId),
-      );
-      this.deviceTrustRegistry.devices.forEach((device) => {
-        if (
-          device.status === "connected" &&
-          !connectedIds.has(device.deviceId)
-        ) {
-          markTrustedDeviceDisconnected(
-            this.deviceTrustRegistry,
-            device.deviceId,
-          );
-        }
-      });
     }
     this.state = { ...this.state, ...partial };
     if (partial.connectedDevices) {
@@ -2066,23 +1951,10 @@ class LucaLinkService {
     isCurrentPrimaryHost = false,
     status: "known" | "connected" | "disconnected" = "connected",
   ): void {
-    const record = upsertTrustedDevice(this.deviceTrustRegistry, {
-      deviceId: device.deviceId,
-      displayName: device.name,
-      deviceType: device.type,
-      lastSeenAt: device.lastSeen,
-      status,
+    this.deviceTrustStore.upsertRuntimeDevice(device, {
       isCurrentPrimaryHost,
+      status,
     });
-    if (
-      status === "connected" &&
-      record.status !== "revoked" &&
-      record.status !== "blocked"
-    ) {
-      markTrustedDeviceConnected(this.deviceTrustRegistry, device.deviceId, {
-        now: device.lastSeen || Date.now(),
-      });
-    }
   }
 
   private syncDeviceTrustRegistryFromConnectedDevices(
@@ -2190,7 +2062,7 @@ class LucaLinkService {
         data.sessionId,
         createLucaLinkGuestSession(data.sessionId),
       );
-      upsertTrustedDevice(this.deviceTrustRegistry, {
+      this.deviceTrustStore.upsert({
         deviceId: data.sessionId,
         displayName: `Guest session ${data.sessionId}`,
         deviceType: "guest web",
@@ -2347,7 +2219,7 @@ class LucaLinkService {
           sessionId: data.sessionId,
         });
       }
-      upsertTrustedDevice(this.deviceTrustRegistry, {
+      this.deviceTrustStore.upsert({
         deviceId: data.sessionId,
         displayName: `Guest session ${data.sessionId}`,
         deviceType: "guest web",
@@ -2357,7 +2229,7 @@ class LucaLinkService {
         lastSeenAt: Date.now(),
         capabilities: ["chat.send", "chat.receive", "webrtc"],
       });
-      markTrustedDeviceConnected(this.deviceTrustRegistry, data.sessionId);
+      this.deviceTrustStore.markConnected(data.sessionId);
       this.evaluateGuestInbound({
         kind: "guest-connected",
         sessionId: data.sessionId,
@@ -2587,7 +2459,7 @@ class LucaLinkService {
           markGuestSessionDisconnected(securitySession),
         );
       }
-      markTrustedDeviceDisconnected(this.deviceTrustRegistry, data.sessionId);
+      this.deviceTrustStore.markDisconnected(data.sessionId);
       const session = this.guestSessions.get(data.sessionId);
       if (session?.peerConnection) {
         session.peerConnection.close();

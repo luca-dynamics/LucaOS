@@ -56,6 +56,23 @@ Model choice remains outside this client transport. The connected server may
 run Parakeet, Gemma, Qwen3-TTS, or other compatible local/hosted components
 according to the user's runtime and hardware policy.
 
+## Canonical HUD session state
+
+`CanonicalVoiceSessionBus` normalizes cloud bidi, hybrid, and realtime-local
+events into the singleton controller owned by `realtimeVoiceUiBridge`. The HUD
+therefore reads one authoritative session ID, transcript, response, listening,
+speaking, interruption, tool, and error state regardless of provider route.
+
+The active realtime-local session also accepts approved hologram vision frames.
+The IPC bridge forwards the image and its observation prompt directly into the
+same multimodal conversation; other routes retain the existing chat/vision
+fallback.
+
+The Hologram presence surface intentionally exposes only three immediate
+actions: Talk/Stop, See Screen, and Open LucaOS. Translation remains available
+as a voice skill, while continuous transcription belongs to Voice HUD and the
+dedicated Dictation Widget rather than permanent Hologram controls.
+
 The `src/services/voice` module is the first contract layer for LucaOS Voice Mode.
 
 ## Purpose

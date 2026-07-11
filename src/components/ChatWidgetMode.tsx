@@ -501,16 +501,7 @@ const ChatWidgetMode: React.FC = () => {
         },
       );
 
-      // 2. Listen for switch-persona (from Tray Menu)
-      // @ts-ignore
-      const removeSwitchPersona = window.electron.ipcRenderer.on(
-        "switch-persona",
-        (newPersona: string) => {
-          setState((prev) => ({ ...prev, persona: newPersona as PersonaType }));
-        },
-      );
-
-      // 3. Listen for clear signal (fresh start on each toggle)
+      // 2. Listen for clear signal (fresh start on each toggle)
       // @ts-ignore
       const removeClear = window.electron.ipcRenderer.on(
         "chat-widget-clear",
@@ -521,7 +512,7 @@ const ChatWidgetMode: React.FC = () => {
         },
       );
 
-      // 4. Listen for vision-status update
+      // 3. Listen for vision-status update
       // @ts-ignore
       const removeVisionStatus = window.electron.ipcRenderer.on(
         "vision-status",
@@ -534,7 +525,6 @@ const ChatWidgetMode: React.FC = () => {
       // @ts-ignore
       return () => {
         if (removeWidgetUpdate) removeWidgetUpdate();
-        if (removeSwitchPersona) removeSwitchPersona();
         if (removeClear) removeClear();
         if (removeVisionStatus) removeVisionStatus();
       };

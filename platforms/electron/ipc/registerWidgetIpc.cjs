@@ -22,6 +22,14 @@ function registerWidgetIpc({ ipcMain, getWidgetWindow, getChatWindow, getHologra
         }
     });
 
+    ipcMain.on('expand-dashboard', () => {
+        const mainWindow = getMainWindow();
+        if (!mainWindow || (mainWindow.isDestroyed && mainWindow.isDestroyed())) return;
+        if (mainWindow.isMinimized && mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+    });
+
     ipcMain.on('widget-voice-data', (event, data) => {
         const widgetWindow = getWidgetWindow();
         const hologramWindow = getHologramWindow();

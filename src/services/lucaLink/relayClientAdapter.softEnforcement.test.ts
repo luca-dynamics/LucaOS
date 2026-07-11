@@ -5,11 +5,9 @@ vi.mock("socket.io-client", () => ({
 }));
 
 import { lucaLink } from "./relayClientAdapter";
-import { createLucaLinkDeviceTrustRegistry } from "./lucaLinkDeviceTrustRegistry";
-import {
-  createLucaLinkContinuationToken,
-  registerLucaLinkContinuation,
-} from "./lucaLinkContinuation";
+import { LucaLinkDeviceTrustStore } from "./lucaLinkDeviceTrustStore";
+import { lucaLinkContinuationStore } from "./lucaLinkContinuationStore";
+import { createLucaLinkContinuationToken } from "./lucaLinkContinuation";
 
 describe("LucaLinkService soft enforcement controls", () => {
   afterEach(() => {
@@ -19,7 +17,7 @@ describe("LucaLinkService soft enforcement controls", () => {
     lucaLink.clearApprovalQueue();
     lucaLink.clearContinuationRegistry();
     lucaLink.clearHostConnections();
-    (lucaLink as any).deviceTrustRegistry = createLucaLinkDeviceTrustRegistry();
+    (lucaLink as any).deviceTrustStore = new LucaLinkDeviceTrustStore();
     (lucaLink as any).socket = null;
     (lucaLink as any).state = {
       connected: false,
@@ -236,7 +234,7 @@ describe("LucaLinkService soft enforcement controls", () => {
       },
       { now: 1_700_000_000_000 },
     );
-    registerLucaLinkContinuation((lucaLink as any).continuationRegistry, token);
+    lucaLinkContinuationStore.register(token);
 
     const evaluated = lucaLink.evaluateContinuationBridge(token.id, {
       requestedByDeviceId: "device-a",
@@ -291,11 +289,8 @@ describe("LucaLinkService soft enforcement controls", () => {
       },
       { now: 1_700_000_000_000 },
     );
-    registerLucaLinkContinuation(
-      (lucaLink as any).continuationRegistry,
-      manual,
-    );
-    registerLucaLinkContinuation((lucaLink as any).continuationRegistry, fresh);
+    lucaLinkContinuationStore.register(manual);
+    lucaLinkContinuationStore.register(fresh);
 
     expect(lucaLink.prepareSafeContinuation(manual.id).decision).toBe(
       "requires-manual-retry",
@@ -376,7 +371,7 @@ describe("LucaLinkService soft enforcement controls", () => {
     const emit = vi.fn();
     const disconnect = vi.fn();
     (lucaLink as any).socket = { emit, disconnect };
-    (lucaLink as any).deviceTrustRegistry = createLucaLinkDeviceTrustRegistry();
+    (lucaLink as any).deviceTrustStore = new LucaLinkDeviceTrustStore();
     (lucaLink as any).updateState({
       connectedDevices: [
         {
@@ -546,7 +541,7 @@ describe("LucaLinkService guest inbound hardening", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     lucaLink.clearGuestInboundAudit();
-    (lucaLink as any).deviceTrustRegistry = createLucaLinkDeviceTrustRegistry();
+    (lucaLink as any).deviceTrustStore = new LucaLinkDeviceTrustStore();
     (lucaLink as any).guestSecuritySessions?.clear();
     (lucaLink as any).guestSessions?.clear();
     (lucaLink as any).guestMessageHandler = null;

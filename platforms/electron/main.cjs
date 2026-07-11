@@ -916,45 +916,44 @@ function updateTrayMenu() {
     if (!tray) return;
 
     const contextMenu = Menu.buildFromTemplate([
-        { label: 'Luca Dashboard', click: () => toggleMainWindow() },
-        { label: 'Luca Smart Screen', click: () => toggleVisualCoreWindow() },
-
-        { label: '🎙️ Start Dictation (Ctrl+D)', click: () => toggleWidgetWindow() },
-
+        { label: 'Open LucaOS', click: () => toggleMainWindow() },
+        { label: 'Talk to Luca', click: () => summonVoicePresence('tray') },
+        { label: 'See Screen', click: () => toggleVisualCoreWindow() },
         { label: 'Luca Hologram Face', click: () => toggleHologram() },
         { label: 'Luca Mini Chat', click: () => toggleChatWindow() },
+        { label: 'Dictation Widget', click: () => toggleDictation() },
         
         { type: 'separator' },
         
         {
-            label: '🔒 Sensor Privacy',
+            label: 'Sensor Privacy',
             submenu: [
                 { 
-                    label: `🎙️ Mic Access`, 
+                    label: `Mic Access`,
                     type: 'checkbox',
                     checked: sensorState.privacy.micEnabled,
                     click: (item) => toggleSensorPrivacy('mic', item.checked)
                 },
                 { 
-                    label: `👁️ Camera Access`, 
+                    label: `Camera Access`,
                     type: 'checkbox',
                     checked: sensorState.privacy.cameraEnabled,
                     click: (item) => toggleSensorPrivacy('camera', item.checked)
                 },
                 { 
-                    label: `🖥️ Screen Access`, 
+                    label: `Screen Access`,
                     type: 'checkbox',
                     checked: sensorState.privacy.screenEnabled,
                     click: (item) => toggleSensorPrivacy('screen', item.checked)
                 },
                 { type: 'separator' },
                 { 
-                    label: `Status: ${sensorState.mic || sensorState.vision || sensorState.screen ? '🔴 CAPTURING' : '🟢 SECURE'}`,
+                    label: `Status: ${sensorState.mic || sensorState.vision || sensorState.screen ? 'Capturing' : 'Secure'}`,
                     enabled: false
                 },
                 { type: 'separator' },
                  { 
-                    label: '🛑 KILL ALL SENSORS', 
+                    label: 'Stop all sensors',
                     click: () => {
                         console.warn('[TRAY] Emergency Kill Switch triggered!');
                         // Immediate UI update
@@ -977,66 +976,6 @@ function updateTrayMenu() {
             ]
         },
         
-        { type: 'separator' },
-
-        {
-            label: '🛡️ LIVE SENTRY MODE',
-            submenu: [
-                {
-                    label: '🔊 Audio Sentry(God Ear)',
-                    type: 'checkbox',
-                    id: 'sentry-audio',
-                    checked: sensorState.audioSentry || false,
-                    click: (item) => toggleSentryMode('audio', item.checked)
-                },
-                {
-                    label: '👁️ Visual Sentry(God Eye)',
-                    type: 'checkbox',
-                    id: 'sentry-vision',
-                    checked: sensorState.visualSentry || false,
-                    click: (item) => toggleSentryMode('visual', item.checked)
-                }
-            ]
-        },
-
-        { type: 'separator' },
-        { 
-            label: 'Switch Mind (Persona)', 
-             submenu: [
-                { label: 'Assistant Mode', click: () => switchPersona('ASSISTANT') },
-                { label: 'Engineer Mode', click: () => switchPersona('ENGINEER') },
-                { label: 'Ruthless Mode', click: () => switchPersona('RUTHLESS') },
-                { label: 'Hacker Mode', click: () => switchPersona('HACKER') }
-            ]
-        },
-        { 
-            label: 'Switch Skin (Theme)', 
-             submenu: [
-                { label: 'Master System (Blue)', click: () => switchTheme('MASTER_SYSTEM') },
-                { label: 'Terminal (Green)', click: () => switchTheme('TERMINAL') },
-                { label: 'Builder (Terracotta)', click: () => switchTheme('BUILDER') },
-                { label: 'Professional (White)', click: () => switchTheme('PROFESSIONAL') },
-                { label: 'Agentic Slate', click: () => switchTheme('AGENTIC_SLATE') },
-                { label: 'Frost Ice', click: () => switchTheme('FROST') },
-                { label: 'Satin Cream', click: () => switchTheme('LIGHTCREAM') },
-                { label: 'Vaporwave Night', click: () => switchTheme('VAPORWAVE') },
-                { label: 'Neural Purple', click: () => switchTheme('DICTATION') }
-            ]
-        },
-        { type: 'separator' },
-        { 
-            label: '⚡ God Mode (Autonomy)', 
-            type: 'checkbox', 
-            checked: sensorState.godMode, 
-            click: (item) => toggleGodMode(item.checked) 
-        },
-        { 
-            label: '🎙️ Sense (Wake Word)', 
-            type: 'checkbox', 
-            id: 'wake-word-monitor',
-            checked: sensorState.wakeWord, 
-            click: (item) => toggleWakeWordMonitor(item.checked)
-        },
         { type: 'separator' },
         { label: 'Quit Luca', click: () => {
             app.isQuitting = true;
@@ -1200,50 +1139,6 @@ function toggleHologram() {
     }
 }
 
-function switchPersona(mode) {
-    if (mainWindow) mainWindow.webContents.send('switch-persona', mode);
-    if (visualCoreWindow) visualCoreWindow.webContents.send('switch-persona', mode);
-    if (widgetWindow) widgetWindow.webContents.send('switch-persona', mode);
-    if (hologramWindow) hologramWindow.webContents.send('switch-persona', mode);
-    if (chatWindow) chatWindow.webContents.send('switch-persona', mode);
-}
-
-function switchTheme(themeId) {
-    if (mainWindow) mainWindow.webContents.send('switch-theme', themeId);
-    if (visualCoreWindow) visualCoreWindow.webContents.send('switch-theme', themeId);
-    if (widgetWindow) widgetWindow.webContents.send('switch-theme', themeId);
-    if (hologramWindow) hologramWindow.webContents.send('switch-theme', themeId);
-    if (chatWindow) chatWindow.webContents.send('switch-theme', themeId);
-}
-
-async function toggleGodMode(enabled) {
-    const endpoint = enabled ? 'start' : 'stop';
-    try {
-        console.log(`[TRAY] Toggling God Mode: ${endpoint.toUpperCase()}`);
-        sensorState.godMode = enabled;
-        updateTrayMenu();
-        await fetch(`http://localhost:${SERVER_PORT}/api/autonomy/${endpoint}`, { method: 'POST' });
-    } catch (e) {
-        console.error(`[TRAY] Failed to toggle God Mode:`, e);
-    }
-}
-
-function toggleWakeWordMonitor(enabled) {
-    if (mainWindow) {
-        console.log(`[TRAY] Sending toggle-wake-word: ${enabled}`);
-        sensorState.wakeWord = enabled;
-        updateTrayMenu();
-        mainWindow.webContents.send('toggle-wake-word', enabled);
-    }
-}
-
-// Bi-directional Sync: Update Tray Checkbox from Renderer
-ipcMain.on('sync-wake-word-tray', (event, { enabled }) => {
-    console.log(`[TRAY] Synced wake-word to: ${enabled}`);
-    sensorState.wakeWord = !!enabled;
-    updateTrayMenu();
-});
-
 // Sentry Mode Sync
 ipcMain.on('sync-sentry-state', (event, state) => {
     // state = { audio: boolean, visual: boolean }
@@ -1272,18 +1167,6 @@ function toggleSensorPrivacy(sensor, enabled) {
         updateTrayMenu();
 
         mainWindow.webContents.send('toggle-sensor-privacy', { sensor, enabled });
-    }
-}
-
-function toggleSentryMode(type, enabled) {
-    if (mainWindow) {
-        console.log(`[TRAY] Toggling Sentry Mode [${type}]: ${enabled}`);
-        mainWindow.webContents.send(`toggle-sentry-${type}`, enabled);
-        
-        // Optimistically update state
-        if (type === 'audio') sensorState.audioSentry = enabled;
-        if (type === 'visual') sensorState.visualSentry = enabled;
-        // updateTrayMenu(); // Wait for sync confirm? Or instant? Instant feel is better.
     }
 }
 
