@@ -126,6 +126,7 @@ import { LucaPremiumOnboardingPreview } from "./components/Onboarding/LucaPremiu
 import { mapLucaOnboardingFlowToDesktopCompletion } from "./components/Onboarding/lucaOnboardingCompletionBridge";
 import { useLucaLocalEndpointStatus } from "./hooks/useLucaLocalEndpointStatus";
 import { LiquidBackground } from "./components/visual/LiquidBackground.tsx";
+import { normalizeLucaAtmosphere } from "./config/lucaAtmospheres";
 import { EdgePresence } from "./components/presence";
 import { THEME_PALETTE } from "./config/themeColors";
 import { isElectron as checkElectron, isWeb } from "./utils/env";
@@ -525,6 +526,9 @@ function AppContent() {
   const lucaLinkBodyDevices = useLucaLinkDevices();
   const [backgroundOpacity, setBackgroundOpacity] = useState<number>(0.3);
   const [backgroundBlur, setBackgroundBlur] = useState<number>(40);
+  const [atmosphere, setAtmosphere] = useState(() =>
+    normalizeLucaAtmosphere(settingsService.getSettings().general.atmosphere),
+  );
   // Live material preview: the Appearance sliders broadcast while dragging;
   // the boundary recomputes and the WHOLE app follows. Cancel/close restores
   // persisted values via the same event.
@@ -537,6 +541,14 @@ function AppContent() {
     };
     window.addEventListener("luca:material-preview", onPreview);
     return () => window.removeEventListener("luca:material-preview", onPreview);
+  }, []);
+
+  useEffect(() => {
+    const handleAtmospherePreview = (event: Event) => {
+      setAtmosphere(normalizeLucaAtmosphere((event as CustomEvent).detail));
+    };
+    window.addEventListener("luca:atmosphere-preview", handleAtmospherePreview);
+    return () => window.removeEventListener("luca:atmosphere-preview", handleAtmospherePreview);
   }, []);
 
   // Watch Settings changes outside of voice subsystem to guarantee UI renders
@@ -583,6 +595,7 @@ function AppContent() {
 
       setBackgroundOpacity(opacity);
       setBackgroundBlur(blur);
+      setAtmosphere(normalizeLucaAtmosphere(settings?.general?.atmosphere));
 
       // Unified Typography Engine
       const fontScale = settings?.general?.fontScale ?? 1.0;
@@ -2685,7 +2698,11 @@ function AppContent() {
             />
           )}
           {platformBackgroundPolicy.shouldRenderLiquidBackground && (
-            <LiquidBackground theme={theme} className="fixed inset-0 -z-50" />
+            <LiquidBackground
+              theme={theme}
+              atmosphere={atmosphere}
+              className="fixed inset-0 -z-50"
+            />
           )}
           {/* Presence edge glow removed — the app reads cleaner without a
               glowing frame around the whole window. */}

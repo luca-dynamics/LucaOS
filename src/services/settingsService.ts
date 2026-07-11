@@ -18,6 +18,7 @@ import {
   normalizeLucaSkinId,
   type LucaSkinId,
 } from "../config/lucaSkins";
+import type { LucaAtmosphere } from "../config/lucaAtmospheres";
 
 export interface NotificationSettings {
   enabled: boolean;
@@ -55,6 +56,7 @@ export interface LucaSettings {
     persona: PersonaMode;
     theme: UIThemeId;
     selectedSkinId?: LucaSkinId;
+    atmosphere?: LucaAtmosphere;
     syncThemeWithPersona: boolean;
     toneStyle: ToneStyleId;
     customTone?: ToneDimensions;

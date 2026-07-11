@@ -689,3 +689,11 @@ html.luca-wco .luca-wco-pad-right {
     opacity: 1;
   }
 }
+@keyframes luca-atmosphere-drift {
+  0% { background-position: 0% 0%; transform: translateZ(0) scale(1.04); }
+  100% { background-position: 100% 100%; transform: translateZ(0) scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*="luca-atmosphere-drift"] { animation: none !important; }
+}
