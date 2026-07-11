@@ -77,33 +77,22 @@ import {
 import { lucaLinkDeviceTrustStore } from "./lucaLinkDeviceTrustStore";
 
 import {
-  approveLucaLinkHandoff,
-  cancelLucaLinkHandoff,
-  clearLucaLinkHandoffRegistry,
   createArtifactHandoffPayload,
   createConversationHandoffPayload,
   createLucaLinkHandoffPayloadPreview,
-  createLucaLinkHandoffRegistry,
   createLucaLinkHandoffRequest,
   createMemoryIntentHandoffPayload,
   createMissionHandoffPayload,
   createModelContextHandoffPayload,
   createSettingsContextHandoffPayload,
-  declineLucaLinkHandoff,
   evaluateLucaLinkHandoffPolicy,
-  getLucaLinkHandoff,
-  listLucaLinkHandoffs,
-  listPendingLucaLinkHandoffs,
-  markLucaLinkHandoffAccepted,
-  registerLucaLinkHandoff,
-  summarizeLucaLinkHandoffRegistry,
   type LucaLinkHandoffKind,
   type LucaLinkHandoffMutationResult,
-  type LucaLinkHandoffRegistryState,
   type LucaLinkHandoffRegistrySummary,
   type LucaLinkHandoffRequest,
   type LucaLinkHandoffRequestInput,
 } from "./lucaLinkHandoff";
+import { lucaLinkHandoffStore } from "./lucaLinkHandoffStore";
 
 import {
   clearLucaLinkHostConnectionRegistry,
@@ -230,8 +219,7 @@ class LucaLinkService {
   private runtimeShadow: LucaLinkRuntimeShadowState =
     createLucaLinkRuntimeShadow({ enabled: false });
   private deviceTrustStore = lucaLinkDeviceTrustStore;
-  private handoffRegistry: LucaLinkHandoffRegistryState =
-    createLucaLinkHandoffRegistry();
+  private handoffStore = lucaLinkHandoffStore;
   private hostConnectionRegistry: LucaLinkHostConnectionRegistryState =
     createLucaLinkHostConnectionRegistry();
   private bridgeReviewRegistry: LucaLinkBridgeReviewRegistry =
@@ -1113,19 +1101,19 @@ class LucaLinkService {
   }
 
   getHandoffs(): LucaLinkHandoffRequest[] {
-    return listLucaLinkHandoffs(this.handoffRegistry);
+    return this.handoffStore.list();
   }
 
   getPendingHandoffs(): LucaLinkHandoffRequest[] {
-    return listPendingLucaLinkHandoffs(this.handoffRegistry);
+    return this.handoffStore.listPending();
   }
 
   getHandoffSummary(): LucaLinkHandoffRegistrySummary {
-    return summarizeLucaLinkHandoffRegistry(this.handoffRegistry);
+    return this.handoffStore.summarize();
   }
 
   clearHandoffs(): LucaLinkHandoffMutationResult {
-    return clearLucaLinkHandoffRegistry(this.handoffRegistry);
+    return this.handoffStore.clear();
   }
 
   private createAndRegisterHandoff(
@@ -1148,7 +1136,7 @@ class LucaLinkService {
         ...input,
         payloadPreview: preview,
       },
-      { defaultTtlMs: this.handoffRegistry.defaultTtlMs },
+      { defaultTtlMs: this.handoffStore.defaultTtlMs },
     );
     const policy = evaluateLucaLinkHandoffPolicy({
       kind: initialRequest.kind,
@@ -1176,7 +1164,7 @@ class LucaLinkService {
       },
       {
         now: initialRequest.createdAt,
-        defaultTtlMs: this.handoffRegistry.defaultTtlMs,
+        defaultTtlMs: this.handoffStore.defaultTtlMs,
       },
     );
 
@@ -1205,7 +1193,7 @@ class LucaLinkService {
       request.approvalRequestId = queued.request?.id;
     }
 
-    return registerLucaLinkHandoff(this.handoffRegistry, request);
+    return this.handoffStore.register(request);
   }
 
   createConversationHandoff(
@@ -1300,36 +1288,32 @@ class LucaLinkService {
     handoffId: string,
     options?: { now?: number; approvedByDeviceId?: string; reason?: string },
   ): LucaLinkHandoffMutationResult {
-    return approveLucaLinkHandoff(this.handoffRegistry, handoffId, options);
+    return this.handoffStore.approve(handoffId, options);
   }
 
   declineHandoff(
     handoffId: string,
     options?: { now?: number; reason?: string },
   ): LucaLinkHandoffMutationResult {
-    return declineLucaLinkHandoff(this.handoffRegistry, handoffId, options);
+    return this.handoffStore.decline(handoffId, options);
   }
 
   cancelHandoff(
     handoffId: string,
     options?: { now?: number; reason?: string },
   ): LucaLinkHandoffMutationResult {
-    return cancelLucaLinkHandoff(this.handoffRegistry, handoffId, options);
+    return this.handoffStore.cancel(handoffId, options);
   }
 
   markHandoffAccepted(
     handoffId: string,
     options?: { now?: number; reason?: string },
   ): LucaLinkHandoffMutationResult {
-    return markLucaLinkHandoffAccepted(
-      this.handoffRegistry,
-      handoffId,
-      options,
-    );
+    return this.handoffStore.markAccepted(handoffId, options);
   }
 
   getHandoff(handoffId: string): LucaLinkHandoffRequest | undefined {
-    return getLucaLinkHandoff(this.handoffRegistry, handoffId);
+    return this.handoffStore.get(handoffId);
   }
 
   getHandoffKinds(): LucaLinkHandoffKind[] {
