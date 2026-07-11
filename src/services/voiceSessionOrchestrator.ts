@@ -10,6 +10,13 @@ import type { VoiceSessionRuntime } from "./voiceSessionTypes";
 import { getFriendlyVoiceSpeedLabel } from "../utils/voiceDisplay";
 import { settingsService } from "./settingsService";
 import {
+  browserHfRealtimeVoiceSession,
+  type BrowserHfRealtimeVoiceConfig,
+} from "./voice/BrowserHfRealtimeVoiceSession";
+import { evaluateVoiceProviderReadiness } from "./voice/VoiceProviderReadiness";
+import { evaluateVoiceRouteAuthority } from "./voice/VoiceRouteAuthorityGate";
+import { deriveVoiceRuntimeProviderPolicy } from "./voice/VoiceRuntimeProviderPolicy";
+import {
   classifyVoiceRoutingHealth,
   recommendVoiceRoute,
   type VoiceRouteRecommendation,
@@ -19,6 +26,7 @@ import {
 export interface VoiceSessionConnectOptions {
   liveConfig: LiveConfig;
   hybridConfig: Partial<HybridVoiceConfig>;
+  hfRealtimeConfig?: Omit<BrowserHfRealtimeVoiceConfig, "endpoint" | "enabled">;
 }
 
 class VoiceSessionOrchestrator {
@@ -255,13 +263,79 @@ class VoiceSessionOrchestrator {
   async connect({
     liveConfig,
     hybridConfig,
+    hfRealtimeConfig,
   }: VoiceSessionConnectOptions): Promise<VoiceSessionRoute> {
     const route = this.resolveAdaptiveRoute();
     this.disconnect(false);
 
+    const settings = settingsService.getSettings();
+    const hfRealtimeRequested =
+      route.kind !== "CLOUD_BIDI" &&
+      settings.voice.hfRealtimeEnabled === true &&
+      Boolean(settings.voice.hfRealtimeEndpoint?.trim());
+    const hfReadiness = evaluateVoiceProviderReadiness({
+      providerKind: "local",
+      capability: "streaming_stt",
+      featureFlags: {
+        enableRealLocalVoiceProvider: hfRealtimeRequested,
+        enableRealStt: hfRealtimeRequested,
+        enableRealStreaming: hfRealtimeRequested,
+        enableLocalModelLoading: hfRealtimeRequested,
+      },
+      backendAvailable: hfRealtimeRequested,
+      modelAvailable: hfRealtimeRequested,
+      localModelLoadingAllowed: hfRealtimeRequested,
+    });
+    const hfAuthority = evaluateVoiceRouteAuthority({
+      mode: hfRealtimeRequested ? "runtime_router" : "existing_resolver",
+      existingRoute: route,
+      runtimeRoute: hfRealtimeRequested ? route : undefined,
+      providerPolicy: deriveVoiceRuntimeProviderPolicy(settings.voice),
+      readinessSummary: hfReadiness,
+      featureFlags: {
+        enableRuntimeRouteAuthority: hfRealtimeRequested,
+        enableRuntimeRouteAuthorityForPrivacyPreset: true,
+        enableRuntimeRouteAuthorityForSpeedsterPreset: true,
+        enableRuntimeRouteAuthorityForPerformancePreset: true,
+        enableRuntimeRouteAuthorityForBalancedPreset: true,
+        requireReadinessReadyBeforePromotion: true,
+      },
+    });
+    route.authority = hfAuthority;
+    const hfRealtimeEnabled =
+      hfRealtimeRequested && hfAuthority.activeAuthority === "runtime_router";
+
     if (route.kind === "CLOUD_BIDI") {
       await liveService.connect(liveConfig);
       this.activeRuntime = liveService;
+    } else if (hfRealtimeEnabled) {
+      try {
+        await browserHfRealtimeVoiceSession.connect({
+          ...hybridConfig,
+          ...hfRealtimeConfig,
+          enabled: true,
+          endpoint: settings.voice.hfRealtimeEndpoint!.trim(),
+        });
+        this.activeRuntime = browserHfRealtimeVoiceSession;
+        route.reason = route.reason
+          ? `${route.reason} OpenAI Realtime local backend connected.`
+          : "OpenAI Realtime local backend connected.";
+      } catch (error) {
+        console.warn(
+          "[VOICE] OpenAI Realtime local backend unavailable; falling back to the configured hybrid pipeline.",
+          error,
+        );
+        await hybridVoiceService.connect({
+          ...hybridConfig,
+          brainProvider: route.brainProvider,
+          ttsVoice:
+            route.kind === "LOCAL_PIPELINE"
+              ? "__LOCAL_PIPELINE__"
+              : "__HYBRID_PIPELINE__",
+        });
+        this.activeRuntime = hybridVoiceService;
+        route.reason = "OpenAI Realtime local backend was unavailable; existing voice pipeline fallback is active.";
+      }
     } else {
       await hybridVoiceService.connect({
         ...hybridConfig,
@@ -291,9 +365,12 @@ class VoiceSessionOrchestrator {
       liveService.disconnect();
     } else if (this.activeRuntime === hybridVoiceService) {
       hybridVoiceService.disconnect();
+    } else if (this.activeRuntime === browserHfRealtimeVoiceSession) {
+      void browserHfRealtimeVoiceSession.disconnect();
     } else {
       liveService.disconnect();
       hybridVoiceService.disconnect();
+      void browserHfRealtimeVoiceSession.disconnect();
     }
     this.activeRoute = null;
     this.activeRuntime = null;

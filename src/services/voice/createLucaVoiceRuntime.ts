@@ -6,6 +6,7 @@ import { VoiceRuntime } from "./VoiceRuntime";
 import { VoiceRuntimeEventBridge } from "./VoiceRuntimeEventBridge";
 import { VoiceStreamingRuntime } from "./VoiceStreamingRuntime";
 import { createRealtimeVoiceSessionController } from "./createRealtimeVoiceSessionController";
+import { HfRealtimeVoiceRuntime, type HfRealtimeVoiceRuntimeOptions } from "./HfRealtimeVoiceRuntime";
 import { createVoiceProviderAdapters } from "./createVoiceProviderAdapters";
 import { createVoiceRealProviderAdapterShell } from "./createVoiceRealProviderAdapterShell";
 import { evaluateVoiceProviderReadiness } from "./VoiceProviderReadiness";
@@ -19,6 +20,7 @@ export interface LucaVoiceRuntimeFactoryOptions {
   enableInMemoryTape?: boolean;
   realProviderFeatureFlags?: LucaVoiceRealProviderFeatureFlags;
   openAICompatibleProviderOptions?: LucaVoiceOpenAICompatibleProviderOptions;
+  hfRealtime?: Omit<HfRealtimeVoiceRuntimeOptions, "controller">;
 }
 
 export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions = {}) {
@@ -36,6 +38,12 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
     streamingRuntime,
     eventBridge,
   }).controller;
+  const hfRealtimeRuntime = options.hfRealtime
+    ? new HfRealtimeVoiceRuntime({
+        ...options.hfRealtime,
+        controller: realtimeVoiceController,
+      })
+    : undefined;
 
   const flags = {
     registerScaffoldProviderAdapters: options.registerScaffoldProviderAdapters ?? true,
@@ -114,6 +122,7 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
     tapeSink,
     eventBridge,
     realtimeVoiceController,
+    hfRealtimeRuntime,
     providerAdapters,
     realProviderAdapterShell,
     getSnapshot: () => {
@@ -130,6 +139,7 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
         streamingSnapshot: streamingRuntime.getSnapshot(),
         audioApiSnapshot: audioApi.getSnapshot(),
         realtimeVoiceControllerSnapshot: realtimeVoiceController.getSnapshot(),
+        hfRealtimeRuntimeSnapshot: hfRealtimeRuntime?.getSnapshot(),
         tapeSnapshot: (options.enableInMemoryTape ?? true) ? tapeSink.getSnapshot() : undefined,
         metadata: {
           factoryKind: "luca_voice_runtime_scaffold" as const,
@@ -154,6 +164,7 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
         tapeSink.reset();
       }
       realtimeVoiceController.reset();
+      hfRealtimeRuntime?.disconnect();
       providerAdapters.reset();
       realProviderAdapterShell.reset();
       registerEnabledAdapters();

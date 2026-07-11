@@ -1,10 +1,10 @@
 import { SecureSocket } from "./secureSocket";
-import { lucaLink as legacyRelayClient } from "./relayClientAdapter";
+import { lucaLinkRelayBoundary as legacyRelayClient } from "./lucaLinkRelayBoundary";
 export type {
   LucaLinkMessage,
   LucaLinkState,
   LucaLinkDevice,
-} from "./relayClientAdapter";
+} from "./lucaLinkRelayBoundary";
 
 /**
  * The relay/guest surface consumers are allowed to use — a narrow, typed
