@@ -621,10 +621,10 @@ class LucaLinkService {
             }
           }
 
-          // Handle registry sync
+          // Handle device sync
           if (message.type === "sync" && message.sync?.type === "registry") {
             const devices = message.sync.data as LucaLinkDevice[];
-            this.syncDeviceTrustRegistryFromConnectedDevices(devices);
+            this.syncDeviceTrustStoreFromConnectedDevices(devices);
             this.updateState({ connectedDevices: devices });
             this.observeRuntimeEventForDiagnostics({
               eventName: "registry",
@@ -1703,9 +1703,7 @@ class LucaLinkService {
           capabilities: device.capabilities,
           isCurrentPrimaryHost: device.deviceId === this.state.deviceId,
           lastSeenAt: device.lastSeenAt,
-          connectionEvidence: [
-            "Derived from local LucaLink device trust registry.",
-          ],
+          connectionEvidence: ["Derived from local LucaLink device trust store."],
         },
         { now },
       );
@@ -1846,7 +1844,7 @@ class LucaLinkService {
     });
   }
 
-  private syncDeviceTrustRegistryFromConnectedDevices(
+  private syncDeviceTrustStoreFromConnectedDevices(
     devices: LucaLinkDevice[],
   ): void {
     devices.forEach((device) => {
