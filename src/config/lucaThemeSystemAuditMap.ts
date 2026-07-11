@@ -277,11 +277,11 @@ export const lucaThemeSystemAuditMap: LucaThemeSystemAuditEntry[] = [
   {
     surfaceId: "onboarding-theme-selection",
     surfaceArea: "onboarding",
-    fileOrComponent: "src/components/Onboarding/ThemeSelectionStep.tsx",
+    fileOrComponent: "src/components/Onboarding/LucaOnboardingScreen.tsx",
     currentThemeUsage:
-      "Theme cards write general.theme, update --app-primary and --app-* contrast variables, and expose opacity/blur previews during first-run.",
+      "The premium environment screen captures the selected Luca skin and material preferences for the host completion bridge.",
     tokenUsage:
-      "Uses THEME_PALETTE, getDynamicContrast, and app CSS variables.",
+      "Uses Luca skin/material tokens and app CSS variables through the premium onboarding shell.",
     hardcodedColorUsage:
       "Theme card metadata includes gradients, descriptions, and color expectations; preview glow uses theme primary values.",
     hardcodedColorRiskLabels: [
@@ -299,9 +299,9 @@ export const lucaThemeSystemAuditMap: LucaThemeSystemAuditEntry[] = [
   {
     surfaceId: "onboarding-hologram-face",
     surfaceArea: "onboarding",
-    fileOrComponent: "src/components/Onboarding/HologramFace.tsx",
+    fileOrComponent: "src/components/Onboarding/LucaPremiumOnboardingPreview.tsx",
     currentThemeUsage:
-      "Uses theme color props for embodied face/glow rendering during onboarding.",
+      "Uses LucaPresence and the premium shell for embodied onboarding presence.",
     tokenUsage:
       "Partial; relies on passed theme/accent values rather than semantic face tokens.",
     hardcodedColorUsage:

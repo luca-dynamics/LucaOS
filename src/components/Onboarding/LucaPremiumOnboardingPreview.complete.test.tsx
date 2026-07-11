@@ -23,6 +23,8 @@ describe("LucaPremiumOnboardingPreview onComplete (P4)", () => {
       root.render(
         <LucaPremiumOnboardingPreview
           initialScreenId="finish"
+          settleDurationMs={0}
+          offerFaceRecognition={false}
           onComplete={onComplete}
         />,
       ),

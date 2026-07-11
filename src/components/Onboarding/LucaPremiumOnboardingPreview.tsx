@@ -56,7 +56,7 @@ function detectCameraAvailable(): boolean {
 
 /**
  * LucaPremiumOnboardingPreview — a PREVIEW-ONLY composition that proves the
- * staged premium onboarding stack works end-to-end:
+ * production onboarding stack used by both desktop and web:
  *
  *   lucaOnboardingFlowEngine (state)
  *        ↓ selectors / transitions
@@ -69,12 +69,11 @@ function detectCameraAvailable(): boolean {
  * call the engine's pure transitions. The chosen environment option drives the
  * shell's skin so the look responds as the user picks.
  *
- * Scope / boundary discipline (deliberately dormant):
- * - This component is mounted NOWHERE in the production boot path. It does not
- *   touch OnboardingFlow.tsx, App.tsx, WebLifecycleShell, the runtime adapters,
- *   routing, or the legacy `onComplete` contract.
- * - Completion is the engine's inert in-memory flag only; it activates nothing
- *   (no settings, provider, memory, tool, voice, or boot-state side effects).
+ * Scope / boundary discipline:
+ * - Hosts provide `onComplete` to bridge the final state through their guarded
+ *   persistence and lifecycle transition.
+ * - This component does not directly activate tools, models, memory, voice, or
+ *   boot-state side effects.
  * - All visual scoping stays local via LucaOnboardingShell; nothing mutates
  *   document / body / html. It carries no status / safety semantics — the
  *   merged per-screen reassurance copy stays authoritative.
@@ -94,8 +93,8 @@ export interface LucaPremiumOnboardingPreviewProps {
   initialScreenId?: PremiumOnboardingScreenId;
   /**
    * Called once when the flow completes (finish primary CTA), with the final
-   * flow state. When omitted the component is a dormant preview that activates
-   * nothing; a live host (P4) provides this to bridge completion.
+   * flow state. Tests and isolated previews may omit it; production hosts pass
+   * it to bridge completion through the host lifecycle.
    */
   onComplete?: (flow: LucaOnboardingFlowState) => void;
   /** Whether this host can provision local models (gates the local-setup tail step). */

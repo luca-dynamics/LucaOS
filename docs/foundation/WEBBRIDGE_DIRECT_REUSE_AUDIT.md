@@ -1,5 +1,11 @@
 # WebBridge Direct LucaOS UI Reuse Audit
 
+> Historical note: the legacy `OnboardingFlow`, `ConversationalOnboarding`,
+> `desktopOnboardingRuntime`, and their private UI cluster were removed after
+> the premium flow became the shared desktop/web production path. Current
+> onboarding mounts `LucaPremiumOnboardingPreview`; legacy paths below document
+> the earlier extraction work and are not current architecture.
+
 ## Decision
 
 WebBridge must import the real LucaOS product UI rather than generate parallel
