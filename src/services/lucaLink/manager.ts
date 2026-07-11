@@ -632,6 +632,10 @@ export class LucaLinkManager {
     return legacyRelayClient.disconnect();
   }
 
+  disposeRelay(): ReturnType<LucaLinkRelayFacade["dispose"]> {
+    return legacyRelayClient.dispose();
+  }
+
   onRelayGuestMessage(
     ...args: Parameters<LucaLinkRelayFacade["onGuestMessage"]>
   ): ReturnType<LucaLinkRelayFacade["onGuestMessage"]> {

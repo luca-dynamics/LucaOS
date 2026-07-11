@@ -930,6 +930,23 @@ class LucaLinkService {
   }
 
   /**
+   * Release relay-owned listeners and guest resources when the host runtime
+   * is being torn down, such as during tests or Electron shutdown.
+   */
+  dispose(): void {
+    this.disconnect();
+    for (const session of this.guestSessions.values()) {
+      session.peerConnection?.close();
+    }
+    this.guestSessions.clear();
+    this.guestSecuritySessions.clear();
+    this.guestInboundAudit = [];
+    this.guestMessageHandler = null;
+    this.stateListeners.clear();
+    this.messageListeners.clear();
+  }
+
+  /**
    * Get the pairing URL for QR code (includes relay URL + token + local URL)
    */
   async getPairingUrl(): Promise<string | null> {

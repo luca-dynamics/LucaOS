@@ -51,6 +51,7 @@ describe("lucaLinkManager relay API", () => {
       "joinRelayWithToken",
       "autoConnectRelay",
       "disconnectRelay",
+      "disposeRelay",
       "generateRelayGuestSession",
       "initRelayGuestHandler",
       "onRelayGuestMessage",

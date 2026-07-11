@@ -73,6 +73,7 @@ export type LucaLinkConsoleFacade = Pick<
   | "declineHandoff"
   | "denyApprovalRequest"
   | "disconnect"
+  | "dispose"
   | "generateGuestSession"
   | "getActiveTrustedDevices"
   | "getAdapterDraftSummary"
