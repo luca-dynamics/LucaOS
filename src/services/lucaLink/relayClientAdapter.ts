@@ -39,16 +39,11 @@ import type {
   LucaLinkContinuationValidationContext,
   LucaLinkContinuationValidationResult,
 } from "./lucaLinkContinuation";
-import {
-  clearLucaLinkShadowObservations,
-  createLucaLinkRuntimeShadow,
-  getLucaLinkShadowObservations,
-  recordLucaLinkShadowObservation,
-  summarizeLucaLinkShadowObservations,
-  type LucaLinkRuntimeShadowEventInput,
-  type LucaLinkRuntimeShadowOptions,
-  type LucaLinkRuntimeShadowState,
+import type {
+  LucaLinkRuntimeShadowEventInput,
+  LucaLinkRuntimeShadowOptions,
 } from "./lucaLinkRuntimeShadow";
+import { lucaLinkRuntimeStore } from "./lucaLinkRuntimeStore";
 import type { LucaHostManifest } from "./lucaHostManifest";
 import type {
   LucaLinkRuntimeObservation,
@@ -137,9 +132,7 @@ import {
 } from "./lucaLinkEmbodiedHostPolicy";
 
 import {
-  createLucaLinkRuntimeEnforcementAuditRecord,
   evaluateLucaLinkRuntimeEnforcement,
-  summarizeLucaLinkRuntimeEnforcementAudit,
   type LucaLinkRuntimeEnforcementAuditRecord,
   type LucaLinkRuntimeEnforcementAuditSummary,
   type LucaLinkRuntimeEnforcementInput,
@@ -194,8 +187,7 @@ class LucaLinkService {
   };
   private stateListeners: Set<StateListener> = new Set();
   private messageListeners: Set<MessageListener> = new Set();
-  private runtimeShadow: LucaLinkRuntimeShadowState =
-    createLucaLinkRuntimeShadow({ enabled: false });
+  private runtimeStore = lucaLinkRuntimeStore;
   private deviceTrustStore = lucaLinkDeviceTrustStore;
   private handoffStore = lucaLinkHandoffStore;
   private hostConnectionStore = lucaLinkHostConnectionStore;
@@ -204,9 +196,6 @@ class LucaLinkService {
   private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
     mode: "disabled",
   };
-  private runtimeEnforcementMode: LucaLinkRuntimeEnforcementMode = "disabled";
-  private runtimeEnforcementAudit: LucaLinkRuntimeEnforcementAuditRecord[] = [];
-  private readonly runtimeEnforcementAuditLimit = 100;
   private localHostRole: "primary" | "guest" = "primary";
 
   // Persistent storage keys
@@ -759,7 +748,7 @@ class LucaLinkService {
     };
 
     if (
-      this.runtimeEnforcementMode !== "disabled" ||
+      this.runtimeStore.getEnforcementMode() !== "disabled" ||
       this.getSoftEnforcementMode() !== "disabled"
     ) {
       const runtimeEnforcement = this.evaluateRuntimeEnforcementForOutbound({
@@ -965,15 +954,15 @@ class LucaLinkService {
   enableRuntimeEnforcement(
     mode: LucaLinkRuntimeEnforcementMode = "observe-only",
   ): void {
-    this.runtimeEnforcementMode = mode;
+    this.runtimeStore.enableEnforcement(mode);
   }
 
   disableRuntimeEnforcement(): void {
-    this.runtimeEnforcementMode = "disabled";
+    this.runtimeStore.disableEnforcement();
   }
 
   getRuntimeEnforcementMode(): LucaLinkRuntimeEnforcementMode {
-    return this.runtimeEnforcementMode;
+    return this.runtimeStore.getEnforcementMode();
   }
 
   evaluateRuntimeEnforcement(
@@ -981,7 +970,7 @@ class LucaLinkService {
   ): LucaLinkRuntimeEnforcementResult {
     return this.evaluateRuntimeEnforcementWithMode(
       input,
-      this.runtimeEnforcementMode,
+      this.runtimeStore.getEnforcementMode(),
     );
   }
 
@@ -989,8 +978,8 @@ class LucaLinkService {
     input: LucaLinkRuntimeEnforcementInput,
   ): LucaLinkRuntimeEnforcementResult {
     const effectiveMode: LucaLinkRuntimeEnforcementMode =
-      this.runtimeEnforcementMode !== "disabled"
-        ? this.runtimeEnforcementMode
+      this.runtimeStore.getEnforcementMode() !== "disabled"
+        ? this.runtimeStore.getEnforcementMode()
         : this.getSoftEnforcementMode();
     return this.evaluateRuntimeEnforcementWithMode(input, effectiveMode);
   }
@@ -1048,31 +1037,20 @@ class LucaLinkService {
         }),
       allowSafeContinuation: true,
     });
-    this.recordRuntimeEnforcementAudit(result);
+    this.runtimeStore.recordEnforcement(result);
     return result;
   }
 
   getRuntimeEnforcementAudit(): LucaLinkRuntimeEnforcementAuditRecord[] {
-    return [...this.runtimeEnforcementAudit];
+    return this.runtimeStore.getEnforcementAudit();
   }
 
   getRuntimeEnforcementSummary(): LucaLinkRuntimeEnforcementAuditSummary {
-    return summarizeLucaLinkRuntimeEnforcementAudit(
-      this.runtimeEnforcementAudit,
-    );
+    return this.runtimeStore.getEnforcementSummary();
   }
 
   clearRuntimeEnforcementAudit(): void {
-    this.runtimeEnforcementAudit = [];
-  }
-
-  private recordRuntimeEnforcementAudit(
-    result: LucaLinkRuntimeEnforcementResult,
-  ): void {
-    this.runtimeEnforcementAudit = [
-      ...this.runtimeEnforcementAudit,
-      createLucaLinkRuntimeEnforcementAuditRecord(result),
-    ].slice(-this.runtimeEnforcementAuditLimit);
+    this.runtimeStore.clearEnforcementAudit();
   }
 
   getHandoffs(): LucaLinkHandoffRequest[] {
@@ -1592,17 +1570,14 @@ class LucaLinkService {
   enableRuntimeShadowDiagnostics(
     options: LucaLinkRuntimeShadowOptions = {},
   ): void {
-    this.runtimeShadow = createLucaLinkRuntimeShadow({
-      ...options,
-      enabled: true,
-    });
+    this.runtimeStore.enableShadowDiagnostics(options);
   }
 
   /**
    * Disable diagnostics-only runtime shadow observations.
    */
   disableRuntimeShadowDiagnostics(): void {
-    this.runtimeShadow.enabled = false;
+    this.runtimeStore.disableShadowDiagnostics();
   }
 
   getTrustedDevices() {
@@ -1815,15 +1790,15 @@ class LucaLinkService {
   }
 
   getRuntimeShadowObservations(): LucaLinkRuntimeObservation[] {
-    return getLucaLinkShadowObservations(this.runtimeShadow);
+    return this.runtimeStore.getShadowObservations();
   }
 
   clearRuntimeShadowObservations(): void {
-    clearLucaLinkShadowObservations(this.runtimeShadow);
+    this.runtimeStore.clearShadowObservations();
   }
 
   getRuntimeShadowSummary(): LucaLinkRuntimeObservationSummary {
-    return summarizeLucaLinkShadowObservations(this.runtimeShadow);
+    return this.runtimeStore.getShadowSummary();
   }
 
   /**
@@ -1833,11 +1808,10 @@ class LucaLinkService {
   observeRuntimeEventForDiagnostics(
     input: LucaLinkRuntimeShadowEventInput,
   ): LucaLinkRuntimeObservation | undefined {
-    if (!this.runtimeShadow.enabled) return undefined;
-
-    return recordLucaLinkShadowObservation(this.runtimeShadow, input, {
-      candidates: this.getRuntimeShadowCandidateManifests(),
-    });
+    return this.runtimeStore.observeRuntimeEvent(
+      input,
+      this.getRuntimeShadowCandidateManifests(),
+    );
   }
 
   private getRuntimeShadowCandidateManifests(): LucaHostManifest[] {
@@ -2452,7 +2426,7 @@ class LucaLinkService {
     }
 
     if (
-      this.runtimeEnforcementMode !== "disabled" ||
+      this.runtimeStore.getEnforcementMode() !== "disabled" ||
       this.getSoftEnforcementMode() !== "disabled"
     ) {
       const runtimeEnforcement = this.evaluateRuntimeEnforcementForOutbound({
