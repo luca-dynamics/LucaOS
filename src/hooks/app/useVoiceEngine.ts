@@ -191,6 +191,22 @@ export function useVoiceEngine({
               syncVoiceRuntimeState();
             },
           },
+          hfRealtimeConfig: {
+            sttModel: voiceSettings?.sttModel || "parakeet-tdt",
+            systemPrompt: `You are Luca in ${targetPersona} mode. Be responsive and concise in spoken conversation.`,
+            onToolCall: executeTool,
+            onTranscript: (text, source) => {
+              setVoiceTranscript(text);
+              setVoiceTranscriptSource(source);
+            },
+            onAudioData: (amp) => setRemoteAmplitude(amp),
+            onVadChange: (active) => setIsVadActive(active),
+            onStatusUpdate: (status) => setVoiceStatus(status),
+            onConnectionChange: (connected) => {
+              soundService.play(connected ? "SUCCESS" : "ALERT");
+              syncVoiceRuntimeState();
+            },
+          },
         });
 
         const adaptiveNotice = getFriendlyAdaptiveVoiceNotice(

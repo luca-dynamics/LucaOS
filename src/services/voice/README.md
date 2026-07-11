@@ -1,4 +1,60 @@
-# LucaOS Voice Runtime Contracts (Scaffold)
+# LucaOS Voice Runtime Contracts
+
+## Operational OpenAI Realtime transport
+
+The module now includes `HfRealtimeVoiceRuntime`, a real, explicitly enabled
+WebSocket transport for OpenAI Realtime-compatible speech servers such as
+`huggingface/speech-to-speech`.
+
+It operationalizes the newer runtime contracts without replacing the existing
+`liveService` or `hybridVoiceService` defaults:
+
+- streams base64 PCM16 input with `input_audio_buffer.append`;
+- maps partial/final transcription events into `RealtimeVoiceSessionController`;
+- streams output audio through an injected audio sink;
+- maps response lifecycle, cancellation, server VAD, and barge-in state;
+- forwards structured tool calls and accepts tool results;
+- accepts multimodal image conversation items;
+- remains disabled unless `enabled: true` and an endpoint are supplied;
+- uses injected WebSocket/audio/tool boundaries for deterministic testing and
+  platform-specific implementations.
+
+Example composition:
+
+```ts
+const voice = createLucaVoiceRuntime({
+  hfRealtime: {
+    enabled: true,
+    url: "ws://127.0.0.1:8765/v1/realtime",
+    session: {
+      instructions: "You are Luca.",
+      turn_detection: { type: "server_vad", interrupt_response: true },
+    },
+    audioSink,
+    onToolCall,
+  },
+});
+
+await voice.hfRealtimeRuntime?.connect();
+```
+
+In the desktop application, users can enable the same transport under
+**Settings → Voice → Advanced Voice Routing** and supply any compatible
+`ws://` or `wss://` endpoint. The existing voice route remains authoritative
+unless all of the following are true:
+
+1. the user explicitly enables the realtime backend;
+2. the endpoint is non-empty;
+3. local streaming provider readiness passes;
+4. `VoiceRouteAuthorityGate` promotes the runtime route;
+5. the WebSocket and microphone both connect successfully.
+
+If connection fails, `voiceSessionOrchestrator` immediately starts the existing
+hybrid/local pipeline and records the fallback reason on the active route.
+
+Model choice remains outside this client transport. The connected server may
+run Parakeet, Gemma, Qwen3-TTS, or other compatible local/hosted components
+according to the user's runtime and hardware policy.
 
 The `src/services/voice` module is the first contract layer for LucaOS Voice Mode.
 

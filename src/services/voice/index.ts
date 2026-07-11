@@ -24,6 +24,9 @@ export * from "./createVoiceOpenAICompatibleProviderAdapter";
 export * from "./createLucaVoiceRuntime";
 export * from "./RealtimeVoiceSessionController";
 export * from "./createRealtimeVoiceSessionController";
+export * from "./HfRealtimeVoiceRuntime";
+export * from "./createHfRealtimeVoiceRuntime";
+export * from "./BrowserHfRealtimeVoiceSession";
 
 
 export * from "./VoiceOnboardingBridge";

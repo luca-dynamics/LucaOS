@@ -325,6 +325,45 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           description="Technical routing, fallback, network, and local model policy."
         >
           <div
+            className="rounded-lg border p-3 space-y-3"
+            style={{ borderColor: "var(--luca-border-subtle, var(--app-border-main))" }}
+          >
+            <label className="flex items-start justify-between gap-4 cursor-pointer">
+              <span>
+                <span className="block text-xs font-black uppercase tracking-wider" style={{ color: "var(--app-text-main)" }}>
+                  OpenAI Realtime local backend
+                </span>
+                <span className="block text-[10px] mt-1" style={{ color: "var(--app-text-muted)" }}>
+                  Use an explicitly configured local or self-hosted speech-to-speech WebSocket endpoint.
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={settings.voice.hfRealtimeEnabled === true}
+                onChange={(event) => onUpdate("voice", "hfRealtimeEnabled", event.target.checked)}
+                className="mt-1"
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--app-text-muted)" }}>
+                Realtime endpoint
+              </span>
+              <input
+                type="url"
+                value={settings.voice.hfRealtimeEndpoint || "ws://127.0.0.1:8765/v1/realtime"}
+                onChange={(event) => onUpdate("voice", "hfRealtimeEndpoint", event.target.value)}
+                disabled={settings.voice.hfRealtimeEnabled !== true}
+                spellCheck={false}
+                className="w-full rounded-lg border px-3 py-2 text-xs outline-none disabled:opacity-50"
+                style={{
+                  backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                  borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+                  color: "var(--app-text-main)",
+                }}
+              />
+            </label>
+          </div>
+          <div
             className="rounded-md border px-3 py-2 text-[10px] uppercase tracking-wider"
             style={{
               borderColor: "var(--luca-border-subtle, var(--app-border-main))",

@@ -1,6 +1,7 @@
 import type { HybridVoiceConfig } from "./hybridVoiceService";
 import type { LiveConfig } from "./liveService";
 import type { VoiceSessionRoute } from "./voiceSessionRouter";
+import type { BrowserHfRealtimeVoiceConfig } from "./voice/BrowserHfRealtimeVoiceSession";
 
 export interface IVoiceSessionRuntime<TConfig> {
   connect(config: TConfig): Promise<void> | void;
@@ -15,4 +16,5 @@ export interface IVoiceSessionRuntime<TConfig> {
 
 export type VoiceSessionRuntime =
   | IVoiceSessionRuntime<LiveConfig>
-  | IVoiceSessionRuntime<Partial<HybridVoiceConfig>>;
+  | IVoiceSessionRuntime<Partial<HybridVoiceConfig>>
+  | IVoiceSessionRuntime<BrowserHfRealtimeVoiceConfig>;

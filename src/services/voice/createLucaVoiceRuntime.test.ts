@@ -61,6 +61,28 @@ describe("createLucaVoiceRuntime", () => {
     expect(composed.registry.selectSTTBackend({ providerKind: "byok" })).toBeUndefined();
   });
 
+  it("composes the operational HF realtime runtime only when explicitly configured", () => {
+    const composed = createLucaVoiceRuntime({
+      hfRealtime: {
+        url: "ws://127.0.0.1:8765/v1/realtime",
+        enabled: true,
+        webSocketFactory: () => ({
+          readyState: 0,
+          binaryType: "blob",
+          send: () => undefined,
+          close: () => undefined,
+          addEventListener: () => undefined,
+        }),
+      },
+    });
+
+    expect(composed.hfRealtimeRuntime).toBeDefined();
+    expect(composed.getSnapshot().hfRealtimeRuntimeSnapshot).toMatchObject({
+      status: "idle",
+      metadata: { featureGated: true, websocketOpened: false },
+    });
+  });
+
   it("snapshot exposes readiness summary and no-call readiness metadata", () => {
     const composed = createLucaVoiceRuntime({
       realProviderFeatureFlags: {
