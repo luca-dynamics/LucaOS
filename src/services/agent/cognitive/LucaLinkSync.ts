@@ -7,8 +7,29 @@ import type { Checkpoint } from "./types";
 import type { LucaLinkMessage } from "../../lucaLink/manager";
 import { lucaLinkManager } from "../../lucaLink/manager";
 
+export type LucaLinkCheckpointSyncStatus =
+  | "local"
+  | "sent"
+  | "received"
+  | "stale-rejected"
+  | "requesting"
+  | "request-timeout"
+  | "deleted";
+
+export interface LucaLinkCheckpointSyncProvenance {
+  workflowId: string;
+  checkpointId?: string;
+  status: LucaLinkCheckpointSyncStatus;
+  updatedAt: number;
+  sourceDeviceId?: string;
+}
+
 export class LucaLinkSync {
   private readonly checkpoints = new Map<string, Checkpoint>();
+  private readonly provenance = new Map<
+    string,
+    LucaLinkCheckpointSyncProvenance
+  >();
   private readonly pendingRequests = new Map<
     string,
     { workflowId: string; resolve: (checkpoint: Checkpoint | null) => void; timeout: ReturnType<typeof setTimeout> }
@@ -23,6 +44,21 @@ export class LucaLinkSync {
           if (checkpoint) {
             if (this.shouldAcceptCheckpoint(checkpoint)) {
               this.checkpoints.set(checkpoint.workflowId, checkpoint);
+              this.setProvenance(checkpoint.workflowId, {
+                workflowId: checkpoint.workflowId,
+                checkpointId: checkpoint.id,
+                status: "received",
+                updatedAt: Date.now(),
+                sourceDeviceId: message.source,
+              });
+            } else {
+              this.setProvenance(checkpoint.workflowId, {
+                workflowId: checkpoint.workflowId,
+                checkpointId: checkpoint.id,
+                status: "stale-rejected",
+                updatedAt: Date.now(),
+                sourceDeviceId: message.source,
+              });
             }
             const requestId = this.readRequestId(message.payload);
             const pending = requestId ? this.pendingRequests.get(requestId) : undefined;
@@ -67,9 +103,22 @@ export class LucaLinkSync {
     const accepted = this.shouldAcceptCheckpoint(checkpoint);
     if (accepted) this.checkpoints.set(checkpoint.workflowId, checkpoint);
     if (!accepted) return false;
-    return lucaLinkManager.sendRelayMessage("all", "CHECKPOINT_SYNC", {
+    this.setProvenance(checkpoint.workflowId, {
+      workflowId: checkpoint.workflowId,
+      checkpointId: checkpoint.id,
+      status: "local",
+      updatedAt: Date.now(),
+    });
+    const sent = lucaLinkManager.sendRelayMessage("all", "CHECKPOINT_SYNC", {
       checkpoint,
     });
+    this.setProvenance(checkpoint.workflowId, {
+      workflowId: checkpoint.workflowId,
+      checkpointId: checkpoint.id,
+      status: sent ? "sent" : "local",
+      updatedAt: Date.now(),
+    });
+    return sent;
   }
 
   async fetchCheckpoint(workflowId: string): Promise<Checkpoint | null> {
@@ -80,8 +129,18 @@ export class LucaLinkSync {
       .toString(36)
       .slice(2, 8)}`;
     return new Promise((resolve) => {
+      this.setProvenance(workflowId, {
+        workflowId,
+        status: "requesting",
+        updatedAt: Date.now(),
+      });
       const timeout = setTimeout(() => {
         this.pendingRequests.delete(requestId);
+        this.setProvenance(workflowId, {
+          workflowId,
+          status: "request-timeout",
+          updatedAt: Date.now(),
+        });
         resolve(null);
       }, 1500);
       this.pendingRequests.set(requestId, { workflowId, resolve, timeout });
@@ -92,6 +151,11 @@ export class LucaLinkSync {
       if (!sent) {
         clearTimeout(timeout);
         this.pendingRequests.delete(requestId);
+        this.setProvenance(workflowId, {
+          workflowId,
+          status: "request-timeout",
+          updatedAt: Date.now(),
+        });
         resolve(null);
       }
     });
@@ -99,7 +163,15 @@ export class LucaLinkSync {
 
   async deleteCheckpoint(checkpointId: string): Promise<boolean> {
     for (const [workflowId, checkpoint] of this.checkpoints) {
-      if (checkpoint.id === checkpointId) this.checkpoints.delete(workflowId);
+      if (checkpoint.id === checkpointId) {
+        this.checkpoints.delete(workflowId);
+        this.setProvenance(workflowId, {
+          workflowId,
+          checkpointId,
+          status: "deleted",
+          updatedAt: Date.now(),
+        });
+      }
     }
     return lucaLinkManager.sendRelayMessage("all", "CHECKPOINT_DELETE", {
       checkpointId,
@@ -109,11 +181,20 @@ export class LucaLinkSync {
   dispose(): void {
     this.unsubscribe();
     this.checkpoints.clear();
+    this.provenance.clear();
     for (const pending of this.pendingRequests.values()) {
       clearTimeout(pending.timeout);
       pending.resolve(null);
     }
     this.pendingRequests.clear();
+  }
+
+  getSyncStatus(workflowId: string): LucaLinkCheckpointSyncProvenance | null {
+    return this.provenance.get(workflowId) ?? null;
+  }
+
+  getSyncStatuses(): LucaLinkCheckpointSyncProvenance[] {
+    return [...this.provenance.values()].map((status) => ({ ...status }));
   }
 
   private readCheckpoint(payload: unknown): Checkpoint | null {
@@ -159,6 +240,13 @@ export class LucaLinkSync {
       return checkpoint.timestamp > current.timestamp;
     }
     return checkpoint.id > current.id;
+  }
+
+  private setProvenance(
+    workflowId: string,
+    status: LucaLinkCheckpointSyncProvenance,
+  ): void {
+    this.provenance.set(workflowId, status);
   }
 }
 

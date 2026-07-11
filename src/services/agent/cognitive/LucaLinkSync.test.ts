@@ -48,6 +48,10 @@ describe("LucaLinkSync", () => {
     await expect(sync.fetchCheckpoint("workflow-1")).resolves.toEqual(
       checkpoint,
     );
+    expect(sync.getSyncStatus("workflow-1")).toMatchObject({
+      status: "sent",
+      checkpointId: "checkpoint-1",
+    });
   });
 
   it("accepts valid remote checkpoints and publishes deletions", async () => {
@@ -118,6 +122,10 @@ describe("LucaLinkSync", () => {
     });
 
     await expect(sync.fetchCheckpoint("workflow-1")).resolves.toEqual(newer);
+    expect(sync.getSyncStatus("workflow-1")).toMatchObject({
+      status: "stale-rejected",
+      checkpointId: "checkpoint-older",
+    });
   });
 
   it("uses checkpoint ID as a deterministic tie-breaker", async () => {
@@ -132,5 +140,9 @@ describe("LucaLinkSync", () => {
     });
 
     await expect(sync.fetchCheckpoint("workflow-1")).resolves.toEqual(second);
+    expect(sync.getSyncStatus("workflow-1")).toMatchObject({
+      status: "received",
+      checkpointId: "checkpoint-b",
+    });
   });
 });
