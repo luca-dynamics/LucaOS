@@ -1,8 +1,14 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../ui/Icon";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { getThemeColors } from "../../config/themeColors";
 import { lucaMaterialFloatingPanelStyle } from "../../styles/lucaMaterialSystem";
+import {
+  LUCA_DRAG_INERTIA,
+  resolveLucaPressMotion,
+  resolveLucaSurfaceMotion,
+  resolveLucaViewportDragConstraints,
+} from "../../styles/lucaFluidMotion";
 
 interface FloatingPanelProps {
   onClose: () => void;
@@ -28,21 +34,74 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
   defaultY = 100,
   onReattach,
 }) => {
+  const reducedMotion = useReducedMotion() ?? false;
+  const surfaceMotion = resolveLucaSurfaceMotion(reducedMotion);
+  const pressMotion = resolveLucaPressMotion(reducedMotion);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [dragConstraints, setDragConstraints] = useState(() =>
+    resolveLucaViewportDragConstraints({
+      viewportWidth: typeof window === "undefined" ? defaultX + defaultWidth : window.innerWidth,
+      viewportHeight:
+        typeof window === "undefined" ? defaultY + defaultHeight : window.innerHeight,
+      panelWidth: defaultWidth,
+      panelHeight: defaultHeight,
+      originX: defaultX,
+      originY: defaultY,
+    }),
+  );
+
+  useEffect(() => {
+    const updateConstraints = () => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      setDragConstraints(
+        resolveLucaViewportDragConstraints({
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          panelWidth: panel.offsetWidth,
+          panelHeight: panel.offsetHeight,
+          originX: defaultX,
+          originY: defaultY,
+        }),
+      );
+    };
+
+    updateConstraints();
+    window.addEventListener("resize", updateConstraints);
+    const observer = new ResizeObserver(updateConstraints);
+    if (panelRef.current) observer.observe(panelRef.current);
+    return () => {
+      window.removeEventListener("resize", updateConstraints);
+      observer.disconnect();
+    };
+  }, [defaultX, defaultY]);
+
   return (
     <AnimatePresence>
       <motion.div
+        ref={panelRef}
         drag
-        dragMomentum={false}
+        dragConstraints={dragConstraints}
+        dragMomentum={!reducedMotion}
+        dragTransition={LUCA_DRAG_INERTIA}
+        dragElastic={0.08}
         initial={{
-          opacity: 0,
-          scale: 0.9,
+          opacity: surfaceMotion.initial.opacity,
+          scale: surfaceMotion.initial.scale,
           x: defaultX,
           y: defaultY,
           width: defaultWidth,
           height: defaultHeight,
         }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+        animate={{
+          opacity: surfaceMotion.animate.opacity,
+          scale: surfaceMotion.animate.scale,
+        }}
+        exit={{
+          opacity: surfaceMotion.exit.opacity,
+          scale: surfaceMotion.exit.scale,
+        }}
+        transition={surfaceMotion.transition}
         className={`fixed z-[100] flex flex-col overflow-hidden border shadow-2xl ${
           theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"
         }`}
@@ -71,8 +130,10 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <motion.button
               onClick={onReattach}
+              whileTap={pressMotion.whileTap}
+              transition={pressMotion.transition}
               className="p-1 hover:bg-[var(--luca-surface-hover)] rounded transition-colors group"
               title="Re-attach to Main Layout"
             >
@@ -82,9 +143,11 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
                 className="text-[color:var(--app-text-muted)] group-hover:text-[color:var(--app-text-main)]"
                 variant="BoldDuotone"
               />
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={onClose}
+              whileTap={pressMotion.whileTap}
+              transition={pressMotion.transition}
               className="p-1 hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] rounded transition-colors group"
               title="Close Panel"
             >
@@ -94,7 +157,7 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
                 className="text-[color:var(--app-text-muted)] group-hover:text-[var(--luca-danger,#f87171)]"
                 variant="BoldDuotone"
               />
-            </button>
+            </motion.button>
           </div>
         </div>
 

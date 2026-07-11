@@ -1,5 +1,7 @@
 import React, { useRef, useEffect, useState, KeyboardEvent } from "react";
+import { AnimatePresence } from "framer-motion";
 import { Icon } from "./ui/Icon";
+import { LucaMotionPopover } from "./ui/luca";
 import ChatModelSwitcher from "./chat/ChatModelSwitcher";
 import IntentRoutingModeSelector from "./runtime/IntentRoutingModeSelector";
 import { CURATED_PLUGINS, MarketplacePlugin } from "../data/directoryData";
@@ -80,6 +82,49 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
 }) => {
   const [plusOpen, setPlusOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const plusButtonRef = useRef<HTMLButtonElement>(null);
+  const plusMenuRef = useRef<HTMLDivElement>(null);
+
+  const closePlusMenu = (restoreFocus = false) => {
+    setPlusOpen(false);
+    if (restoreFocus) {
+      requestAnimationFrame(() => plusButtonRef.current?.focus());
+    }
+  };
+
+  useEffect(() => {
+    if (!plusOpen) return;
+    requestAnimationFrame(() => {
+      plusMenuRef.current
+        ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
+        ?.focus();
+    });
+  }, [plusOpen]);
+
+  const handlePlusMenuKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const items = Array.from(
+      plusMenuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [],
+    );
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closePlusMenu(true);
+      return;
+    }
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) || items.length === 0) {
+      return;
+    }
+    event.preventDefault();
+    const activeIndex = items.indexOf(document.activeElement as HTMLButtonElement);
+    const nextIndex =
+      event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? items.length - 1
+          : event.key === "ArrowDown"
+            ? (activeIndex + 1) % items.length
+            : (activeIndex - 1 + items.length) % items.length;
+    items[nextIndex]?.focus();
+  };
 
   // THREE.Color/CSS doesn't always handle 8-digit hex properly when appending, sanitize to 6-digit
   const safeColor = React.useMemo(() => {
@@ -295,6 +340,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                 nothing; a list can. */}
             <div className="relative">
               <button
+                ref={plusButtonRef}
                 type="button"
                 aria-haspopup="menu"
                 aria-expanded={plusOpen}
@@ -312,14 +358,21 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                   />
                 )}
               </button>
-              {plusOpen && (
-                <>
+              <AnimatePresence>
+                {plusOpen && (
+                  <>
                   <div
                     className="fixed inset-0 z-[60]"
-                    onClick={() => setPlusOpen(false)}
+                    onClick={() => closePlusMenu(true)}
+                    aria-hidden="true"
                   />
-                  <div
+                  <LucaMotionPopover
+                    ref={plusMenuRef}
                     role="menu"
+                    aria-label="Add to conversation"
+                    originX={0.08}
+                    originY={1}
+                    onKeyDown={handlePlusMenuKeyDown}
                     className="absolute bottom-full left-0 z-[70] mb-1.5 w-[216px]"
                     style={{
                       background:
@@ -375,9 +428,10 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                     <div className="px-3 pb-1 pt-1.5 text-[10.5px] text-[var(--app-text-muted)] opacity-80">
                       Everything asks before it runs.
                     </div>
-                  </div>
-                </>
-              )}
+                  </LucaMotionPopover>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Status Indicators (RELOCATED LEFT) */}

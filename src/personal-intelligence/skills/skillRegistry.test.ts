@@ -5,7 +5,7 @@ import { createSkillRegistry, createSkillRegistryEntry, filterSkillRegistry, sum
 describe("Personal Intelligence skill registry", () => {
   it("builds UI-safe entries from fixtures", () => {
     const entries = createSkillRegistry(personalIntelligenceSkillRegistryFixtures);
-    expect(entries).toHaveLength(6);
+    expect(entries).toHaveLength(7);
     expect(entries[0]).toMatchObject({ status: "available", executionEnabled: false, sideEffectsPerformed: false });
     expect(entries.every((entry) => entry.executionEnabled === false)).toBe(true);
   });
@@ -34,11 +34,11 @@ describe("Personal Intelligence skill registry", () => {
     const entries = createSkillRegistry(personalIntelligenceSkillRegistryFixtures);
     const before = JSON.stringify(entries);
     expect(summarizeSkillRegistry(entries)).toEqual({
-      total: 6, available: 2, reviewRequired: 2, blocked: 2, disabled: 0,
+      total: 7, available: 3, reviewRequired: 2, blocked: 2, disabled: 0,
       executionEnabled: false, sideEffectsPerformed: false,
     });
     expect(filterSkillRegistry(entries, { status: "blocked", riskLevel: "critical" })).toHaveLength(2);
-    expect(filterSkillRegistry(entries, { query: "writing" })).toHaveLength(1);
+    expect(filterSkillRegistry(entries, { query: "writing-format-assistant" })).toHaveLength(1);
     expect(JSON.stringify(entries)).toBe(before);
   });
 
