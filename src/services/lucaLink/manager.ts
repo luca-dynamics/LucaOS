@@ -455,18 +455,6 @@ export class LucaLinkManager {
    * companions register without a key pair, so this never carries secrets.
    */
   /**
-   * Consolidation slice 2 (facade-first): the desktop relay + guest-WebRTC
-   * surface, exposed from the manager so consumers migrate HERE instead of
-   * importing the deprecated lucaLinkService. The implementation still lives
-   * in lucaLinkService for now; once every consumer reads
-   * lucaLinkManager.relay.*, the code behind this getter moves into
-   * ./relayClientAdapter without touching another file.
-   */
-  get relay(): LucaLinkRelayFacade {
-    return legacyRelayClient;
-  }
-
-  /**
    * Single manager-owned relay send path for application surfaces.
    * The Socket.IO implementation remains behind this façade during the
    * transport migration, so consumers do not hold or emit on raw sockets.
@@ -517,6 +505,38 @@ export class LucaLinkManager {
 
   initRelayGuestHandler(...args: LucaLinkRelayGuestHandler): void {
     legacyRelayClient.initGuestHandler(...args);
+  }
+
+  autoConnectRelay(
+    ...args: Parameters<LucaLinkRelayFacade["autoConnect"]>
+  ): ReturnType<LucaLinkRelayFacade["autoConnect"]> {
+    return legacyRelayClient.autoConnect(...args);
+  }
+
+  disconnectRelay(): ReturnType<LucaLinkRelayFacade["disconnect"]> {
+    return legacyRelayClient.disconnect();
+  }
+
+  onRelayGuestMessage(
+    ...args: Parameters<LucaLinkRelayFacade["onGuestMessage"]>
+  ): ReturnType<LucaLinkRelayFacade["onGuestMessage"]> {
+    return legacyRelayClient.onGuestMessage(...args);
+  }
+
+  sendRelayToGuest(
+    ...args: Parameters<LucaLinkRelayFacade["sendToGuest"]>
+  ): ReturnType<LucaLinkRelayFacade["sendToGuest"]> {
+    return legacyRelayClient.sendToGuest(...args);
+  }
+
+  syncRelayMission(
+    ...args: Parameters<LucaLinkRelayFacade["syncMission"]>
+  ): ReturnType<LucaLinkRelayFacade["syncMission"]> {
+    return legacyRelayClient.syncMission(...args);
+  }
+
+  getRelayPairingUrl(): ReturnType<LucaLinkRelayFacade["getPairingUrl"]> {
+    return legacyRelayClient.getPairingUrl();
   }
 
   /** Consolidation slice 3: the state-only governance surface (see type). */
