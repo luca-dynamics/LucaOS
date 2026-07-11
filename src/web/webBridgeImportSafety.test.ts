@@ -15,20 +15,13 @@ const lucaChatSurfaceSource = read("src/components/chat/LucaChatSurface.tsx");
 const chatWidgetModeSource = read("src/components/ChatWidgetMode.tsx");
 const auditSource = read("docs/foundation/WEBBRIDGE_DIRECT_REUSE_AUDIT.md");
 const bootstrapSource = read("src/index.tsx");
-const onboardingSource = read("src/components/Onboarding/OnboardingFlow.tsx");
+const onboardingSource = read("src/components/Onboarding/LucaPremiumOnboardingPreview.tsx");
 const iconSource = read("src/components/ui/Icon.tsx");
 const webAdapterSource = read("src/web/adapters/webOnboardingRuntime.tsx");
 const onboardingConversationSurfaceSource = read(
   "src/components/Onboarding/OnboardingConversationSurface.tsx",
 );
 const webBackgroundSource = read("src/web/WebLucaBackground.tsx");
-const onboardingAccessSource = read(
-  "src/components/Onboarding/OnboardingAccessPanels.tsx",
-);
-const modeSelectSource = read("src/components/Onboarding/ModeSelect.tsx");
-const desktopAdapterSource = read(
-  "src/desktop/adapters/desktopOnboardingRuntime.ts",
-);
 const postBootSource = read("src/web/postBoot/WebPostBootTransition.tsx");
 const staticFaceSource = read(
   "src/components/visual/LucaStaticFacePresence.tsx",
@@ -48,9 +41,6 @@ const visualSourceAudit = read(visualSourceAuditPath);
 const onboardingLifecycleSource = read(
   "src/services/onboarding/OnboardingLifecycleService.ts",
 );
-const themeSelectionSource = read(
-  "src/components/Onboarding/ThemeSelectionStep.tsx",
-);
 
 const generatedProductSurfaces = [
   "src/web/WebOnboardingSurface.tsx",
@@ -66,6 +56,22 @@ const generatedProductSurfaces = [
   "src/shared/settings/LucaDeviceCenter.tsx",
   "src/shared/ui/ExtractedSurfacePrimitives.tsx",
   "src/shared/ui/LucaPrimitives.tsx",
+];
+
+const removedLegacyOnboardingSurfaces = [
+  "src/components/Onboarding/OnboardingFlow.tsx",
+  "src/components/Onboarding/ConversationalOnboarding.tsx",
+  "src/components/Onboarding/HologramFace.tsx",
+  "src/components/Onboarding/HologramFace2D.tsx",
+  "src/components/Onboarding/ConstitutionalAlignment.tsx",
+  "src/components/Onboarding/ThemeSelectionStep.tsx",
+  "src/components/Onboarding/OnboardingAccessPanels.tsx",
+  "src/components/Onboarding/OnboardingLocalPlanReviewPanel.tsx",
+  "src/components/Onboarding/OnboardingSystemPanels.tsx",
+  "src/components/Onboarding/OnboardingProvisioningPanel.tsx",
+  "src/components/Onboarding/ModeSelect.tsx",
+  "src/components/Onboarding/MessageInput.tsx",
+  "src/desktop/adapters/desktopOnboardingRuntime.ts",
 ];
 
 const forbidden = [
@@ -139,6 +145,12 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     );
   });
 
+  it("keeps the retired onboarding implementation deleted", () => {
+    for (const path of removedLegacyOnboardingSurfaces) {
+      expect(existsSync(path), path).toBe(false);
+    }
+  });
+
   it("keeps Icon presentation-only at module import time", () => {
     expect(iconSource).not.toContain("settingsService");
     expect(iconSource).not.toContain("secureVault");
@@ -147,20 +159,18 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(iconSource).toContain("color || 'var(--app-primary, currentColor)'");
   });
 
-  it("isolates canonical onboarding runtime dependencies behind adapters", () => {
+  it("keeps premium onboarding free of legacy runtime and conversation imports", () => {
     for (const runtimeImport of [
       "services/ModelManagerService",
       "services/settingsService",
       "services/voice/realtimeVoiceUiBridge",
-      'from "./ConversationalOnboarding"',
+      "ConversationalOnboarding",
+      'from "./OnboardingFlow"',
     ]) {
       expect(onboardingSource).not.toContain(runtimeImport);
     }
-    expect(onboardingSource).toContain("runtime: OnboardingRuntimeAdapter");
-    expect(onboardingSource).toContain("<ConversationComponent");
-    expect(desktopAdapterSource).toContain("ModelManagerService");
-    expect(desktopAdapterSource).toContain("settingsService");
-    expect(desktopAdapterSource).toContain("realtimeVoiceUiBridge");
+    expect(onboardingSource).toContain("LucaOnboardingShell");
+    expect(onboardingSource).toContain("LucaOnboardingScreen");
     expect(webAdapterSource).not.toContain("ModelManagerService");
     expect(webAdapterSource).not.toContain("settingsService");
     expect(webAdapterSource).not.toContain("realtimeVoiceUiBridge");
@@ -189,9 +199,6 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(webAdapterSource).not.toContain("WebOnboardingConversation");
     expect(webAdapterSource).toContain("subscribeVisualSettings");
     expect(onboardingSource).not.toContain("fallback={null}");
-    expect(onboardingSource).toContain(
-      "Preparing Luca conversation interface...",
-    );
   });
 
   it("keeps post-boot presentation on reused Luca visuals and safe storage", () => {
@@ -278,17 +285,11 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
       "src/components/voice/VoiceVisualizer.tsx",
     );
     expect(visualSourceAudit).toContain(
-      "src/components/Onboarding/HologramFace.tsx",
-    );
-    expect(visualSourceAudit).toContain(
       "src/components/Hologram/HologramScene.tsx",
     );
     expect(visualSourceAudit).toContain('useGLTF("/models/avatar.glb")');
     expect(visualSourceAudit).toContain(
       "src/services/onboarding/OnboardingLifecycleService.ts",
-    );
-    expect(visualSourceAudit).toContain(
-      "src/components/Onboarding/OnboardingFlow.tsx",
     );
     expect(visualSourceAudit).toContain("KERNEL_AWAKENING");
   });
@@ -302,8 +303,7 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     ]) {
       expect(onboardingLifecycleSource).toContain(copyKey);
     }
-    expect(onboardingSource).toContain('step === "KERNEL_AWAKENING"');
-    expect(onboardingSource).not.toContain('{">"} {text}');
+    expect(onboardingSource).not.toContain("KERNEL_AWAKENING");
     expect(presenceOrbSource).toContain(
       "@deprecated Generic PR #310 placeholder",
     );
@@ -325,10 +325,8 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     ).toEqual(orbComponentFiles.sort());
   });
 
-  it("keeps WebBridge onboarding on shared premium theme copy without unsafe runtime imports", () => {
-    expect(onboardingSource).toContain("<ThemeSelectionStep");
-    expect(themeSelectionSource).toContain("LUCA_SKIN_IDS");
-    expect(themeSelectionSource).toContain("Choose Luca's environment");
+  it("keeps WebBridge onboarding on the shared premium screen path without unsafe runtime imports", () => {
+    expect(onboardingSource).toContain("<LucaOnboardingScreen");
     expect(webAdapterSource).not.toMatch(
       /theme protocol|visual protocol|system profile/i,
     );
@@ -427,9 +425,6 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     for (const path of [
       "src/reactAppEntry.tsx",
       "src/App.tsx",
-      "src/components/Onboarding/OnboardingFlow.tsx",
-      "src/components/Onboarding/ThemeSelectionStep.tsx",
-      "src/components/Onboarding/ModeSelect.tsx",
       "src/components/layout/Header.tsx",
       "src/components/layout/ChatPanel.tsx",
       "src/components/SettingsModal.tsx",

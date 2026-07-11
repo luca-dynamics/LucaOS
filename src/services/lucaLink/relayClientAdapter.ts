@@ -39,35 +39,29 @@ import type {
   LucaLinkContinuationValidationContext,
   LucaLinkContinuationValidationResult,
 } from "./lucaLinkContinuation";
-import {
-  clearLucaLinkShadowObservations,
-  createLucaLinkRuntimeShadow,
-  getLucaLinkShadowObservations,
-  recordLucaLinkShadowObservation,
-  summarizeLucaLinkShadowObservations,
-  type LucaLinkRuntimeShadowEventInput,
-  type LucaLinkRuntimeShadowOptions,
-  type LucaLinkRuntimeShadowState,
+import type {
+  LucaLinkRuntimeShadowEventInput,
+  LucaLinkRuntimeShadowOptions,
 } from "./lucaLinkRuntimeShadow";
+import { lucaLinkRuntimeStore } from "./lucaLinkRuntimeStore";
 import type { LucaHostManifest } from "./lucaHostManifest";
 import type {
   LucaLinkRuntimeObservation,
   LucaLinkRuntimeObservationSummary,
 } from "./lucaLinkRuntimeObserver";
 import {
-  createLucaLinkGuestSession,
   evaluateLucaLinkGuestInbound,
   isGuestAuthPayload,
   markGuestSessionActive,
   markGuestSessionAuthChallenge,
   markGuestSessionAuthenticated,
   markGuestSessionDisconnected,
-  summarizeLucaLinkGuestSessions,
   type LucaLinkGuestInboundInput,
   type LucaLinkGuestInboundResult,
   type LucaLinkGuestSessionRecord,
   type LucaLinkGuestSessionSummary,
 } from "./lucaLinkGuestSessionPolicy";
+import { lucaLinkGuestSessionStore } from "./lucaLinkGuestSessionStore";
 
 import {
   type LucaLinkDeviceTrustLevel,
@@ -77,46 +71,30 @@ import {
 import { lucaLinkDeviceTrustStore } from "./lucaLinkDeviceTrustStore";
 
 import {
-  approveLucaLinkHandoff,
-  cancelLucaLinkHandoff,
-  clearLucaLinkHandoffRegistry,
   createArtifactHandoffPayload,
   createConversationHandoffPayload,
   createLucaLinkHandoffPayloadPreview,
-  createLucaLinkHandoffRegistry,
   createLucaLinkHandoffRequest,
   createMemoryIntentHandoffPayload,
   createMissionHandoffPayload,
   createModelContextHandoffPayload,
   createSettingsContextHandoffPayload,
-  declineLucaLinkHandoff,
   evaluateLucaLinkHandoffPolicy,
-  getLucaLinkHandoff,
-  listLucaLinkHandoffs,
-  listPendingLucaLinkHandoffs,
-  markLucaLinkHandoffAccepted,
-  registerLucaLinkHandoff,
-  summarizeLucaLinkHandoffRegistry,
   type LucaLinkHandoffKind,
   type LucaLinkHandoffMutationResult,
-  type LucaLinkHandoffRegistryState,
   type LucaLinkHandoffRegistrySummary,
   type LucaLinkHandoffRequest,
   type LucaLinkHandoffRequestInput,
 } from "./lucaLinkHandoff";
+import { lucaLinkHandoffStore } from "./lucaLinkHandoffStore";
 
 import {
-  clearLucaLinkHostConnectionRegistry,
   createLucaLinkHostConnectionRecord,
-  createLucaLinkHostConnectionRegistry,
-  listLucaLinkHostConnections,
-  summarizeLucaLinkHostConnectionRegistry,
-  upsertLucaLinkHostConnection,
   type LucaLinkHostConnectionInput,
   type LucaLinkHostConnectionRecord,
-  type LucaLinkHostConnectionRegistryState,
   type LucaLinkHostConnectionRegistrySummary,
 } from "./lucaLinkHostConnectionModel";
+import { lucaLinkHostConnectionStore } from "./lucaLinkHostConnectionStore";
 import {
   createLucaLinkHostBridgeBlueprint,
   createLucaLinkHostConnectionDiagnosis,
@@ -138,41 +116,22 @@ import {
   type LucaLinkApprovalSurfaceSummary,
 } from "./lucaLinkMultiHostApproval";
 import {
-  approveBridgeReviewForSandbox as approveLucaLinkBridgeReviewForSandboxModel,
-  cancelBridgeReview as cancelLucaLinkBridgeReviewModel,
-  createLucaLinkBridgeReviewRecord,
-  createLucaLinkBridgeReviewRegistry,
-  getBridgeReview,
-  listBridgeReviews,
-  registerBridgeReview,
-  rejectBridgeReview as rejectLucaLinkBridgeReviewModel,
-  summarizeBridgeReviews,
-  updateBridgeReview,
   type LucaLinkBridgeReviewRecord,
-  type LucaLinkBridgeReviewRegistry,
   type LucaLinkBridgeReviewSummary,
 } from "./lucaLinkBridgeReview";
+import { lucaLinkBridgeReviewStore } from "./lucaLinkBridgeReviewStore";
 import {
-  createAdapterDraftFromBlueprint as createLucaLinkAdapterDraftFromBlueprintModel,
-  createAdapterDraftFromBridgeReview as createLucaLinkAdapterDraftFromBridgeReviewModel,
-  createLucaLinkAdapterDraftRegistry,
-  listAdapterDrafts,
-  registerAdapterDraft,
-  summarizeAdapterDrafts,
-  updateAdapterDraft,
   type LucaLinkAdapterDraft,
-  type LucaLinkAdapterDraftRegistry,
   type LucaLinkAdapterDraftSummary,
 } from "./lucaLinkAdapterDrafts";
+import { lucaLinkAdapterDraftStore } from "./lucaLinkAdapterDraftStore";
 import {
   deriveEmbodiedHostCapabilityEnvelope,
   type LucaLinkEmbodiedCapabilityEnvelope,
 } from "./lucaLinkEmbodiedHostPolicy";
 
 import {
-  createLucaLinkRuntimeEnforcementAuditRecord,
   evaluateLucaLinkRuntimeEnforcement,
-  summarizeLucaLinkRuntimeEnforcementAudit,
   type LucaLinkRuntimeEnforcementAuditRecord,
   type LucaLinkRuntimeEnforcementAuditSummary,
   type LucaLinkRuntimeEnforcementInput,
@@ -227,23 +186,16 @@ class LucaLinkService {
   };
   private stateListeners: Set<StateListener> = new Set();
   private messageListeners: Set<MessageListener> = new Set();
-  private runtimeShadow: LucaLinkRuntimeShadowState =
-    createLucaLinkRuntimeShadow({ enabled: false });
+  private runtimeStore = lucaLinkRuntimeStore;
   private deviceTrustStore = lucaLinkDeviceTrustStore;
-  private handoffRegistry: LucaLinkHandoffRegistryState =
-    createLucaLinkHandoffRegistry();
-  private hostConnectionRegistry: LucaLinkHostConnectionRegistryState =
-    createLucaLinkHostConnectionRegistry();
-  private bridgeReviewRegistry: LucaLinkBridgeReviewRegistry =
-    createLucaLinkBridgeReviewRegistry();
-  private adapterDraftRegistry: LucaLinkAdapterDraftRegistry =
-    createLucaLinkAdapterDraftRegistry();
+  private handoffStore = lucaLinkHandoffStore;
+  private hostConnectionStore = lucaLinkHostConnectionStore;
+  private bridgeReviewStore = lucaLinkBridgeReviewStore;
+  private adapterDraftStore = lucaLinkAdapterDraftStore;
+  private guestSessionStore = lucaLinkGuestSessionStore;
   private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
     mode: "disabled",
   };
-  private runtimeEnforcementMode: LucaLinkRuntimeEnforcementMode = "disabled";
-  private runtimeEnforcementAudit: LucaLinkRuntimeEnforcementAuditRecord[] = [];
-  private readonly runtimeEnforcementAuditLimit = 100;
   private localHostRole: "primary" | "guest" = "primary";
 
   // Persistent storage keys
@@ -669,10 +621,10 @@ class LucaLinkService {
             }
           }
 
-          // Handle registry sync
+          // Handle device sync
           if (message.type === "sync" && message.sync?.type === "registry") {
             const devices = message.sync.data as LucaLinkDevice[];
-            this.syncDeviceTrustRegistryFromConnectedDevices(devices);
+            this.syncDeviceTrustStoreFromConnectedDevices(devices);
             this.updateState({ connectedDevices: devices });
             this.observeRuntimeEventForDiagnostics({
               eventName: "registry",
@@ -796,7 +748,7 @@ class LucaLinkService {
     };
 
     if (
-      this.runtimeEnforcementMode !== "disabled" ||
+      this.runtimeStore.getEnforcementMode() !== "disabled" ||
       this.getSoftEnforcementMode() !== "disabled"
     ) {
       const runtimeEnforcement = this.evaluateRuntimeEnforcementForOutbound({
@@ -892,13 +844,7 @@ class LucaLinkService {
    */
   dispose(): void {
     this.disconnect();
-    for (const session of this.guestSessions.values()) {
-      session.peerConnection?.close();
-    }
-    this.guestSessions.clear();
-    this.guestSecuritySessions.clear();
-    this.guestInboundAudit = [];
-    this.guestMessageHandler = null;
+    this.guestSessionStore.dispose();
     this.stateListeners.clear();
     this.messageListeners.clear();
   }
@@ -1002,15 +948,15 @@ class LucaLinkService {
   enableRuntimeEnforcement(
     mode: LucaLinkRuntimeEnforcementMode = "observe-only",
   ): void {
-    this.runtimeEnforcementMode = mode;
+    this.runtimeStore.enableEnforcement(mode);
   }
 
   disableRuntimeEnforcement(): void {
-    this.runtimeEnforcementMode = "disabled";
+    this.runtimeStore.disableEnforcement();
   }
 
   getRuntimeEnforcementMode(): LucaLinkRuntimeEnforcementMode {
-    return this.runtimeEnforcementMode;
+    return this.runtimeStore.getEnforcementMode();
   }
 
   evaluateRuntimeEnforcement(
@@ -1018,7 +964,7 @@ class LucaLinkService {
   ): LucaLinkRuntimeEnforcementResult {
     return this.evaluateRuntimeEnforcementWithMode(
       input,
-      this.runtimeEnforcementMode,
+      this.runtimeStore.getEnforcementMode(),
     );
   }
 
@@ -1026,8 +972,8 @@ class LucaLinkService {
     input: LucaLinkRuntimeEnforcementInput,
   ): LucaLinkRuntimeEnforcementResult {
     const effectiveMode: LucaLinkRuntimeEnforcementMode =
-      this.runtimeEnforcementMode !== "disabled"
-        ? this.runtimeEnforcementMode
+      this.runtimeStore.getEnforcementMode() !== "disabled"
+        ? this.runtimeStore.getEnforcementMode()
         : this.getSoftEnforcementMode();
     return this.evaluateRuntimeEnforcementWithMode(input, effectiveMode);
   }
@@ -1085,47 +1031,36 @@ class LucaLinkService {
         }),
       allowSafeContinuation: true,
     });
-    this.recordRuntimeEnforcementAudit(result);
+    this.runtimeStore.recordEnforcement(result);
     return result;
   }
 
   getRuntimeEnforcementAudit(): LucaLinkRuntimeEnforcementAuditRecord[] {
-    return [...this.runtimeEnforcementAudit];
+    return this.runtimeStore.getEnforcementAudit();
   }
 
   getRuntimeEnforcementSummary(): LucaLinkRuntimeEnforcementAuditSummary {
-    return summarizeLucaLinkRuntimeEnforcementAudit(
-      this.runtimeEnforcementAudit,
-    );
+    return this.runtimeStore.getEnforcementSummary();
   }
 
   clearRuntimeEnforcementAudit(): void {
-    this.runtimeEnforcementAudit = [];
-  }
-
-  private recordRuntimeEnforcementAudit(
-    result: LucaLinkRuntimeEnforcementResult,
-  ): void {
-    this.runtimeEnforcementAudit = [
-      ...this.runtimeEnforcementAudit,
-      createLucaLinkRuntimeEnforcementAuditRecord(result),
-    ].slice(-this.runtimeEnforcementAuditLimit);
+    this.runtimeStore.clearEnforcementAudit();
   }
 
   getHandoffs(): LucaLinkHandoffRequest[] {
-    return listLucaLinkHandoffs(this.handoffRegistry);
+    return this.handoffStore.list();
   }
 
   getPendingHandoffs(): LucaLinkHandoffRequest[] {
-    return listPendingLucaLinkHandoffs(this.handoffRegistry);
+    return this.handoffStore.listPending();
   }
 
   getHandoffSummary(): LucaLinkHandoffRegistrySummary {
-    return summarizeLucaLinkHandoffRegistry(this.handoffRegistry);
+    return this.handoffStore.summarize();
   }
 
   clearHandoffs(): LucaLinkHandoffMutationResult {
-    return clearLucaLinkHandoffRegistry(this.handoffRegistry);
+    return this.handoffStore.clear();
   }
 
   private createAndRegisterHandoff(
@@ -1148,7 +1083,7 @@ class LucaLinkService {
         ...input,
         payloadPreview: preview,
       },
-      { defaultTtlMs: this.handoffRegistry.defaultTtlMs },
+      { defaultTtlMs: this.handoffStore.defaultTtlMs },
     );
     const policy = evaluateLucaLinkHandoffPolicy({
       kind: initialRequest.kind,
@@ -1176,7 +1111,7 @@ class LucaLinkService {
       },
       {
         now: initialRequest.createdAt,
-        defaultTtlMs: this.handoffRegistry.defaultTtlMs,
+        defaultTtlMs: this.handoffStore.defaultTtlMs,
       },
     );
 
@@ -1205,7 +1140,7 @@ class LucaLinkService {
       request.approvalRequestId = queued.request?.id;
     }
 
-    return registerLucaLinkHandoff(this.handoffRegistry, request);
+    return this.handoffStore.register(request);
   }
 
   createConversationHandoff(
@@ -1300,36 +1235,32 @@ class LucaLinkService {
     handoffId: string,
     options?: { now?: number; approvedByDeviceId?: string; reason?: string },
   ): LucaLinkHandoffMutationResult {
-    return approveLucaLinkHandoff(this.handoffRegistry, handoffId, options);
+    return this.handoffStore.approve(handoffId, options);
   }
 
   declineHandoff(
     handoffId: string,
     options?: { now?: number; reason?: string },
   ): LucaLinkHandoffMutationResult {
-    return declineLucaLinkHandoff(this.handoffRegistry, handoffId, options);
+    return this.handoffStore.decline(handoffId, options);
   }
 
   cancelHandoff(
     handoffId: string,
     options?: { now?: number; reason?: string },
   ): LucaLinkHandoffMutationResult {
-    return cancelLucaLinkHandoff(this.handoffRegistry, handoffId, options);
+    return this.handoffStore.cancel(handoffId, options);
   }
 
   markHandoffAccepted(
     handoffId: string,
     options?: { now?: number; reason?: string },
   ): LucaLinkHandoffMutationResult {
-    return markLucaLinkHandoffAccepted(
-      this.handoffRegistry,
-      handoffId,
-      options,
-    );
+    return this.handoffStore.markAccepted(handoffId, options);
   }
 
   getHandoff(handoffId: string): LucaLinkHandoffRequest | undefined {
-    return getLucaLinkHandoff(this.handoffRegistry, handoffId);
+    return this.handoffStore.get(handoffId);
   }
 
   getHandoffKinds(): LucaLinkHandoffKind[] {
@@ -1385,7 +1316,7 @@ class LucaLinkService {
       deriveLucaLinkApprovalSurface(hostConnection, {
         currentPrimaryHostId:
           this.state.deviceId ??
-          this.hostConnectionRegistry.records.find(
+          this.getHostConnections({ refresh: false }).find(
             (record) => record.hostClass === "primary-host",
           )?.id,
       }),
@@ -1433,56 +1364,38 @@ class LucaLinkService {
   }
 
   getBridgeReviews(): LucaLinkBridgeReviewRecord[] {
-    return listBridgeReviews(this.bridgeReviewRegistry);
+    return this.bridgeReviewStore.list();
   }
 
   getBridgeReviewSummary(): LucaLinkBridgeReviewSummary {
-    return summarizeBridgeReviews(this.getBridgeReviews());
+    return this.bridgeReviewStore.summarize();
   }
 
   createBridgeReviewFromBlueprint(
     input: Partial<LucaLinkHostBridgeBlueprint>,
   ): LucaLinkBridgeReviewRecord {
-    return registerBridgeReview(
-      this.bridgeReviewRegistry,
-      createLucaLinkBridgeReviewRecord(input),
-    );
+    return this.bridgeReviewStore.createFromBlueprint(input);
   }
 
   approveBridgeReviewForSandbox(
     reviewId: string,
     options?: { approvedByDeviceId?: string; now?: number },
   ): LucaLinkBridgeReviewRecord | undefined {
-    const review = getBridgeReview(this.bridgeReviewRegistry, reviewId);
-    if (!review) return undefined;
-    return updateBridgeReview(
-      this.bridgeReviewRegistry,
-      approveLucaLinkBridgeReviewForSandboxModel(review, options),
-    );
+    return this.bridgeReviewStore.approveForSandbox(reviewId, options);
   }
 
   rejectBridgeReview(
     reviewId: string,
     options?: { reason?: string; now?: number },
   ): LucaLinkBridgeReviewRecord | undefined {
-    const review = getBridgeReview(this.bridgeReviewRegistry, reviewId);
-    if (!review) return undefined;
-    return updateBridgeReview(
-      this.bridgeReviewRegistry,
-      rejectLucaLinkBridgeReviewModel(review, options),
-    );
+    return this.bridgeReviewStore.reject(reviewId, options);
   }
 
   cancelBridgeReview(
     reviewId: string,
     options?: { reason?: string; now?: number },
   ): LucaLinkBridgeReviewRecord | undefined {
-    const review = getBridgeReview(this.bridgeReviewRegistry, reviewId);
-    if (!review) return undefined;
-    return updateBridgeReview(
-      this.bridgeReviewRegistry,
-      cancelLucaLinkBridgeReviewModel(review, options),
-    );
+    return this.bridgeReviewStore.cancel(reviewId, options);
   }
 
   getEmbodiedHostCapabilityEnvelopes(): LucaLinkEmbodiedCapabilityEnvelope[] {
@@ -1492,47 +1405,33 @@ class LucaLinkService {
   }
 
   getAdapterDrafts(): LucaLinkAdapterDraft[] {
-    return listAdapterDrafts(this.adapterDraftRegistry);
+    return this.adapterDraftStore.list();
   }
 
   getAdapterDraftSummary(): LucaLinkAdapterDraftSummary {
-    return summarizeAdapterDrafts(this.getAdapterDrafts());
+    return this.adapterDraftStore.summarize();
   }
 
   createAdapterDraftFromBlueprint(
     input: Partial<LucaLinkHostBridgeBlueprint>,
   ): LucaLinkAdapterDraft {
-    return registerAdapterDraft(
-      this.adapterDraftRegistry,
-      createLucaLinkAdapterDraftFromBlueprintModel(input),
-    );
+    return this.adapterDraftStore.createFromBlueprint(input);
   }
 
   createAdapterDraftFromBridgeReview(
     reviewId: string,
   ): LucaLinkAdapterDraft | undefined {
-    const review = getBridgeReview(this.bridgeReviewRegistry, reviewId);
+    const review = this.bridgeReviewStore.get(reviewId);
     if (!review) return undefined;
-    return registerAdapterDraft(
-      this.adapterDraftRegistry,
-      createLucaLinkAdapterDraftFromBridgeReviewModel(review),
-    );
+    return this.adapterDraftStore.createFromBridgeReview(review);
   }
 
   cancelAdapterDraft(draftId: string): LucaLinkAdapterDraft | undefined {
-    const draft = this.adapterDraftRegistry.records.find(
-      (record) => record.id === draftId,
-    );
-    if (!draft) return undefined;
-    return updateAdapterDraft(this.adapterDraftRegistry, {
-      ...draft,
-      status: "cancelled",
-      updatedAt: Date.now(),
-    });
+    return this.adapterDraftStore.cancel(draftId);
   }
 
   clearAdapterDrafts(): void {
-    this.adapterDraftRegistry.records = [];
+    this.adapterDraftStore.clear();
   }
 
   getContinuationTokens(): LucaLinkContinuationToken[] {
@@ -1665,17 +1564,14 @@ class LucaLinkService {
   enableRuntimeShadowDiagnostics(
     options: LucaLinkRuntimeShadowOptions = {},
   ): void {
-    this.runtimeShadow = createLucaLinkRuntimeShadow({
-      ...options,
-      enabled: true,
-    });
+    this.runtimeStore.enableShadowDiagnostics(options);
   }
 
   /**
    * Disable diagnostics-only runtime shadow observations.
    */
   disableRuntimeShadowDiagnostics(): void {
-    this.runtimeShadow.enabled = false;
+    this.runtimeStore.disableShadowDiagnostics();
   }
 
   getTrustedDevices() {
@@ -1741,7 +1637,7 @@ class LucaLinkService {
     if (options.refresh !== false) {
       this.refreshHostConnectionsFromCurrentState();
     }
-    return listLucaLinkHostConnections(this.hostConnectionRegistry);
+    return this.hostConnectionStore.list();
   }
 
   getHostConnectionSummary(
@@ -1750,7 +1646,7 @@ class LucaLinkService {
     if (options.refresh !== false) {
       this.refreshHostConnectionsFromCurrentState();
     }
-    return summarizeLucaLinkHostConnectionRegistry(this.hostConnectionRegistry);
+    return this.hostConnectionStore.summarize();
   }
 
   getFreshHostConnections(): LucaLinkHostConnectionRecord[] {
@@ -1762,7 +1658,7 @@ class LucaLinkService {
   }
 
   clearHostConnections(): void {
-    clearLucaLinkHostConnectionRegistry(this.hostConnectionRegistry);
+    this.hostConnectionStore.clear();
   }
 
   refreshHostConnectionsFromCurrentState(): LucaLinkHostConnectionRecord[] {
@@ -1774,8 +1670,7 @@ class LucaLinkService {
 
     this.state.connectedDevices.forEach((device) => {
       const trusted = trustByDeviceId.get(device.deviceId);
-      upsertLucaLinkHostConnection(
-        this.hostConnectionRegistry,
+      this.hostConnectionStore.upsert(
         {
           id: device.deviceId,
           deviceId: device.deviceId,
@@ -1796,8 +1691,7 @@ class LucaLinkService {
     });
 
     trustedDevices.forEach((device) => {
-      upsertLucaLinkHostConnection(
-        this.hostConnectionRegistry,
+      this.hostConnectionStore.upsert(
         {
           id: device.deviceId,
           deviceId: device.deviceId,
@@ -1809,17 +1703,14 @@ class LucaLinkService {
           capabilities: device.capabilities,
           isCurrentPrimaryHost: device.deviceId === this.state.deviceId,
           lastSeenAt: device.lastSeenAt,
-          connectionEvidence: [
-            "Derived from local LucaLink device trust registry.",
-          ],
+          connectionEvidence: ["Derived from local LucaLink device trust store."],
         },
         { now },
       );
     });
 
-    this.guestSecuritySessions.forEach((session) => {
-      upsertLucaLinkHostConnection(
-        this.hostConnectionRegistry,
+    this.guestSessionStore.getSecuritySessions().forEach((session) => {
+      this.hostConnectionStore.upsert(
         {
           id: session.sessionId,
           deviceId: session.sessionId,
@@ -1839,12 +1730,9 @@ class LucaLinkService {
 
     if (
       this.state.deviceId &&
-      !this.hostConnectionRegistry.records.some(
-        (record) => record.deviceId === this.state.deviceId,
-      )
+      !this.hostConnectionStore.has(this.state.deviceId)
     ) {
-      upsertLucaLinkHostConnection(
-        this.hostConnectionRegistry,
+      this.hostConnectionStore.upsert(
         {
           id: this.state.deviceId,
           deviceId: this.state.deviceId,
@@ -1862,7 +1750,7 @@ class LucaLinkService {
       );
     }
 
-    return listLucaLinkHostConnections(this.hostConnectionRegistry);
+    return this.hostConnectionStore.list();
   }
 
   diagnoseHostConnection(
@@ -1894,15 +1782,15 @@ class LucaLinkService {
   }
 
   getRuntimeShadowObservations(): LucaLinkRuntimeObservation[] {
-    return getLucaLinkShadowObservations(this.runtimeShadow);
+    return this.runtimeStore.getShadowObservations();
   }
 
   clearRuntimeShadowObservations(): void {
-    clearLucaLinkShadowObservations(this.runtimeShadow);
+    this.runtimeStore.clearShadowObservations();
   }
 
   getRuntimeShadowSummary(): LucaLinkRuntimeObservationSummary {
-    return summarizeLucaLinkShadowObservations(this.runtimeShadow);
+    return this.runtimeStore.getShadowSummary();
   }
 
   /**
@@ -1912,11 +1800,10 @@ class LucaLinkService {
   observeRuntimeEventForDiagnostics(
     input: LucaLinkRuntimeShadowEventInput,
   ): LucaLinkRuntimeObservation | undefined {
-    if (!this.runtimeShadow.enabled) return undefined;
-
-    return recordLucaLinkShadowObservation(this.runtimeShadow, input, {
-      candidates: this.getRuntimeShadowCandidateManifests(),
-    });
+    return this.runtimeStore.observeRuntimeEvent(
+      input,
+      this.getRuntimeShadowCandidateManifests(),
+    );
   }
 
   private getRuntimeShadowCandidateManifests(): LucaHostManifest[] {
@@ -1957,7 +1844,7 @@ class LucaLinkService {
     });
   }
 
-  private syncDeviceTrustRegistryFromConnectedDevices(
+  private syncDeviceTrustStoreFromConnectedDevices(
     devices: LucaLinkDevice[],
   ): void {
     devices.forEach((device) => {
@@ -1971,32 +1858,20 @@ class LucaLinkService {
 
   // ========== GUEST SESSION METHODS (Primary Host room mode) ==========
 
-  private guestSessions: Map<
-    string,
-    { peerConnection: RTCPeerConnection | null; sessionId: string }
-  > = new Map();
-  private guestMessageHandler:
-    | ((sessionId: string, message: string) => void)
-    | null = null;
-  private guestSecuritySessions: Map<string, LucaLinkGuestSessionRecord> =
-    new Map();
-  private guestInboundAudit: LucaLinkGuestInboundResult[] = [];
-  private readonly guestInboundAuditLimit = 100;
-
   getGuestSecuritySessions(): LucaLinkGuestSessionRecord[] {
-    return [...this.guestSecuritySessions.values()];
+    return this.guestSessionStore.getSecuritySessions();
   }
 
   getGuestSecuritySummary(): LucaLinkGuestSessionSummary {
-    return summarizeLucaLinkGuestSessions(this.guestSecuritySessions.values());
+    return this.guestSessionStore.getSecuritySummary();
   }
 
   getGuestInboundAudit(): LucaLinkGuestInboundResult[] {
-    return [...this.guestInboundAudit];
+    return this.guestSessionStore.getInboundAudit();
   }
 
   clearGuestInboundAudit(): void {
-    this.guestInboundAudit = [];
+    this.guestSessionStore.clearInboundAudit();
   }
 
   private evaluateGuestInbound(
@@ -2004,22 +1879,22 @@ class LucaLinkService {
   ): LucaLinkGuestInboundResult {
     const sessionId = input.sessionId;
     let session = sessionId
-      ? this.guestSecuritySessions.get(sessionId)
+      ? this.guestSessionStore.getSecuritySession(sessionId)
       : undefined;
     if (sessionId && !session) {
-      session = createLucaLinkGuestSession(sessionId, { now: input.now });
-      this.guestSecuritySessions.set(sessionId, session);
+      session = this.guestSessionStore.ensureSecuritySession(sessionId);
     }
 
     const result = evaluateLucaLinkGuestInbound(input, session, {
       now: input.now,
     });
     if (sessionId && result.updatedSession) {
-      this.guestSecuritySessions.set(sessionId, result.updatedSession);
+      this.guestSessionStore.setSecuritySession(
+        sessionId,
+        result.updatedSession,
+      );
     }
-    this.guestInboundAudit = [...this.guestInboundAudit, result].slice(
-      -this.guestInboundAuditLimit,
-    );
+    this.guestSessionStore.recordInbound(result);
     return result;
   }
 
@@ -2054,14 +1929,8 @@ class LucaLinkService {
       console.log("[LucaLink] Guest session created:", data);
 
       // Store session locally
-      this.guestSessions.set(data.sessionId, {
-        peerConnection: null,
-        sessionId: data.sessionId,
-      });
-      this.guestSecuritySessions.set(
-        data.sessionId,
-        createLucaLinkGuestSession(data.sessionId),
-      );
+      this.guestSessionStore.ensurePeerSession(data.sessionId);
+      this.guestSessionStore.ensureSecuritySession(data.sessionId);
       this.deviceTrustStore.upsert({
         deviceId: data.sessionId,
         displayName: `Guest session ${data.sessionId}`,
@@ -2084,7 +1953,7 @@ class LucaLinkService {
    * Set handler for guest messages
    */
   onGuestMessage(handler: (sessionId: string, message: string) => void): void {
-    this.guestMessageHandler = handler;
+    this.guestSessionStore.setMessageHandler(handler);
   }
 
   /**
@@ -2151,10 +2020,7 @@ class LucaLinkService {
       };
 
       // Store the peer connection
-      const session = this.guestSessions.get(sessionId);
-      if (session) {
-        session.peerConnection = pc;
-      }
+      this.guestSessionStore.setPeerConnection(sessionId, pc);
 
       return pc;
     } catch (e) {
@@ -2213,12 +2079,8 @@ class LucaLinkService {
         sourceDeviceId: data.sessionId,
         targetDeviceId: this.state.deviceId ?? "primary",
       });
-      if (!this.guestSessions.has(data.sessionId)) {
-        this.guestSessions.set(data.sessionId, {
-          peerConnection: null,
-          sessionId: data.sessionId,
-        });
-      }
+      this.guestSessionStore.ensurePeerSession(data.sessionId);
+      this.guestSessionStore.ensureSecuritySession(data.sessionId);
       this.deviceTrustStore.upsert({
         deviceId: data.sessionId,
         displayName: `Guest session ${data.sessionId}`,
@@ -2244,11 +2106,11 @@ class LucaLinkService {
           console.log(
             `[LucaLink] PIN required for session ${data.sessionId}, sending challenge`,
           );
-          const securitySession = this.guestSecuritySessions.get(
+          const securitySession = this.guestSessionStore.getSecuritySession(
             data.sessionId,
           );
           if (securitySession) {
-            this.guestSecuritySessions.set(
+            this.guestSessionStore.setSecuritySession(
               data.sessionId,
               markGuestSessionAuthChallenge(securitySession),
             );
@@ -2261,9 +2123,11 @@ class LucaLinkService {
       }
 
       // If no PIN required (or check failed), proceed
-      const securitySession = this.guestSecuritySessions.get(data.sessionId);
+      const securitySession = this.guestSessionStore.getSecuritySession(
+        data.sessionId,
+      );
       if (securitySession) {
-        this.guestSecuritySessions.set(
+        this.guestSessionStore.setSecuritySession(
           data.sessionId,
           markGuestSessionActive(securitySession),
         );
@@ -2289,7 +2153,7 @@ class LucaLinkService {
           sessionId: data.sessionId,
           payload: data,
         });
-        const session = this.guestSessions.get(data.sessionId);
+        const session = this.guestSessionStore.getPeerSession(data.sessionId);
         if (session?.peerConnection) {
           await session.peerConnection.setRemoteDescription(
             new RTCSessionDescription(data.answer),
@@ -2313,7 +2177,7 @@ class LucaLinkService {
           sessionId: data.sessionId,
           payload: data,
         });
-        const session = this.guestSessions.get(data.sessionId);
+        const session = this.guestSessionStore.getPeerSession(data.sessionId);
         if (session?.peerConnection && data.candidate) {
           await session.peerConnection.addIceCandidate(
             new RTCIceCandidate(data.candidate),
@@ -2402,11 +2266,11 @@ class LucaLinkService {
                   console.log(
                     `[LucaLink] PIN correct for ${data.sessionId}. starting session.`,
                   );
-                  const securitySession = this.guestSecuritySessions.get(
+                  const securitySession = this.guestSessionStore.getSecuritySession(
                     data.sessionId,
                   );
                   if (securitySession) {
-                    this.guestSecuritySessions.set(
+                    this.guestSessionStore.setSecuritySession(
                       data.sessionId,
                       markGuestSessionActive(
                         markGuestSessionAuthenticated(securitySession),
@@ -2432,8 +2296,9 @@ class LucaLinkService {
 
         // 3. Normal Chat Message
         console.log("[LucaLink] Guest chat message:", data);
-        if (this.guestMessageHandler) {
-          this.guestMessageHandler(data.sessionId, inboundMessage);
+        const guestMessageHandler = this.guestSessionStore.getMessageHandler();
+        if (guestMessageHandler) {
+          guestMessageHandler(data.sessionId, inboundMessage);
         }
       },
     );
@@ -2452,19 +2317,17 @@ class LucaLinkService {
         sessionId: data.sessionId,
         payload: data,
       });
-      const securitySession = this.guestSecuritySessions.get(data.sessionId);
+      const securitySession = this.guestSessionStore.getSecuritySession(
+        data.sessionId,
+      );
       if (securitySession) {
-        this.guestSecuritySessions.set(
+        this.guestSessionStore.setSecuritySession(
           data.sessionId,
           markGuestSessionDisconnected(securitySession),
         );
       }
       this.deviceTrustStore.markDisconnected(data.sessionId);
-      const session = this.guestSessions.get(data.sessionId);
-      if (session?.peerConnection) {
-        session.peerConnection.close();
-      }
-      this.guestSessions.delete(data.sessionId);
+      this.guestSessionStore.closeAndRemovePeerSession(data.sessionId);
     });
   }
 
@@ -2531,7 +2394,7 @@ class LucaLinkService {
     }
 
     if (
-      this.runtimeEnforcementMode !== "disabled" ||
+      this.runtimeStore.getEnforcementMode() !== "disabled" ||
       this.getSoftEnforcementMode() !== "disabled"
     ) {
       const runtimeEnforcement = this.evaluateRuntimeEnforcementForOutbound({

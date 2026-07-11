@@ -13,8 +13,8 @@ vi.mock("./sessionManager", () => ({
 }));
 
 import { lucaLink } from "./relayClientAdapter";
-import { createLucaLinkBridgeReviewRegistry } from "./lucaLinkBridgeReview";
-import { createLucaLinkAdapterDraftRegistry } from "./lucaLinkAdapterDrafts";
+import { LucaLinkBridgeReviewStore } from "./lucaLinkBridgeReviewStore";
+import { LucaLinkAdapterDraftStore } from "./lucaLinkAdapterDraftStore";
 
 describe("LucaLinkService runtime QA model-only regressions", () => {
   beforeEach(() => {
@@ -24,10 +24,8 @@ describe("LucaLinkService runtime QA model-only regressions", () => {
     lucaLink.clearContinuationRegistry();
     lucaLink.clearHostConnections();
     lucaLink.clearAdapterDrafts();
-    (lucaLink as any).bridgeReviewRegistry =
-      createLucaLinkBridgeReviewRegistry();
-    (lucaLink as any).adapterDraftRegistry =
-      createLucaLinkAdapterDraftRegistry();
+    (lucaLink as any).bridgeReviewStore = new LucaLinkBridgeReviewStore();
+    (lucaLink as any).adapterDraftStore = new LucaLinkAdapterDraftStore();
     (lucaLink as any).socket = null;
     (lucaLink as any).state = {
       connected: false,

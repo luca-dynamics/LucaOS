@@ -100,11 +100,9 @@ describe("LucaLink production security invariants", () => {
       "  clearAdapterDrafts",
     );
 
-    expect(helperSource).toContain("registerBridgeReview");
-    expect(helperSource).toContain("updateBridgeReview");
-    expect(helperSource).toContain("registerAdapterDraft");
-    expect(helperSource).toContain("updateAdapterDraft");
-    expect(helperSource).toContain("this.adapterDraftRegistry.records = []");
+    expect(helperSource).toContain("this.bridgeReviewStore");
+    expect(helperSource).toContain("this.adapterDraftStore");
+    expect(helperSource).toContain("this.adapterDraftStore.clear()");
 
     for (const forbidden of [
       /\bsend\s*\(/,

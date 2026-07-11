@@ -1,5 +1,11 @@
 # Luca Orb and Post-Boot Visual Source Audit
 
+> Historical note: references below to `OnboardingFlow`, `HologramFace`, and
+> `HologramFace2D` describe the retired onboarding implementation. Those files
+> were removed after `LucaPremiumOnboardingPreview` became the shared production
+> onboarding path. The VoiceHUD/Dictation source findings remain historical
+> evidence; they do not identify current onboarding mounts.
+
 ## Scope and conclusion
 
 This is a source-location audit only. It does not replace post-boot visuals,

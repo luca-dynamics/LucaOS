@@ -10,7 +10,7 @@ import type {
   ProvisionRow,
 } from "../../services/onboarding/LocalProvisioningService";
 import type { OnboardingModelReadiness } from "../../services/onboarding/OnboardingModelModeCoordinator";
-import type { ConversationMode } from "./ModeSelect";
+export type ConversationMode = "TEXT" | "VOICE";
 
 export type OnboardingSound =
   | "BOOT"

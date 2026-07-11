@@ -308,7 +308,7 @@ export const lucaBootExperiencePhases: LucaBootExperiencePhase[] = [
     bootSequence: "ONBOARDING",
     title: "Chat/Voice mode selection and model-route confirmation",
     summary:
-      "ModeSelect lets the user choose text or voice. Selection updates the realtime voice bridge, resolves whether the selected mode is supported, checks chat/STT/TTS/embedding readiness as needed, warns when voice/model routes need attention, and then enters the onboarding conversation.",
+      "The premium onboarding presence and intelligence-route screens capture interaction and model preferences, then the guarded completion bridge maps them into the desktop or web host lifecycle.",
     surface: "mode-select",
     audience: ["standard", "tactical", "origin"],
     userFacingCopy: [
