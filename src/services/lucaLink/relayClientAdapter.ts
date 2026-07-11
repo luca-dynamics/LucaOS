@@ -122,20 +122,10 @@ import {
   type LucaLinkApprovalSurfaceSummary,
 } from "./lucaLinkMultiHostApproval";
 import {
-  approveBridgeReviewForSandbox as approveLucaLinkBridgeReviewForSandboxModel,
-  cancelBridgeReview as cancelLucaLinkBridgeReviewModel,
-  createLucaLinkBridgeReviewRecord,
-  createLucaLinkBridgeReviewRegistry,
-  getBridgeReview,
-  listBridgeReviews,
-  registerBridgeReview,
-  rejectBridgeReview as rejectLucaLinkBridgeReviewModel,
-  summarizeBridgeReviews,
-  updateBridgeReview,
   type LucaLinkBridgeReviewRecord,
-  type LucaLinkBridgeReviewRegistry,
   type LucaLinkBridgeReviewSummary,
 } from "./lucaLinkBridgeReview";
+import { lucaLinkBridgeReviewStore } from "./lucaLinkBridgeReviewStore";
 import {
   createAdapterDraftFromBlueprint as createLucaLinkAdapterDraftFromBlueprintModel,
   createAdapterDraftFromBridgeReview as createLucaLinkAdapterDraftFromBridgeReviewModel,
@@ -216,8 +206,7 @@ class LucaLinkService {
   private deviceTrustStore = lucaLinkDeviceTrustStore;
   private handoffStore = lucaLinkHandoffStore;
   private hostConnectionStore = lucaLinkHostConnectionStore;
-  private bridgeReviewRegistry: LucaLinkBridgeReviewRegistry =
-    createLucaLinkBridgeReviewRegistry();
+  private bridgeReviewStore = lucaLinkBridgeReviewStore;
   private adapterDraftRegistry: LucaLinkAdapterDraftRegistry =
     createLucaLinkAdapterDraftRegistry();
   private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
@@ -1411,56 +1400,38 @@ class LucaLinkService {
   }
 
   getBridgeReviews(): LucaLinkBridgeReviewRecord[] {
-    return listBridgeReviews(this.bridgeReviewRegistry);
+    return this.bridgeReviewStore.list();
   }
 
   getBridgeReviewSummary(): LucaLinkBridgeReviewSummary {
-    return summarizeBridgeReviews(this.getBridgeReviews());
+    return this.bridgeReviewStore.summarize();
   }
 
   createBridgeReviewFromBlueprint(
     input: Partial<LucaLinkHostBridgeBlueprint>,
   ): LucaLinkBridgeReviewRecord {
-    return registerBridgeReview(
-      this.bridgeReviewRegistry,
-      createLucaLinkBridgeReviewRecord(input),
-    );
+    return this.bridgeReviewStore.createFromBlueprint(input);
   }
 
   approveBridgeReviewForSandbox(
     reviewId: string,
     options?: { approvedByDeviceId?: string; now?: number },
   ): LucaLinkBridgeReviewRecord | undefined {
-    const review = getBridgeReview(this.bridgeReviewRegistry, reviewId);
-    if (!review) return undefined;
-    return updateBridgeReview(
-      this.bridgeReviewRegistry,
-      approveLucaLinkBridgeReviewForSandboxModel(review, options),
-    );
+    return this.bridgeReviewStore.approveForSandbox(reviewId, options);
   }
 
   rejectBridgeReview(
     reviewId: string,
     options?: { reason?: string; now?: number },
   ): LucaLinkBridgeReviewRecord | undefined {
-    const review = getBridgeReview(this.bridgeReviewRegistry, reviewId);
-    if (!review) return undefined;
-    return updateBridgeReview(
-      this.bridgeReviewRegistry,
-      rejectLucaLinkBridgeReviewModel(review, options),
-    );
+    return this.bridgeReviewStore.reject(reviewId, options);
   }
 
   cancelBridgeReview(
     reviewId: string,
     options?: { reason?: string; now?: number },
   ): LucaLinkBridgeReviewRecord | undefined {
-    const review = getBridgeReview(this.bridgeReviewRegistry, reviewId);
-    if (!review) return undefined;
-    return updateBridgeReview(
-      this.bridgeReviewRegistry,
-      cancelLucaLinkBridgeReviewModel(review, options),
-    );
+    return this.bridgeReviewStore.cancel(reviewId, options);
   }
 
   getEmbodiedHostCapabilityEnvelopes(): LucaLinkEmbodiedCapabilityEnvelope[] {
@@ -1489,7 +1460,7 @@ class LucaLinkService {
   createAdapterDraftFromBridgeReview(
     reviewId: string,
   ): LucaLinkAdapterDraft | undefined {
-    const review = getBridgeReview(this.bridgeReviewRegistry, reviewId);
+    const review = this.bridgeReviewStore.get(reviewId);
     if (!review) return undefined;
     return registerAdapterDraft(
       this.adapterDraftRegistry,
