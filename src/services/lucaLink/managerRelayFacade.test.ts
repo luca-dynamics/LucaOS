@@ -9,7 +9,7 @@ import { lucaLinkRelayBoundary as lucaLink } from "./lucaLinkRelayBoundary";
 
 describe("lucaLinkManager relay API", () => {
   it("exposes the governance surface through the manager (same state)", () => {
-    expect(lucaLinkManager.governance).toBe(lucaLink);
+    expect(lucaLinkManager.governance).not.toBe(lucaLink);
     const surface = [
       "getTrustedDevices",
       "renameTrustedDevice",
@@ -31,10 +31,12 @@ describe("lucaLinkManager relay API", () => {
   });
 
   it("exposes the settings-console surface through the manager (same state)", () => {
-    expect(lucaLinkManager.console).toBe(lucaLink);
+    expect(lucaLinkManager.console).not.toBe(lucaLink);
     for (const method of ["getHandoffs", "getBridgeReviews", "getApprovalSurfaces", "getFreshHostConnections", "getRuntimeShadowSummary"]) {
       expect(typeof (lucaLinkManager.console as any)[method]).toBe("function");
     }
+    expect("send" in (lucaLinkManager.console as object)).toBe(false);
+    expect("sendToGuest" in (lucaLinkManager.console as object)).toBe(false);
   });
 
   it("exposes explicit relay operations without returning the implementation", () => {

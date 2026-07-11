@@ -150,6 +150,120 @@ export type LucaLinkRelayGuestHandler = Parameters<
 export type LucaLinkRelayMessageListener = Parameters<
   LucaLinkRelayFacade["onMessage"]
 >[0];
+
+type FacadeKey<T extends object> = keyof T & string;
+
+function createBoundFacade<
+  T extends object,
+  K extends FacadeKey<T>,
+>(source: T, keys: readonly K[]): Pick<T, K> {
+  const facade = {} as Pick<T, K>;
+  for (const key of keys) {
+    (facade as Record<string, unknown>)[key] = (
+      source as Record<string, (...args: never[]) => unknown>
+    )[key].bind(source);
+  }
+  return facade;
+}
+
+const governanceFacadeKeys = [
+  "getTrustedDevices",
+  "getDeviceTrustSummary",
+  "getDeviceTrustAudit",
+  "clearDeviceTrustAudit",
+  "renameTrustedDevice",
+  "setTrustedDeviceTrustLevel",
+  "revokeTrustedDevice",
+  "blockTrustedDevice",
+  "unblockTrustedDevice",
+  "getPendingApprovalRequests",
+  "getApprovalRequests",
+  "getApprovalQueueSummary",
+  "approveApprovalRequest",
+  "denyApprovalRequest",
+  "cancelApprovalRequest",
+  "queueApprovalForSoftEnforcementResult",
+  "getContinuationTokens",
+  "getValidContinuationTokens",
+  "createContinuationFromApprovalRequest",
+  "validateContinuationToken",
+  "consumeContinuationToken",
+  "prepareSafeContinuation",
+  "consumePreparedContinuation",
+  "evaluateContinuationBridge",
+  "enableSoftEnforcement",
+  "disableSoftEnforcement",
+  "getSoftEnforcementMode",
+  "evaluateRuntimeEventForSoftEnforcement",
+] as const satisfies readonly FacadeKey<LucaLinkGovernanceFacade>[];
+
+const consoleFacadeKeys = [
+  "approveApprovalRequest",
+  "approveBridgeReviewForSandbox",
+  "approveHandoff",
+  "blockTrustedDevice",
+  "cancelAdapterDraft",
+  "cancelApprovalRequest",
+  "cancelBridgeReview",
+  "cancelContinuationToken",
+  "cancelHandoff",
+  "clearAdapterDrafts",
+  "consumeContinuationToken",
+  "createAdapterDraftFromBlueprint",
+  "createAdapterDraftFromBridgeReview",
+  "createBridgeReviewFromBlueprint",
+  "createContinuationFromApprovalRequest",
+  "createConversationHandoff",
+  "createRoom",
+  "declineHandoff",
+  "denyApprovalRequest",
+  "disconnect",
+  "generateGuestSession",
+  "getActiveTrustedDevices",
+  "getAdapterDraftSummary",
+  "getAdapterDrafts",
+  "getApprovalQueueSummary",
+  "getApprovalRequests",
+  "getApprovalSurfaceSummary",
+  "getApprovalSurfaces",
+  "getBridgeReviewSummary",
+  "getBridgeReviews",
+  "getContinuationRegistrySummary",
+  "getContinuationTokens",
+  "getDeviceTrustAudit",
+  "getDeviceTrustSummary",
+  "getEmbodiedHostCapabilityEnvelopes",
+  "getFreshHostConnectionSummary",
+  "getFreshHostConnections",
+  "getGuestSecuritySessions",
+  "getGuestSecuritySummary",
+  "getHandoffSummary",
+  "getHandoffs",
+  "getPairingUrl",
+  "getPendingApprovalRequests",
+  "getPendingHandoffs",
+  "getRuntimeShadowObservations",
+  "getRuntimeShadowSummary",
+  "getSoftEnforcementMode",
+  "getState",
+  "getTrustedDevices",
+  "getValidContinuationTokens",
+  "joinWithToken",
+  "markHandoffAccepted",
+  "onStateChange",
+  "rejectBridgeReview",
+  "renameTrustedDevice",
+  "revokeTrustedDevice",
+  "setTrustedDeviceTrustLevel",
+  "unblockTrustedDevice",
+  "validateContinuationToken",
+] as const satisfies readonly FacadeKey<LucaLinkConsoleFacade>[];
+
+const governanceFacade = createBoundFacade(
+  legacyRelayClient,
+  governanceFacadeKeys,
+);
+const consoleFacade = createBoundFacade(legacyRelayClient, consoleFacadeKeys);
 import { CryptoService } from "./crypto";
 import { deviceRegistry, DeviceRegistryService } from "./deviceRegistry";
 import { sessionManager, SessionManager } from "./sessionManager";
@@ -541,12 +655,12 @@ export class LucaLinkManager {
 
   /** Consolidation slice 3: the state-only governance surface (see type). */
   get governance(): LucaLinkGovernanceFacade {
-    return legacyRelayClient;
+    return governanceFacade;
   }
 
   /** Consolidation slice 4b: the settings-console surface (see type). */
   get console(): LucaLinkConsoleFacade {
-    return legacyRelayClient;
+    return consoleFacade;
   }
 
   sendSessionHandoff(
