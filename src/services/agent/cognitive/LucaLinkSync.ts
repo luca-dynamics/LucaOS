@@ -34,6 +34,9 @@ export class LucaLinkSync {
     string,
     { workflowId: string; resolve: (checkpoint: Checkpoint | null) => void; timeout: ReturnType<typeof setTimeout> }
   >();
+  private readonly statusListeners = new Set<
+    (status: LucaLinkCheckpointSyncProvenance) => void
+  >();
   private readonly unsubscribe: () => void;
 
   constructor() {
@@ -197,6 +200,13 @@ export class LucaLinkSync {
     return [...this.provenance.values()].map((status) => ({ ...status }));
   }
 
+  onStatusChange(
+    listener: (status: LucaLinkCheckpointSyncProvenance) => void,
+  ): () => void {
+    this.statusListeners.add(listener);
+    return () => this.statusListeners.delete(listener);
+  }
+
   private readCheckpoint(payload: unknown): Checkpoint | null {
     if (!payload || typeof payload !== "object") return null;
     const value = (payload as { checkpoint?: unknown }).checkpoint;
@@ -247,6 +257,7 @@ export class LucaLinkSync {
     status: LucaLinkCheckpointSyncProvenance,
   ): void {
     this.provenance.set(workflowId, status);
+    for (const listener of this.statusListeners) listener({ ...status });
   }
 }
 

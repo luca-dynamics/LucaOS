@@ -1,7 +1,7 @@
 
 // Runs in Electron main process, accessed via IPC, or in Node server
 
-import { LucaLinkSync } from "./LucaLinkSync";
+import { getLucaLinkSync } from "./LucaLinkSync";
 import type { Checkpoint, CheckpointQuery } from "./types";
 
 // Environment detection
@@ -15,7 +15,7 @@ export class CheckpointManager {
 
   constructor() {
     this.memoryCache = new Map();
-    this.lucaLink = new LucaLinkSync();
+    this.lucaLink = getLucaLinkSync();
     
     // Initializing the DB asynchronously in the background or on-demand
     this.ensureInitialized();
