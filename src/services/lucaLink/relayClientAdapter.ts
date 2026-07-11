@@ -127,17 +127,10 @@ import {
 } from "./lucaLinkBridgeReview";
 import { lucaLinkBridgeReviewStore } from "./lucaLinkBridgeReviewStore";
 import {
-  createAdapterDraftFromBlueprint as createLucaLinkAdapterDraftFromBlueprintModel,
-  createAdapterDraftFromBridgeReview as createLucaLinkAdapterDraftFromBridgeReviewModel,
-  createLucaLinkAdapterDraftRegistry,
-  listAdapterDrafts,
-  registerAdapterDraft,
-  summarizeAdapterDrafts,
-  updateAdapterDraft,
   type LucaLinkAdapterDraft,
-  type LucaLinkAdapterDraftRegistry,
   type LucaLinkAdapterDraftSummary,
 } from "./lucaLinkAdapterDrafts";
+import { lucaLinkAdapterDraftStore } from "./lucaLinkAdapterDraftStore";
 import {
   deriveEmbodiedHostCapabilityEnvelope,
   type LucaLinkEmbodiedCapabilityEnvelope,
@@ -207,8 +200,7 @@ class LucaLinkService {
   private handoffStore = lucaLinkHandoffStore;
   private hostConnectionStore = lucaLinkHostConnectionStore;
   private bridgeReviewStore = lucaLinkBridgeReviewStore;
-  private adapterDraftRegistry: LucaLinkAdapterDraftRegistry =
-    createLucaLinkAdapterDraftRegistry();
+  private adapterDraftStore = lucaLinkAdapterDraftStore;
   private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
     mode: "disabled",
   };
@@ -1441,20 +1433,17 @@ class LucaLinkService {
   }
 
   getAdapterDrafts(): LucaLinkAdapterDraft[] {
-    return listAdapterDrafts(this.adapterDraftRegistry);
+    return this.adapterDraftStore.list();
   }
 
   getAdapterDraftSummary(): LucaLinkAdapterDraftSummary {
-    return summarizeAdapterDrafts(this.getAdapterDrafts());
+    return this.adapterDraftStore.summarize();
   }
 
   createAdapterDraftFromBlueprint(
     input: Partial<LucaLinkHostBridgeBlueprint>,
   ): LucaLinkAdapterDraft {
-    return registerAdapterDraft(
-      this.adapterDraftRegistry,
-      createLucaLinkAdapterDraftFromBlueprintModel(input),
-    );
+    return this.adapterDraftStore.createFromBlueprint(input);
   }
 
   createAdapterDraftFromBridgeReview(
@@ -1462,26 +1451,15 @@ class LucaLinkService {
   ): LucaLinkAdapterDraft | undefined {
     const review = this.bridgeReviewStore.get(reviewId);
     if (!review) return undefined;
-    return registerAdapterDraft(
-      this.adapterDraftRegistry,
-      createLucaLinkAdapterDraftFromBridgeReviewModel(review),
-    );
+    return this.adapterDraftStore.createFromBridgeReview(review);
   }
 
   cancelAdapterDraft(draftId: string): LucaLinkAdapterDraft | undefined {
-    const draft = this.adapterDraftRegistry.records.find(
-      (record) => record.id === draftId,
-    );
-    if (!draft) return undefined;
-    return updateAdapterDraft(this.adapterDraftRegistry, {
-      ...draft,
-      status: "cancelled",
-      updatedAt: Date.now(),
-    });
+    return this.adapterDraftStore.cancel(draftId);
   }
 
   clearAdapterDrafts(): void {
-    this.adapterDraftRegistry.records = [];
+    this.adapterDraftStore.clear();
   }
 
   getContinuationTokens(): LucaLinkContinuationToken[] {
