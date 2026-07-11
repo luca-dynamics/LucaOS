@@ -50,19 +50,18 @@ import type {
   LucaLinkRuntimeObservationSummary,
 } from "./lucaLinkRuntimeObserver";
 import {
-  createLucaLinkGuestSession,
   evaluateLucaLinkGuestInbound,
   isGuestAuthPayload,
   markGuestSessionActive,
   markGuestSessionAuthChallenge,
   markGuestSessionAuthenticated,
   markGuestSessionDisconnected,
-  summarizeLucaLinkGuestSessions,
   type LucaLinkGuestInboundInput,
   type LucaLinkGuestInboundResult,
   type LucaLinkGuestSessionRecord,
   type LucaLinkGuestSessionSummary,
 } from "./lucaLinkGuestSessionPolicy";
+import { lucaLinkGuestSessionStore } from "./lucaLinkGuestSessionStore";
 
 import {
   type LucaLinkDeviceTrustLevel,
@@ -193,6 +192,7 @@ class LucaLinkService {
   private hostConnectionStore = lucaLinkHostConnectionStore;
   private bridgeReviewStore = lucaLinkBridgeReviewStore;
   private adapterDraftStore = lucaLinkAdapterDraftStore;
+  private guestSessionStore = lucaLinkGuestSessionStore;
   private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
     mode: "disabled",
   };
@@ -844,13 +844,7 @@ class LucaLinkService {
    */
   dispose(): void {
     this.disconnect();
-    for (const session of this.guestSessions.values()) {
-      session.peerConnection?.close();
-    }
-    this.guestSessions.clear();
-    this.guestSecuritySessions.clear();
-    this.guestInboundAudit = [];
-    this.guestMessageHandler = null;
+    this.guestSessionStore.dispose();
     this.stateListeners.clear();
     this.messageListeners.clear();
   }
@@ -1717,7 +1711,7 @@ class LucaLinkService {
       );
     });
 
-    this.guestSecuritySessions.forEach((session) => {
+    this.guestSessionStore.getSecuritySessions().forEach((session) => {
       this.hostConnectionStore.upsert(
         {
           id: session.sessionId,
@@ -1866,32 +1860,20 @@ class LucaLinkService {
 
   // ========== GUEST SESSION METHODS (Primary Host room mode) ==========
 
-  private guestSessions: Map<
-    string,
-    { peerConnection: RTCPeerConnection | null; sessionId: string }
-  > = new Map();
-  private guestMessageHandler:
-    | ((sessionId: string, message: string) => void)
-    | null = null;
-  private guestSecuritySessions: Map<string, LucaLinkGuestSessionRecord> =
-    new Map();
-  private guestInboundAudit: LucaLinkGuestInboundResult[] = [];
-  private readonly guestInboundAuditLimit = 100;
-
   getGuestSecuritySessions(): LucaLinkGuestSessionRecord[] {
-    return [...this.guestSecuritySessions.values()];
+    return this.guestSessionStore.getSecuritySessions();
   }
 
   getGuestSecuritySummary(): LucaLinkGuestSessionSummary {
-    return summarizeLucaLinkGuestSessions(this.guestSecuritySessions.values());
+    return this.guestSessionStore.getSecuritySummary();
   }
 
   getGuestInboundAudit(): LucaLinkGuestInboundResult[] {
-    return [...this.guestInboundAudit];
+    return this.guestSessionStore.getInboundAudit();
   }
 
   clearGuestInboundAudit(): void {
-    this.guestInboundAudit = [];
+    this.guestSessionStore.clearInboundAudit();
   }
 
   private evaluateGuestInbound(
@@ -1899,22 +1881,22 @@ class LucaLinkService {
   ): LucaLinkGuestInboundResult {
     const sessionId = input.sessionId;
     let session = sessionId
-      ? this.guestSecuritySessions.get(sessionId)
+      ? this.guestSessionStore.getSecuritySession(sessionId)
       : undefined;
     if (sessionId && !session) {
-      session = createLucaLinkGuestSession(sessionId, { now: input.now });
-      this.guestSecuritySessions.set(sessionId, session);
+      session = this.guestSessionStore.ensureSecuritySession(sessionId);
     }
 
     const result = evaluateLucaLinkGuestInbound(input, session, {
       now: input.now,
     });
     if (sessionId && result.updatedSession) {
-      this.guestSecuritySessions.set(sessionId, result.updatedSession);
+      this.guestSessionStore.setSecuritySession(
+        sessionId,
+        result.updatedSession,
+      );
     }
-    this.guestInboundAudit = [...this.guestInboundAudit, result].slice(
-      -this.guestInboundAuditLimit,
-    );
+    this.guestSessionStore.recordInbound(result);
     return result;
   }
 
@@ -1949,14 +1931,8 @@ class LucaLinkService {
       console.log("[LucaLink] Guest session created:", data);
 
       // Store session locally
-      this.guestSessions.set(data.sessionId, {
-        peerConnection: null,
-        sessionId: data.sessionId,
-      });
-      this.guestSecuritySessions.set(
-        data.sessionId,
-        createLucaLinkGuestSession(data.sessionId),
-      );
+      this.guestSessionStore.ensurePeerSession(data.sessionId);
+      this.guestSessionStore.ensureSecuritySession(data.sessionId);
       this.deviceTrustStore.upsert({
         deviceId: data.sessionId,
         displayName: `Guest session ${data.sessionId}`,
@@ -1979,7 +1955,7 @@ class LucaLinkService {
    * Set handler for guest messages
    */
   onGuestMessage(handler: (sessionId: string, message: string) => void): void {
-    this.guestMessageHandler = handler;
+    this.guestSessionStore.setMessageHandler(handler);
   }
 
   /**
@@ -2046,10 +2022,7 @@ class LucaLinkService {
       };
 
       // Store the peer connection
-      const session = this.guestSessions.get(sessionId);
-      if (session) {
-        session.peerConnection = pc;
-      }
+      this.guestSessionStore.setPeerConnection(sessionId, pc);
 
       return pc;
     } catch (e) {
@@ -2108,12 +2081,8 @@ class LucaLinkService {
         sourceDeviceId: data.sessionId,
         targetDeviceId: this.state.deviceId ?? "primary",
       });
-      if (!this.guestSessions.has(data.sessionId)) {
-        this.guestSessions.set(data.sessionId, {
-          peerConnection: null,
-          sessionId: data.sessionId,
-        });
-      }
+      this.guestSessionStore.ensurePeerSession(data.sessionId);
+      this.guestSessionStore.ensureSecuritySession(data.sessionId);
       this.deviceTrustStore.upsert({
         deviceId: data.sessionId,
         displayName: `Guest session ${data.sessionId}`,
@@ -2139,11 +2108,11 @@ class LucaLinkService {
           console.log(
             `[LucaLink] PIN required for session ${data.sessionId}, sending challenge`,
           );
-          const securitySession = this.guestSecuritySessions.get(
+          const securitySession = this.guestSessionStore.getSecuritySession(
             data.sessionId,
           );
           if (securitySession) {
-            this.guestSecuritySessions.set(
+            this.guestSessionStore.setSecuritySession(
               data.sessionId,
               markGuestSessionAuthChallenge(securitySession),
             );
@@ -2156,9 +2125,11 @@ class LucaLinkService {
       }
 
       // If no PIN required (or check failed), proceed
-      const securitySession = this.guestSecuritySessions.get(data.sessionId);
+      const securitySession = this.guestSessionStore.getSecuritySession(
+        data.sessionId,
+      );
       if (securitySession) {
-        this.guestSecuritySessions.set(
+        this.guestSessionStore.setSecuritySession(
           data.sessionId,
           markGuestSessionActive(securitySession),
         );
@@ -2184,7 +2155,7 @@ class LucaLinkService {
           sessionId: data.sessionId,
           payload: data,
         });
-        const session = this.guestSessions.get(data.sessionId);
+        const session = this.guestSessionStore.getPeerSession(data.sessionId);
         if (session?.peerConnection) {
           await session.peerConnection.setRemoteDescription(
             new RTCSessionDescription(data.answer),
@@ -2208,7 +2179,7 @@ class LucaLinkService {
           sessionId: data.sessionId,
           payload: data,
         });
-        const session = this.guestSessions.get(data.sessionId);
+        const session = this.guestSessionStore.getPeerSession(data.sessionId);
         if (session?.peerConnection && data.candidate) {
           await session.peerConnection.addIceCandidate(
             new RTCIceCandidate(data.candidate),
@@ -2297,11 +2268,11 @@ class LucaLinkService {
                   console.log(
                     `[LucaLink] PIN correct for ${data.sessionId}. starting session.`,
                   );
-                  const securitySession = this.guestSecuritySessions.get(
+                  const securitySession = this.guestSessionStore.getSecuritySession(
                     data.sessionId,
                   );
                   if (securitySession) {
-                    this.guestSecuritySessions.set(
+                    this.guestSessionStore.setSecuritySession(
                       data.sessionId,
                       markGuestSessionActive(
                         markGuestSessionAuthenticated(securitySession),
@@ -2327,8 +2298,9 @@ class LucaLinkService {
 
         // 3. Normal Chat Message
         console.log("[LucaLink] Guest chat message:", data);
-        if (this.guestMessageHandler) {
-          this.guestMessageHandler(data.sessionId, inboundMessage);
+        const guestMessageHandler = this.guestSessionStore.getMessageHandler();
+        if (guestMessageHandler) {
+          guestMessageHandler(data.sessionId, inboundMessage);
         }
       },
     );
@@ -2347,19 +2319,17 @@ class LucaLinkService {
         sessionId: data.sessionId,
         payload: data,
       });
-      const securitySession = this.guestSecuritySessions.get(data.sessionId);
+      const securitySession = this.guestSessionStore.getSecuritySession(
+        data.sessionId,
+      );
       if (securitySession) {
-        this.guestSecuritySessions.set(
+        this.guestSessionStore.setSecuritySession(
           data.sessionId,
           markGuestSessionDisconnected(securitySession),
         );
       }
       this.deviceTrustStore.markDisconnected(data.sessionId);
-      const session = this.guestSessions.get(data.sessionId);
-      if (session?.peerConnection) {
-        session.peerConnection.close();
-      }
-      this.guestSessions.delete(data.sessionId);
+      this.guestSessionStore.closeAndRemovePeerSession(data.sessionId);
     });
   }
 

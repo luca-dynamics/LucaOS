@@ -6,6 +6,7 @@ vi.mock("socket.io-client", () => ({
 
 import { lucaLink } from "./relayClientAdapter";
 import { LucaLinkDeviceTrustStore } from "./lucaLinkDeviceTrustStore";
+import { LucaLinkGuestSessionStore } from "./lucaLinkGuestSessionStore";
 import { lucaLinkContinuationStore } from "./lucaLinkContinuationStore";
 import { createLucaLinkContinuationToken } from "./lucaLinkContinuation";
 
@@ -18,6 +19,7 @@ describe("LucaLinkService soft enforcement controls", () => {
     lucaLink.clearContinuationRegistry();
     lucaLink.clearHostConnections();
     (lucaLink as any).deviceTrustStore = new LucaLinkDeviceTrustStore();
+    (lucaLink as any).guestSessionStore = new LucaLinkGuestSessionStore();
     (lucaLink as any).socket = null;
     (lucaLink as any).state = {
       connected: false,
@@ -542,9 +544,7 @@ describe("LucaLinkService guest inbound hardening", () => {
     vi.restoreAllMocks();
     lucaLink.clearGuestInboundAudit();
     (lucaLink as any).deviceTrustStore = new LucaLinkDeviceTrustStore();
-    (lucaLink as any).guestSecuritySessions?.clear();
-    (lucaLink as any).guestSessions?.clear();
-    (lucaLink as any).guestMessageHandler = null;
+    (lucaLink as any).guestSessionStore = new LucaLinkGuestSessionStore();
     (lucaLink as any).socket = null;
     (lucaLink as any).state = {
       connected: false,
@@ -642,9 +642,9 @@ describe("LucaLinkService guest inbound hardening", () => {
         }
       },
     );
-    (lucaLink as any).guestSessions.set("guest-1", {
-      sessionId: "guest-1",
-      peerConnection: { setRemoteDescription, addIceCandidate },
+    (lucaLink as any).guestSessionStore.setPeerConnection("guest-1", {
+      setRemoteDescription,
+      addIceCandidate,
     });
 
     await handlers["webrtc-answer"]({
