@@ -6,14 +6,16 @@ vi.mock("socket.io-client", () => ({ io: vi.fn() }));
 
 import { lucaLinkManager } from "./manager";
 import { lucaLinkRelayBoundary as lucaLink } from "./lucaLinkRelayBoundary";
+import managerSource from "./manager.ts?raw";
 
-describe("lucaLinkManager.relay (consolidation facade)", () => {
-  it("exposes the legacy relay client through the manager", () => {
-    expect(lucaLinkManager.relay).toBe(lucaLink);
+describe("lucaLinkManager relay API", () => {
+  it("keeps relay contract types at the boundary", () => {
+    expect(managerSource).not.toContain("typeof legacyRelayClient");
+    expect(managerSource).toContain("LucaLinkRelayImplementation");
   });
 
   it("exposes the governance surface through the manager (same state)", () => {
-    expect(lucaLinkManager.governance).toBe(lucaLink);
+    expect(lucaLinkManager.governance).not.toBe(lucaLink);
     const surface = [
       "getTrustedDevices",
       "renameTrustedDevice",
@@ -35,33 +37,37 @@ describe("lucaLinkManager.relay (consolidation facade)", () => {
   });
 
   it("exposes the settings-console surface through the manager (same state)", () => {
-    expect(lucaLinkManager.console).toBe(lucaLink);
+    expect(lucaLinkManager.console).not.toBe(lucaLink);
     for (const method of ["getHandoffs", "getBridgeReviews", "getApprovalSurfaces", "getFreshHostConnections", "getRuntimeShadowSummary"]) {
       expect(typeof (lucaLinkManager.console as any)[method]).toBe("function");
     }
+    expect("send" in (lucaLinkManager.console as object)).toBe(false);
+    expect("sendToGuest" in (lucaLinkManager.console as object)).toBe(false);
   });
 
-  it("carries the full allowed surface and nothing is undefined", () => {
+  it("exposes explicit relay operations without returning the implementation", () => {
     const surface = [
-      "createRoom",
-      "joinWithToken",
-      "autoConnect",
-      "disconnect",
-      "generateGuestSession",
-      "initGuestHandler",
-      "onGuestMessage",
-      "sendToGuest",
-      "getState",
-      "onStateChange",
-      "onMessage",
-      "send",
-      "beamPacket",
-      "syncMission",
-      "getPairingUrl",
+      "createRelayRoom",
+      "joinRelayWithToken",
+      "autoConnectRelay",
+      "disconnectRelay",
+      "disposeRelay",
+      "generateRelayGuestSession",
+      "initRelayGuestHandler",
+      "onRelayGuestMessage",
+      "sendRelayToGuest",
+      "getRelayState",
+      "onRelayStateChange",
+      "onRelayMessage",
+      "sendRelayMessage",
+      "beamRelayPacket",
+      "syncRelayMission",
+      "getRelayPairingUrl",
     ] as const;
     for (const method of surface) {
-      expect(typeof (lucaLinkManager.relay as any)[method]).toBe("function");
+      expect(typeof (lucaLinkManager as any)[method]).toBe("function");
     }
+    expect("relay" in (lucaLinkManager as object)).toBe(false);
   });
 
   it("routes application relay sends through manager-owned methods", () => {

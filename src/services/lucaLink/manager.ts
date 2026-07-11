@@ -1,5 +1,6 @@
 import { SecureSocket } from "./secureSocket";
 import { lucaLinkRelayBoundary as legacyRelayClient } from "./lucaLinkRelayBoundary";
+import type { LucaLinkRelayImplementation } from "./lucaLinkRelayBoundary";
 export type {
   LucaLinkMessage,
   LucaLinkState,
@@ -19,7 +20,7 @@ export type {
  * the manager without another consumer sweep. Nothing here transports.
  */
 export type LucaLinkGovernanceFacade = Pick<
-  typeof legacyRelayClient,
+  LucaLinkRelayImplementation,
   // Device trust
   | "getTrustedDevices"
   | "getDeviceTrustSummary"
@@ -63,7 +64,7 @@ export type LucaLinkGovernanceFacade = Pick<
  * the legacy import without forking state.
  */
 export type LucaLinkConsoleFacade = Pick<
-  typeof legacyRelayClient,
+  LucaLinkRelayImplementation,
   | "approveApprovalRequest"
   | "approveBridgeReviewForSandbox"
   | "approveHandoff"
@@ -126,7 +127,7 @@ export type LucaLinkConsoleFacade = Pick<
 >;
 
 export type LucaLinkRelayFacade = Pick<
-  typeof legacyRelayClient,
+  LucaLinkRelayImplementation,
   | "createRoom"
   | "joinWithToken"
   | "autoConnect"
@@ -150,6 +151,120 @@ export type LucaLinkRelayGuestHandler = Parameters<
 export type LucaLinkRelayMessageListener = Parameters<
   LucaLinkRelayFacade["onMessage"]
 >[0];
+
+type FacadeKey<T extends object> = keyof T & string;
+
+function createBoundFacade<
+  T extends object,
+  K extends FacadeKey<T>,
+>(source: T, keys: readonly K[]): Pick<T, K> {
+  const facade = {} as Pick<T, K>;
+  for (const key of keys) {
+    (facade as Record<string, unknown>)[key] = (
+      source as unknown as Record<string, (...args: never[]) => unknown>
+    )[key].bind(source);
+  }
+  return facade;
+}
+
+const governanceFacadeKeys = [
+  "getTrustedDevices",
+  "getDeviceTrustSummary",
+  "getDeviceTrustAudit",
+  "clearDeviceTrustAudit",
+  "renameTrustedDevice",
+  "setTrustedDeviceTrustLevel",
+  "revokeTrustedDevice",
+  "blockTrustedDevice",
+  "unblockTrustedDevice",
+  "getPendingApprovalRequests",
+  "getApprovalRequests",
+  "getApprovalQueueSummary",
+  "approveApprovalRequest",
+  "denyApprovalRequest",
+  "cancelApprovalRequest",
+  "queueApprovalForSoftEnforcementResult",
+  "getContinuationTokens",
+  "getValidContinuationTokens",
+  "createContinuationFromApprovalRequest",
+  "validateContinuationToken",
+  "consumeContinuationToken",
+  "prepareSafeContinuation",
+  "consumePreparedContinuation",
+  "evaluateContinuationBridge",
+  "enableSoftEnforcement",
+  "disableSoftEnforcement",
+  "getSoftEnforcementMode",
+  "evaluateRuntimeEventForSoftEnforcement",
+] as const satisfies readonly FacadeKey<LucaLinkGovernanceFacade>[];
+
+const consoleFacadeKeys = [
+  "approveApprovalRequest",
+  "approveBridgeReviewForSandbox",
+  "approveHandoff",
+  "blockTrustedDevice",
+  "cancelAdapterDraft",
+  "cancelApprovalRequest",
+  "cancelBridgeReview",
+  "cancelContinuationToken",
+  "cancelHandoff",
+  "clearAdapterDrafts",
+  "consumeContinuationToken",
+  "createAdapterDraftFromBlueprint",
+  "createAdapterDraftFromBridgeReview",
+  "createBridgeReviewFromBlueprint",
+  "createContinuationFromApprovalRequest",
+  "createConversationHandoff",
+  "createRoom",
+  "declineHandoff",
+  "denyApprovalRequest",
+  "disconnect",
+  "generateGuestSession",
+  "getActiveTrustedDevices",
+  "getAdapterDraftSummary",
+  "getAdapterDrafts",
+  "getApprovalQueueSummary",
+  "getApprovalRequests",
+  "getApprovalSurfaceSummary",
+  "getApprovalSurfaces",
+  "getBridgeReviewSummary",
+  "getBridgeReviews",
+  "getContinuationRegistrySummary",
+  "getContinuationTokens",
+  "getDeviceTrustAudit",
+  "getDeviceTrustSummary",
+  "getEmbodiedHostCapabilityEnvelopes",
+  "getFreshHostConnectionSummary",
+  "getFreshHostConnections",
+  "getGuestSecuritySessions",
+  "getGuestSecuritySummary",
+  "getHandoffSummary",
+  "getHandoffs",
+  "getPairingUrl",
+  "getPendingApprovalRequests",
+  "getPendingHandoffs",
+  "getRuntimeShadowObservations",
+  "getRuntimeShadowSummary",
+  "getSoftEnforcementMode",
+  "getState",
+  "getTrustedDevices",
+  "getValidContinuationTokens",
+  "joinWithToken",
+  "markHandoffAccepted",
+  "onStateChange",
+  "rejectBridgeReview",
+  "renameTrustedDevice",
+  "revokeTrustedDevice",
+  "setTrustedDeviceTrustLevel",
+  "unblockTrustedDevice",
+  "validateContinuationToken",
+] as const satisfies readonly FacadeKey<LucaLinkConsoleFacade>[];
+
+const governanceFacade = createBoundFacade(
+  legacyRelayClient,
+  governanceFacadeKeys,
+);
+const consoleFacade = createBoundFacade(legacyRelayClient, consoleFacadeKeys);
 import { CryptoService } from "./crypto";
 import { deviceRegistry, DeviceRegistryService } from "./deviceRegistry";
 import { sessionManager, SessionManager } from "./sessionManager";
@@ -455,18 +570,6 @@ export class LucaLinkManager {
    * companions register without a key pair, so this never carries secrets.
    */
   /**
-   * Consolidation slice 2 (facade-first): the desktop relay + guest-WebRTC
-   * surface, exposed from the manager so consumers migrate HERE instead of
-   * importing the deprecated lucaLinkService. The implementation still lives
-   * in lucaLinkService for now; once every consumer reads
-   * lucaLinkManager.relay.*, the code behind this getter moves into
-   * ./relayClientAdapter without touching another file.
-   */
-  get relay(): LucaLinkRelayFacade {
-    return legacyRelayClient;
-  }
-
-  /**
    * Single manager-owned relay send path for application surfaces.
    * The Socket.IO implementation remains behind this façade during the
    * transport migration, so consumers do not hold or emit on raw sockets.
@@ -519,14 +622,50 @@ export class LucaLinkManager {
     legacyRelayClient.initGuestHandler(...args);
   }
 
+  autoConnectRelay(
+    ...args: Parameters<LucaLinkRelayFacade["autoConnect"]>
+  ): ReturnType<LucaLinkRelayFacade["autoConnect"]> {
+    return legacyRelayClient.autoConnect(...args);
+  }
+
+  disconnectRelay(): ReturnType<LucaLinkRelayFacade["disconnect"]> {
+    return legacyRelayClient.disconnect();
+  }
+
+  disposeRelay(): ReturnType<LucaLinkRelayFacade["dispose"]> {
+    return legacyRelayClient.dispose();
+  }
+
+  onRelayGuestMessage(
+    ...args: Parameters<LucaLinkRelayFacade["onGuestMessage"]>
+  ): ReturnType<LucaLinkRelayFacade["onGuestMessage"]> {
+    return legacyRelayClient.onGuestMessage(...args);
+  }
+
+  sendRelayToGuest(
+    ...args: Parameters<LucaLinkRelayFacade["sendToGuest"]>
+  ): ReturnType<LucaLinkRelayFacade["sendToGuest"]> {
+    return legacyRelayClient.sendToGuest(...args);
+  }
+
+  syncRelayMission(
+    ...args: Parameters<LucaLinkRelayFacade["syncMission"]>
+  ): ReturnType<LucaLinkRelayFacade["syncMission"]> {
+    return legacyRelayClient.syncMission(...args);
+  }
+
+  getRelayPairingUrl(): ReturnType<LucaLinkRelayFacade["getPairingUrl"]> {
+    return legacyRelayClient.getPairingUrl();
+  }
+
   /** Consolidation slice 3: the state-only governance surface (see type). */
   get governance(): LucaLinkGovernanceFacade {
-    return legacyRelayClient;
+    return governanceFacade;
   }
 
   /** Consolidation slice 4b: the settings-console surface (see type). */
   get console(): LucaLinkConsoleFacade {
-    return legacyRelayClient;
+    return consoleFacade;
   }
 
   sendSessionHandoff(
