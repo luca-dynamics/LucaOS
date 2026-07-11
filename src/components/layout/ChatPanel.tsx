@@ -8,6 +8,7 @@ import ChatApprovalStrip from "../chat/ChatApprovalStrip";
 import WhileYouWereAwayStrip from "../chat/WhileYouWereAwayStrip";
 import { MessageScroller } from "../chat/LucaConversationPrimitives";
 import SuggestionChips from "../SuggestionChips";
+import { LucaMotionSheet } from "../ui/luca";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sender } from "../../types";
 import { awarenessService } from "../../services/awarenessService";
@@ -993,17 +994,26 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       </AnimatePresence>
 
       {/* Bottom-docked input */}
-      <div
-        className={`${isMobile ? "border-t" : "bg-transparent"} z-40 px-3 sm:px-6 pb-3 sm:pb-4 pt-0`}
-        style={isMobile ? lucaMaterialMobileSheetStyle : undefined}
-      >
-        <div className="mx-auto w-full max-w-3xl">
-          <div className="mb-2 px-1">
-            {suggestionChips}
+      {isMobile ? (
+        <LucaMotionSheet
+          edge="bottom"
+          aria-label="Conversation composer"
+          className="z-40 border-t px-3 pb-3 pt-0 sm:px-6 sm:pb-4"
+          style={lucaMaterialMobileSheetStyle}
+        >
+          <div className="mx-auto w-full max-w-3xl">
+            <div className="mb-2 px-1">{suggestionChips}</div>
+            {sharedInputArea}
           </div>
-          {sharedInputArea}
+        </LucaMotionSheet>
+      ) : (
+        <div className="z-40 bg-transparent px-3 pb-3 pt-0 sm:px-6 sm:pb-4">
+          <div className="mx-auto w-full max-w-3xl">
+            <div className="mb-2 px-1">{suggestionChips}</div>
+            {sharedInputArea}
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 };

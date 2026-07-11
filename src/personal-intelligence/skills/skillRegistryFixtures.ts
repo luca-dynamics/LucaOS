@@ -1,6 +1,8 @@
 import type { PersonalIntelligenceSkillManifest } from "./skillRegistryTypes";
+import { lucaFluidDesignReviewManifest } from "./lucaFluidDesignReviewManifest";
 
 export const personalIntelligenceSkillRegistryFixtures: readonly PersonalIntelligenceSkillManifest[] = [
+  lucaFluidDesignReviewManifest,
   {
     id: "writing-format-assistant",
     manifestId: "pi.writing-format-assistant",

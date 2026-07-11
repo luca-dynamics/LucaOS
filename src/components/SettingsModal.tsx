@@ -142,6 +142,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             },
           }),
         );
+        window.dispatchEvent(
+          new CustomEvent("luca:atmosphere-preview", {
+            detail: persisted.atmosphere,
+          }),
+        );
       } catch {
         /* settings unavailable — nothing to restore */
       }

@@ -48,6 +48,10 @@ describe("LucaLinkSync", () => {
     await expect(sync.fetchCheckpoint("workflow-1")).resolves.toEqual(
       checkpoint,
     );
+    expect(sync.getSyncStatus("workflow-1")).toMatchObject({
+      status: "sent",
+      checkpointId: "checkpoint-1",
+    });
   });
 
   it("accepts valid remote checkpoints and publishes deletions", async () => {
@@ -64,5 +68,81 @@ describe("LucaLinkSync", () => {
       { checkpointId: "checkpoint-1" },
     );
     await expect(sync.fetchCheckpoint("workflow-1")).resolves.toBeNull();
+  });
+
+  it("requests a missing checkpoint and resolves when a linked host replies", async () => {
+    mocks.sendRelayMessage.mockImplementationOnce((_target, type, payload) => {
+      if (type === "CHECKPOINT_REQUEST") {
+        mocks.relayListener?.({
+          type: "CHECKPOINT_SYNC",
+          payload: { checkpoint, requestId: (payload as { requestId: string }).requestId },
+        });
+      }
+      return true;
+    });
+
+    const sync = new LucaLinkSync();
+    await expect(sync.fetchCheckpoint("workflow-1")).resolves.toEqual(
+      checkpoint,
+    );
+    expect(mocks.sendRelayMessage).toHaveBeenCalledWith(
+      "all",
+      "CHECKPOINT_REQUEST",
+      expect.objectContaining({ workflowId: "workflow-1" }),
+    );
+  });
+
+  it("answers a checkpoint request from its local continuity cache", async () => {
+    const sync = new LucaLinkSync();
+    await sync.syncCheckpoint(checkpoint);
+    mocks.sendRelayMessage.mockClear();
+
+    mocks.relayListener?.({
+      type: "CHECKPOINT_REQUEST",
+      source: "companion-1",
+      payload: { workflowId: "workflow-1", requestId: "request-1" },
+    });
+
+    expect(mocks.sendRelayMessage).toHaveBeenCalledWith(
+      "companion-1",
+      "CHECKPOINT_SYNC",
+      { checkpoint, requestId: "request-1" },
+    );
+  });
+
+  it("keeps the newest checkpoint when updates arrive out of order", async () => {
+    const sync = new LucaLinkSync();
+    const newer = { ...checkpoint, id: "checkpoint-newer", timestamp: 200 };
+    const older = { ...checkpoint, id: "checkpoint-older", timestamp: 100 };
+
+    await sync.syncCheckpoint(newer);
+    mocks.relayListener?.({
+      type: "CHECKPOINT_SYNC",
+      payload: { checkpoint: older },
+    });
+
+    await expect(sync.fetchCheckpoint("workflow-1")).resolves.toEqual(newer);
+    expect(sync.getSyncStatus("workflow-1")).toMatchObject({
+      status: "stale-rejected",
+      checkpointId: "checkpoint-older",
+    });
+  });
+
+  it("uses checkpoint ID as a deterministic tie-breaker", async () => {
+    const sync = new LucaLinkSync();
+    const first = { ...checkpoint, id: "checkpoint-a", timestamp: 200 };
+    const second = { ...checkpoint, id: "checkpoint-b", timestamp: 200 };
+
+    await sync.syncCheckpoint(first);
+    mocks.relayListener?.({
+      type: "CHECKPOINT_SYNC",
+      payload: { checkpoint: second },
+    });
+
+    await expect(sync.fetchCheckpoint("workflow-1")).resolves.toEqual(second);
+    expect(sync.getSyncStatus("workflow-1")).toMatchObject({
+      status: "received",
+      checkpointId: "checkpoint-b",
+    });
   });
 });

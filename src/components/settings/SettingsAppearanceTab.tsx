@@ -10,6 +10,7 @@ import {
   settingsSelectClassName,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import AtmosphereStudio from "./AtmosphereStudio";
 
 /**
  * Appearance — a first-class Settings destination (see
@@ -47,6 +48,25 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
           onUpdate("general", "selectedSkinId", skinId)
         }
       />
+
+      <SettingsSection
+        title="Atmosphere"
+        description="Create a personal background while Luca keeps the selected skin readable and consistent."
+        icon="Palette"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <AtmosphereStudio
+          value={settings.general.atmosphere}
+          accentColor={theme.hex}
+          onChange={(atmosphere) => {
+            onUpdate("general", "atmosphere", atmosphere);
+            window.dispatchEvent(
+              new CustomEvent("luca:atmosphere-preview", { detail: atmosphere }),
+            );
+          }}
+        />
+      </SettingsSection>
 
         <SettingsSection
           title="Material & Display"

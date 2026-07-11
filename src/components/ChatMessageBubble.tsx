@@ -9,6 +9,7 @@ import ChartRenderer from "./chat/ChartRenderer";
 import { Attachment, Bubble, Marker, Message } from "./chat/LucaConversationPrimitives";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import "../styles/lucaTypeset.css";
 import {
   getRouteToneColor,
   getRouteToneBorder,
@@ -267,7 +268,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
               )}
 
               <div
-                className="prose max-w-none text-[15px] leading-7 font-sans"
+                className="luca-typeset max-w-none"
                 style={{ color: "var(--app-text-main, #ffffff)" }}
               >
                 <ReactMarkdown

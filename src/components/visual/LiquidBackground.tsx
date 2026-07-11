@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { setHexAlpha } from "../../config/themeColors";
 import { isElectron as checkElectron } from "../../utils/env";
+import {
+  buildLucaAtmosphereBackground,
+  normalizeLucaAtmosphere,
+  type LucaAtmosphere,
+} from "../../config/lucaAtmospheres";
 
 interface LiquidBackgroundProps {
   theme?: {
@@ -13,6 +18,7 @@ interface LiquidBackgroundProps {
   isSpeaking?: boolean;
   opacity?: number;
   className?: string;
+  atmosphere?: LucaAtmosphere;
 }
 
 export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
@@ -23,6 +29,7 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
   isSpeaking = false,
   opacity,
   className = "",
+  atmosphere,
 }) => {
   const hex = color || theme?.hex || "#4f8cff";
   const fallbackAccentSoft = setHexAlpha(hex, 0.16);
@@ -57,6 +64,8 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
   }, [isElectron]);
 
   const isWeb = !isElectron;
+  const resolvedAtmosphere = normalizeLucaAtmosphere(atmosphere);
+  const atmosphereBackground = buildLucaAtmosphereBackground(resolvedAtmosphere);
 
   const webBackground =
     "var(--luca-background-liquid, var(--luca-background-elevated, var(--luca-background-base, #101215)))";
@@ -86,13 +95,36 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
         <div
           className={`absolute inset-0 transition-all duration-1000 ${isThinking ? "animate-pulse" : ""}`}
           style={{
-            background: `${tokenBackgroundLiquid}, radial-gradient(ellipse at 50% 12%, color-mix(in srgb, ${tokenAccentPrimary} ${isLight ? 10 : 12}%, transparent) 0%, transparent 62%), radial-gradient(ellipse at 85% 85%, color-mix(in srgb, ${tokenAccentSoft} ${isSpeaking ? 34 : 22}%, transparent) 0%, transparent 54%), radial-gradient(ellipse at 15% 75%, color-mix(in srgb, ${tokenAccentSoft} ${isThinking ? 32 : 18}%, transparent) 0%, transparent 52%)`,
-            filter: `blur(calc(${tokenBlurLevel} * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.82) / 0.18), 1))))`,
+            background: resolvedAtmosphere.enabled
+              ? atmosphereBackground
+              : `${tokenBackgroundLiquid}, radial-gradient(ellipse at 50% 12%, color-mix(in srgb, ${tokenAccentPrimary} ${isLight ? 10 : 12}%, transparent) 0%, transparent 62%), radial-gradient(ellipse at 85% 85%, color-mix(in srgb, ${tokenAccentSoft} ${isSpeaking ? 34 : 22}%, transparent) 0%, transparent 54%), radial-gradient(ellipse at 15% 75%, color-mix(in srgb, ${tokenAccentSoft} ${isThinking ? 32 : 18}%, transparent) 0%, transparent 52%)`,
+            filter: resolvedAtmosphere.enabled
+              ? `blur(${resolvedAtmosphere.softnessPx}px)`
+              : `blur(calc(${tokenBlurLevel} * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.82) / 0.18), 1))))`,
             boxShadow: tokenShadowSoft,
             opacity:
               "calc((1 - var(--app-bg-opacity, 0.3)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.9) / 0.1), 1)) * 0.9)",
-            transform: `translateZ(0) scale(${1 + (amplitude * 0.05)})`,
+            transform: `translateZ(0) scale(${1 + amplitude * 0.05})`,
+            backgroundSize:
+              resolvedAtmosphere.enabled && resolvedAtmosphere.motion === "calm"
+                ? "115% 115%"
+                : undefined,
+            animation:
+              resolvedAtmosphere.enabled && resolvedAtmosphere.motion === "calm"
+                ? "luca-atmosphere-drift 18s ease-in-out infinite alternate"
+                : undefined,
             willChange: "filter, transform",
+          }}
+        />
+      )}
+
+      {resolvedAtmosphere.enabled && resolvedAtmosphere.noise > 0 && (
+        <div
+          className="absolute inset-0 mix-blend-soft-light pointer-events-none"
+          style={{
+            opacity: resolvedAtmosphere.noise,
+            backgroundImage:
+              `url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.75'/%3E%3C/svg%3E")`,
           }}
         />
       )}

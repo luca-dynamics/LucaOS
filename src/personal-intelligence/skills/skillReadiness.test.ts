@@ -15,7 +15,7 @@ describe("skill readiness summaries", () => {
 
   it("never reports an executable registry", () => {
     const summary = summarizeSkillRegistryReadiness(createSkillRegistry(personalIntelligenceSkillRegistryFixtures));
-    expect(summary.readyForInspection).toBe(6);
+    expect(summary.readyForInspection).toBe(7);
     expect(summary.readyForExecution).toBe(0);
     expect(summary.executionEnabled).toBe(false);
     expect(summary.sideEffectsPerformed).toBe(false);

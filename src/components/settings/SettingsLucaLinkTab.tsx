@@ -113,6 +113,12 @@ import { SettingsLucaLinkTransportPermissions } from "./SettingsLucaLinkTranspor
 import { SettingsLucaLinkAdapterFileInstallPermissions } from "./SettingsLucaLinkAdapterFileInstallPermissions";
 import { SettingsLucaLinkDryRunHandoff } from "./SettingsLucaLinkDryRunHandoff";
 import { SettingsLucaLinkRuntimeAuthority } from "./SettingsLucaLinkRuntimeAuthority";
+import {
+  getLucaLinkSync,
+} from "../../services/agent/cognitive/LucaLinkSync";
+import type {
+  LucaLinkCheckpointSyncProvenance,
+} from "../../services/agent/cognitive/LucaLinkSync";
 
 // Device Center source-level safety copy anchors for tests:
 // Admin does not bypass Primary Host approvals
@@ -618,6 +624,7 @@ interface LucaLinkDeviceCenterSnapshot {
   embodiedCapabilityEnvelopes: LucaLinkEmbodiedCapabilityEnvelope[];
   adapterDrafts: LucaLinkAdapterDraft[];
   adapterDraftSummary: LucaLinkAdapterDraftSummary;
+  checkpointSyncStatuses: LucaLinkCheckpointSyncProvenance[];
 }
 
 const lucaLinkDeviceCenterTabs: Array<{
@@ -663,12 +670,34 @@ function readLucaLinkDeviceCenterSnapshot(): LucaLinkDeviceCenterSnapshot {
     embodiedCapabilityEnvelopes: lucaLinkManager.console.getEmbodiedHostCapabilityEnvelopes(),
     adapterDrafts: lucaLinkManager.console.getAdapterDrafts(),
     adapterDraftSummary: lucaLinkManager.console.getAdapterDraftSummary(),
+    checkpointSyncStatuses: getLucaLinkSync().getSyncStatuses(),
   };
 }
 
 export function formatLucaLinkTimestamp(value?: number): string {
   if (!value) return "Not available";
   return new Date(value).toLocaleString();
+}
+
+export function formatLucaLinkCheckpointSyncStatus(
+  status: LucaLinkCheckpointSyncProvenance["status"],
+): string {
+  switch (status) {
+    case "sent":
+      return "Sent to linked hosts";
+    case "received":
+      return "Received from linked host";
+    case "stale-rejected":
+      return "Stale update rejected";
+    case "requesting":
+      return "Requesting from linked hosts";
+    case "request-timeout":
+      return "Request timed out";
+    case "deleted":
+      return "Deleted across linked hosts";
+    default:
+      return "Saved locally";
+  }
 }
 
 export function getLucaLinkSecurityModeLabel(
@@ -847,7 +876,13 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       setLinkState(state);
       setDeviceCenterSnapshot((snapshot) => ({ ...snapshot, state }));
     });
-    return () => unsubscribe();
+    const unsubscribeCheckpointStatus = getLucaLinkSync().onStatusChange(
+      () => refreshDeviceCenter(),
+    );
+    return () => {
+      unsubscribe();
+      unsubscribeCheckpointStatus();
+    };
   }, []);
 
   // Auto-start room if enabled but missing token (e.g. on page refresh)
@@ -956,6 +991,9 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const currentDeviceId =
     deviceCenterSnapshot.state.deviceId ?? linkState.deviceId ?? undefined;
   const connectedDevices = deviceCenterSnapshot.state.connectedDevices;
+  const checkpointSyncStatuses = [...deviceCenterSnapshot.checkpointSyncStatuses].sort(
+    (left, right) => right.updatedAt - left.updatedAt,
+  );
   const trustedDevices: LucaLinkTrustedDeviceRecord[] =
     deviceCenterSnapshot.trustedDevices.length > 0
       ? deviceCenterSnapshot.trustedDevices
@@ -3031,6 +3069,64 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               accentColor={theme.hex}
             />
           </div>
+
+          <SettingsCard>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">Checkpoint continuity</p>
+                <p className="mt-1 text-xs leading-relaxed opacity-70">
+                  Read-only delivery history for Luca&apos;s resumable work across
+                  linked hosts. Checkpoints remain local unless a link is active.
+                </p>
+              </div>
+              <span
+                className="rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+                style={{
+                  borderColor: settingsSurfaceTokens.borderSubtle,
+                  color: settingsSurfaceTokens.textSecondary,
+                }}
+              >
+                {checkpointSyncStatuses.length} tracked
+              </span>
+            </div>
+            {checkpointSyncStatuses.length === 0 ? (
+              <p className="mt-3 rounded-lg border px-3 py-3 text-xs opacity-70" style={{ borderColor: settingsSurfaceTokens.borderSubtle }}>
+                No checkpoint transfers have been recorded in this session.
+              </p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {checkpointSyncStatuses.slice(0, 5).map((status) => (
+                  <div
+                    key={`${status.workflowId}-${status.updatedAt}`}
+                    className="flex flex-col gap-2 rounded-lg border px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+                    style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold">
+                        {status.workflowId}
+                      </p>
+                      <p className="truncate text-[11px] opacity-60">
+                        {status.checkpointId
+                          ? `Checkpoint ${status.checkpointId}`
+                          : "Checkpoint pending"}
+                        {status.sourceDeviceId
+                          ? ` · ${status.sourceDeviceId}`
+                          : ""}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-left sm:text-right">
+                      <p className="text-xs font-semibold">
+                        {formatLucaLinkCheckpointSyncStatus(status.status)}
+                      </p>
+                      <p className="text-[11px] opacity-60">
+                        {formatLucaLinkTimestamp(status.updatedAt)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SettingsCard>
 
           <SettingsCard>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

@@ -1,0 +1,87 @@
+/*
+ * Luca Typeset
+ *
+ * Container-scoped defaults for semantic HTML produced from assistant
+ * markdown. Keep product-specific renderers (code, charts, tables and action
+ * surfaces) in React; this layer owns the reading rhythm between them.
+ */
+.luca-typeset {
+  --typeset-text: var(--app-text-main, #f8fafc);
+  --typeset-muted: var(--app-text-muted, #94a3b8);
+  --typeset-border: var(--luca-border-subtle, var(--app-border-main, rgba(255, 255, 255, 0.12)));
+  --typeset-accent: var(--luca-info, #4f8cff);
+  color: var(--typeset-text);
+  font-family: var(--app-font-family, ui-sans-serif, system-ui, sans-serif);
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+.luca-typeset > :first-child { margin-top: 0; }
+.luca-typeset > :last-child { margin-bottom: 0; }
+
+.luca-typeset :where(p) { margin-block: 0 0.9em; }
+.luca-typeset :where(h1, h2, h3, h4) {
+  color: var(--typeset-text);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.luca-typeset :where(h1) { margin-block: 1.6em 0.65em; font-size: 1.5em; }
+.luca-typeset :where(h2) { margin-block: 1.45em 0.6em; font-size: 1.3em; }
+.luca-typeset :where(h3) { margin-block: 1.25em 0.5em; font-size: 1.12em; }
+.luca-typeset :where(h4) { margin-block: 1.1em 0.45em; font-size: 1em; }
+
+.luca-typeset :where(ul, ol) { margin-block: 0.75em 1em; padding-inline-start: 1.5em; }
+.luca-typeset :where(ul) { list-style: disc; }
+.luca-typeset :where(ol) { list-style: decimal; }
+.luca-typeset :where(li) { padding-inline-start: 0.2em; }
+.luca-typeset :where(li + li) { margin-top: 0.3em; }
+.luca-typeset :where(li > p) { margin-block: 0.25em; }
+.luca-typeset :where(ul ul, ul ol, ol ul, ol ol) { margin-block: 0.35em; }
+
+.luca-typeset :where(strong) { color: var(--typeset-text); font-weight: 650; }
+.luca-typeset :where(a) {
+  color: var(--typeset-accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--typeset-accent) 45%, transparent);
+  text-underline-offset: 0.2em;
+}
+.luca-typeset :where(a:hover) { text-decoration-color: currentColor; }
+
+.luca-typeset :where(blockquote) {
+  margin-block: 1.15em;
+  padding-inline-start: 1em;
+  border-inline-start: 3px solid var(--typeset-border);
+  color: var(--typeset-muted);
+}
+.luca-typeset :where(hr) { margin-block: 1.75em; border: 0; border-top: 1px solid var(--typeset-border); }
+
+.luca-typeset :where(code):not(pre code) {
+  border: 1px solid var(--typeset-border);
+  border-radius: 0.35rem;
+  background: var(--app-bg-tint, rgba(255, 255, 255, 0.05));
+  padding: 0.12em 0.35em;
+  color: var(--typeset-text);
+  font-family: var(--app-mono-font-family, ui-monospace, SFMono-Regular, Consolas, monospace);
+  font-size: 0.88em;
+}
+
+.luca-typeset :where(img, video) { max-width: 100%; height: auto; border-radius: 0.75rem; }
+.luca-typeset :where(table) { width: 100%; border-collapse: collapse; }
+.luca-typeset :where(th) { font-weight: 650; }
+.luca-typeset :where(th, td) { vertical-align: top; }
+
+@media (max-width: 640px) {
+  .luca-typeset { font-size: 0.9rem; line-height: 1.7; }
+  .luca-typeset :where(h1) { font-size: 1.35em; }
+  .luca-typeset :where(h2) { font-size: 1.2em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .luca-typeset *, .luca-typeset *::before, .luca-typeset *::after {
+    scroll-behavior: auto !important;
+  }
+}
