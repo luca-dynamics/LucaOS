@@ -1,5 +1,6 @@
 import { SecureSocket } from "./secureSocket";
 import { lucaLinkRelayBoundary as legacyRelayClient } from "./lucaLinkRelayBoundary";
+import type { LucaLinkRelayImplementation } from "./lucaLinkRelayBoundary";
 export type {
   LucaLinkMessage,
   LucaLinkState,
@@ -19,7 +20,7 @@ export type {
  * the manager without another consumer sweep. Nothing here transports.
  */
 export type LucaLinkGovernanceFacade = Pick<
-  typeof legacyRelayClient,
+  LucaLinkRelayImplementation,
   // Device trust
   | "getTrustedDevices"
   | "getDeviceTrustSummary"
@@ -63,7 +64,7 @@ export type LucaLinkGovernanceFacade = Pick<
  * the legacy import without forking state.
  */
 export type LucaLinkConsoleFacade = Pick<
-  typeof legacyRelayClient,
+  LucaLinkRelayImplementation,
   | "approveApprovalRequest"
   | "approveBridgeReviewForSandbox"
   | "approveHandoff"
@@ -126,7 +127,7 @@ export type LucaLinkConsoleFacade = Pick<
 >;
 
 export type LucaLinkRelayFacade = Pick<
-  typeof legacyRelayClient,
+  LucaLinkRelayImplementation,
   | "createRoom"
   | "joinWithToken"
   | "autoConnect"
@@ -160,7 +161,7 @@ function createBoundFacade<
   const facade = {} as Pick<T, K>;
   for (const key of keys) {
     (facade as Record<string, unknown>)[key] = (
-      source as Record<string, (...args: never[]) => unknown>
+      source as unknown as Record<string, (...args: never[]) => unknown>
     )[key].bind(source);
   }
   return facade;

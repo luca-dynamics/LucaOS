@@ -6,8 +6,14 @@ vi.mock("socket.io-client", () => ({ io: vi.fn() }));
 
 import { lucaLinkManager } from "./manager";
 import { lucaLinkRelayBoundary as lucaLink } from "./lucaLinkRelayBoundary";
+import managerSource from "./manager.ts?raw";
 
 describe("lucaLinkManager relay API", () => {
+  it("keeps relay contract types at the boundary", () => {
+    expect(managerSource).not.toContain("typeof legacyRelayClient");
+    expect(managerSource).toContain("LucaLinkRelayImplementation");
+  });
+
   it("exposes the governance surface through the manager (same state)", () => {
     expect(lucaLinkManager.governance).not.toBe(lucaLink);
     const surface = [
