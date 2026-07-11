@@ -95,17 +95,12 @@ import {
 import { lucaLinkHandoffStore } from "./lucaLinkHandoffStore";
 
 import {
-  clearLucaLinkHostConnectionRegistry,
   createLucaLinkHostConnectionRecord,
-  createLucaLinkHostConnectionRegistry,
-  listLucaLinkHostConnections,
-  summarizeLucaLinkHostConnectionRegistry,
-  upsertLucaLinkHostConnection,
   type LucaLinkHostConnectionInput,
   type LucaLinkHostConnectionRecord,
-  type LucaLinkHostConnectionRegistryState,
   type LucaLinkHostConnectionRegistrySummary,
 } from "./lucaLinkHostConnectionModel";
+import { lucaLinkHostConnectionStore } from "./lucaLinkHostConnectionStore";
 import {
   createLucaLinkHostBridgeBlueprint,
   createLucaLinkHostConnectionDiagnosis,
@@ -220,8 +215,7 @@ class LucaLinkService {
     createLucaLinkRuntimeShadow({ enabled: false });
   private deviceTrustStore = lucaLinkDeviceTrustStore;
   private handoffStore = lucaLinkHandoffStore;
-  private hostConnectionRegistry: LucaLinkHostConnectionRegistryState =
-    createLucaLinkHostConnectionRegistry();
+  private hostConnectionStore = lucaLinkHostConnectionStore;
   private bridgeReviewRegistry: LucaLinkBridgeReviewRegistry =
     createLucaLinkBridgeReviewRegistry();
   private adapterDraftRegistry: LucaLinkAdapterDraftRegistry =
@@ -1369,7 +1363,7 @@ class LucaLinkService {
       deriveLucaLinkApprovalSurface(hostConnection, {
         currentPrimaryHostId:
           this.state.deviceId ??
-          this.hostConnectionRegistry.records.find(
+          this.getHostConnections({ refresh: false }).find(
             (record) => record.hostClass === "primary-host",
           )?.id,
       }),
@@ -1725,7 +1719,7 @@ class LucaLinkService {
     if (options.refresh !== false) {
       this.refreshHostConnectionsFromCurrentState();
     }
-    return listLucaLinkHostConnections(this.hostConnectionRegistry);
+    return this.hostConnectionStore.list();
   }
 
   getHostConnectionSummary(
@@ -1734,7 +1728,7 @@ class LucaLinkService {
     if (options.refresh !== false) {
       this.refreshHostConnectionsFromCurrentState();
     }
-    return summarizeLucaLinkHostConnectionRegistry(this.hostConnectionRegistry);
+    return this.hostConnectionStore.summarize();
   }
 
   getFreshHostConnections(): LucaLinkHostConnectionRecord[] {
@@ -1746,7 +1740,7 @@ class LucaLinkService {
   }
 
   clearHostConnections(): void {
-    clearLucaLinkHostConnectionRegistry(this.hostConnectionRegistry);
+    this.hostConnectionStore.clear();
   }
 
   refreshHostConnectionsFromCurrentState(): LucaLinkHostConnectionRecord[] {
@@ -1758,8 +1752,7 @@ class LucaLinkService {
 
     this.state.connectedDevices.forEach((device) => {
       const trusted = trustByDeviceId.get(device.deviceId);
-      upsertLucaLinkHostConnection(
-        this.hostConnectionRegistry,
+      this.hostConnectionStore.upsert(
         {
           id: device.deviceId,
           deviceId: device.deviceId,
@@ -1780,8 +1773,7 @@ class LucaLinkService {
     });
 
     trustedDevices.forEach((device) => {
-      upsertLucaLinkHostConnection(
-        this.hostConnectionRegistry,
+      this.hostConnectionStore.upsert(
         {
           id: device.deviceId,
           deviceId: device.deviceId,
@@ -1802,8 +1794,7 @@ class LucaLinkService {
     });
 
     this.guestSecuritySessions.forEach((session) => {
-      upsertLucaLinkHostConnection(
-        this.hostConnectionRegistry,
+      this.hostConnectionStore.upsert(
         {
           id: session.sessionId,
           deviceId: session.sessionId,
@@ -1823,12 +1814,9 @@ class LucaLinkService {
 
     if (
       this.state.deviceId &&
-      !this.hostConnectionRegistry.records.some(
-        (record) => record.deviceId === this.state.deviceId,
-      )
+      !this.hostConnectionStore.has(this.state.deviceId)
     ) {
-      upsertLucaLinkHostConnection(
-        this.hostConnectionRegistry,
+      this.hostConnectionStore.upsert(
         {
           id: this.state.deviceId,
           deviceId: this.state.deviceId,
@@ -1846,7 +1834,7 @@ class LucaLinkService {
       );
     }
 
-    return listLucaLinkHostConnections(this.hostConnectionRegistry);
+    return this.hostConnectionStore.list();
   }
 
   diagnoseHostConnection(
