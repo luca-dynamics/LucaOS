@@ -27,6 +27,7 @@ export * from "./createRealtimeVoiceSessionController";
 export * from "./HfRealtimeVoiceRuntime";
 export * from "./createHfRealtimeVoiceRuntime";
 export * from "./BrowserHfRealtimeVoiceSession";
+export * from "./CanonicalVoiceSessionBus";
 
 
 export * from "./VoiceOnboardingBridge";

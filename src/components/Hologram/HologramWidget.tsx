@@ -5,7 +5,6 @@ import { PERSONA_UI_CONFIG } from "../../config/themeColors";
 import {
   translationService,
   TranslationMode,
-  TranslationState,
 } from "../../services/TranslationService";
 import { MissionScope } from "../../services/toolRegistry";
 import { MISSION_COLORS } from "../../config/themeColors";
@@ -210,19 +209,19 @@ const ContextButton = ({
   );
 };
 
-const TranslationControlBar = ({
-  state,
+const PresenceControlBar = ({
   primaryColor,
   onMonitorToggle,
   onFullscreenToggle,
   isVisualCoreActive,
+  isMicOpen,
   onToggle,
 }: {
-  state: TranslationState;
   primaryColor: string;
   onMonitorToggle?: () => void;
   onFullscreenToggle?: () => void;
   isVisualCoreActive?: boolean;
+  isMicOpen?: boolean;
   onToggle?: () => void;
 }) => {
   const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
@@ -243,59 +242,33 @@ const TranslationControlBar = ({
 
   const controls = [
     {
-      id: TranslationMode.OFF,
-      icon: "Power",
-      x: 30,
-      y: 178,
-      type: "MODE",
-      desc: "TOGGLE <ON /OFF",
-      info: "Privacy: All translation and transcription services are paused.",
-    },
-    {
-      id: TranslationMode.ONE_WAY,
+      id: "VOICE",
       icon: "Mic",
       x: 58,
-      y: 191,
-      type: "MODE",
-      desc: "1-WAY TRANSLATE",
-      info: "Translates one source into your primary language.",
-    },
-    {
-      id: TranslationMode.INTERPRETER,
-      icon: "Languages",
-      x: 86,
-      y: 199,
-      type: "MODE",
-      desc: "INTERPRETER MODE",
-      info: "Bilingual: Translates both directions of a conversation.",
-    },
-    {
-      id: TranslationMode.TRANSCRIBE,
-      icon: "FileText",
-      x: 114,
-      y: 199,
-      type: "MODE",
-      desc: "LIVE TRANSCRIPT",
-      info: "No translation: Records a real-time text transcript of audio.",
+      y: 190,
+      type: "ACTION",
+      desc: isMicOpen ? "STOP LISTENING" : "TALK TO LUCA",
+      info: "Start or stop the current Luca voice session.",
+      onClick: onToggle,
     },
     {
       id: "MONITOR",
-      icon: "Monitor",
-      x: 142,
-      y: 191,
+      icon: "Eye",
+      x: 100,
+      y: 202,
       type: "ACTION",
-      desc: "SMART SCREEN",
-      info: "HUD Vision: Mirror a specific screen or window into the HUD.",
+      desc: isVisualCoreActive ? "STOP SEEING SCREEN" : "SEE SCREEN",
+      info: "Share the approved screen context with Luca. Privacy permission is always required.",
       onClick: onMonitorToggle,
     },
     {
       id: "EXPAND",
-      icon: "Maximize",
-      x: 170,
-      y: 178,
+      icon: "PanelTopOpen",
+      x: 142,
+      y: 190,
       type: "ACTION",
-      desc: "DASHBOARD",
-      info: "System Core: Expand to the full LUCA management console.",
+      desc: "OPEN LUCAOS",
+      info: "Open the full LucaOS workspace.",
       onClick: onFullscreenToggle,
     },
   ];
@@ -350,12 +323,7 @@ const TranslationControlBar = ({
         </div>
 
         {controls.map((m) => {
-          const isActive =
-            m.type === "MODE"
-              ? state.mode === m.id
-              : m.id === "MONITOR"
-                ? isVisualCoreActive
-                : false;
+          const isActive = m.id === "VOICE" ? isMicOpen : m.id === "MONITOR" ? isVisualCoreActive : false;
 
           return (
             <button
@@ -363,13 +331,7 @@ const TranslationControlBar = ({
               onPointerEnter={() => setHoveredStatus(m.desc)}
               onPointerLeave={() => setHoveredStatus(null)}
               onClick={() => {
-                if (m.id === TranslationMode.OFF) {
-                  onToggle?.();
-                } else if (m.type === "MODE") {
-                  translationService.setMode(m.id as TranslationMode);
-                } else {
-                  m.onClick?.();
-                }
+                m.onClick?.();
               }}
               className={`absolute pointer-events-auto w-7 h-7 rounded-full glass-blur flex items-center justify-center transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 ${
                 isActive
@@ -401,6 +363,7 @@ const HologramEntity = ({
   persona,
   onClick,
   isVisionActive,
+  isMicOpen,
   transcript,
   transcriptSource,
   intent,
@@ -410,8 +373,6 @@ const HologramEntity = ({
   onExpand,
 }: any) => {
   const [cards, setCards] = React.useState<ContextCard[]>([]);
-  const [translationState, setTranslationState] =
-    React.useState<TranslationState>(translationService.getState());
   const [translations, setTranslations] = React.useState<TranslationResult[]>(
     [],
   );
@@ -424,9 +385,6 @@ const HologramEntity = ({
         { ...res, timestamp: Date.now() },
       ]);
     };
-    const handleStateChange = (state: TranslationState) => {
-      setTranslationState(state);
-    };
     const handleCards = (newCards: ContextCard[]) => {
       setCards(newCards);
     };
@@ -438,14 +396,12 @@ const HologramEntity = ({
     };
 
     eventBus.on("translation-result", handleTranslationResult);
-    eventBus.on("translation-state-changed", handleStateChange);
     eventBus.on("context-cards-updated", handleCards);
     eventBus.on("wake-word-triggered", handleWakeWord);
     eventBus.on("voice-status-update", handleVoiceStatus);
 
     return () => {
       eventBus.off("translation-result", handleTranslationResult);
-      eventBus.off("translation-state-changed", handleStateChange);
       eventBus.off("context-cards-updated", handleCards);
       eventBus.off("wake-word-triggered", handleWakeWord);
       eventBus.off("voice-status-update", handleVoiceStatus);
@@ -637,12 +593,12 @@ const HologramEntity = ({
 
           {/* CURVED HUD CONTROLS - Anchored to the center of the hologram scene */}
           <div className="absolute inset-0 pointer-events-none transition-all duration-500 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 z-50">
-            <TranslationControlBar
-              state={translationState}
+            <PresenceControlBar
               primaryColor={missionColor}
               onMonitorToggle={onToggleHUD}
               onFullscreenToggle={onExpand}
               isVisualCoreActive={isVisualCoreActive}
+              isMicOpen={isMicOpen}
               onToggle={onClick}
             />
           </div>

@@ -7,6 +7,7 @@ import { soundService } from "../../services/soundService";
 import { DeviceType, SmartDevice } from "../../types";
 import { watchGateway } from "../../services/watchGateway";
 import { lucaLinkManager } from "../../services/lucaLink/manager";
+import { voiceSessionOrchestrator } from "../../services/voiceSessionOrchestrator";
 
 interface UseAppIPCProps {
   isElectron: boolean;
@@ -73,7 +74,6 @@ export const useAppIPC = ({
   stopVoiceHub,
   forceKillWakeWord,
   handleSendMessageRef,
-  handlePersonaSwitchRef,
   setToolLogs,
   setDevices,
   setMessages,
@@ -140,21 +140,7 @@ export const useAppIPC = ({
   useEffect(() => {
     if (!isElectron) return;
 
-    // 1. WAKE WORD (Tray Control)
-    const wakeWordHandler = (enabled: boolean) => {
-      console.log("[useAppIPC] Tray requested Wake Word:", enabled);
-      const current = settingsService.getSettings();
-      settingsService.saveSettings({
-        ...current,
-        voice: { ...current.voice, wakeWordEnabled: enabled },
-      });
-    };
-    const removeWakeWord = (window as any).electron.ipcRenderer.on(
-      "toggle-wake-word",
-      wakeWordHandler,
-    );
-
-    // 2. VOICE HUD TRIGGER (HEY LUCA)
+    // 1. VOICE HUD TRIGGER (HEY LUCA)
     const hudHandler = () => {
       console.log("[useAppIPC] Triggering VoiceHud from Wake Word");
       setIsVoiceMode(true);
@@ -164,49 +150,7 @@ export const useAppIPC = ({
       hudHandler,
     );
 
-    // 3. SENTRY AUDIO (Tray Control)
-    const sentryAudioHandler = (enabled: boolean) => {
-      setAudioMonitoringActive((current: boolean) => {
-        const targetState = typeof enabled === "boolean" ? enabled : !current;
-        console.log(`[useAppIPC] Audio Sentry Toggle: ${targetState}`);
-
-        fetch(apiUrl(`/api/audio/${targetState ? "start" : "stop"}`), {
-          method: "POST",
-        }).catch(console.error);
-
-        (window as any).electron.ipcRenderer.send("sync-sentry-state", {
-          audio: targetState,
-        });
-        return targetState;
-      });
-    };
-    const removeSentryAudio = (window as any).electron.ipcRenderer.on(
-      "toggle-sentry-audio",
-      sentryAudioHandler,
-    );
-
-    // 4. SENTRY VISION (Tray Control)
-    const sentryVisionHandler = (enabled: boolean) => {
-      setVisionMonitoringActive((current: boolean) => {
-        const targetState = typeof enabled === "boolean" ? enabled : !current;
-        console.log(`[useAppIPC] Vision Sentry Toggle: ${targetState}`);
-
-        fetch(apiUrl(`/api/vision/${targetState ? "start" : "stop"}`), {
-          method: "POST",
-        }).catch(console.error);
-
-        (window as any).electron.ipcRenderer.send("sync-sentry-state", {
-          visual: targetState,
-        });
-        return targetState;
-      });
-    };
-    const removeSentryVisual = (window as any).electron.ipcRenderer.on(
-      "toggle-sentry-visual",
-      sentryVisionHandler,
-    );
-
-    // 5. PRIVACY TOGGLE FROM TRAY
+    // 2. PRIVACY TOGGLE FROM TRAY
     const privacyToggleHandler = ({ sensor, enabled }: any) => {
       const current = settingsService.getSettings();
       const privacy = { ...current.privacy };
@@ -220,7 +164,7 @@ export const useAppIPC = ({
       privacyToggleHandler,
     );
 
-    // 6. SENTRY INSTRUCTION
+    // 3. SENTRY INSTRUCTION
     const sentryInstrHandler = (instr: string) => {
       setSentryInstruction(instr);
     };
@@ -229,7 +173,7 @@ export const useAppIPC = ({
       sentryInstrHandler,
     );
 
-    // 7. KILL SENSORS (Emergency)
+    // 4. KILL SENSORS (Emergency)
     const killHandler = () => {
       console.warn("[useAppIPC] 🚨 KILL SWITCH ACTIVATED via IPC");
       stopVoiceHub();
@@ -255,42 +199,10 @@ export const useAppIPC = ({
         audio: false,
         visual: false,
       });
-      (window as any).electron.ipcRenderer.send("sync-wake-word-tray", {
-        enabled: false,
-      });
     };
     const removeKill = (window as any).electron.ipcRenderer.on(
       "force-kill-sensors",
       killHandler,
-    );
-
-    // 8. PERSONA SWITCH FROM TRAY
-    const personaHandler = (mode: string) => {
-      console.log("[useAppIPC] Tray requested persona switch:", mode);
-      if (handlePersonaSwitchRef?.current) {
-        handlePersonaSwitchRef.current(mode);
-      }
-    };
-    const removePersona = (window as any).electron.ipcRenderer.on(
-      "switch-persona",
-      personaHandler,
-    );
-    
-    // 9. THEME SWITCH FROM TRAY
-    const themeHandler = (themeId: string) => {
-      console.log("[useAppIPC] Tray requested theme switch:", themeId);
-      const current = settingsService.getSettings();
-      settingsService.saveSettings({
-        general: { 
-          ...current.general, 
-          theme: themeId as any, 
-          syncThemeWithPersona: false // Manual user choice overrides auto-sync
-        }
-      });
-    };
-    const removeTheme = (window as any).electron.ipcRenderer.on(
-      "switch-theme",
-      themeHandler,
     );
 
     const chatWidgetHandler = async (data: {
@@ -337,15 +249,10 @@ export const useAppIPC = ({
     );
 
     return () => {
-      if (removeWakeWord) removeWakeWord();
       if (removeHud) removeHud();
-      if (removeSentryAudio) removeSentryAudio();
-      if (removeSentryVisual) removeSentryVisual();
       if (removePrivacy) removePrivacy();
       if (removeSentryInstr) removeSentryInstr();
       if (removeKill) removeKill();
-      if (removePersona) removePersona();
-      if (removeTheme) removeTheme();
       if (removeChatWidget) removeChatWidget();
       if (removeRemote) removeRemote();
     };
@@ -359,7 +266,6 @@ export const useAppIPC = ({
     setIsScreenSharing,
     stopVoiceHub,
     forceKillWakeWord,
-    handlePersonaSwitchRef,
     devices,
   ]);
 
@@ -562,6 +468,10 @@ export const useAppIPC = ({
         const visionPrompt = `[AMBIENT VISION — SCREEN OBSERVATION]
 You just observed the user's screen through the holographic overlay. Analyze what you see.
 Mention it briefly (1-2 sentences). Do NOT describe literals — be helpful.`;
+        if (voiceSessionOrchestrator.sendImage(data.frame, false)) {
+          await voiceSessionOrchestrator.sendText(visionPrompt);
+          return;
+        }
         if (handleSendMessageRef.current) {
           await handleSendMessageRef.current(
             visionPrompt,
@@ -587,20 +497,11 @@ Mention it briefly (1-2 sentences). Do NOT describe literals — be helpful.`;
         setIsWakeWordActive(enabled);
       }
       if (isElectron) {
-        (window as any).electron.ipcRenderer.send("sync-wake-word-tray", {
-          enabled,
-        });
         if (newSettings.privacy) {
           (window as any).electron.ipcRenderer.send("sync-privacy-state", {
             micEnabled: newSettings.privacy.micEnabled,
             cameraEnabled: newSettings.privacy.cameraEnabled,
             screenEnabled: newSettings.privacy.screenEnabled,
-          });
-        }
-        if (newSettings.general?.theme) {
-          // Sync Visual Theme with Tray
-          (window as any).electron.ipcRenderer.send("sync-persona-tray", {
-            mode: newSettings.general.theme,
           });
         }
       }

@@ -28,7 +28,7 @@ const WidgetControls: React.FC<WidgetControlsProps> = ({
             ? "bg-white/15 border-white/30 text-white"
             : "bg-black/40 border-white/10 text-white/40 hover:bg-black/60 hover:border-white/20 hover:text-white"
         }`}
-        title={isHUDActive ? "Dismiss Smart Screen" : "Summon Smart Screen"}
+        title={isHUDActive ? "Stop seeing screen" : "See screen"}
       >
         <Icon name="Monitor" size={14} />
       </button>
@@ -39,7 +39,7 @@ const WidgetControls: React.FC<WidgetControlsProps> = ({
           onExpand();
         }}
         className="p-2 rounded-full bg-black/40 glass-blur border border-white/10 text-white/40 hover:bg-black/60 hover:border-white/20 hover:text-white transition-all duration-300"
-        title="Expand to Dashboard"
+        title="Open LucaOS"
       >
         <Icon name="Maximize2" size={14} />
       </button>

@@ -156,17 +156,9 @@ export const useSatelliteState = (
         "hologram-update",
         handleUpdate,
       );
-      const removeTheme = window.electron.ipcRenderer.on(
-        "switch-persona",
-        (persona: string) => {
-          setState((prev) => ({ ...prev, persona: persona as PersonaType }));
-        },
-      );
-
       return () => {
         removeUpdate();
         removeHologram();
-        removeTheme();
       };
     }
 

@@ -1,26 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export const useDictation = () => {
   const [isDictating, setIsDictating] = useState(false);
 
-  // We listen to the backend to confirm if we are strictly in dictation mode
-  // But for now, we just toggle the intent.
-
-  const toggleDictation = () => {
-    const newState = !isDictating;
-    setIsDictating(newState);
-
-    // @ts-ignore
+  const sendDictationMode = (active: boolean) => {
     if (window.electron?.ipcRenderer) {
-      // @ts-ignore
       window.electron.ipcRenderer.send("widget-toggle-voice", {
-        mode: newState ? "DICTATION" : "OFF",
+        mode: active ? "DICTATION" : "OFF",
       });
     }
   };
 
-  const setDictationState = (active: boolean) => {
+  const toggleDictation = () => {
+    const newState = !isDictating;
+    setIsDictating(newState);
+    sendDictationMode(newState);
+  };
+
+  const setDictationState = (active: boolean, notifyMain = false) => {
     setIsDictating(active);
+    if (notifyMain) sendDictationMode(active);
   };
 
   return { isDictating, toggleDictation, setDictationState };

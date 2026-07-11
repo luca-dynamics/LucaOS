@@ -19,4 +19,10 @@ describe("BrowserHfRealtimeVoiceSession integration", () => {
     expect(surface).toContain("OpenAI Realtime local backend");
     expect(surface).toContain('onUpdate("voice", "hfRealtimeEndpoint"');
   });
+
+  it("routes approved hologram frames into the active realtime session", () => {
+    const ipcHook = readFileSync("src/hooks/app/useAppIPC.ts", "utf8");
+    expect(ipcHook).toContain("voiceSessionOrchestrator.sendImage(data.frame, false)");
+    expect(ipcHook).toContain("await voiceSessionOrchestrator.sendText(visionPrompt)");
+  });
 });

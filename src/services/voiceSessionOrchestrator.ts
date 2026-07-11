@@ -16,6 +16,7 @@ import {
 import { evaluateVoiceProviderReadiness } from "./voice/VoiceProviderReadiness";
 import { evaluateVoiceRouteAuthority } from "./voice/VoiceRouteAuthorityGate";
 import { deriveVoiceRuntimeProviderPolicy } from "./voice/VoiceRuntimeProviderPolicy";
+import { canonicalVoiceSessionBus } from "./voice/CanonicalVoiceSessionBus";
 import {
   classifyVoiceRoutingHealth,
   recommendVoiceRoute,
@@ -267,6 +268,81 @@ class VoiceSessionOrchestrator {
   }: VoiceSessionConnectOptions): Promise<VoiceSessionRoute> {
     const route = this.resolveAdaptiveRoute();
     this.disconnect(false);
+    const canonicalRoute = route.kind === "CLOUD_BIDI" ? "cloud_bidi" : "hybrid";
+    const canonicalLiveConfig: LiveConfig = {
+      ...liveConfig,
+      onToolCall: async (name, args) => {
+        canonicalVoiceSessionBus.publish({ type: "tool.requested", route: "cloud_bidi", name });
+        const result = await liveConfig.onToolCall(name, args);
+        canonicalVoiceSessionBus.publish({ type: "tool.completed", route: "cloud_bidi", name });
+        return result;
+      },
+      onConnectionChange: (connected) => {
+        canonicalVoiceSessionBus.publish({
+          type: connected ? "session.connected" : "session.disconnected",
+          route: "cloud_bidi",
+          ...(connected ? {} : { reason: "provider_disconnected" }),
+        });
+        liveConfig.onConnectionChange?.(connected);
+      },
+      onVadChange: (active) => {
+        canonicalVoiceSessionBus.publish({ type: active ? "speech.started" : "speech.stopped", route: "cloud_bidi" });
+        liveConfig.onVadChange?.(active);
+      },
+      onTranscript: (text, source) => {
+        canonicalVoiceSessionBus.publish(
+          source === "user"
+            ? { type: "transcript.final", route: "cloud_bidi", text }
+            : { type: "response.text.delta", route: "cloud_bidi", text },
+        );
+        liveConfig.onTranscript(text, source);
+      },
+      onStatusUpdate: (status) => {
+        const normalized = status.toLowerCase();
+        if (normalized.includes("listening") || normalized.includes("idle")) {
+          if (canonicalVoiceSessionBus.getSnapshot().isSpeaking) {
+            canonicalVoiceSessionBus.publish({ type: "response.audio.completed", route: "cloud_bidi" });
+          }
+        } else if (normalized.includes("error") || normalized.includes("failed")) {
+          canonicalVoiceSessionBus.publish({ type: "session.error", route: "cloud_bidi", error: status });
+        }
+        liveConfig.onStatusUpdate?.(status);
+      },
+    };
+    const canonicalHybridConfig: Partial<HybridVoiceConfig> = {
+      ...hybridConfig,
+      onConnectionChange: (connected) => {
+        canonicalVoiceSessionBus.publish({
+          type: connected ? "session.connected" : "session.disconnected",
+          route: canonicalRoute,
+          ...(connected ? {} : { reason: "provider_disconnected" }),
+        });
+        hybridConfig.onConnectionChange?.(connected);
+      },
+      onVadChange: (active) => {
+        canonicalVoiceSessionBus.publish({ type: active ? "speech.started" : "speech.stopped", route: canonicalRoute });
+        hybridConfig.onVadChange?.(active);
+      },
+      onTranscript: (text, source) => {
+        canonicalVoiceSessionBus.publish(
+          source === "user"
+            ? { type: "transcript.final", route: canonicalRoute, text }
+            : { type: "response.text.delta", route: canonicalRoute, text },
+        );
+        hybridConfig.onTranscript?.(text, source);
+      },
+      onStatusUpdate: (status) => {
+        const normalized = status.toLowerCase();
+        if (normalized.includes("listening") || normalized.includes("idle")) {
+          if (canonicalVoiceSessionBus.getSnapshot().isSpeaking) {
+            canonicalVoiceSessionBus.publish({ type: "response.audio.completed", route: canonicalRoute });
+          }
+        } else if (normalized.includes("error") || normalized.includes("failed")) {
+          canonicalVoiceSessionBus.publish({ type: "session.error", route: canonicalRoute, error: status });
+        }
+        hybridConfig.onStatusUpdate?.(status);
+      },
+    };
 
     const settings = settingsService.getSettings();
     const hfRealtimeRequested =
@@ -306,12 +382,12 @@ class VoiceSessionOrchestrator {
       hfRealtimeRequested && hfAuthority.activeAuthority === "runtime_router";
 
     if (route.kind === "CLOUD_BIDI") {
-      await liveService.connect(liveConfig);
+      await liveService.connect(canonicalLiveConfig);
       this.activeRuntime = liveService;
     } else if (hfRealtimeEnabled) {
       try {
         await browserHfRealtimeVoiceSession.connect({
-          ...hybridConfig,
+          ...canonicalHybridConfig,
           ...hfRealtimeConfig,
           enabled: true,
           endpoint: settings.voice.hfRealtimeEndpoint!.trim(),
@@ -326,7 +402,7 @@ class VoiceSessionOrchestrator {
           error,
         );
         await hybridVoiceService.connect({
-          ...hybridConfig,
+          ...canonicalHybridConfig,
           brainProvider: route.brainProvider,
           ttsVoice:
             route.kind === "LOCAL_PIPELINE"
@@ -338,7 +414,7 @@ class VoiceSessionOrchestrator {
       }
     } else {
       await hybridVoiceService.connect({
-        ...hybridConfig,
+        ...canonicalHybridConfig,
         brainProvider: route.brainProvider,
         ttsVoice:
           route.kind === "LOCAL_PIPELINE"
@@ -358,6 +434,12 @@ class VoiceSessionOrchestrator {
   async sendText(text: string): Promise<void> {
     if (!this.activeRuntime) return;
     await this.activeRuntime.sendText(text);
+  }
+
+  sendImage(frame: string, createResponse = true): boolean {
+    return this.activeRuntime === browserHfRealtimeVoiceSession
+      ? browserHfRealtimeVoiceSession.sendImage(frame, createResponse)
+      : false;
   }
 
   disconnect(resetAdaptiveState: boolean = true): void {
