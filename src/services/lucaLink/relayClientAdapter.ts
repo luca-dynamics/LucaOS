@@ -70,25 +70,11 @@ import {
 } from "./lucaLinkGuestSessionPolicy";
 
 import {
-  blockTrustedDevice,
-  clearDeviceTrustAudit,
-  createLucaLinkDeviceTrustRegistry,
-  getDeviceTrustAudit,
-  listActiveTrustedDevices,
-  listTrustedDevices,
-  markTrustedDeviceConnected,
-  markTrustedDeviceDisconnected,
-  renameTrustedDevice,
-  revokeTrustedDevice,
-  setTrustedDeviceTrustLevel,
-  summarizeDeviceTrustRegistry,
-  unblockTrustedDevice,
-  upsertTrustedDevice,
   type LucaLinkDeviceTrustLevel,
   type LucaLinkDeviceTrustMutationOptions,
   type LucaLinkDeviceTrustMutationResult,
-  type LucaLinkDeviceTrustRegistryState,
 } from "./lucaLinkDeviceTrustRegistry";
+import { lucaLinkDeviceTrustStore } from "./lucaLinkDeviceTrustStore";
 
 import {
   approveLucaLinkHandoff,
@@ -243,8 +229,7 @@ class LucaLinkService {
   private messageListeners: Set<MessageListener> = new Set();
   private runtimeShadow: LucaLinkRuntimeShadowState =
     createLucaLinkRuntimeShadow({ enabled: false });
-  private deviceTrustRegistry: LucaLinkDeviceTrustRegistryState =
-    createLucaLinkDeviceTrustRegistry();
+  private deviceTrustStore = lucaLinkDeviceTrustStore;
   private handoffRegistry: LucaLinkHandoffRegistryState =
     createLucaLinkHandoffRegistry();
   private hostConnectionRegistry: LucaLinkHostConnectionRegistryState =
@@ -885,7 +870,7 @@ class LucaLinkService {
    */
   disconnect(): void {
     this.state.connectedDevices.forEach((device) => {
-      markTrustedDeviceDisconnected(this.deviceTrustRegistry, device.deviceId);
+      this.deviceTrustStore.markDisconnected(device.deviceId);
     });
     if (this.socket) {
       this.socket.disconnect();
@@ -1153,14 +1138,10 @@ class LucaLinkService {
         summary: input.summary,
       });
     const targetDevice = input.targetDeviceId
-      ? this.deviceTrustRegistry.devices.find(
-          (device) => device.deviceId === input.targetDeviceId,
-        )
+      ? this.deviceTrustStore.get(input.targetDeviceId)
       : undefined;
     const sourceDevice = input.sourceDeviceId
-      ? this.deviceTrustRegistry.devices.find(
-          (device) => device.deviceId === input.sourceDeviceId,
-        )
+      ? this.deviceTrustStore.get(input.sourceDeviceId)
       : undefined;
     const initialRequest = createLucaLinkHandoffRequest(
       {
@@ -1698,23 +1679,23 @@ class LucaLinkService {
   }
 
   getTrustedDevices() {
-    return listTrustedDevices(this.deviceTrustRegistry);
+    return this.deviceTrustStore.list();
   }
 
   getActiveTrustedDevices() {
-    return listActiveTrustedDevices(this.deviceTrustRegistry);
+    return this.deviceTrustStore.listActive();
   }
 
   getDeviceTrustSummary() {
-    return summarizeDeviceTrustRegistry(this.deviceTrustRegistry);
+    return this.deviceTrustStore.summarize();
   }
 
   getDeviceTrustAudit() {
-    return getDeviceTrustAudit(this.deviceTrustRegistry);
+    return this.deviceTrustStore.getAudit();
   }
 
   clearDeviceTrustAudit(): void {
-    clearDeviceTrustAudit(this.deviceTrustRegistry);
+    this.deviceTrustStore.clearAudit();
   }
 
   renameTrustedDevice(
@@ -1722,12 +1703,7 @@ class LucaLinkService {
     displayName: string,
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
-    return renameTrustedDevice(
-      this.deviceTrustRegistry,
-      deviceId,
-      displayName,
-      options,
-    );
+    return this.deviceTrustStore.rename(deviceId, displayName, options);
   }
 
   setTrustedDeviceTrustLevel(
@@ -1735,33 +1711,28 @@ class LucaLinkService {
     trustLevel: LucaLinkDeviceTrustLevel,
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
-    return setTrustedDeviceTrustLevel(
-      this.deviceTrustRegistry,
-      deviceId,
-      trustLevel,
-      options,
-    );
+    return this.deviceTrustStore.setTrustLevel(deviceId, trustLevel, options);
   }
 
   revokeTrustedDevice(
     deviceId: string,
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
-    return revokeTrustedDevice(this.deviceTrustRegistry, deviceId, options);
+    return this.deviceTrustStore.revoke(deviceId, options);
   }
 
   blockTrustedDevice(
     deviceId: string,
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
-    return blockTrustedDevice(this.deviceTrustRegistry, deviceId, options);
+    return this.deviceTrustStore.block(deviceId, options);
   }
 
   unblockTrustedDevice(
     deviceId: string,
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
-    return unblockTrustedDevice(this.deviceTrustRegistry, deviceId, options);
+    return this.deviceTrustStore.unblock(deviceId, options);
   }
 
   getHostConnections(
@@ -1796,7 +1767,7 @@ class LucaLinkService {
 
   refreshHostConnectionsFromCurrentState(): LucaLinkHostConnectionRecord[] {
     const now = Date.now();
-    const trustedDevices = listTrustedDevices(this.deviceTrustRegistry);
+    const trustedDevices = this.deviceTrustStore.list();
     const trustByDeviceId = new Map(
       trustedDevices.map((device) => [device.deviceId, device]),
     );
@@ -1963,23 +1934,10 @@ class LucaLinkService {
 
   private updateState(partial: Partial<LucaLinkState>): void {
     if (partial.connectedDevices) {
-      this.syncDeviceTrustRegistryFromConnectedDevices(
+      this.deviceTrustStore.syncConnectedRuntimeDevices(
         partial.connectedDevices,
+        this.state.deviceId,
       );
-      const connectedIds = new Set(
-        partial.connectedDevices.map((device) => device.deviceId),
-      );
-      this.deviceTrustRegistry.devices.forEach((device) => {
-        if (
-          device.status === "connected" &&
-          !connectedIds.has(device.deviceId)
-        ) {
-          markTrustedDeviceDisconnected(
-            this.deviceTrustRegistry,
-            device.deviceId,
-          );
-        }
-      });
     }
     this.state = { ...this.state, ...partial };
     if (partial.connectedDevices) {
@@ -1993,23 +1951,10 @@ class LucaLinkService {
     isCurrentPrimaryHost = false,
     status: "known" | "connected" | "disconnected" = "connected",
   ): void {
-    const record = upsertTrustedDevice(this.deviceTrustRegistry, {
-      deviceId: device.deviceId,
-      displayName: device.name,
-      deviceType: device.type,
-      lastSeenAt: device.lastSeen,
-      status,
+    this.deviceTrustStore.upsertRuntimeDevice(device, {
       isCurrentPrimaryHost,
+      status,
     });
-    if (
-      status === "connected" &&
-      record.status !== "revoked" &&
-      record.status !== "blocked"
-    ) {
-      markTrustedDeviceConnected(this.deviceTrustRegistry, device.deviceId, {
-        now: device.lastSeen || Date.now(),
-      });
-    }
   }
 
   private syncDeviceTrustRegistryFromConnectedDevices(
@@ -2117,7 +2062,7 @@ class LucaLinkService {
         data.sessionId,
         createLucaLinkGuestSession(data.sessionId),
       );
-      upsertTrustedDevice(this.deviceTrustRegistry, {
+      this.deviceTrustStore.upsert({
         deviceId: data.sessionId,
         displayName: `Guest session ${data.sessionId}`,
         deviceType: "guest web",
@@ -2274,7 +2219,7 @@ class LucaLinkService {
           sessionId: data.sessionId,
         });
       }
-      upsertTrustedDevice(this.deviceTrustRegistry, {
+      this.deviceTrustStore.upsert({
         deviceId: data.sessionId,
         displayName: `Guest session ${data.sessionId}`,
         deviceType: "guest web",
@@ -2284,7 +2229,7 @@ class LucaLinkService {
         lastSeenAt: Date.now(),
         capabilities: ["chat.send", "chat.receive", "webrtc"],
       });
-      markTrustedDeviceConnected(this.deviceTrustRegistry, data.sessionId);
+      this.deviceTrustStore.markConnected(data.sessionId);
       this.evaluateGuestInbound({
         kind: "guest-connected",
         sessionId: data.sessionId,
@@ -2514,7 +2459,7 @@ class LucaLinkService {
           markGuestSessionDisconnected(securitySession),
         );
       }
-      markTrustedDeviceDisconnected(this.deviceTrustRegistry, data.sessionId);
+      this.deviceTrustStore.markDisconnected(data.sessionId);
       const session = this.guestSessions.get(data.sessionId);
       if (session?.peerConnection) {
         session.peerConnection.close();

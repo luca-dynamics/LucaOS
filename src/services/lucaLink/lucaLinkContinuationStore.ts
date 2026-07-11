@@ -19,6 +19,7 @@ import {
   expireLucaLinkContinuationTokens,
   getValidLucaLinkContinuationTokens,
   listLucaLinkContinuationTokens,
+  registerLucaLinkContinuation,
   registerContinuationFromApprovalRequest,
   summarizeLucaLinkContinuationRegistry,
   validateLucaLinkContinuationToken,
@@ -55,6 +56,10 @@ export class LucaLinkContinuationStore {
     request: LucaLinkApprovalRequest,
   ): LucaLinkContinuationMutationResult {
     return registerContinuationFromApprovalRequest(this.state, request);
+  }
+
+  register(token: LucaLinkContinuationToken): LucaLinkContinuationMutationResult {
+    return registerLucaLinkContinuation(this.state, token);
   }
 
   validate(
