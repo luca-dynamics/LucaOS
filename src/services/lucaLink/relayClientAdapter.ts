@@ -21,23 +21,12 @@ import {
   type LucaLinkSoftEnforcementResult,
 } from "./lucaLinkSoftEnforcement";
 import {
-  approveLucaLinkApprovalRequest,
-  cancelLucaLinkApprovalRequest,
-  clearLucaLinkApprovalQueue,
-  createLucaLinkApprovalQueue,
-  denyLucaLinkApprovalRequest,
-  enqueueApprovalForSoftEnforcementResult,
-  enqueueLucaLinkApprovalRequest,
-  getLucaLinkApprovalRequest,
-  getPendingLucaLinkApprovalRequests,
-  listLucaLinkApprovalRequests,
-  summarizeLucaLinkApprovalQueue,
   type LucaLinkApprovalDecisionInput,
   type LucaLinkApprovalMutationResult,
-  type LucaLinkApprovalQueueState,
   type LucaLinkApprovalQueueSummary,
   type LucaLinkApprovalRequest,
 } from "./lucaLinkApprovalQueue";
+import { lucaLinkApprovalStore } from "./lucaLinkApprovalStore";
 import {
   consumePreparedLucaLinkContinuation,
   evaluateLucaLinkContinuationBridge,
@@ -267,8 +256,6 @@ class LucaLinkService {
   private messageListeners: Set<MessageListener> = new Set();
   private runtimeShadow: LucaLinkRuntimeShadowState =
     createLucaLinkRuntimeShadow({ enabled: false });
-  private approvalQueue: LucaLinkApprovalQueueState =
-    createLucaLinkApprovalQueue();
   private continuationRegistry: LucaLinkContinuationRegistryState =
     createLucaLinkContinuationRegistry();
   private deviceTrustRegistry: LucaLinkDeviceTrustRegistryState =
@@ -1228,7 +1215,7 @@ class LucaLinkService {
     );
 
     if (policy.requiresPrimaryHostApproval) {
-      const queued = enqueueLucaLinkApprovalRequest(this.approvalQueue, {
+      const queued = lucaLinkApprovalStore.enqueue({
         source: "manual",
         requestedByDeviceId: request.requestedByDeviceId,
         requestedTargetDeviceId: request.targetDeviceId,
@@ -1391,48 +1378,40 @@ class LucaLinkService {
   }
 
   getPendingApprovalRequests(): LucaLinkApprovalRequest[] {
-    return getPendingLucaLinkApprovalRequests(this.approvalQueue);
+    return lucaLinkApprovalStore.getPending();
   }
 
   getApprovalRequests(): LucaLinkApprovalRequest[] {
-    return listLucaLinkApprovalRequests(this.approvalQueue);
+    return lucaLinkApprovalStore.list();
   }
 
   getApprovalQueueSummary(): LucaLinkApprovalQueueSummary {
-    return summarizeLucaLinkApprovalQueue(this.approvalQueue);
+    return lucaLinkApprovalStore.summarize();
   }
 
   approveApprovalRequest(
     requestId: string,
     decision?: LucaLinkApprovalDecisionInput,
   ): LucaLinkApprovalMutationResult {
-    return approveLucaLinkApprovalRequest(
-      this.approvalQueue,
-      requestId,
-      decision,
-    );
+    return lucaLinkApprovalStore.approve(requestId, decision);
   }
 
   denyApprovalRequest(
     requestId: string,
     decision?: LucaLinkApprovalDecisionInput,
   ): LucaLinkApprovalMutationResult {
-    return denyLucaLinkApprovalRequest(this.approvalQueue, requestId, decision);
+    return lucaLinkApprovalStore.deny(requestId, decision);
   }
 
   cancelApprovalRequest(
     requestId: string,
     decision?: LucaLinkApprovalDecisionInput,
   ): LucaLinkApprovalMutationResult {
-    return cancelLucaLinkApprovalRequest(
-      this.approvalQueue,
-      requestId,
-      decision,
-    );
+    return lucaLinkApprovalStore.cancel(requestId, decision);
   }
 
   clearApprovalQueue(): LucaLinkApprovalMutationResult {
-    return clearLucaLinkApprovalQueue(this.approvalQueue);
+    return lucaLinkApprovalStore.clear();
   }
 
   getApprovalSurfaces(): LucaLinkApprovalSurfaceRecord[] {
@@ -1454,7 +1433,7 @@ class LucaLinkService {
   evaluateApprovalSurfacesForRequest(
     requestId: string,
   ): LucaLinkApprovalSurfaceEvaluation[] {
-    const request = getLucaLinkApprovalRequest(this.approvalQueue, requestId);
+    const request = lucaLinkApprovalStore.get(requestId);
     return this.getApprovalSurfaces().map((surface) =>
       evaluateLucaLinkApprovalSurfaceForRequest(surface, request),
     );
@@ -1465,7 +1444,7 @@ class LucaLinkService {
   ): LucaLinkApprovalSurfaceRecord[] {
     return rankEligibleApprovalSurfaces(
       this.getApprovalSurfaces(),
-      getLucaLinkApprovalRequest(this.approvalQueue, requestId),
+      lucaLinkApprovalStore.get(requestId),
     );
   }
 
@@ -1475,7 +1454,7 @@ class LucaLinkService {
     evaluations: LucaLinkApprovalSurfaceEvaluation[];
     summary: LucaLinkApprovalSurfaceSummary;
   } {
-    const request = getLucaLinkApprovalRequest(this.approvalQueue, requestId);
+    const request = lucaLinkApprovalStore.get(requestId);
     const surfaces = this.getApprovalSurfaces();
     return {
       request,
@@ -1609,7 +1588,7 @@ class LucaLinkService {
   createContinuationFromApprovalRequest(
     requestId: string,
   ): LucaLinkContinuationMutationResult {
-    const request = getLucaLinkApprovalRequest(this.approvalQueue, requestId);
+    const request = lucaLinkApprovalStore.get(requestId);
     if (!request) {
       return {
         valid: false,
@@ -1718,11 +1697,7 @@ class LucaLinkService {
       payload?: unknown;
     } = {},
   ): LucaLinkApprovalMutationResult {
-    return enqueueApprovalForSoftEnforcementResult(
-      this.approvalQueue,
-      result,
-      context,
-    );
+    return lucaLinkApprovalStore.enqueueSoftEnforcement(result, context);
   }
 
   /**
