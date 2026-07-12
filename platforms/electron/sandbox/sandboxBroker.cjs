@@ -7,18 +7,24 @@ const MAX_ARGUMENTS = 128;
 const MAX_ARGUMENT_LENGTH = 8192;
 const MAX_TIMEOUT_MS = 120_000;
 const MAX_ARTIFACT_BYTES = 128 * 1024 * 1024;
+const DEFAULT_SESSION_TTL_MS = 60 * 60 * 1000;
+const MAX_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
-function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
+function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs, now = () => new Date() }) {
     if (!adapter) throw new Error('Sandbox adapter is required.');
     if (!path.isAbsolute(workspaceRoot)) throw new Error('Sandbox workspace root must be absolute.');
     const sessions = new Map();
+    const snapshots = new Map();
 
     function normalizeRequest(request = {}) {
         const missionId = typeof request.missionId === 'string' ? request.missionId.trim() : '';
         if (!/^[a-zA-Z0-9._-]{1,100}$/.test(missionId)) throw new Error('Invalid sandbox mission id.');
         const capabilities = [...new Set(Array.isArray(request.capabilities) ? request.capabilities : [])];
         if (!capabilities.length || capabilities.some((item) => !ALLOWED_CAPABILITIES.has(item))) throw new Error('Sandbox capabilities are missing or unsupported.');
-        return { missionId, capabilities };
+        const ttlMs = Number.isFinite(request.ttlMs)
+            ? Math.max(60_000, Math.min(MAX_SESSION_TTL_MS, Math.floor(request.ttlMs)))
+            : DEFAULT_SESSION_TTL_MS;
+        return { missionId, capabilities, ttlMs };
     }
 
     function normalizeCommand(command = {}) {
@@ -60,6 +66,33 @@ function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
         return session;
     }
 
+    function snapshotSession(session) {
+        const capturedAt = now().toISOString();
+        const snapshot = {
+            snapshotId: crypto.randomUUID(),
+            sessionId: session.sessionId,
+            missionId: session.missionId,
+            backend: session.backend,
+            status: session.status,
+            capabilities: [...session.capabilities],
+            workspacePath: session.workspacePath,
+            createdAt: session.createdAt,
+            capturedAt,
+            expiresAt: session.expiresAt,
+            hostFallbackAllowed: false
+        };
+        snapshots.set(snapshot.snapshotId, snapshot);
+        session.lastSnapshotId = snapshot.snapshotId;
+        session.updatedAt = capturedAt;
+        return { ...snapshot };
+    }
+
+    async function destroySession(session) {
+        await adapter.destroy(session.runtime);
+        fsApi.rmSync(session.workspacePath, { recursive: true, force: true });
+        sessions.delete(session.sessionId);
+    }
+
     return {
         probe: (request) => adapter.probe(request),
         async create(request) {
@@ -74,7 +107,20 @@ function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
             fsApi.mkdirSync(workspacePath, { recursive: true });
             try {
                 const runtime = await adapter.create({ sessionId, workspacePath, networkEnabled: normalized.capabilities.includes('network') });
-                const session = { sessionId, missionId: normalized.missionId, backend: runtime.backend || adapter.kind, status: 'running', capabilities: normalized.capabilities, workspacePath, runtime, createdAt: new Date().toISOString(), hostFallbackAllowed: false };
+                const createdAt = now().toISOString();
+                const session = {
+                    sessionId,
+                    missionId: normalized.missionId,
+                    backend: runtime.backend || adapter.kind,
+                    status: 'running',
+                    capabilities: normalized.capabilities,
+                    workspacePath,
+                    runtime,
+                    createdAt,
+                    updatedAt: createdAt,
+                    expiresAt: new Date(Date.parse(createdAt) + normalized.ttlMs).toISOString(),
+                    hostFallbackAllowed: false
+                };
                 sessions.set(sessionId, session);
                 return session;
             } catch (error) {
@@ -83,6 +129,30 @@ function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
             }
         },
         list: () => [...sessions.values()].map((session) => ({ ...session })),
+        listSnapshots: (sessionId) => [...snapshots.values()].filter((snapshot) => !sessionId || snapshot.sessionId === sessionId).map((snapshot) => ({ ...snapshot })),
+        async snapshot(sessionId) {
+            const session = requireSession(sessionId);
+            return snapshotSession(session);
+        },
+        async cleanupExpired() {
+            const nowMs = now().getTime();
+            const cleaned = [];
+            for (const session of [...sessions.values()]) {
+                if (!session.expiresAt || Date.parse(session.expiresAt) > nowMs) continue;
+                const snapshot = session.lastSnapshotId ? snapshots.get(session.lastSnapshotId) : snapshotSession(session);
+                await destroySession(session);
+                cleaned.push({
+                    sessionId: session.sessionId,
+                    missionId: session.missionId,
+                    backend: session.backend,
+                    snapshotId: snapshot.snapshotId,
+                    destroyed: true,
+                    cleanedAt: now().toISOString(),
+                    hostFallbackAllowed: false
+                });
+            }
+            return cleaned;
+        },
         async execute(sessionId, command) {
             const session = requireSession(sessionId, 'terminal');
             const normalized = normalizeCommand(command);
@@ -157,12 +227,10 @@ function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
         async destroy(sessionId) {
             const session = sessions.get(sessionId);
             if (!session) return { destroyed: false, reason: 'Sandbox session not found.' };
-            await adapter.destroy(session.runtime);
-            fsApi.rmSync(session.workspacePath, { recursive: true, force: true });
-            sessions.delete(sessionId);
+            await destroySession(session);
             return { destroyed: true, sessionId };
         }
     };
 }
 
-module.exports = { createSandboxBroker, ALLOWED_CAPABILITIES, MAX_TIMEOUT_MS, MAX_ARTIFACT_BYTES };
+module.exports = { createSandboxBroker, ALLOWED_CAPABILITIES, MAX_TIMEOUT_MS, MAX_ARTIFACT_BYTES, DEFAULT_SESSION_TTL_MS, MAX_SESSION_TTL_MS };
