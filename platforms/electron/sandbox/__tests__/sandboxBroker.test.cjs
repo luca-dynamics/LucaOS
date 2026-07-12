@@ -20,6 +20,24 @@ test('creates only isolated capability-matched sessions', async () => {
     assert.equal(calls[0].networkEnabled, false);
 });
 
+test('passes requested capabilities into automatic backend probing', async () => {
+    const probes = [];
+    const broker = createSandboxBroker({ workspaceRoot: root, fsApi, adapter: {
+        kind: 'automatic',
+        async probe(request) {
+            probes.push(request);
+            return { available: true, isolated: true, capabilities: ['terminal'] };
+        },
+        async create() { return { backend: 'wsl2' }; },
+        async destroy() {}
+    } });
+
+    await broker.create({ missionId: 'mission-capabilities', capabilities: ['terminal'] });
+
+    assert.deepEqual(probes, [{ capabilities: ['terminal'] }]);
+});
+
+
 test('fails closed when adapter is not isolated', async () => {
     const broker = createSandboxBroker({ workspaceRoot: root, fsApi, adapter: { kind: 'docker', async probe() { return { available: true, isolated: false, capabilities: ['terminal'] }; } } });
     await assert.rejects(() => broker.create({ missionId: 'mission-2', capabilities: ['terminal'] }), /No isolated/);

@@ -13,6 +13,29 @@ test('selects WSL2 when Docker is unavailable', async () => {
     assert.equal(runtime.backend, 'wsl2');
 });
 
+test('skips isolated backends that do not satisfy requested capabilities', async () => {
+    const router = createSandboxAdapterRouter([
+        {
+            kind: 'windows_sandbox',
+            async probe() { return { backend: 'windows_sandbox', available: true, isolated: true, reason: 'gui only', capabilities: ['workspace_read'] }; },
+            async create() { throw new Error('wrong backend'); },
+            async destroy() {}
+        },
+        {
+            kind: 'wsl2',
+            async probe() { return { backend: 'wsl2', available: true, isolated: true, reason: 'ready', capabilities: ['terminal', 'workspace_read'] }; },
+            async create() { return { distroName: 'wsl' }; },
+            async destroy() {}
+        }
+    ]);
+
+    const probe = await router.probe({ capabilities: ['terminal'] });
+    const runtime = await router.create({ capabilities: ['terminal'] });
+
+    assert.equal(probe.backend, 'wsl2');
+    assert.equal(runtime.backend, 'wsl2');
+});
+
 test('delegates artifact operations to the runtime backend', async () => {
     const calls = [];
     const router = createSandboxAdapterRouter([

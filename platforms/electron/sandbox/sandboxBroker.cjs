@@ -61,10 +61,10 @@ function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
     }
 
     return {
-        probe: () => adapter.probe(),
+        probe: (request) => adapter.probe(request),
         async create(request) {
             const normalized = normalizeRequest(request);
-            const probe = await adapter.probe();
+            const probe = await adapter.probe({ capabilities: normalized.capabilities });
             if (!probe.available || !probe.isolated) throw new Error('No isolated Docker sandbox is available.');
             if (normalized.capabilities.some((item) => !probe.capabilities.includes(item))) throw new Error('Docker sandbox does not satisfy the requested capabilities.');
             const sessionId = crypto.randomUUID();
