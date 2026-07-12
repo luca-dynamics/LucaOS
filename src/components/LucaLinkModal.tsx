@@ -5,9 +5,15 @@ import { lucaLinkManager } from "../services/lucaLink/manager";
 import { DeviceList } from "./lucaLink/DeviceList";
 import { ErrorToast } from "./lucaLink/ErrorToast";
 import { createLucaLinkModalReadinessItems } from "./lucaLink/lucaLinkModalReadiness";
+import {
+  createLucaLinkPairingMobileUrl,
+  resolveLucaLinkPairingRoute,
+  type LucaLinkPairingRoute,
+} from "./lucaLink/lucaLinkPairingRoute";
 import type { Device, LucaLinkError } from "../services/lucaLink/types";
 import { ConnectionState } from "../services/lucaLink/types";
 import { API_BASE_URL, SERVER_HTTP_PORT, WS_PORT, RELAY_SERVER_URL, getAuthHeaders, waitForAuth } from "../config/api";
+import { settingsService } from "../services/settingsService";
 
 interface LucaLinkModalProps {
   onClose: () => void;
@@ -54,12 +60,12 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
   const [errors, setErrors] = useState<LucaLinkError[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
+  const [pairingRoute, setPairingRoute] =
+    useState<LucaLinkPairingRoute | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
 
   // Initialize Luca Link Manager
   useEffect(() => {
-    if (!localIp) return; // Wait for IP
-
     // Reset initialization on IP change
     const initManager = async () => {
       try {
@@ -67,19 +73,29 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
         setInitError(null);
         setQrDataUrl(""); // Clear QR while regenerating
 
-        const connectionUrl =
-          RELAY_SERVER_URL || `http://${localIp}:${WS_PORT}`;
-        const isCloudRelay = !!RELAY_SERVER_URL;
+        const lucaLinkSettings = settingsService.getSettings().lucaLink;
+        const route = resolveLucaLinkPairingRoute({
+          localIp,
+          connectionMode: lucaLinkSettings.connectionMode,
+          configuredRelayUrl:
+            lucaLinkSettings.relayServerUrl || RELAY_SERVER_URL,
+          configuredVpnUrl: lucaLinkSettings.vpnServerUrl,
+          wsPort: WS_PORT,
+          serverHttpPort: SERVER_HTTP_PORT,
+        });
+        setPairingRoute(route);
+
+        if (!route.canGenerateQr) {
+          throw new Error(route.warning ?? route.detail);
+        }
 
         let pairingToken: string;
-        if (isCloudRelay) {
+        if (!route.usesServerMintedToken) {
           // Relay flow keeps the client-minted token (relay does its own auth).
           pairingToken = (await lucaLinkManager.generatePairingData()).token;
         } else {
-          // Local flow: the socket server must be running and the token must
-          // come from IT — the server rejects tokens it didn't mint. Auth
-          // headers are sent explicitly (belt and braces over the global
-          // interceptor) after the boot token setup settles.
+          // Direct routes use server-minted tokens; the socket server rejects
+          // tokens it did not issue.
           await waitForAuth();
           const started = await fetch(`${API_BASE_URL}/api/luca-link/start`, {
             method: "POST",
@@ -105,8 +121,8 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
         }
 
         // Initialize manager (desktop side of the same socket server)
-        await lucaLinkManager.initialize(connectionUrl, {
-          path: isCloudRelay ? "" : "/mobile/socket.io", // Cloud relays typically perform root routing
+        await lucaLinkManager.initialize(route.connectionUrl, {
+          path: route.managerPath,
           deviceId: "desktop_main",
           deviceName: "Luca Desktop",
         });
@@ -114,12 +130,7 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
         // Connect
         await lucaLinkManager.connect();
 
-        // The companion PAGE is served by Express (SERVER_HTTP_PORT); its
-        // SOCKET lives on WS_PORT. The old URL inverted both ports, which is
-        // why local pairing never worked.
-        const mobileUrl = isCloudRelay
-          ? `${connectionUrl}/mobile/index.html?token=${pairingToken}&host=${connectionUrl}&mode=cloud`
-          : `http://${localIp}:${SERVER_HTTP_PORT}/mobile/index.html?token=${pairingToken}&host=${localIp}:${WS_PORT}&mode=local`;
+        const mobileUrl = createLucaLinkPairingMobileUrl(route, pairingToken);
 
         // Scannability beats theming: dark ink on white, every skin.
         const url = await QRCode.toDataURL(mobileUrl, {
@@ -306,6 +317,59 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
             time.
           </p>
 
+          {pairingRoute && (
+            <div
+              className="mt-4 rounded-xl border p-3"
+              style={{
+                background:
+                  pairingRoute.kind === "unavailable"
+                    ? "color-mix(in srgb, var(--luca-danger,#f87171) 8%, transparent)"
+                    : "var(--luca-surface-glass, rgba(255,255,255,0.03))",
+                borderColor:
+                  pairingRoute.kind === "unavailable"
+                    ? "color-mix(in srgb, var(--luca-danger,#f87171) 30%, transparent)"
+                    : "var(--luca-border-subtle, rgba(255,255,255,0.08))",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-lg border"
+                  style={{
+                    borderColor:
+                      "var(--luca-border-subtle, rgba(255,255,255,0.08))",
+                    background:
+                      "var(--luca-background-panel, rgba(255,255,255,0.04))",
+                  }}
+                >
+                  <Icon
+                    name={
+                      pairingRoute.kind === "relay"
+                        ? "Globe"
+                        : pairingRoute.kind === "vpn"
+                          ? "Shield"
+                          : pairingRoute.kind === "local"
+                            ? "Wifi"
+                            : "WifiLow"
+                    }
+                    size={15}
+                    className="text-[var(--app-text-muted)]"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold text-[var(--app-text-main)]">
+                    {pairingRoute.title}
+                  </p>
+                  <p className="mt-1 text-[12px] leading-relaxed text-[var(--app-text-muted)]">
+                    {pairingRoute.detail}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-[var(--app-text-muted)] opacity-75">
+                    {pairingRoute.requirement}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mt-4 grid grid-cols-2 gap-2">
             {readinessItems.map((item) => {
               const toneStyle = readinessToneStyle(item.tone);
@@ -372,17 +436,17 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
                 <div className="flex h-44 w-44 flex-col items-center justify-center gap-2 text-[#69737f]">
                   <Icon name="Restart" className="animate-spin" size={20} />
                   <span className="text-[11px]">
-                    {!localIp ? "Finding this machine on your network…" : "Preparing…"}
+                    Preparing pairing route...
                   </span>
                 </div>
               )}
             </div>
-            {localIp && (
+            {pairingRoute?.connectionUrl && (
               <p
                 className="mt-3 text-[11px] text-[var(--app-text-muted)] opacity-70"
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
-                {localIp}
+                {pairingRoute.connectionUrl}
               </p>
             )}
           </div>
