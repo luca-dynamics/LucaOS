@@ -24,3 +24,8 @@ uses OS-backed encryption for scoped one-use secret leases and invokes ClamAV on
 Hardware promotion uses `certify-sandbox-backend.cjs` on an explicitly labelled
 self-hosted runner. It requires seven live assertions and produces Ed25519-signed
 host/image evidence; repository-hosted contract CI cannot substitute for it.
+
+`SandboxReleaseGate` is the final authority for shipping status. Stable tier,
+verified assets, live host features, scanner availability, fresh signed hardware
+evidence, and all seven assertions are mandatory. Preview backends cannot be
+promoted by configuration alone, and host fallback remains false.

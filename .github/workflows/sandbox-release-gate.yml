@@ -1,0 +1,14 @@
+name: Sandbox release gate
+on:
+  pull_request:
+    paths: ['src/config/sandboxReleaseMatrix.ts', 'src/services/sandbox/**', 'platforms/electron/sandbox/**', 'ops/scripts/*sandbox*', '.github/workflows/sandbox-*.yml']
+jobs:
+  release-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: npm run sandbox:verify-runtime
+      - run: npx vitest run src/config/sandboxReleaseMatrix.test.ts src/services/sandbox/SandboxAssetDeliveryService.test.ts src/services/sandbox/SandboxBackendSetupService.test.ts src/services/sandbox/SandboxReleaseGate.test.ts src/components/sandbox/SandboxRuntimeSettingsPanel.test.tsx
