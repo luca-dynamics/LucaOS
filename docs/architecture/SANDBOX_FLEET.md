@@ -136,7 +136,11 @@ microphones, cameras, credentials, signing keys, or LucaLink devices.
    **Implemented:** `SandboxArtifactBridge` for scanned, approved,
    content-addressed handoffs across Linux, Windows, and macOS sessions.
 4. Linux Podman/microVM adapter and macOS Virtualization Framework adapter.
-5. Windows Sandbox or Hyper-V adapter.
+   **Partially implemented:** rootless Podman adapter is available; microVM and
+   macOS Virtualization Framework adapters remain.
+5. Windows Sandbox or Hyper-V adapter. **Partially implemented:** Windows
+   Sandbox GUI/workspace adapter is available without terminal execution;
+   Hyper-V remains.
 6. Paired-host and remote placement, including Apple-hardware macOS workers.
 7. Fleet UI for capacity, active sessions, switching, persistence, audit, and
    emergency destruction.

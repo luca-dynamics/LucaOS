@@ -31,7 +31,9 @@ const {
     registerSandboxIpc
 } = require('./ipc/index.cjs');
 const { createDockerSandboxAdapter } = require('./sandbox/dockerSandboxAdapter.cjs');
+const { createPodmanSandboxAdapter } = require('./sandbox/podmanSandboxAdapter.cjs');
 const { createWsl2SandboxAdapter } = require('./sandbox/wsl2SandboxAdapter.cjs');
+const { createWindowsSandboxAdapter } = require('./sandbox/windowsSandboxAdapter.cjs');
 const { createSandboxAdapterRouter } = require('./sandbox/sandboxAdapterRouter.cjs');
 const { createSandboxBroker } = require('./sandbox/sandboxBroker.cjs');
 
@@ -1699,6 +1701,7 @@ registerVisualCoreIpc({
 const sandboxBroker = createSandboxBroker({
     adapter: createSandboxAdapterRouter([
         createDockerSandboxAdapter(),
+        createPodmanSandboxAdapter(),
         createWsl2SandboxAdapter({
             rootfsPath: app.isPackaged
                 ? path.join(process.resourcesPath, 'sandbox', 'lucaos-wsl-rootfs.tar')
@@ -1707,6 +1710,9 @@ const sandboxBroker = createSandboxBroker({
                 ? path.join(process.resourcesPath, 'sandbox', 'lucaos-wsl-rootfs.tar.sha256')
                 : path.join(__dirname, 'sandbox', 'artifacts', 'lucaos-wsl-rootfs.tar.sha256'),
             installRoot: path.join(app.getPath('userData'), 'sandbox-wsl2')
+        }),
+        createWindowsSandboxAdapter({
+            configRoot: path.join(app.getPath('userData'), 'windows-sandbox-configs')
         })
     ]),
     workspaceRoot: path.join(app.getPath('userData'), 'sandbox-workspaces')

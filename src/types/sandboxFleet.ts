@@ -145,3 +145,44 @@ export interface SandboxArtifactImportResult {
   importedAt?: string;
   hostFallbackAllowed: false;
 }
+
+export type SandboxHostCapability =
+  | "host_file_read"
+  | "host_file_write"
+  | "display_capture"
+  | "ui_input"
+  | "credential_access"
+  | "signing_key"
+  | "luca_link_device";
+
+export type SandboxHostCapabilityRequestStatus = "pending" | "approved" | "rejected" | "consumed" | "expired";
+
+export interface SandboxHostCapabilityRequest {
+  requestId: string;
+  missionId: string;
+  sessionId: string;
+  capability: SandboxHostCapability;
+  reason: string;
+  scope: Record<string, string | number | boolean>;
+  status: SandboxHostCapabilityRequestStatus;
+  createdAt: string;
+  expiresAt: string;
+  decidedAt?: string;
+  consumedAt?: string;
+  hostFallbackAllowed: false;
+}
+
+export interface SandboxRemoteWorkerDescriptor {
+  workerId: string;
+  hostId: string;
+  hostPlatform: SandboxHostPlatform;
+  locality: "paired_host" | "remote";
+  isolationTier: SandboxIsolationTier;
+  appleHardware: boolean;
+  trust: SandboxFleetBackend["trust"];
+  capacity: number;
+  guestOs: SandboxGuestOs[];
+  capabilities: SandboxCapability[];
+  images: SandboxFleetBackend["images"];
+  attestationDigest?: string;
+}

@@ -28,6 +28,13 @@ function createWsl2SandboxAdapter({
             : { valid: false, reason: 'Managed LucaOS WSL2 rootfs checksum does not match.' };
     }
 
+    function workspacePath(relativePath) {
+        const normalized = typeof relativePath === 'string' ? relativePath.replaceAll('\\', '/').trim() : '';
+        if (!normalized || normalized.startsWith('/') || /^[a-zA-Z]:/.test(normalized)) throw new Error('Invalid WSL2 sandbox artifact path.');
+        if (normalized.split('/').some((part) => !part || part === '..')) throw new Error('Invalid WSL2 sandbox artifact path.');
+        return `/workspace/${normalized}`;
+    }
+
     return {
         kind: 'wsl2',
         async probe() {
@@ -68,6 +75,26 @@ function createWsl2SandboxAdapter({
                 { timeout: timeoutMs }
             );
             return { stdout: String(result.stdout || ''), stderr: String(result.stderr || ''), exitCode: 0 };
+        },
+        async exportArtifact(runtime, { relativePath, maxBytes }) {
+            const artifactPath = workspacePath(relativePath);
+            const result = await wsl(
+                ['--distribution', runtime.distroName, '--user', 'luca', '--cd', '/workspace', '--exec', '/bin/sh', '-c', 'test -f "$1" && cat "$1"', 'luca-export', artifactPath],
+                { timeout: 30_000, encoding: 'buffer', maxBuffer: maxBytes + 1 }
+            );
+            const bytes = Buffer.from(result.stdout || []);
+            if (bytes.byteLength > maxBytes) throw new Error('Sandbox artifact exceeds the transfer size limit.');
+            return { bytes };
+        },
+        async importArtifact(runtime, { relativePath, bytes, maxBytes }) {
+            if (bytes.byteLength > maxBytes) throw new Error('Sandbox artifact exceeds the transfer size limit.');
+            const artifactPath = workspacePath(relativePath);
+            const directory = path.posix.dirname(artifactPath);
+            await wsl(
+                ['--distribution', runtime.distroName, '--user', 'luca', '--cd', '/workspace', '--exec', '/bin/sh', '-c', 'mkdir -p "$1" && test ! -e "$2" && cat > "$2"', 'luca-import', directory, artifactPath],
+                { timeout: 30_000, input: bytes, maxBuffer: 1024 * 1024 }
+            );
+            return { imported: true };
         },
         async destroy({ distroName, distroPath }) {
             await wsl(['--terminate', distroName]).catch(() => undefined);
