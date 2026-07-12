@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { PresenceMarkState } from "../../presence/presenceMark";
 import PresenceMark from "./PresenceMark";
+import { LucaLiquidGlassLayer } from "../material/LucaLiquidGlass";
 import {
   createLiquidPresenceRenderer,
   type LiquidPresenceRenderer,
@@ -96,6 +97,7 @@ const LiquidPresenceMark: React.FC<LiquidPresenceMarkProps> = ({
         style={{ width: size, height: size }}
         className="absolute inset-0 pointer-events-none"
       />
+      <LucaLiquidGlassLayer shape="circle" depth="hero" />
       <div
         className="absolute rounded-full border border-white/0 group-hover:border-white/15 pointer-events-none"
         style={{
