@@ -136,8 +136,9 @@ microphones, cameras, credentials, signing keys, or LucaLink devices.
    **Implemented:** `SandboxArtifactBridge` for scanned, approved,
    content-addressed handoffs across Linux, Windows, and macOS sessions.
 4. Linux Podman/microVM adapter and macOS Virtualization Framework adapter.
-   **Partially implemented:** rootless Podman and fail-closed Firecracker/KVM
-   adapters are available; macOS Virtualization Framework remains.
+   **Implemented as guarded adapters:** rootless Podman, Firecracker/KVM, and
+   Apple Virtualization Framework. Native helpers and images remain release
+   prerequisites and missing attestation blocks placement.
 5. Windows Sandbox or Hyper-V adapter. **Partially implemented:** Windows
    Sandbox GUI/workspace adapter is available without terminal execution;
    Hyper-V remains.
