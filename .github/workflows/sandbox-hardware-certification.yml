@@ -1,0 +1,26 @@
+name: Sandbox hardware certification
+on:
+  workflow_dispatch:
+    inputs:
+      backend:
+        description: Backend to certify on its matching self-hosted runner
+        required: true
+        type: choice
+        options: [wsl2, windows_sandbox, hyperv, podman, firecracker, apple_virtualization]
+jobs:
+  certify:
+    runs-on: [self-hosted, sandbox-certification]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node ops/scripts/certify-sandbox-backend.cjs --backend "${{ inputs.backend }}" --runner "${{ runner.temp }}/luca-sandbox-certifier" --output "${{ runner.temp }}/evidence/${{ inputs.backend }}.json"
+        env:
+          LUCA_SANDBOX_CERTIFICATION_PRIVATE_KEY: ${{ secrets.LUCA_SANDBOX_CERTIFICATION_PRIVATE_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sandbox-certification-${{ inputs.backend }}
+          path: ${{ runner.temp }}/evidence/*.json
+          if-no-files-found: error

@@ -1,0 +1,11 @@
+const { execFileSync } = require('child_process'); const crypto = require('crypto'); const fs = require('fs'); const path = require('path');
+const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, value, index, all) => value.startsWith('--') ? [...pairs, [value.slice(2), all[index + 1]]] : pairs, []));
+const allowed = new Set(['docker', 'podman', 'wsl2', 'windows_sandbox', 'firecracker', 'hyperv', 'apple_virtualization']);
+if (!allowed.has(args.backend) || !args.runner || !path.isAbsolute(args.runner)) throw new Error('Usage: --backend <kind> --runner <absolute executable> --output <path>');
+const privateKey = process.env.LUCA_SANDBOX_CERTIFICATION_PRIVATE_KEY; if (!privateKey) throw new Error('Sandbox certification signing key is required.');
+const raw = execFileSync(args.runner, ['--backend', args.backend, '--json'], { encoding: 'utf8', timeout: 15 * 60_000, windowsHide: true }); const result = JSON.parse(raw);
+const required = ['probeIsolated', 'createDestroy', 'commandIsolation', 'networkPolicy', 'artifactIntegrity', 'snapshotCleanup', 'crashRecovery'];
+const failed = required.filter((check) => result[check] !== true); if (failed.length) throw new Error(`Sandbox certification failed: ${failed.join(', ')}`);
+const evidence = { schemaVersion: 1, backend: args.backend, host: { platform: process.platform, arch: process.arch, fingerprint: result.hostFingerprint }, imageDigests: result.imageDigests || [], checks: Object.fromEntries(required.map((check) => [check, true])), certifiedAt: new Date().toISOString(), runnerVersion: result.runnerVersion };
+const payload = Buffer.from(JSON.stringify(evidence)); const signature = crypto.sign(null, payload, privateKey).toString('base64'); const output = JSON.stringify({ evidence, signature }, null, 2) + '\n';
+const outputPath = path.resolve(args.output || `sandbox-certification-${args.backend}.json`); fs.mkdirSync(path.dirname(outputPath), { recursive: true }); fs.writeFileSync(outputPath, output, { flag: 'wx', mode: 0o600 }); process.stdout.write(`${outputPath}\n`);
