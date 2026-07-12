@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { PersonaType } from "../../services/lucaService";
 import { Presence, deriveIntentFromStatus } from "../presence";
 import type { PresenceIntent } from "../presence";
@@ -36,6 +36,8 @@ const VoiceStatusOrb: React.FC<VoiceStatusOrbProps> = ({
   voiceModeLabel = "Voice",
   detailLabel,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [surfaceHeight, setSurfaceHeight] = useState(768);
   const intent = deriveIntentFromStatus(statusMessage, {
     isVadActive,
     isSpeaking,
@@ -49,14 +51,38 @@ const VoiceStatusOrb: React.FC<VoiceStatusOrbProps> = ({
       : intent !== "idle"
         ? "var(--app-id-accent, #ffffff)"
         : "var(--app-text-main, rgba(255,255,255,0.6))";
+  const presenceSize = Math.round(Math.min(112, Math.max(72, surfaceHeight * 0.16)));
+  const verticalOffset = -Math.min(192, Math.max(58, surfaceHeight * 0.18));
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const measure = () => {
+      const nextHeight = Math.max(1, Math.round(container.getBoundingClientRect().height));
+      setSurfaceHeight((current) => (current === nextHeight ? current : nextHeight));
+    };
+
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-      <div className="absolute z-20 flex -translate-y-48 flex-col items-center gap-3 pointer-events-none">
+    <div ref={containerRef} className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+      <div
+        className="absolute z-20 flex flex-col items-center gap-2 sm:gap-3 pointer-events-none"
+        style={{
+          transform: `translateY(${verticalOffset}px)`,
+        }}
+      >
         <Presence
           intent={intent}
           color={canvasThemeColor}
-          size={132}
+          size={presenceSize}
           reactToAudio
         />
         <div

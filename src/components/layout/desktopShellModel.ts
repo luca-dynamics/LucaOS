@@ -18,6 +18,56 @@ export const RIGHT_PANEL_COLLAPSED_KEY = "luca_right_panel_collapsed";
 /** Width of the slim collapsed rails (icon-only), within the 56–64px range. */
 export const DESKTOP_RAIL_WIDTH_PX = 60;
 
+export interface DesktopPanelWidths {
+  sidebar: number;
+  right: number;
+}
+
+/**
+ * Fits desktop panels to the current native-window shape while reserving a
+ * useful center workspace. Requested widths remain the user's preference;
+ * this resolver only derives the rendered widths for the present viewport.
+ */
+export function resolveDesktopPanelWidths({
+  viewportWidth,
+  requested,
+  leftVisible = true,
+  rightVisible = true,
+}: {
+  viewportWidth: number;
+  requested: DesktopPanelWidths;
+  leftVisible?: boolean;
+  rightVisible?: boolean;
+}): DesktopPanelWidths {
+  const width = Math.max(320, viewportWidth);
+  const visibleCount = Number(leftVisible) + Number(rightVisible);
+  if (visibleCount === 0) return { sidebar: 0, right: 0 };
+
+  const centerReserve = Math.min(520, Math.max(180, width * 0.46));
+  const resizeGutters = visibleCount * 6;
+  const sideBudget = Math.max(0, width - centerReserve - resizeGutters);
+  const minimumSide = Math.min(220, sideBudget / visibleCount);
+
+  if (visibleCount === 1) {
+    return {
+      sidebar: leftVisible
+        ? Math.max(minimumSide, Math.min(requested.sidebar, sideBudget))
+        : 0,
+      right: rightVisible
+        ? Math.max(minimumSide, Math.min(requested.right, sideBudget))
+        : 0,
+    };
+  }
+
+  const requestedTotal = Math.max(1, requested.sidebar + requested.right);
+  const preferredLeft = sideBudget * (requested.sidebar / requestedTotal);
+  const sidebar = Math.max(
+    minimumSide,
+    Math.min(preferredLeft, sideBudget - minimumSide),
+  );
+  return { sidebar, right: Math.max(minimumSide, sideBudget - sidebar) };
+}
+
 // Accessible labels for the icon-only collapse/expand controls.
 export const COLLAPSE_APPS_LABEL = "Collapse Apps panel";
 export const EXPAND_APPS_LABEL = "Expand Apps panel";

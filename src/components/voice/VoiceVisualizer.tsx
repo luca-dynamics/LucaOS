@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { eventBus } from "../../services/eventBus";
 import { PersonaType } from "../../services/lucaService";
 import { THEME_PALETTE, setHexAlpha } from "../../config/themeColors";
+import { resolveVoiceVisualizerGeometry } from "./voiceVisualizerGeometry";
 
 // Removed local CANVAS_THEME_COLORS map to use central THEME_PALETTE from themeColors.ts
 
@@ -21,11 +22,9 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
   persona,
   lowPower = false,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const viewportWidth =
-    typeof window === "undefined" ? 1024 : window.innerWidth;
-  const viewportHeight =
-    typeof window === "undefined" ? 768 : window.innerHeight;
+  const [canvasSize, setCanvasSize] = useState({ width: 1024, height: 768 });
   const internalAmplitude = useRef(0);
   const amplitudeRef = useRef(amplitude);
   const isVadActiveRef = useRef(isVadActive);
@@ -55,6 +54,33 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
   }, [amplitude, isVadActive, transcriptSource, persona]);
 
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof window === "undefined") return;
+
+    const measure = () => {
+      const rect = container.getBoundingClientRect();
+      const width = Math.max(1, Math.round(rect.width || window.innerWidth));
+      const height = Math.max(1, Math.round(rect.height || window.innerHeight));
+      setCanvasSize((current) =>
+        current.width === width && current.height === height
+          ? current
+          : { width, height },
+      );
+    };
+
+    measure();
+
+    if (typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(measure);
+      observer.observe(container);
+      return () => observer.disconnect();
+    }
+
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -62,6 +88,15 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
     if (!ctx) return;
 
     let animationId: number;
+    const dpr =
+      typeof window === "undefined"
+        ? 1
+        : Math.min(window.devicePixelRatio || 1, 2);
+    const displayWidth = Math.max(1, canvasSize.width);
+    const displayHeight = Math.max(1, canvasSize.height);
+    canvas.width = Math.round(displayWidth * dpr);
+    canvas.height = Math.round(displayHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const draw = () => {
       if (!canvas || !ctx) return;
@@ -79,16 +114,20 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
         THEME_PALETTE.RUTHLESS;
 
       // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, displayWidth, displayHeight);
 
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const baseRadius = 150;
+      const shortSide = Math.max(1, Math.min(displayWidth, displayHeight));
+      const {
+        centerX,
+        centerY,
+        baseRadius,
+        baseOrbRadius,
+        spectrumPulse,
+      } = resolveVoiceVisualizerGeometry(displayWidth, displayHeight);
       const time = Date.now() * 0.001;
       const tick = time;
 
       // --- 1. LIQUID PLASMA ORB (The Core) ---
-      const baseOrbRadius = Math.min(canvas.width, canvas.height) * 0.18; // Size of the orb
       const activeScale = currentIsVadActive ? 1.2 : 1.0;
 
       ctx.save();
@@ -101,10 +140,14 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
         const angle = (i / points) * Math.PI * 2;
 
         // Wave superposition for "liquid" effect
-        const w1 = Math.sin(angle * 3 + tick) * 10;
-        const w2 = lowPower ? 0 : Math.cos(angle * 6 - tick * 1.5) * 8;
-        const w3 = Math.sin(angle * 12 + tick * 5) * (currentAmplitude * 60);
-        const pulse = currentAmplitude * 30;
+        const w1 = Math.sin(angle * 3 + tick) * shortSide * 0.013;
+        const w2 = lowPower
+          ? 0
+          : Math.cos(angle * 6 - tick * 1.5) * shortSide * 0.01;
+        const w3 =
+          Math.sin(angle * 12 + tick * 5) *
+          (currentAmplitude * shortSide * 0.075);
+        const pulse = currentAmplitude * shortSide * 0.04;
 
         const r = (baseOrbRadius + w1 + w2 + w3 + pulse) * activeScale;
 
@@ -197,7 +240,7 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
       ctx.arc(
         0,
         0,
-        baseOrbRadius * 2.5 + currentAmplitude * 20,
+        baseOrbRadius * 2.5 + currentAmplitude * spectrumPulse,
         0,
         Math.PI * 2,
       );
@@ -211,16 +254,14 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
 
     draw();
     return () => cancelAnimationFrame(animationId);
-  }, []); // Run setup once, loop uses refs for updating values
+  }, [canvasSize.height, canvasSize.width, lowPower]); // Loop uses refs for live voice state.
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center z-20 pointer-events-none">
-      <canvas
-        ref={canvasRef}
-        width={viewportWidth}
-        height={viewportHeight}
-        className="absolute inset-0 w-full h-full"
-      />
+    <div
+      ref={containerRef}
+      className="relative w-full h-full flex items-center justify-center z-20 pointer-events-none overflow-hidden"
+    >
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
       {/* Background Grid */}
       <div
         className="absolute inset-0 pointer-events-none opacity-20 bg-[size:60px_60px]"

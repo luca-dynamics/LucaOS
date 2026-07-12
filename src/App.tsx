@@ -113,6 +113,7 @@ import {
   RIGHT_PANEL_COLLAPSED_KEY,
   leftToggleIcon,
   readCollapsedPreference,
+  resolveDesktopPanelWidths,
   rightToggleIcon,
   writeCollapsedPreference,
 } from "./components/layout/desktopShellModel";
@@ -269,7 +270,10 @@ function AppContent() {
     [webAccessPolicy, isElectron],
   );
   const isBrowserSafeWebInterface = browserSafeBootState.bootResolved;
-  const isMobile = useMobile();
+  const isMobile = useMobile({
+    desktopHost: isElectron,
+    nativeMobileHost: isCapacitor,
+  });
   const platformBackgroundPolicy = useMemo(
     () =>
       resolveLucaPlatformBackgroundPolicy({
@@ -445,6 +449,16 @@ function AppContent() {
     chat: 430,
     right: 380,
   });
+  const [desktopViewportWidth, setDesktopViewportWidth] = useState(() =>
+    typeof window === "undefined" ? 1440 : window.innerWidth,
+  );
+  useEffect(() => {
+    if (!isElectron) return;
+    const updateDesktopViewport = () => setDesktopViewportWidth(window.innerWidth);
+    updateDesktopViewport();
+    window.addEventListener("resize", updateDesktopViewport);
+    return () => window.removeEventListener("resize", updateDesktopViewport);
+  }, [isElectron]);
 
   // Desktop-only collapsible side panels (UI shell layout only). Persisted via
   // the existing `luca_*` localStorage preference convention.
@@ -528,6 +542,16 @@ function AppContent() {
   const [backgroundBlur, setBackgroundBlur] = useState<number>(40);
   const [atmosphere, setAtmosphere] = useState(() =>
     normalizeLucaAtmosphere(settingsService.getSettings().general.atmosphere),
+  );
+  const renderedPanelWidths = useMemo(
+    () =>
+      resolveDesktopPanelWidths({
+        viewportWidth: desktopViewportWidth,
+        requested: panelWidths,
+        leftVisible: !leftPanelCollapsed,
+        rightVisible: !rightPanelCollapsed,
+      }),
+    [desktopViewportWidth, panelWidths, leftPanelCollapsed, rightPanelCollapsed],
   );
   // Live material preview: the Appearance sliders broadcast while dragging;
   // the boundary recomputes and the WHOLE app follows. Cancel/close restores
@@ -3042,7 +3066,7 @@ function AppContent() {
                 style={{
                   ...lucaShellPanelSurfaceStyle,
                   boxShadow: "6px 0 18px -10px rgba(0,0,0,0.5)",
-                  width: `${panelWidths.sidebar}px`,
+                  width: `${renderedPanelWidths.sidebar}px`,
                 }}
               >
                 <SafeComponent componentName="SessionsRail">
@@ -3271,7 +3295,7 @@ function AppContent() {
                 style={{
                   ...lucaShellPanelSurfaceStyle,
                   boxShadow: "-6px 0 18px -10px rgba(0,0,0,0.5)",
-                  width: `${panelWidths.right}px`,
+                  width: `${renderedPanelWidths.right}px`,
                 }}
               >
                 <div className="flex flex-col h-full w-full overflow-hidden">
