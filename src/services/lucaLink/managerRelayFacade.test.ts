@@ -38,7 +38,14 @@ describe("lucaLinkManager relay API", () => {
 
   it("exposes the settings-console surface through the manager (same state)", () => {
     expect(lucaLinkManager.console).not.toBe(lucaLink);
-    for (const method of ["getHandoffs", "getBridgeReviews", "getApprovalSurfaces", "getFreshHostConnections", "getRuntimeShadowSummary"]) {
+    for (const method of [
+      "getHandoffs",
+      "getBridgeReviews",
+      "getApprovalSurfaces",
+      "getFreshHostConnections",
+      "getRuntimeShadowSummary",
+      "revokeGuestSession",
+    ]) {
       expect(typeof (lucaLinkManager.console as any)[method]).toBe("function");
     }
     expect("send" in (lucaLinkManager.console as object)).toBe(false);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import lucaLinkSource from "./SettingsLucaLinkTab.tsx?raw";
-import lucaLinkServiceSource from "../../services/lucaLinkService.ts?raw";
+import lucaLinkServiceSource from "../../services/lucaLink/relayClientAdapter.ts?raw";
 import { LUCA_LINK_FORBIDDEN_DEVICE_CENTER_ACTION_LABELS } from "../../services/lucaLink/lucaLinkArchitectureInvariants";
 
 const approvalActionSource = lucaLinkSource.slice(
@@ -316,8 +316,12 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain("Failed to connect to Primary Host");
     expect(lucaLinkSource).toContain("Connected to Primary Host");
     expect(lucaLinkSource).toContain("Connect to Primary Host");
-    expect(lucaLinkSource).toContain("Pair trusted Luca-capable hosts");
-    expect(lucaLinkSource).toContain("using this QR code or token");
+    expect(lucaLinkSource).toContain(
+      "Allow trusted Luca-capable hosts to pair securely",
+    );
+    expect(lucaLinkSource).toContain(
+      "Scan a QR from your phone to pair it with this LucaOS",
+    );
     expect(lucaLinkSource).toContain('onUpdate("lucaLink", "vpnServerUrl"');
 
     for (const staleCopy of [
@@ -436,7 +440,7 @@ describe("Settings LucaLink Device Center guest and service cleanup", () => {
     );
   });
 
-  it("replaces stale guest copy with read-only guest security state", () => {
+  it("replaces stale guest copy with local guest access controls", () => {
     expect(lucaLinkSource).not.toContain(
       ["No active guest", "session data exposed yet."].join(" "),
     );
@@ -444,10 +448,16 @@ describe("Settings LucaLink Device Center guest and service cleanup", () => {
       ["No reliable active", "guest session list is exposed yet."].join(" "),
     );
     expect(guestsSectionSource).toContain(
-      "Guest security sessions are read-only.",
+      "Guest access controls",
     );
     expect(guestsSectionSource).toContain(
-      "This view does not revoke guests, regenerate invites, or change guest auth, PIN, or WebRTC behavior.",
+      "handleGuestSessionAction(session, \"revoke\")",
+    );
+    expect(lucaLinkSource).toContain(
+      "lucaLinkManager.console.revokeGuestSession",
+    );
+    expect(guestsSectionSource).toContain(
+      "invite generation, PIN setup, and WebRTC setup stay",
     );
   });
 

@@ -120,6 +120,7 @@ export type LucaLinkConsoleFacade = Pick<
   | "onStateChange"
   | "rejectBridgeReview"
   | "renameTrustedDevice"
+  | "revokeGuestSession"
   | "revokeTrustedDevice"
   | "setTrustedDeviceTrustLevel"
   | "unblockTrustedDevice"
@@ -254,6 +255,7 @@ const consoleFacadeKeys = [
   "onStateChange",
   "rejectBridgeReview",
   "renameTrustedDevice",
+  "revokeGuestSession",
   "revokeTrustedDevice",
   "setTrustedDeviceTrustLevel",
   "unblockTrustedDevice",

@@ -614,6 +614,26 @@ describe("LucaLinkService guest inbound hardening", () => {
     });
   });
 
+  it("revokes guest sessions through local state without requiring transport", () => {
+    const close = vi.fn();
+    (lucaLink as any).guestSessionStore.ensureSecuritySession("guest-1");
+    (lucaLink as any).guestSessionStore.setPeerConnection("guest-1", {
+      close,
+    });
+
+    const revoked = lucaLink.revokeGuestSession("guest-1", {
+      now: Date.now(),
+      reason: "User ended guest access",
+    });
+
+    expect(revoked?.status).toBe("revoked");
+    expect(revoked?.warnings.at(-1)).toBe(
+      "Revoked by Primary Host: User ended guest access",
+    );
+    expect(lucaLink.getGuestSecuritySummary().revoked).toBe(1);
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
   it("preserves WebRTC answer and ICE handlers while observing inbound signaling", async () => {
     const { handlers } = installGuestSocket();
     const setRemoteDescription = vi.fn();
