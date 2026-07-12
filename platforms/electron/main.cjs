@@ -34,6 +34,9 @@ const { createDockerSandboxAdapter } = require('./sandbox/dockerSandboxAdapter.c
 const { createPodmanSandboxAdapter } = require('./sandbox/podmanSandboxAdapter.cjs');
 const { createWsl2SandboxAdapter } = require('./sandbox/wsl2SandboxAdapter.cjs');
 const { createWindowsSandboxAdapter } = require('./sandbox/windowsSandboxAdapter.cjs');
+const { createFirecrackerSandboxAdapter } = require('./sandbox/firecrackerSandboxAdapter.cjs');
+const { createAppleVirtualizationSandboxAdapter } = require('./sandbox/appleVirtualizationSandboxAdapter.cjs');
+const { createHyperVSandboxAdapter } = require('./sandbox/hypervSandboxAdapter.cjs');
 const { createSandboxAdapterRouter } = require('./sandbox/sandboxAdapterRouter.cjs');
 const { createSandboxBroker } = require('./sandbox/sandboxBroker.cjs');
 
@@ -1713,6 +1716,20 @@ const sandboxBroker = createSandboxBroker({
         }),
         createWindowsSandboxAdapter({
             configRoot: path.join(app.getPath('userData'), 'windows-sandbox-configs')
+        }),
+        createFirecrackerSandboxAdapter({
+            kernelPath: path.join(process.resourcesPath, 'sandbox', 'microvm', 'vmlinux'),
+            rootfsPath: path.join(process.resourcesPath, 'sandbox', 'microvm', 'rootfs.ext4'),
+            stateRoot: path.join(app.getPath('userData'), 'sandbox-firecracker')
+        }),
+        createAppleVirtualizationSandboxAdapter({
+            helperPath: path.join(process.resourcesPath, 'sandbox', 'macos', 'luca-virtualization'),
+            imagePath: path.join(process.resourcesPath, 'sandbox', 'macos', 'guest.img'),
+            stateRoot: path.join(app.getPath('userData'), 'sandbox-apple-vm')
+        }),
+        createHyperVSandboxAdapter({
+            imagePath: path.join(process.resourcesPath, 'sandbox', 'hyperv', 'guest.vhdx'),
+            stateRoot: path.join(app.getPath('userData'), 'sandbox-hyperv')
         })
     ]),
     workspaceRoot: path.join(app.getPath('userData'), 'sandbox-workspaces')

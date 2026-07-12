@@ -22,6 +22,7 @@
     "sandbox:build-rootfs": "node ops/scripts/build-sandbox-rootfs.cjs",
     "sandbox:prepare-release": "node ops/scripts/prepare-sandbox-rootfs-release.cjs",
     "sandbox:smoke": "node ops/scripts/smoke-sandbox-host.cjs",
+    "sandbox:verify-runtime": "node ops/scripts/verify-sandbox-runtime.cjs",
     "start:all": "concurrently -k -p \"[{name}]\" -n \"UI,CORE,BRAIN\" -c \"cyan,magenta,yellow\" \"npm run dev\" \"npm run server\" \"npm run cortex\"",
     "cleanup": "node ops/scripts/cleanup.cjs",
     "restore": "node ops/scripts/restore.js",

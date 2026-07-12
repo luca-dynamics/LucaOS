@@ -153,6 +153,11 @@ microphones, cameras, credentials, signing keys, or LucaLink devices.
    renderer-side runtime. `SandboxFleetController` now binds those callbacks to
    broker-owned switching, snapshot, cleanup, destruction, and artifact gates.
 
+The Electron runtime registers every local adapter with platform-specific
+managed resource paths. The `sandbox-runtime.yml` Windows, Linux, and macOS
+matrix verifies contract behavior on every PR; missing native images, helpers,
+virtualization features, or attestations remain explicit blocked states.
+
 ## Non-goals
 
 - Pretending host process execution is a sandbox.
