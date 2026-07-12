@@ -1,0 +1,37 @@
+function createSandboxAdapterRouter(adapters) {
+    if (!Array.isArray(adapters) || adapters.length === 0) throw new Error('At least one sandbox adapter is required.');
+    const byKind = new Map(adapters.map((adapter) => [adapter.kind, adapter]));
+
+    async function select() {
+        const probes = [];
+        for (const adapter of adapters) {
+            const probe = await adapter.probe();
+            probes.push(probe);
+            if (probe.available && probe.isolated) return { adapter, probe };
+        }
+        return { adapter: null, probe: { backend: 'none', available: false, isolated: false, reason: probes.map((item) => `${item.backend}: ${item.reason}`).join(' '), capabilities: [] } };
+    }
+
+    return {
+        kind: 'automatic',
+        async probe() { return (await select()).probe; },
+        async create(input) {
+            const selected = await select();
+            if (!selected.adapter) throw new Error(selected.probe.reason || 'No isolated sandbox backend is available.');
+            const runtime = await selected.adapter.create(input);
+            return { ...runtime, backend: selected.adapter.kind };
+        },
+        async execute(runtime, command) {
+            const adapter = byKind.get(runtime?.backend);
+            if (!adapter?.execute) throw new Error('Sandbox runtime backend cannot execute commands.');
+            return adapter.execute(runtime, command);
+        },
+        async destroy(runtime) {
+            const adapter = byKind.get(runtime?.backend);
+            if (!adapter) throw new Error('Sandbox runtime backend is unavailable for cleanup.');
+            return adapter.destroy(runtime);
+        }
+    };
+}
+
+module.exports = { createSandboxAdapterRouter };

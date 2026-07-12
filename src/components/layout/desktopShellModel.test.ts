@@ -11,6 +11,7 @@ import {
   leftToggleIcon,
   parseCollapsedPreference,
   readCollapsedPreference,
+  resolveDesktopPanelWidths,
   rightToggleIcon,
   writeCollapsedPreference,
 } from "./desktopShellModel";
@@ -107,5 +108,32 @@ describe("desktopShellModel", () => {
     expect(() =>
       writeCollapsedPreference(LEFT_PANEL_COLLAPSED_KEY, true, throwingStorage),
     ).not.toThrow();
+  });
+
+  it("preserves requested proportions while reserving the center workspace", () => {
+    const wide = resolveDesktopPanelWidths({
+      viewportWidth: 1440,
+      requested: { sidebar: 320, right: 380 },
+    });
+    expect(wide.sidebar / wide.right).toBeCloseTo(320 / 380, 2);
+    expect(1440 - wide.sidebar - wide.right).toBeGreaterThanOrEqual(520);
+  });
+
+  it("shrinks both panels proportionally for narrow desktop windows", () => {
+    const narrow = resolveDesktopPanelWidths({
+      viewportWidth: 620,
+      requested: { sidebar: 320, right: 380 },
+    });
+    expect(narrow.sidebar).toBeGreaterThan(0);
+    expect(narrow.right).toBeGreaterThan(0);
+    expect(narrow.sidebar + narrow.right).toBeLessThan(440);
+  });
+
+  it("gives the available side budget to the only visible panel", () => {
+    expect(resolveDesktopPanelWidths({
+      viewportWidth: 700,
+      requested: { sidebar: 320, right: 380 },
+      leftVisible: false,
+    })).toEqual({ sidebar: 0, right: 372 });
   });
 });

@@ -1,0 +1,12 @@
+{
+  "distribution": "Alpine Linux",
+  "version": "3.24.1",
+  "architecture": "x86_64",
+  "sha256": "8e55f9e112381b245246cc4ffb4e371019eac53854d43113687ff02959bc0c3e",
+  "runtime": {
+    "user": "luca",
+    "node": "24.17.0",
+    "python": "3.14.5",
+    "networkIsolationTool": "util-linux unshare 2.42.1"
+  }
+}

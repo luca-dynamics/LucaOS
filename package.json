@@ -19,6 +19,8 @@
     "server": "node server.js",
     "cortex": "node ops/scripts/run-cortex.cjs",
     "cortex:build": "node ops/scripts/build-cortex.cjs",
+    "sandbox:build-rootfs": "node ops/scripts/build-sandbox-rootfs.cjs",
+    "sandbox:smoke": "node ops/scripts/smoke-sandbox-host.cjs",
     "start:all": "concurrently -k -p \"[{name}]\" -n \"UI,CORE,BRAIN\" -c \"cyan,magenta,yellow\" \"npm run dev\" \"npm run server\" \"npm run cortex\"",
     "cleanup": "node ops/scripts/cleanup.cjs",
     "restore": "node ops/scripts/restore.js",

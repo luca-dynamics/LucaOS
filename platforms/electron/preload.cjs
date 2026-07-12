@@ -59,6 +59,15 @@ expose('luca', {
         getContext: () => ipcRenderer.invoke('mission-get-context'),
         getActive: () => ipcRenderer.invoke('mission-get-active'),
         archive: (missionId) => ipcRenderer.invoke('mission-archive', missionId)
+    },
+    sandbox: {
+        probe: () => ipcRenderer.invoke('sandbox:probe'),
+        create: (request) => ipcRenderer.invoke('sandbox:create', request),
+        list: () => ipcRenderer.invoke('sandbox:list'),
+        execute: (sessionId, command) => ipcRenderer.invoke('sandbox:execute', sessionId, command),
+        exportArtifact: (sessionId, request) => ipcRenderer.invoke('sandbox:exportArtifact', sessionId, request),
+        importArtifact: (sessionId, artifact) => ipcRenderer.invoke('sandbox:importArtifact', sessionId, artifact),
+        destroy: (sessionId) => ipcRenderer.invoke('sandbox:destroy', sessionId)
     }
 });
 

@@ -1,17 +1,39 @@
 import { useState, useEffect } from "react";
+import { isCapacitor, isElectron } from "../utils/env";
+
+export interface MobileLayoutSignals {
+  viewportWidth: number;
+  mobileUserAgent: boolean;
+  touchDevice: boolean;
+  desktopHost?: boolean;
+  nativeMobileHost?: boolean;
+}
+
+export interface UseMobileOptions {
+  /** Native desktop shells stay desktop regardless of window width. */
+  desktopHost?: boolean;
+  /** Native mobile shells stay mobile regardless of viewport emulation. */
+  nativeMobileHost?: boolean;
+}
+
+export function resolveMobileLayout(signals: MobileLayoutSignals): boolean {
+  if (signals.desktopHost) return false;
+  if (signals.nativeMobileHost) return true;
+  const narrowViewport = signals.viewportWidth < 768;
+  return narrowViewport ||
+    (signals.mobileUserAgent && narrowViewport) ||
+    (signals.touchDevice && narrowViewport);
+}
 
 /**
  * Hook to detect if the device is mobile
  * Returns true for mobile devices (phones/tablets)
  */
-export function useMobile(): boolean {
+export function useMobile(options: UseMobileOptions = {}): boolean {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
-      // Check viewport width (mobile breakpoint - only phones, not tablets)
-      const isMobileWidth = window.innerWidth < 768; // md breakpoint (tablets 768+ get desktop layout)
-
       // Check user agent for mobile devices
       const userAgent =
         navigator.userAgent || navigator.vendor || (window as any).opera;
@@ -24,12 +46,13 @@ export function useMobile(): boolean {
       const isTouchDevice =
         "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
-      // Consider mobile if: small screen (< 768px) OR mobile UA (excluding iPad) AND small screen
-      setIsMobile(
-        isMobileWidth ||
-          (isMobileUA && isMobileWidth) ||
-          (isTouchDevice && isMobileWidth)
-      );
+      setIsMobile(resolveMobileLayout({
+        viewportWidth: window.innerWidth,
+        mobileUserAgent: isMobileUA,
+        touchDevice: isTouchDevice,
+        desktopHost: options.desktopHost ?? isElectron(),
+        nativeMobileHost: options.nativeMobileHost ?? isCapacitor(),
+      }));
     };
 
     // Initial check
@@ -45,7 +68,7 @@ export function useMobile(): boolean {
       window.removeEventListener("resize", checkMobile);
       window.removeEventListener("orientationchange", checkMobile);
     };
-  }, []);
+  }, [options.desktopHost, options.nativeMobileHost]);
 
   return isMobile;
 }
