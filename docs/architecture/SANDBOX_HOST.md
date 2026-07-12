@@ -44,6 +44,9 @@ capabilities, enforce resource/network/workspace scope, and implement destroy.
    controlled `/workspace` paths. The rootfs artifact is not bundled yet, so
    this backend remains fail-closed.
 4. Playwright browser inside the sandbox with observation/action policies.
+   **Implemented:** the managed rootfs includes a headless Chromium runner;
+   `SandboxBrowserController` accepts bounded semantic actions and routes them
+   through the broker without exposing arbitrary evaluation or host browsing.
 5. Narrow host capability bridge and LucaLink embodiment grants.
 6. Resource limits, secret injection, persistence controls, audit UI, and
    recovery/cleanup.
