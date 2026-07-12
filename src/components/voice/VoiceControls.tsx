@@ -25,18 +25,15 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
   isVideoActive,
 
   onClose,
-  theme,
   canvasThemeColor,
   hideControls = false, // Default to false (show controls)
 }) => {
   return (
-    <div className="absolute top-0 left-0 w-full p-4 md:p-8 flex justify-between items-start z-[100] pointer-events-none">
+    <div className="absolute top-0 left-0 w-full p-3 sm:p-4 md:p-8 flex justify-between items-start z-[100] pointer-events-none">
       {/* Header Info */}
       <div className="flex flex-col gap-1 md:gap-2 pointer-events-auto max-w-[60%]">
         <h2
-          className={`font-display text-xl md:text-3xl ${
-            theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-white"
-          } tracking-[0.1em] md:tracking-[0.2em] font-bold flex items-center gap-2 md:gap-3`}
+          className="font-display text-xl md:text-3xl text-[var(--luca-text-primary)] tracking-[0.1em] md:tracking-[0.2em] font-bold flex items-center gap-2 md:gap-3"
         >
           <Icon
             name="Activity"
@@ -63,35 +60,40 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
       </div>
 
       {/* Control Buttons */}
-      <div className="flex gap-2 md:gap-4 pointer-events-auto">
+      <div className="flex max-[560px]:flex-col gap-1.5 sm:gap-2 md:gap-4 pointer-events-auto">
         {!hideControls && (
           <>
             <button
               onClick={onSettingsClick}
-              className={`cursor-pointer group p-3 md:p-4 rounded-full border ${
-                theme.themeName?.toLowerCase() === "lucagent"
-                  ? "border-slate-900/10 bg-white/60 text-slate-900 hover:bg-white/80"
-                  : "border-white/10 bg-black/60 text-slate-400 hover:text-white"
-              } transition-all glass-blur`}
+              className="cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border text-[var(--luca-text-secondary)] hover:text-[var(--luca-text-primary)] transition-all glass-blur"
+              style={{
+                backgroundColor: "var(--luca-surface-glass)",
+                borderColor:
+                  "color-mix(in srgb, var(--luca-accent-primary) 28%, transparent)",
+              }}
               title="Voice Settings"
             >
-              <Icon name="Settings" size={20} className="md:w-6 md:h-6" />
+              <Icon name="Settings" size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
             </button>
             <button
               onClick={onToggleVideo}
-              className={`cursor-pointer group p-3 md:p-4 rounded-full border transition-all ${
-                isVideoActive
-                  ? `${theme.bg} ${theme.border} ${theme.primary}`
-                  : theme.themeName?.toLowerCase() === "lucagent"
-                    ? "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-white/40 text-[var(--luca-info,#4f8cff)] hover:bg-white/60"
-                    : "bg-black/40 border-white/10 hover:bg-white/10 text-slate-400"
-              }`}
+              className="cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border transition-all"
+              style={{
+                backgroundColor: isVideoActive
+                  ? "var(--luca-accent-soft)"
+                  : "var(--luca-surface-glass)",
+                borderColor:
+                  "color-mix(in srgb, var(--luca-accent-primary) 28%, transparent)",
+                color: isVideoActive
+                  ? "var(--luca-accent-primary)"
+                  : "var(--luca-text-secondary)",
+              }}
               title="Toggle Vision"
             >
-              <Icon name="Camera" size={20} className="md:w-6 md:h-6" />
+              <Icon name="Camera" size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
               {isVideoActive && (
                 <div
-                  className={`absolute -bottom-6 left-1/2 -translate-x-1/2 text-[8px] font-mono ${theme.primary} whitespace-nowrap`}
+                  className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[8px] font-mono text-[var(--luca-accent-primary)] whitespace-nowrap"
                 >
                   VISION ON
                 </div>
@@ -102,17 +104,18 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
 
         <button
           onClick={onClose}
-          className={`cursor-pointer group p-3 md:p-4 rounded-full border ${
-            theme.themeName?.toLowerCase() === "lucagent"
-              ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-white/60 text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
-              : "border-white/10 bg-black/60 text-slate-400 hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] hover:text-white"
-          } transition-all z-[110] glass-blur`}
+          className="cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border text-[var(--luca-text-secondary)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] hover:text-[var(--luca-text-primary)] transition-all z-[110] glass-blur"
+          style={{
+            backgroundColor: "var(--luca-surface-glass)",
+            borderColor:
+              "color-mix(in srgb, var(--luca-accent-primary) 28%, transparent)",
+          }}
           title="Terminate Voice Uplink"
         >
           <Icon
             name="CloseCircle"
-            size={20}
-            className="text-slate-400 group-hover:text-white md:w-6 md:h-6"
+            size={18}
+            className="text-slate-400 group-hover:text-white sm:w-5 sm:h-5 md:w-6 md:h-6"
           />
         </button>
       </div>

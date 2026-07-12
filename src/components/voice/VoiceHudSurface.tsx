@@ -9,6 +9,7 @@ import { useTheme } from "../../hooks/useTheme";
 import { settingsService } from "../../services/settingsService";
 import type { LucaSettings } from "../../services/settingsService";
 import { getLucaSkinMaterialVariables } from "../../styles/lucaSkinMaterialBridge";
+import { resolveVoiceHudSkinPalette } from "./voiceHudSkinModel";
 
 const TypewriterText = ({ text }: { text: string }) => {
   const [displayedText, setDisplayedText] = useState("");
@@ -121,7 +122,6 @@ export function VoiceHudSurface({
   localCoreReadinessReason,
   routingHealth = "stable",
   routeRecommendation = {},
-  adaptiveRouteApplied = false,
   realDB = -60,
   dominantFrequency = 0,
   realtimeStatus,
@@ -167,10 +167,28 @@ export function VoiceHudSurface({
       }),
     [selectedSkinId],
   );
-  const themeColor =
-    theme.hex ||
-    voiceSkinVariables["--luca-accent-primary"] ||
-    palette.primary;
+  const voiceVisualizerSkinColors = useMemo(
+    () =>
+      resolveVoiceHudSkinPalette(voiceSkinVariables, {
+        primary: theme.hex || palette.primary,
+        secondary: palette.secondary,
+        background: palette.dark,
+      }),
+    [palette.dark, palette.primary, palette.secondary, theme.hex, voiceSkinVariables],
+  );
+  const themeColor = voiceVisualizerSkinColors.primary;
+  const voiceSkinStyle = useMemo(
+    () =>
+      ({
+        ...voiceSkinVariables,
+        "--app-bg-main": voiceSkinVariables["--luca-background-liquid"],
+        "--app-bg-tint": voiceSkinVariables["--luca-surface-glass"],
+        "--app-text-main": voiceSkinVariables["--luca-text-primary"],
+        "--app-text-muted": voiceSkinVariables["--luca-text-secondary"],
+        "--app-border-main": voiceSkinVariables["--luca-accent-soft"],
+      }) as React.CSSProperties,
+    [voiceSkinVariables],
+  );
 
   useEffect(() => {
     const handleSettingsChange = (settings: LucaSettings) => {
@@ -231,17 +249,16 @@ export function VoiceHudSurface({
       data-voice-hud-surface="original"
       className="fixed inset-0 z-[200] flex flex-col items-center justify-center animate-in fade-in duration-500"
       style={{
-        ...voiceSkinVariables,
-        backgroundColor: transparentBackground
+        ...voiceSkinStyle,
+        background: transparentBackground
           ? "transparent"
-          : "var(--app-bg-main)",
-        opacity: transparentBackground ? 1 : "var(--app-bg-opacity, 0.9)",
+          : "var(--luca-background-liquid)",
         backdropFilter: transparentBackground
           ? "none"
-          : `blur(var(--app-bg-blur, 40px))`,
+          : "blur(var(--luca-material-blur, 40px))",
         WebkitBackdropFilter: transparentBackground
           ? "none"
-          : `blur(var(--app-bg-blur, 40px))`,
+          : "blur(var(--luca-material-blur, 40px))",
       }}
     >
       <div
@@ -261,23 +278,17 @@ export function VoiceHudSurface({
               backgroundImage: `linear-gradient(${themeColor}1A 1px, transparent 1px)`,
             }}
           >
+            <div className="absolute top-10 left-10 border-t-2 border-l-2 w-16 h-16" style={{ borderColor: themeColor }} />
+            <div className="absolute top-10 right-10 border-t-2 border-r-2 w-16 h-16" style={{ borderColor: themeColor }} />
+            <div className="absolute bottom-10 left-10 border-b-2 border-l-2 w-16 h-16" style={{ borderColor: themeColor }} />
+            <div className="absolute bottom-10 right-10 border-b-2 border-r-2 w-16 h-16" style={{ borderColor: themeColor }} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border opacity-50 w-64 h-64 rounded-full animate-pulse" style={{ borderColor: themeColor }} />
             <div
-              className={`absolute top-10 left-10 border-t-2 border-l-2 ${theme.border} w-16 h-16`}
-            />
-            <div
-              className={`absolute top-10 right-10 border-t-2 border-r-2 ${theme.border} w-16 h-16`}
-            />
-            <div
-              className={`absolute bottom-10 left-10 border-b-2 border-l-2 ${theme.border} w-16 h-16`}
-            />
-            <div
-              className={`absolute bottom-10 right-10 border-b-2 border-r-2 ${theme.border} w-16 h-16`}
-            />
-            <div
-              className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border ${theme.border} opacity-50 w-64 h-64 rounded-full animate-pulse`}
-            />
-            <div
-              className={`absolute top-20 left-1/2 -translate-x-1/2 ${theme.bg} px-4 py-1 ${theme.primary} text-xs font-bold font-mono tracking-widest`}
+              className="absolute top-20 left-1/2 -translate-x-1/2 px-4 py-1 text-xs font-bold font-mono tracking-widest"
+              style={{
+                backgroundColor: "var(--luca-accent-soft)",
+                color: themeColor,
+              }}
             >
               LIVE VISION FEED ACTIVE
             </div>
@@ -292,6 +303,7 @@ export function VoiceHudSurface({
         }
         persona={persona as any}
         lowPower={isVisionActive}
+        skinColors={voiceVisualizerSkinColors}
       />
       <VoiceStatusOrb
         isVadActive={isVadActive}
@@ -327,14 +339,17 @@ export function VoiceHudSurface({
         </div>
       )}
 
-      <div className="absolute bottom-20 sm:bottom-32 w-full px-4 sm:px-8 md:max-w-4xl flex flex-col items-center justify-center z-30">
+      <div
+        className="absolute w-full px-4 sm:px-8 md:max-w-4xl flex flex-col items-center justify-center z-30"
+        style={{ bottom: "clamp(3.5rem, 14vh, 8rem)" }}
+      >
         <div className="text-center px-4 sm:px-6 md:px-8 py-3 sm:py-4 min-h-[60px] sm:min-h-[80px] w-full max-w-[90vw] sm:max-w-full">
           <div className="mb-2 sm:mb-3 flex items-center justify-center gap-2">
             <Icon
               name="Microphone"
               size={14}
               className="animate-pulse"
-              style={{ color: theme.primary }}
+              style={{ color: themeColor }}
               variant="Linear"
             />
             <span className="text-[10px] tracking-[0.4em] font-bold uppercase text-[var(--app-text-main)] opacity-80">
@@ -581,7 +596,8 @@ export function VoiceHudSurface({
           <Icon
             name="Eye"
             size={10}
-            className={`md:w-3 md:h-3 ${isVideoActive ? theme.primary : ""}`}
+            className="md:w-3 md:h-3"
+            style={{ color: isVideoActive ? themeColor : undefined }}
             variant="Linear"
           />
           Vision {isVideoActive ? "on" : "off"}
