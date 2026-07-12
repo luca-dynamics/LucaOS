@@ -56,6 +56,7 @@ import {
   markGuestSessionAuthChallenge,
   markGuestSessionAuthenticated,
   markGuestSessionDisconnected,
+  markGuestSessionRevoked,
   type LucaLinkGuestInboundInput,
   type LucaLinkGuestInboundResult,
   type LucaLinkGuestSessionRecord,
@@ -1864,6 +1865,33 @@ class LucaLinkService {
 
   getGuestSecuritySummary(): LucaLinkGuestSessionSummary {
     return this.guestSessionStore.getSecuritySummary();
+  }
+
+  revokeGuestSession(
+    sessionId: string,
+    options: { now?: number; reason?: string } = {},
+  ): LucaLinkGuestSessionRecord | undefined {
+    const revoked = this.guestSessionStore.updateSecuritySession(
+      sessionId,
+      (session) => {
+        const updated = markGuestSessionRevoked(session, {
+          now: options.now,
+        });
+        return {
+          ...updated,
+          warnings: [
+            ...updated.warnings,
+            options.reason
+              ? `Revoked by Primary Host: ${options.reason}`
+              : "Revoked by Primary Host.",
+          ],
+        };
+      },
+    );
+    if (revoked) {
+      this.guestSessionStore.closeAndRemovePeerSession(sessionId);
+    }
+    return revoked;
   }
 
   getGuestInboundAudit(): LucaLinkGuestInboundResult[] {

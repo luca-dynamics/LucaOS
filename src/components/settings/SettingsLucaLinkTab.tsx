@@ -131,8 +131,9 @@ import type {
 // Host adaptation intelligence is model-only.
 // generated adapters are not executed in this PR
 // Primary Host approval, sandbox checks, and future execution controls
-// Guest security sessions are read-only.
-// This view does not revoke guests, regenerate invites, or change guest auth, PIN, or WebRTC behavior.
+// Guest access controls are local-first: revoke can end a tracked guest session
+// locally, while invite regeneration, PIN setup, and WebRTC setup stay in the
+// dedicated Link a device / guest access flow.
 // Pairing request previews are model-only: no real QR scanning, pairing code verification, network discovery, transport, trust persistence, or linked-host writes.
 
 // Guest Access Section (Long Distance via Relay)
@@ -851,6 +852,9 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const [deviceTrustActionMessage, setDeviceTrustActionMessage] = useState<
     string | null
   >(null);
+  const [guestSessionActionMessage, setGuestSessionActionMessage] = useState<
+    string | null
+  >(null);
   const [deviceCenterSnapshot, setDeviceCenterSnapshot] =
     useState<LucaLinkDeviceCenterSnapshot>(readLucaLinkDeviceCenterSnapshot());
   const [copied, setCopied] = useState(false);
@@ -1300,6 +1304,26 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       result.valid
         ? `${device.displayName} updated locally. ${result.warnings.join(" ")}`.trim()
         : `${device.displayName} was not changed: ${result.errors.concat(result.warnings).join(" ")}`,
+    );
+    refreshDeviceCenter();
+  };
+
+  const handleGuestSessionAction = (
+    session: LucaLinkGuestSessionRecord,
+    action: "revoke",
+  ) => {
+    if (action !== "revoke") return;
+    const result = lucaLinkManager.console.revokeGuestSession(
+      session.sessionId,
+      {
+        reason:
+          "Ended from LucaLink Device Center; local guest session access revoked.",
+      },
+    );
+    setGuestSessionActionMessage(
+      result
+        ? `Guest ${session.sessionId} access ended locally.`
+        : `Guest ${session.sessionId} was not found.`,
     );
     refreshDeviceCenter();
   };
@@ -2930,11 +2954,23 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       {deviceCenterTab === "guests" && (
         <SettingsSection
           title="Guest Sessions"
-          description="Guest access events are observed through LucaLink runtime diagnostics. Detailed guest session controls will be added in a later hardening PR."
+          description="Review guest access, end tracked guest sessions locally, and inspect inbound protection counters."
           icon="Globus"
           accentColor={theme.hex}
           isMobile={isMobile}
         >
+          {guestSessionActionMessage && (
+            <SettingsCard>
+              <p className="text-sm font-semibold">
+                {guestSessionActionMessage}
+              </p>
+              <p className="mt-1 text-xs opacity-70">
+                Local only; invite generation, PIN setup, and WebRTC setup stay
+                in the Link a device guest access flow.
+              </p>
+            </SettingsCard>
+          )}
+
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <SettingsStatusCard
               label="Tracked guests"
@@ -2951,7 +2987,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             <SettingsStatusCard
               label="Expired / disconnected"
               value={`${deviceCenterSnapshot.guestSecuritySummary.expired} / ${deviceCenterSnapshot.guestSecuritySummary.disconnected}`}
-              detail="No guest transport controls are exposed here."
+              detail={`${deviceCenterSnapshot.guestSecuritySummary.revoked} revoked locally.`}
               accentColor={theme.hex}
             />
             <SettingsStatusCard
@@ -2962,14 +2998,14 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             />
           </div>
           <SettingsCard>
-            {/* This view does not revoke guests, regenerate invites, or change guest auth, PIN, or WebRTC behavior. */}
             <p className="text-sm font-semibold">
-              Guest security sessions are read-only.
+              Guest access controls
             </p>
             <p className="mt-1 text-xs opacity-70">
               Guest host records are derived from existing guest security
-              session state. This view does not revoke guests, regenerate
-              invites, or change guest auth, PIN, or WebRTC behavior.
+              session state. Ending access marks a guest revoked locally and
+              closes any local peer connection. Invite regeneration, PIN setup,
+              and WebRTC setup remain in the Link a device guest flow.
             </p>
             {deviceCenterSnapshot.guestSecuritySessions.length === 0 ? (
               <p className="mt-3 text-xs opacity-70">
@@ -2990,7 +3026,22 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       <p className="text-sm font-semibold">
                         Guest {session.sessionId}
                       </p>
-                      <StatusBadge status={session.status} />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusBadge status={session.status} />
+                        {session.status !== "revoked" &&
+                          session.status !== "expired" &&
+                          session.status !== "disconnected" && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleGuestSessionAction(session, "revoke")
+                              }
+                              style={settingsControlInlineStyle}
+                            >
+                              End access
+                            </button>
+                          )}
+                      </div>
                     </div>
                     <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
                       <DetailField
@@ -3884,11 +3935,10 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     <div className="text-[15px] font-semibold text-[var(--app-text-main)]">
                       Link a device
                     </div>
-                    <p className="mt-1 text-sm leading-relaxed text-[var(--app-text-muted)]">
-                      Scan a QR from your phone and it becomes part of Luca's
-                      body. Pairing tokens are minted by this machine and
-                      expire after five minutes; nothing connects without
-                      pairing.
+                     <p className="mt-1 text-sm leading-relaxed text-[var(--app-text-muted)]">
+                      Scan a QR from your phone to pair it with this LucaOS
+                      host. Pairing tokens are minted by this machine and expire
+                      after five minutes; nothing connects without pairing.
                     </p>
                     <button
                       type="button"

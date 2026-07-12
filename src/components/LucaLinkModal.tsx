@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import { lucaLinkManager } from "../services/lucaLink/manager";
 import { DeviceList } from "./lucaLink/DeviceList";
 import { ErrorToast } from "./lucaLink/ErrorToast";
+import { createLucaLinkModalReadinessItems } from "./lucaLink/lucaLinkModalReadiness";
 import type { Device, LucaLinkError } from "../services/lucaLink/types";
 import { ConnectionState } from "../services/lucaLink/types";
 import { API_BASE_URL, SERVER_HTTP_PORT, WS_PORT, RELAY_SERVER_URL, getAuthHeaders, waitForAuth } from "../config/api";
@@ -12,6 +13,34 @@ interface LucaLinkModalProps {
   onClose: () => void;
   localIp: string;
 }
+
+const readinessToneStyle = (tone: "ready" | "waiting" | "attention") => {
+  if (tone === "ready") {
+    return {
+      background:
+        "color-mix(in srgb, var(--luca-success,#4fbf7a) 8%, transparent)",
+      borderColor:
+        "color-mix(in srgb, var(--luca-success,#4fbf7a) 30%, transparent)",
+      color: "var(--luca-success,#4fbf7a)",
+    };
+  }
+
+  if (tone === "attention") {
+    return {
+      background:
+        "color-mix(in srgb, var(--luca-danger,#f87171) 8%, transparent)",
+      borderColor:
+        "color-mix(in srgb, var(--luca-danger,#f87171) 30%, transparent)",
+      color: "var(--luca-danger,#f87171)",
+    };
+  }
+
+  return {
+    background: "var(--luca-surface-glass, rgba(255,255,255,0.03))",
+    borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.08))",
+    color: "var(--app-text-muted)",
+  };
+};
 
 const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
   onClose,
@@ -50,7 +79,7 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
           // Local flow: the socket server must be running and the token must
           // come from IT — the server rejects tokens it didn't mint. Auth
           // headers are sent explicitly (belt and braces over the global
-          // interceptor) after the boot token handshake settles.
+          // interceptor) after the boot token setup settles.
           await waitForAuth();
           const started = await fetch(`${API_BASE_URL}/api/luca-link/start`, {
             method: "POST",
@@ -209,6 +238,24 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
       : connectionState === ConnectionState.DISCONNECTED
         ? "var(--luca-border-strong, rgba(255,255,255,0.25))"
         : "var(--luca-warning, #e0b15a)";
+  const deviceTrustSummary = lucaLinkManager.console.getDeviceTrustSummary();
+  const hostConnectionSummary =
+    lucaLinkManager.console.getFreshHostConnectionSummary();
+  const guestSecuritySummary =
+    lucaLinkManager.console.getGuestSecuritySummary();
+  const readinessItems = createLucaLinkModalReadinessItems({
+    connectionState,
+    isInitialized,
+    initError,
+    linkedDevices: devices.length,
+    trustedDevices: deviceTrustSummary.trusted,
+    blockedDevices: deviceTrustSummary.blocked,
+    onlineHosts: hostConnectionSummary.online,
+    activeGuests: guestSecuritySummary.active,
+    pendingGuestAuth: guestSecuritySummary.authChallenge,
+    deniedGuestInbound: guestSecuritySummary.deniedGuestInbound,
+    rateLimitedGuestInbound: guestSecuritySummary.rateLimitedGuestInbound,
+  });
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4">
@@ -254,9 +301,46 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-5">
           <p className="text-sm leading-relaxed text-[var(--app-text-muted)]">
-            Scan this from your phone — it becomes part of my body. I can only
-            use what you allow, and you can unlink it any time.
+            Scan this from your phone to pair it with this LucaOS host. Luca can
+            only use capabilities you approve, and you can unlink the device any
+            time.
           </p>
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            {readinessItems.map((item) => {
+              const toneStyle = readinessToneStyle(item.tone);
+              return (
+                <div
+                  key={item.id}
+                  className="min-h-[74px] rounded-xl border px-3 py-2.5"
+                  style={{
+                    background: toneStyle.background,
+                    borderColor: toneStyle.borderColor,
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--app-text-muted)]">
+                      {item.label}
+                    </p>
+                    <span
+                      className="h-1.5 w-1.5 flex-none rounded-full"
+                      style={{ background: toneStyle.color }}
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <p
+                    className="mt-1 truncate text-[13px] font-semibold"
+                    style={{ color: toneStyle.color }}
+                  >
+                    {item.value}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-[var(--app-text-muted)]">
+                    {item.detail}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
 
           <div className="mt-5 flex flex-col items-center">
             <div

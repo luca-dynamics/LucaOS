@@ -31,7 +31,7 @@ describe("Settings LucaLink Device Center runtime safety", () => {
       "getEmbodiedHostCapabilityEnvelopes",
       "getAdapterDrafts",
     ]) {
-      expect(snapshot).toContain(`lucaLink.${getter}()`);
+      expect(snapshot).toContain(`lucaLinkManager.console.${getter}()`);
     }
     expect(lucaLinkSource).toContain("hostConnections.length === 0");
     expect(lucaLinkSource).toContain("bridgeReviews.map");
