@@ -145,7 +145,9 @@ microphones, cameras, credentials, signing keys, or LucaLink devices.
 7. Fleet UI for capacity, active sessions, switching, persistence, audit, and
    emergency destruction. **Foundation implemented:** `SandboxFleetViewModel`
    produces operator-facing backend capacity, session switching, expiry cleanup,
-   artifact gate, snapshot, and host-fallback status for future UI surfaces.
+   artifact gate, snapshot, and host-fallback status. `SandboxFleetPanel` renders
+   that state and exposes typed lifecycle callbacks without inventing a
+   renderer-side runtime.
 
 ## Non-goals
 
