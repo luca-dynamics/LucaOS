@@ -40,8 +40,9 @@ capabilities, enforce resource/network/workspace scope, and implement destroy.
 3. WSL2 adapter and per-session workspace mounting. **Implemented:** disposable
    per-session distro import/unregister lifecycle, managed-rootfs requirement,
    per-command private-network requirement, and automatic Docker-to-WSL2
-   backend selection. The
-   rootfs artifact is not bundled yet, so this backend remains fail-closed.
+   backend selection, plus adapter-level artifact export/import through
+   controlled `/workspace` paths. The rootfs artifact is not bundled yet, so
+   this backend remains fail-closed.
 4. Playwright browser inside the sandbox with observation/action policies.
 5. Narrow host capability bridge and LucaLink embodiment grants.
 6. Resource limits, secret injection, persistence controls, audit UI, and
@@ -65,3 +66,13 @@ The managed WSL rootfs is reproducible from `sandbox/rootfs/Dockerfile` using
 the archive is a release artifact and should not be committed as source.
 The WSL2 adapter verifies that SHA-256 before reporting itself available or
 importing any session; a missing, malformed, or mismatched digest fails closed.
+
+Rootless Podman is available as a Linux-native container backend. It reports
+availability only when `podman info` confirms rootless execution, then launches
+containers with no-new-privileges, read-only root, resource limits, scoped
+workspace mounting, and explicit network posture.
+
+Windows Sandbox is available as a Windows GUI/workspace backend when
+`WindowsSandbox.exe` exists. It launches a generated `.wsb` file with networking
+and vGPU disabled and a scoped mapped workspace folder. It does not expose the
+terminal capability and cannot be selected for command execution.
