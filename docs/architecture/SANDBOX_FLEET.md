@@ -150,7 +150,8 @@ microphones, cameras, credentials, signing keys, or LucaLink devices.
    produces operator-facing backend capacity, session switching, expiry cleanup,
    artifact gate, snapshot, and host-fallback status. `SandboxFleetPanel` renders
    that state and exposes typed lifecycle callbacks without inventing a
-   renderer-side runtime.
+   renderer-side runtime. `SandboxFleetController` now binds those callbacks to
+   broker-owned switching, snapshot, cleanup, destruction, and artifact gates.
 
 ## Non-goals
 
