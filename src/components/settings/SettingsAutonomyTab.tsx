@@ -1,4 +1,5 @@
 import React from "react";
+import SandboxRuntimeSettingsPanel from "../sandbox/SandboxRuntimeSettingsPanel";
 import { LucaSettings } from "../../services/settingsService";
 import {
   SettingsAdvancedDisclosure,
@@ -213,6 +214,7 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
         title="Advanced Details"
         description="Advanced autonomy safeguards, planning traces, tool execution diagnostics, and autonomy logs."
       >
+        <SandboxRuntimeSettingsPanel />
         <SettingsRow
           label="Shadow execution safeguard"
           description="Preview actions before Luca runs or surfaces them. Use only when you understand the mission review flow."

@@ -12,3 +12,7 @@ digests. Installation is committed only after full verification.
 `SandboxBackendSetupService` converts the release matrix and live host evidence
 into user-facing readiness, missing-asset, missing-feature, certification, and
 preview blockers. It never weakens placement or enables host fallback.
+
+`SandboxRuntimeSettingsPanel` is mounted in advanced Autonomy settings and reads
+only the narrow Electron sandbox bridge. It exposes status, sessions, snapshots,
+expiry cleanup, and emergency destruction without renderer command authority.
