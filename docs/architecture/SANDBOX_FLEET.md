@@ -139,9 +139,9 @@ microphones, cameras, credentials, signing keys, or LucaLink devices.
    **Implemented as guarded adapters:** rootless Podman, Firecracker/KVM, and
    Apple Virtualization Framework. Native helpers and images remain release
    prerequisites and missing attestation blocks placement.
-5. Windows Sandbox or Hyper-V adapter. **Partially implemented:** Windows
-   Sandbox GUI/workspace adapter is available without terminal execution;
-   Hyper-V remains.
+5. Windows Sandbox or Hyper-V adapter. **Implemented as guarded adapters:**
+   Windows Sandbox provides GUI/workspace isolation; Hyper-V provides managed
+   VM command execution when its feature and signed guest image are available.
 6. Paired-host and remote placement, including Apple-hardware macOS workers.
 7. Fleet UI for capacity, active sessions, switching, persistence, audit, and
    emergency destruction. **Foundation implemented:** `SandboxFleetViewModel`
