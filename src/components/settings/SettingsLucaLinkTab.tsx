@@ -1219,28 +1219,28 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
     refreshDeviceCenter();
   };
 
-  const handleCreateSampleConversationHandoff = () => {
+  const handleStartContinueOnHost = () => {
     const result = lucaLinkManager.console.createConversationHandoff({
-      conversationTitle: "Sample conversation handoff",
+      conversationTitle: "Continue current conversation",
       messageSummary:
-        "A safe local sample handoff preview for Device Center visibility.",
-      currentTask: "Review LucaLink handoff state in Device Center.",
+        "A protected continuation preview for the current LucaOS conversation.",
+      currentTask: "Continue this work from another trusted LucaLink host.",
       activeIntent:
-        "Continue on a trusted LucaLink device after approval if required.",
+        "Resume the visible conversation context after Primary Host approval if required.",
       userVisibleContext: {
-        source: "Device Center sample",
+        source: "Device Center continue flow",
         rawPayloadVisible: false,
       },
       sourceDeviceId: currentDeviceId,
       requestedByDeviceId: currentDeviceId,
       reason:
-        "Created locally from Device Center as a sample model-only handoff.",
+        "Created locally from Device Center as a protected continue-on-host preview.",
     });
     setHandoffActionMessage(
       result.valid
-        ? "Sample conversation handoff created locally. No payload was sent."
+        ? "Continue request prepared locally. Review the payload preview before approval; nothing was sent."
         : result.errors.concat(result.warnings).join(" ") ||
-            "Sample handoff was not created.",
+            "Continue request was not created.",
     );
     refreshDeviceCenter();
   };
@@ -3199,14 +3199,18 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     Handoff does not execute tools or mutate remote devices.
                   </li>
                 </ul>
+                <p className="mt-3 text-xs opacity-70">
+                  Continue on another host prepares a reviewable payload preview
+                  for approval. It does not send the handoff immediately.
+                </p>
               </div>
               <button
                 type="button"
-                onClick={handleCreateSampleConversationHandoff}
+                onClick={handleStartContinueOnHost}
                 className="rounded-lg border px-3 py-2 text-sm font-semibold"
                 style={settingsControlInlineStyle}
               >
-                Create sample conversation handoff
+                Continue on another host
               </button>
             </div>
             {handoffActionMessage && (
