@@ -171,3 +171,18 @@ export interface SandboxHostCapabilityRequest {
   consumedAt?: string;
   hostFallbackAllowed: false;
 }
+
+export interface SandboxRemoteWorkerDescriptor {
+  workerId: string;
+  hostId: string;
+  hostPlatform: SandboxHostPlatform;
+  locality: "paired_host" | "remote";
+  isolationTier: SandboxIsolationTier;
+  appleHardware: boolean;
+  trust: SandboxFleetBackend["trust"];
+  capacity: number;
+  guestOs: SandboxGuestOs[];
+  capabilities: SandboxCapability[];
+  images: SandboxFleetBackend["images"];
+  attestationDigest?: string;
+}
