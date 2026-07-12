@@ -143,7 +143,9 @@ microphones, cameras, credentials, signing keys, or LucaLink devices.
    Hyper-V remains.
 6. Paired-host and remote placement, including Apple-hardware macOS workers.
 7. Fleet UI for capacity, active sessions, switching, persistence, audit, and
-   emergency destruction.
+   emergency destruction. **Foundation implemented:** `SandboxFleetViewModel`
+   produces operator-facing backend capacity, session switching, expiry cleanup,
+   artifact gate, snapshot, and host-fallback status for future UI surfaces.
 
 ## Non-goals
 
