@@ -26,6 +26,16 @@ function createSandboxAdapterRouter(adapters) {
             if (!adapter?.execute) throw new Error('Sandbox runtime backend cannot execute commands.');
             return adapter.execute(runtime, command);
         },
+        async exportArtifact(runtime, request) {
+            const adapter = byKind.get(runtime?.backend);
+            if (!adapter?.exportArtifact) return null;
+            return adapter.exportArtifact(runtime, request);
+        },
+        async importArtifact(runtime, artifact) {
+            const adapter = byKind.get(runtime?.backend);
+            if (!adapter?.importArtifact) return null;
+            return adapter.importArtifact(runtime, artifact);
+        },
         async destroy(runtime) {
             const adapter = byKind.get(runtime?.backend);
             if (!adapter) throw new Error('Sandbox runtime backend is unavailable for cleanup.');

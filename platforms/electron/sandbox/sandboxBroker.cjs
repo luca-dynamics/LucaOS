@@ -101,11 +101,18 @@ function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
         async exportArtifact(sessionId, request = {}) {
             const session = requireSession(sessionId, 'workspace_read');
             const { normalized, filePath } = workspaceFilePath(session, request.relativePath);
-            const stat = fsApi.statSync(filePath);
-            if (!stat.isFile()) throw new Error('Sandbox artifact export path must be a file.');
-            if (stat.size <= 0) throw new Error('Sandbox artifact export requires non-empty content.');
-            if (stat.size > MAX_ARTIFACT_BYTES) throw new Error('Sandbox artifact exceeds the transfer size limit.');
-            const bytes = fsApi.readFileSync(filePath);
+            const exported = adapter.exportArtifact
+                ? await adapter.exportArtifact(session.runtime, { relativePath: normalized, maxBytes: MAX_ARTIFACT_BYTES })
+                : null;
+            if (!exported) {
+                const stat = fsApi.statSync(filePath);
+                if (!stat.isFile()) throw new Error('Sandbox artifact export path must be a file.');
+                if (stat.size <= 0) throw new Error('Sandbox artifact export requires non-empty content.');
+                if (stat.size > MAX_ARTIFACT_BYTES) throw new Error('Sandbox artifact exceeds the transfer size limit.');
+            }
+            const bytes = Buffer.from(exported?.bytes || fsApi.readFileSync(filePath));
+            if (bytes.byteLength <= 0) throw new Error('Sandbox artifact export requires non-empty content.');
+            if (bytes.byteLength > MAX_ARTIFACT_BYTES) throw new Error('Sandbox artifact exceeds the transfer size limit.');
             const digest = digestBytes(bytes);
             return {
                 artifactId: crypto.randomUUID(),
@@ -130,8 +137,12 @@ function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
             if (bytes.byteLength > MAX_ARTIFACT_BYTES) throw new Error('Sandbox artifact exceeds the transfer size limit.');
             const digest = digestBytes(bytes);
             if (typeof artifact.digest !== 'string' || artifact.digest !== digest) throw new Error('Sandbox artifact digest mismatch.');
-            fsApi.mkdirSync(path.dirname(filePath), { recursive: true });
-            fsApi.writeFileSync(filePath, bytes, { flag: 'wx' });
+            if (adapter.importArtifact) {
+                await adapter.importArtifact(session.runtime, { relativePath: normalized, bytes, maxBytes: MAX_ARTIFACT_BYTES });
+            } else {
+                fsApi.mkdirSync(path.dirname(filePath), { recursive: true });
+                fsApi.writeFileSync(filePath, bytes, { flag: 'wx' });
+            }
             return {
                 imported: true,
                 artifactId: artifact.artifactId || null,

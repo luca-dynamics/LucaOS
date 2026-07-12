@@ -46,3 +46,29 @@ test('imports a unique WSL2 distro and requires per-command network isolation', 
     assert.ok(calls[0].includes('--version'));
     assert.equal(calls.length, 1);
 });
+
+test('exports and imports artifacts through WSL2 workspace commands', async () => {
+    const calls = [];
+    const inputs = [];
+    const adapter = createWsl2SandboxAdapter({
+        platform: 'win32', rootfsPath, installRoot,
+        checksumPath,
+        fsApi: verifiedFs,
+        execFile: async (_command, args, options = {}) => {
+            calls.push(args);
+            if (options.input) inputs.push(options.input);
+            return { stdout: Buffer.from('artifact') };
+        }
+    });
+    const runtime = { distroName: 'LucaOS-Sandbox-test', networkEnabled: false };
+
+    const exported = await adapter.exportArtifact(runtime, { relativePath: 'dist/app.zip', maxBytes: 1024 });
+    await adapter.importArtifact(runtime, { relativePath: 'incoming/app.zip', bytes: Buffer.from('artifact'), maxBytes: 1024 });
+
+    assert.deepEqual(exported, { bytes: Buffer.from('artifact') });
+    assert.deepEqual(calls[0].slice(0, 6), ['--distribution', runtime.distroName, '--user', 'luca', '--cd', '/workspace']);
+    assert.ok(calls[0].includes('/workspace/dist/app.zip'));
+    assert.ok(calls[1].includes('/workspace/incoming'));
+    assert.ok(calls[1].includes('/workspace/incoming/app.zip'));
+    assert.equal(String(inputs[0]), 'artifact');
+});
