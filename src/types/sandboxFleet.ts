@@ -216,3 +216,60 @@ export interface SandboxRemoteWorkerDescriptor {
   images: SandboxFleetBackend["images"];
   attestationDigest?: string;
 }
+
+export interface SandboxFleetBackendView {
+  backendId: string;
+  kind: SandboxFleetBackend["kind"];
+  hostId: string;
+  hostPlatform: SandboxHostPlatform;
+  locality: SandboxLocality;
+  isolationTier: SandboxIsolationTier;
+  available: boolean;
+  trust: SandboxFleetBackend["trust"];
+  capacity: number;
+  activeSessions: number;
+  remainingSlots: number;
+  guestOs: SandboxGuestOs[];
+  capabilities: SandboxCapability[];
+  blockedReason?: string;
+}
+
+export interface SandboxFleetSessionView {
+  sessionId: string;
+  missionId: string;
+  status: SandboxFleetSessionStatus;
+  backendId: string;
+  guestOs: SandboxGuestOs;
+  imageId: string;
+  persistence: SandboxSessionPersistence;
+  active: boolean;
+  switchable: boolean;
+  emergencyDestroyAllowed: boolean;
+  expiresAt?: string;
+  expired: boolean;
+  needsCleanup: boolean;
+  lastSnapshotId?: string;
+}
+
+export interface SandboxFleetArtifactView {
+  artifactId: string;
+  missionId: string;
+  sourceSessionId: string;
+  kind: SandboxArtifactKind;
+  name: string;
+  digest: string;
+  scanStatus: SandboxArtifactScanStatus;
+  approvalStatus: SandboxArtifactApprovalStatus;
+  importCount: number;
+  blockedReason?: string;
+}
+
+export interface SandboxFleetOperatorView {
+  missionId?: string;
+  backends: SandboxFleetBackendView[];
+  sessions: SandboxFleetSessionView[];
+  artifacts: SandboxFleetArtifactView[];
+  snapshots: SandboxFleetSessionSnapshot[];
+  cleanupCount: number;
+  hostFallbackAllowed: false;
+}
