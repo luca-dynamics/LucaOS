@@ -6,6 +6,7 @@ const ALLOWED_CAPABILITIES = new Set(['terminal', 'workspace_read', 'workspace_w
 const MAX_ARGUMENTS = 128;
 const MAX_ARGUMENT_LENGTH = 8192;
 const MAX_TIMEOUT_MS = 120_000;
+const MAX_ARTIFACT_BYTES = 128 * 1024 * 1024;
 
 function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
     if (!adapter) throw new Error('Sandbox adapter is required.');
@@ -33,6 +34,32 @@ function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
         return { executable, args: [...args], timeoutMs };
     }
 
+    function normalizeArtifactPath(relativePath) {
+        const normalized = typeof relativePath === 'string' ? relativePath.replaceAll('\\', '/').trim() : '';
+        if (!normalized || normalized.startsWith('/') || /^[a-zA-Z]:/.test(normalized)) throw new Error('Sandbox artifact path must be relative.');
+        if (normalized.split('/').some((part) => !part || part === '..')) throw new Error('Sandbox artifact path must stay inside the workspace.');
+        return normalized;
+    }
+
+    function workspaceFilePath(session, relativePath) {
+        const normalized = normalizeArtifactPath(relativePath);
+        const filePath = path.resolve(session.workspacePath, ...normalized.split('/'));
+        const relative = path.relative(path.resolve(session.workspacePath), filePath);
+        if (relative.startsWith('..') || path.isAbsolute(relative)) throw new Error('Sandbox artifact path escaped its workspace.');
+        return { normalized, filePath };
+    }
+
+    function digestBytes(bytes) {
+        return `sha256:${crypto.createHash('sha256').update(bytes).digest('hex')}`;
+    }
+
+    function requireSession(sessionId, capability) {
+        const session = sessions.get(sessionId);
+        if (!session || session.status !== 'running') throw new Error('Running sandbox session not found.');
+        if (capability && !session.capabilities.includes(capability)) throw new Error(`Sandbox session has no ${capability} capability.`);
+        return session;
+    }
+
     return {
         probe: () => adapter.probe(),
         async create(request) {
@@ -57,9 +84,7 @@ function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
         },
         list: () => [...sessions.values()].map((session) => ({ ...session })),
         async execute(sessionId, command) {
-            const session = sessions.get(sessionId);
-            if (!session || session.status !== 'running') throw new Error('Running sandbox session not found.');
-            if (!session.capabilities.includes('terminal')) throw new Error('Sandbox session has no terminal capability.');
+            const session = requireSession(sessionId, 'terminal');
             const normalized = normalizeCommand(command);
             const startedAt = new Date().toISOString();
             try {
@@ -73,6 +98,51 @@ function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
                 };
             }
         },
+        async exportArtifact(sessionId, request = {}) {
+            const session = requireSession(sessionId, 'workspace_read');
+            const { normalized, filePath } = workspaceFilePath(session, request.relativePath);
+            const stat = fsApi.statSync(filePath);
+            if (!stat.isFile()) throw new Error('Sandbox artifact export path must be a file.');
+            if (stat.size <= 0) throw new Error('Sandbox artifact export requires non-empty content.');
+            if (stat.size > MAX_ARTIFACT_BYTES) throw new Error('Sandbox artifact exceeds the transfer size limit.');
+            const bytes = fsApi.readFileSync(filePath);
+            const digest = digestBytes(bytes);
+            return {
+                artifactId: crypto.randomUUID(),
+                sourceSessionId: session.sessionId,
+                missionId: session.missionId,
+                backend: session.backend,
+                relativePath: normalized,
+                name: request.name || path.basename(normalized),
+                sizeBytes: bytes.byteLength,
+                digest,
+                bytesBase64: bytes.toString('base64'),
+                exportedAt: new Date().toISOString(),
+                hostFallbackAllowed: false
+            };
+        },
+        async importArtifact(sessionId, artifact = {}) {
+            const session = requireSession(sessionId, 'workspace_write');
+            if (artifact.sourceSessionId === sessionId) throw new Error('Sandbox artifact cannot be imported into its source session.');
+            const { normalized, filePath } = workspaceFilePath(session, artifact.relativePath);
+            const bytes = Buffer.from(String(artifact.bytesBase64 || ''), 'base64');
+            if (bytes.byteLength <= 0) throw new Error('Sandbox artifact import requires non-empty content.');
+            if (bytes.byteLength > MAX_ARTIFACT_BYTES) throw new Error('Sandbox artifact exceeds the transfer size limit.');
+            const digest = digestBytes(bytes);
+            if (typeof artifact.digest !== 'string' || artifact.digest !== digest) throw new Error('Sandbox artifact digest mismatch.');
+            fsApi.mkdirSync(path.dirname(filePath), { recursive: true });
+            fsApi.writeFileSync(filePath, bytes, { flag: 'wx' });
+            return {
+                imported: true,
+                artifactId: artifact.artifactId || null,
+                targetSessionId: session.sessionId,
+                relativePath: normalized,
+                sizeBytes: bytes.byteLength,
+                digest,
+                importedAt: new Date().toISOString(),
+                hostFallbackAllowed: false
+            };
+        },
         async destroy(sessionId) {
             const session = sessions.get(sessionId);
             if (!session) return { destroyed: false, reason: 'Sandbox session not found.' };
@@ -84,4 +154,4 @@ function createSandboxBroker({ adapter, workspaceRoot, fsApi = fs }) {
     };
 }
 
-module.exports = { createSandboxBroker, ALLOWED_CAPABILITIES, MAX_TIMEOUT_MS };
+module.exports = { createSandboxBroker, ALLOWED_CAPABILITIES, MAX_TIMEOUT_MS, MAX_ARTIFACT_BYTES };

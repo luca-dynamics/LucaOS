@@ -115,6 +115,11 @@ provenance, blocks unsafe paths and oversized payloads, requires scan and
 approval gates before import, and records each target session that receives the
 artifact.
 
+The Electron sandbox broker also exposes local workspace artifact
+`exportArtifact` and `importArtifact` operations. They read and write only
+validated relative paths inside sandbox workspaces, enforce the transfer size
+limit, verify SHA-256 digests before import, and refuse source-session reimport.
+
 ### HostCapabilityBridge
 
 Provides the only route from sandboxed work to real files, UI input, displays,
