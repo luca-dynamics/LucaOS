@@ -20,3 +20,7 @@ expiry cleanup, and emergency destruction without renderer command authority.
 Electron owns the production security executors: `sandboxSecurityServices.cjs`
 uses OS-backed encryption for scoped one-use secret leases and invokes ClamAV on
 0600 temporary files that are removed after every result. Failure is not clean.
+
+Hardware promotion uses `certify-sandbox-backend.cjs` on an explicitly labelled
+self-hosted runner. It requires seven live assertions and produces Ed25519-signed
+host/image evidence; repository-hosted contract CI cannot substitute for it.
