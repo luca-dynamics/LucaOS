@@ -48,6 +48,10 @@ const adapter = (events: string[] = []): SandboxFleetRuntimeAdapter => ({
   async resume(runtimeRef) {
     events.push(`resume:${(runtimeRef as { sessionId: string }).sessionId}`);
   },
+  async snapshot(runtimeRef) {
+    events.push(`snapshot:${(runtimeRef as { sessionId: string }).sessionId}`);
+    return { runtimeSnapshotRef: { snapshotFor: (runtimeRef as { sessionId: string }).sessionId } };
+  },
   async destroy(runtimeRef) {
     events.push(`destroy:${(runtimeRef as { sessionId: string }).sessionId}`);
   },
@@ -153,5 +157,57 @@ describe("SandboxFleetSessionBroker", () => {
     await broker.suspend(terminal.session!.sessionId);
     await expect(broker.execute(terminal.session!.sessionId, { executable: "node", args: [] })).rejects.toThrow("not running");
   });
-});
 
+  it("assigns expiry to ephemeral sessions and leaves persistent sessions unexpired", async () => {
+    const registry = new SandboxFleetRegistry();
+    registry.register(backend({ capacity: 2 }));
+    let now = "2026-07-12T00:00:00.000Z";
+    let nextId = 0;
+    const broker = new SandboxFleetSessionBroker(registry, { wsl2: adapter() }, () => `session-${++nextId}`, () => now, 60_000);
+
+    const ephemeral = await broker.create(request());
+    const persistent = await broker.create(request({ persistence: "persistent" }));
+
+    expect(ephemeral.session?.expiresAt).toBe("2026-07-12T00:01:00.000Z");
+    expect(persistent.session?.expiresAt).toBeUndefined();
+  });
+
+  it("captures audit-safe session snapshots through the owning adapter", async () => {
+    const registry = new SandboxFleetRegistry();
+    registry.register(backend({}));
+    const events: string[] = [];
+    const broker = new SandboxFleetSessionBroker(registry, { wsl2: adapter(events) }, () => "snapshot-1");
+    const created = await broker.create(request());
+
+    const snapshot = await broker.snapshot(created.session!.sessionId);
+
+    expect(snapshot).toMatchObject({
+      snapshotId: "snapshot-1",
+      sessionId: created.session!.sessionId,
+      missionId: "mission-fleet",
+      guestOs: "linux",
+      hostFallbackAllowed: false,
+      runtimeSnapshotRef: { snapshotFor: created.session!.sessionId },
+    });
+    expect(broker.get(created.session!.sessionId)?.lastSnapshotId).toBe("snapshot-1");
+    expect(events).toContain(`snapshot:${created.session!.sessionId}`);
+  });
+
+  it("expires due sessions with a final snapshot and clears active mission selection", async () => {
+    const registry = new SandboxFleetRegistry();
+    registry.register(backend({}));
+    let now = "2026-07-12T00:00:00.000Z";
+    let nextId = 0;
+    const broker = new SandboxFleetSessionBroker(registry, { wsl2: adapter() }, () => `id-${++nextId}`, () => now, 1_000);
+    const created = await broker.create(request());
+    broker.activate("mission-fleet", created.session!.sessionId);
+
+    now = "2026-07-12T00:00:02.000Z";
+    const snapshots = await broker.expireDueSessions();
+
+    expect(snapshots).toHaveLength(1);
+    expect(broker.get(created.session!.sessionId)?.status).toBe("expired");
+    expect(broker.getActiveSession("mission-fleet")).toBeUndefined();
+    expect(() => broker.activate("mission-fleet", created.session!.sessionId)).toThrow("Expired");
+  });
+});
