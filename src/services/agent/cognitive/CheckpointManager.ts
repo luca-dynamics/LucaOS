@@ -1,7 +1,7 @@
 
 // Runs in Electron main process, accessed via IPC, or in Node server
 
-import { getLucaLinkSync } from "./LucaLinkSync";
+import { getLucaLinkSync, type LucaLinkSync } from "./LucaLinkSync";
 import type { Checkpoint, CheckpointQuery } from "./types";
 
 // Environment detection
@@ -182,7 +182,7 @@ export class CheckpointManager {
 
       // Sync to Luca Link (cross-device) - non-blocking
       if (this.lucaLink.isConnected()) {
-        this.lucaLink.syncCheckpoint(checkpoint).catch((err) => {
+        this.lucaLink.syncCheckpoint(checkpoint).catch((err: unknown) => {
           console.warn("[CheckpointManager] Luca Link sync failed:", err);
         });
       }

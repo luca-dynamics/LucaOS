@@ -80,8 +80,8 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
           configuredRelayUrl:
             lucaLinkSettings.relayServerUrl || RELAY_SERVER_URL,
           configuredVpnUrl: lucaLinkSettings.vpnServerUrl,
-          wsPort: WS_PORT,
-          serverHttpPort: SERVER_HTTP_PORT,
+          wsPort: Number(WS_PORT),
+          serverHttpPort: Number(SERVER_HTTP_PORT),
         });
         setPairingRoute(route);
 

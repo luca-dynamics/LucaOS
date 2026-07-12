@@ -23,7 +23,7 @@ const floatToPcm16Base64 = (samples: Float32Array): string => {
   return btoa(binary);
 };
 
-const pcm16Base64ToFloat = (base64: string): Float32Array => {
+const pcm16Base64ToFloat = (base64: string): Float32Array<ArrayBuffer> => {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);

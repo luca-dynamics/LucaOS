@@ -103,7 +103,7 @@ export function OnboardingConversationSurface({
               Personalization
             </p>
             <p className="mt-1 text-xs" style={{ color: "var(--app-text-muted)" }}>
-              {mode === "voice" ? "Voice mode selected" : "Text mode selected"}
+              {mode === "VOICE" ? "Voice mode selected" : "Text mode selected"}
             </p>
           </div>
         </div>
@@ -144,9 +144,9 @@ export function OnboardingConversationSurface({
                 }
               }}
               rows={2}
-              autoFocus={mode === "text"}
+              autoFocus={mode === "TEXT"}
               placeholder="Type your response…"
-              aria-label={mode === "voice" ? "Text fallback response" : "Your response"}
+              aria-label={mode === "VOICE" ? "Text fallback response" : "Your response"}
               className="min-h-[3.5rem] min-w-0 flex-1 resize-none rounded-xl border bg-black/10 px-4 py-3 text-base outline-none sm:text-sm"
               style={{
                 color: "var(--app-text-main)",

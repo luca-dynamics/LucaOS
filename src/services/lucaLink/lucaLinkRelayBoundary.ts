@@ -121,6 +121,7 @@ export type LucaLinkRelayFacade = Pick<
   | "joinWithToken"
   | "autoConnect"
   | "disconnect"
+  | "dispose"
   | "generateGuestSession"
   | "initGuestHandler"
   | "onGuestMessage"

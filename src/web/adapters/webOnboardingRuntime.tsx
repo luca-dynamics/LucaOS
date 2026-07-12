@@ -80,7 +80,7 @@ export const webOnboardingRuntime: OnboardingRuntimeAdapter = {
   supportsLocalProvisioning: false,
   skipKernelAwakeningVisual: true,
   ConversationComponent: (props: import("../../components/Onboarding/OnboardingRuntimeAdapter").OnboardingConversationProps) =>
-    props.mode === "voice" ? (
+    props.mode === "VOICE" ? (
       <WebVoiceOnboardingSurface {...props} />
     ) : (
       <OnboardingConversationSurface {...props} />
