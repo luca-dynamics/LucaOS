@@ -16,3 +16,7 @@ preview blockers. It never weakens placement or enables host fallback.
 `SandboxRuntimeSettingsPanel` is mounted in advanced Autonomy settings and reads
 only the narrow Electron sandbox bridge. It exposes status, sessions, snapshots,
 expiry cleanup, and emergency destruction without renderer command authority.
+
+Electron owns the production security executors: `sandboxSecurityServices.cjs`
+uses OS-backed encryption for scoped one-use secret leases and invokes ClamAV on
+0600 temporary files that are removed after every result. Failure is not clean.
