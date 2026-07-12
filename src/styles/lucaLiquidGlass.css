@@ -1,0 +1,78 @@
+/*
+ * Luca Liquid Glass
+ * -----------------
+ * A thin optical finish applied over a substrate, never a replacement for it.
+ * Skin/material variables supply identity and host policy supplies blur budget.
+ */
+.luca-liquid-glass {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.luca-liquid-glass__optics {
+  --luca-glass-rim-alpha: 0.24;
+  --luca-glass-glint-alpha: 0.2;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(80% 48% at 27% 6%, rgb(255 255 255 / var(--luca-glass-glint-alpha)), transparent 58%),
+    linear-gradient(135deg, color-mix(in srgb, var(--luca-accent-primary, #8a8f98) 9%, transparent), transparent 42% 68%, rgb(255 255 255 / 0.07));
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / var(--luca-glass-rim-alpha)),
+    inset 0 -1px 2px rgb(0 0 0 / 0.18),
+    inset 0 1px 1px rgb(255 255 255 / 0.12);
+  backdrop-filter: blur(min(var(--luca-material-blur, 16px), 16px)) saturate(1.08);
+  -webkit-backdrop-filter: blur(min(var(--luca-material-blur, 16px), 16px)) saturate(1.08);
+}
+
+.luca-liquid-glass__optics::after {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  background: linear-gradient(108deg, transparent 40%, rgb(255 255 255 / 0.14) 49%, transparent 58%);
+  transform: translate3d(-22%, -6%, 0) rotate(-4deg);
+  opacity: 0.55;
+  transition: transform var(--luca-duration-slow, 520ms) var(--luca-ease, ease-out);
+}
+
+.luca-liquid-glass:hover > .luca-liquid-glass__optics::after,
+.luca-liquid-glass:focus-visible > .luca-liquid-glass__optics::after,
+.luca-liquid-glass-control:hover > .luca-liquid-glass__optics::after,
+.luca-liquid-glass-control:focus-visible > .luca-liquid-glass__optics::after {
+  transform: translate3d(18%, 4%, 0) rotate(-4deg);
+}
+
+[data-luca-glass-shape="circle"] { border-radius: 9999px; }
+[data-luca-glass-shape="capsule"] { border-radius: 9999px; }
+[data-luca-glass-shape="rounded"] { border-radius: var(--luca-radius-lg, 18px); }
+[data-luca-glass-depth="quiet"] { --luca-glass-rim-alpha: 0.14; --luca-glass-glint-alpha: 0.1; }
+[data-luca-glass-depth="hero"] { --luca-glass-rim-alpha: 0.3; --luca-glass-glint-alpha: 0.25; }
+
+.luca-liquid-glass-control {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.luca-liquid-glass-control > :not(.luca-liquid-glass__optics) {
+  position: relative;
+  z-index: 3;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .luca-liquid-glass__optics {
+    background: color-mix(in srgb, var(--luca-surface-solid, #17191d) 94%, var(--luca-accent-primary, #8a8f98));
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .luca-liquid-glass__optics::after { transition: none; transform: none; }
+}
+
