@@ -4,6 +4,7 @@ import type {
   SandboxFleetCommandResult,
   SandboxFleetCreateSessionResult,
   SandboxFleetSession,
+  SandboxFleetSessionCleanupResult,
   SandboxFleetSessionSnapshot,
   SandboxPlacementRequest,
 } from "../../types/sandboxFleet";
@@ -206,13 +207,7 @@ export class SandboxFleetSessionBroker {
       this.activeSessionByMission.delete(session.missionId);
     }
 
-    const backend = this.registry.get(session.backendId);
-    if (backend) {
-      this.registry.updateHealth(backend.backendId, {
-        available: backend.available,
-        activeSessions: Math.max(0, backend.activeSessions - 1),
-      });
-    }
+    this.releaseBackendCapacity(session.backendId);
 
     return { destroyed: true, sessionId };
   }
@@ -234,6 +229,37 @@ export class SandboxFleetSessionBroker {
     return expired;
   }
 
+  async cleanupExpiredSessions(): Promise<SandboxFleetSessionCleanupResult[]> {
+    const nowMs = Date.parse(this.now());
+    const cleaned: SandboxFleetSessionCleanupResult[] = [];
+    for (const session of [...this.sessions.values()]) {
+      const due = session.expiresAt && Date.parse(session.expiresAt) <= nowMs;
+      if (!due && session.status !== "expired") continue;
+
+      const snapshot = session.status === "expired" && session.lastSnapshotId
+        ? this.snapshots.get(session.lastSnapshotId) ?? await this.snapshot(session.sessionId)
+        : await this.snapshot(session.sessionId);
+      const adapter = this.requireAdapter(session);
+      await adapter.destroy(session.runtimeRef);
+      this.sessions.delete(session.sessionId);
+      if (this.activeSessionByMission.get(session.missionId) === session.sessionId) {
+        this.activeSessionByMission.delete(session.missionId);
+      }
+      this.releaseBackendCapacity(session.backendId);
+
+      cleaned.push({
+        sessionId: session.sessionId,
+        missionId: session.missionId,
+        backendId: session.backendId,
+        snapshotId: snapshot.snapshotId,
+        destroyed: true,
+        cleanedAt: this.now(),
+        hostFallbackAllowed: false,
+      });
+    }
+    return cleaned;
+  }
+
   private blocked(decision: SandboxFleetCreateSessionResult["decision"], reason: string): SandboxFleetCreateSessionResult {
     return {
       status: "blocked",
@@ -252,6 +278,15 @@ export class SandboxFleetSessionBroker {
     const adapter = this.adapters[session.backendId] ?? this.adapters[session.backendKind];
     if (!adapter) throw new Error("Sandbox runtime adapter is not registered.");
     return adapter;
+  }
+
+  private releaseBackendCapacity(backendId: string): void {
+    const backend = this.registry.get(backendId);
+    if (!backend) return;
+    this.registry.updateHealth(backend.backendId, {
+      available: backend.available,
+      activeSessions: Math.max(0, backend.activeSessions - 1),
+    });
   }
 
   private updateSessionStatus(

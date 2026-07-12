@@ -210,4 +210,51 @@ describe("SandboxFleetSessionBroker", () => {
     expect(broker.getActiveSession("mission-fleet")).toBeUndefined();
     expect(() => broker.activate("mission-fleet", created.session!.sessionId)).toThrow("Expired");
   });
+
+  it("cleans up due sessions by snapshotting and destroying runtime capacity", async () => {
+    const registry = new SandboxFleetRegistry();
+    registry.register(backend({ capacity: 1 }));
+    const events: string[] = [];
+    let now = "2026-07-12T00:00:00.000Z";
+    let nextId = 0;
+    const broker = new SandboxFleetSessionBroker(registry, { wsl2: adapter(events) }, () => `id-${++nextId}`, () => now, 1_000);
+    const created = await broker.create(request());
+    broker.activate("mission-fleet", created.session!.sessionId);
+
+    now = "2026-07-12T00:00:02.000Z";
+    const cleaned = await broker.cleanupExpiredSessions();
+
+    expect(cleaned).toEqual([{
+      sessionId: created.session!.sessionId,
+      missionId: "mission-fleet",
+      backendId: "local-wsl2",
+      snapshotId: "id-2",
+      destroyed: true,
+      cleanedAt: "2026-07-12T00:00:02.000Z",
+      hostFallbackAllowed: false,
+    }]);
+    expect(broker.get(created.session!.sessionId)).toBeUndefined();
+    expect(broker.getActiveSession("mission-fleet")).toBeUndefined();
+    expect(registry.get("local-wsl2")?.activeSessions).toBe(0);
+    expect(events).toContain(`snapshot:${created.session!.sessionId}`);
+    expect(events).toContain(`destroy:${created.session!.sessionId}`);
+  });
+
+  it("cleans up sessions already marked expired without taking a second snapshot", async () => {
+    const registry = new SandboxFleetRegistry();
+    registry.register(backend({ capacity: 1 }));
+    const events: string[] = [];
+    let now = "2026-07-12T00:00:00.000Z";
+    let nextId = 0;
+    const broker = new SandboxFleetSessionBroker(registry, { wsl2: adapter(events) }, () => `id-${++nextId}`, () => now, 1_000);
+    const created = await broker.create(request());
+
+    now = "2026-07-12T00:00:02.000Z";
+    await broker.expireDueSessions();
+    const cleaned = await broker.cleanupExpiredSessions();
+
+    expect(cleaned[0].snapshotId).toBe("id-2");
+    expect(events.filter((event) => event === `snapshot:${created.session!.sessionId}`)).toHaveLength(1);
+    expect(events).toContain(`destroy:${created.session!.sessionId}`);
+  });
 });

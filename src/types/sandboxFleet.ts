@@ -115,6 +115,16 @@ export interface SandboxFleetSessionSnapshot {
   hostFallbackAllowed: false;
 }
 
+export interface SandboxFleetSessionCleanupResult {
+  sessionId: string;
+  missionId: string;
+  backendId: string;
+  snapshotId: string;
+  destroyed: boolean;
+  cleanedAt: string;
+  hostFallbackAllowed: false;
+}
+
 export type SandboxArtifactKind = "source_tree" | "build_output" | "test_report" | "package" | "log_bundle";
 export type SandboxArtifactScanStatus = "pending" | "passed" | "failed";
 export type SandboxArtifactApprovalStatus = "not_required" | "pending" | "approved" | "rejected";
