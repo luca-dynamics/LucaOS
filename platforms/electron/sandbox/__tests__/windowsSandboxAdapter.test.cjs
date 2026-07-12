@@ -24,10 +24,13 @@ test('reports workspace capabilities without terminal execution', async () => {
 test('creates a locked-down Windows Sandbox configuration', async () => {
     const writes = new Map();
     const created = [];
+    const systemRoot = path.resolve('fixtures', 'Windows');
+    const configRoot = path.resolve('fixtures', 'configs');
+    const workspacePath = path.resolve('fixtures', 'workspace');
     const adapter = createWindowsSandboxAdapter({
         platform: 'win32',
-        systemRoot: 'C:\\Windows',
-        configRoot: 'C:\\luca\\configs',
+        systemRoot,
+        configRoot,
         fsApi: {
             existsSync: () => true,
             mkdirSync(target) { created.push(target); },
@@ -38,8 +41,8 @@ test('creates a locked-down Windows Sandbox configuration', async () => {
             rmSync() {}
         },
         spawn(executable, args, options) {
-            assert.equal(executable, path.join('C:\\Windows', 'System32', 'WindowsSandbox.exe'));
-            assert.deepEqual(args, ['C:\\luca\\configs\\12345678-1234-1234-1234-123456789abc.wsb']);
+            assert.equal(executable, path.join(systemRoot, 'System32', 'WindowsSandbox.exe'));
+            assert.deepEqual(args, [path.join(configRoot, '12345678-1234-1234-1234-123456789abc.wsb')]);
             assert.equal(options.detached, true);
             return { pid: 42, unref() {} };
         }
@@ -47,15 +50,15 @@ test('creates a locked-down Windows Sandbox configuration', async () => {
 
     const runtime = await adapter.create({
         sessionId: '12345678-1234-1234-1234-123456789abc',
-        workspacePath: 'C:\\luca\\workspace'
+        workspacePath
     });
 
     const config = writes.get(runtime.configPath);
     assert.equal(runtime.processId, 42);
-    assert.ok(created.includes('C:\\luca\\configs'));
+    assert.ok(created.includes(configRoot));
     assert.match(config, /<VGpu>Disable<\/VGpu>/);
     assert.match(config, /<Networking>Disable<\/Networking>/);
-    assert.match(config, /<HostFolder>C:\\luca\\workspace<\/HostFolder>/);
+    assert.ok(config.includes(`<HostFolder>${workspacePath}</HostFolder>`));
     assert.match(config, /<ReadOnly>false<\/ReadOnly>/);
 });
 
