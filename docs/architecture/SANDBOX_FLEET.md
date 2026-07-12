@@ -143,6 +143,8 @@ microphones, cameras, credentials, signing keys, or LucaLink devices.
    Windows Sandbox provides GUI/workspace isolation; Hyper-V provides managed
    VM command execution when its feature and signed guest image are available.
 6. Paired-host and remote placement, including Apple-hardware macOS workers.
+   **Implemented:** trusted worker registration plus an HTTPS runtime client
+   with ephemeral credentials and response-attestation verification.
 7. Fleet UI for capacity, active sessions, switching, persistence, audit, and
    emergency destruction. **Foundation implemented:** `SandboxFleetViewModel`
    produces operator-facing backend capacity, session switching, expiry cleanup,
