@@ -269,6 +269,13 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain(
       "Handoff does not execute tools or mutate remote devices.",
     );
+    expect(lucaLinkSource).toContain("Continue on another host");
+    expect(lucaLinkSource).toContain(
+      "prepares a reviewable payload preview",
+    );
+    expect(lucaLinkSource).not.toContain(
+      "Create sample conversation handoff",
+    );
   });
 
   it("renders handoff payloadPreview only and avoids raw payload controls", () => {
@@ -287,10 +294,12 @@ describe("Settings LucaLink Device Center", () => {
 
   it("wires handoff actions through state-only service helpers without transport calls", () => {
     const handoffActionSource = lucaLinkSource.slice(
-      lucaLinkSource.indexOf("const handleCreateSampleConversationHandoff"),
+      lucaLinkSource.indexOf("const handleStartContinueOnHost"),
       lucaLinkSource.indexOf("const handleDeviceTrustAction"),
     );
     expect(handoffActionSource).toContain("lucaLinkManager.console.createConversationHandoff");
+    expect(handoffActionSource).toContain("Continue current conversation");
+    expect(handoffActionSource).toContain("Device Center continue flow");
     expect(handoffActionSource).toContain("lucaLinkManager.console.approveHandoff");
     expect(handoffActionSource).toContain("lucaLinkManager.console.declineHandoff");
     expect(handoffActionSource).toContain("lucaLinkManager.console.cancelHandoff");
