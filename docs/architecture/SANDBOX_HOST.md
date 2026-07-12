@@ -66,6 +66,10 @@ The managed WSL rootfs is reproducible from `sandbox/rootfs/Dockerfile` using
 the archive is a release artifact and should not be committed as source.
 The WSL2 adapter verifies that SHA-256 before reporting itself available or
 importing any session; a missing, malformed, or mismatched digest fails closed.
+Release packaging is also explicit: `npm run sandbox:prepare-release` verifies
+the built artifact again and stages the rootfs, checksum, and versioned manifest
+under `build/sandbox`. Electron Builder maps that directory to the production
+`resources/sandbox` bundle consumed by the main-process adapter.
 
 Rootless Podman is available as a Linux-native container backend. It reports
 availability only when `podman info` confirms rootless execution, then launches
