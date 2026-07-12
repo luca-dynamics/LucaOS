@@ -4,11 +4,13 @@ const { registerWidgetIpc } = require('./registerWidgetIpc.cjs');
 const { registerHologramIpc } = require('./registerHologramIpc.cjs');
 const { registerMiniChatIpc } = require('./registerMiniChatIpc.cjs');
 const { registerVisualCoreIpc } = require('./registerVisualCoreIpc.cjs');
+const { registerSandboxIpc } = require('./registerSandboxIpc.cjs');
 
 module.exports = {
     registerPresenceIpc,
     registerWidgetIpc,
     registerHologramIpc,
     registerMiniChatIpc,
-    registerVisualCoreIpc
+    registerVisualCoreIpc,
+    registerSandboxIpc
 };

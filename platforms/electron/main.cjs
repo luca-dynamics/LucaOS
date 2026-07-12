@@ -27,8 +27,13 @@ const {
     registerWidgetIpc,
     registerHologramIpc,
     registerMiniChatIpc,
-    registerVisualCoreIpc
+    registerVisualCoreIpc,
+    registerSandboxIpc
 } = require('./ipc/index.cjs');
+const { createDockerSandboxAdapter } = require('./sandbox/dockerSandboxAdapter.cjs');
+const { createWsl2SandboxAdapter } = require('./sandbox/wsl2SandboxAdapter.cjs');
+const { createSandboxAdapterRouter } = require('./sandbox/sandboxAdapterRouter.cjs');
+const { createSandboxBroker } = require('./sandbox/sandboxBroker.cjs');
 
 // [MAIN] Mission Control Service Initialization
 const MissionControl = require('./services/missionControl.cjs');
@@ -1690,6 +1695,23 @@ registerVisualCoreIpc({
     getMainWindow: () => mainWindow,
     logger: console
 });
+
+const sandboxBroker = createSandboxBroker({
+    adapter: createSandboxAdapterRouter([
+        createDockerSandboxAdapter(),
+        createWsl2SandboxAdapter({
+            rootfsPath: app.isPackaged
+                ? path.join(process.resourcesPath, 'sandbox', 'lucaos-wsl-rootfs.tar')
+                : path.join(__dirname, 'sandbox', 'artifacts', 'lucaos-wsl-rootfs.tar'),
+            checksumPath: app.isPackaged
+                ? path.join(process.resourcesPath, 'sandbox', 'lucaos-wsl-rootfs.tar.sha256')
+                : path.join(__dirname, 'sandbox', 'artifacts', 'lucaos-wsl-rootfs.tar.sha256'),
+            installRoot: path.join(app.getPath('userData'), 'sandbox-wsl2')
+        })
+    ]),
+    workspaceRoot: path.join(app.getPath('userData'), 'sandbox-workspaces')
+});
+registerSandboxIpc({ ipcMain, broker: sandboxBroker });
 
 function toggleVisualCoreWindow() {
     if (visualCoreWindow) {
