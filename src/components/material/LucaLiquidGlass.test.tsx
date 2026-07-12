@@ -24,4 +24,3 @@ describe("Luca liquid glass material", () => {
     expect(markup).toContain('data-luca-glass-shape="inherit"');
   });
 });
-

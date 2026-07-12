@@ -44,4 +44,3 @@ orb, a face, and a small set of high-value controls without losing its skin.
   obsolete scanline/grid/glitch hologram material has been retired.
 - Voice settings, vision, and termination controls use the shared optical tier
   while keeping their existing semantic colours and actions.
-

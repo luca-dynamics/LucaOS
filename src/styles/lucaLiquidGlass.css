@@ -75,4 +75,3 @@
 @media (prefers-reduced-motion: reduce) {
   .luca-liquid-glass__optics::after { transition: none; transform: none; }
 }
-
