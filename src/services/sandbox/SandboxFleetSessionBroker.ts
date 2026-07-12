@@ -4,6 +4,8 @@ import type {
   SandboxFleetCommandResult,
   SandboxFleetCreateSessionResult,
   SandboxFleetSession,
+  SandboxFleetSessionCleanupResult,
+  SandboxFleetSessionSnapshot,
   SandboxPlacementRequest,
 } from "../../types/sandboxFleet";
 import { SandboxFleetRegistry } from "./SandboxFleetRegistry";
@@ -21,12 +23,14 @@ export interface SandboxFleetRuntimeAdapter {
   execute?(runtimeRef: unknown, command: SandboxFleetCommand): Promise<Omit<SandboxFleetCommandResult, "sessionId" | "startedAt" | "finishedAt">>;
   suspend?(runtimeRef: unknown): Promise<void>;
   resume?(runtimeRef: unknown): Promise<void>;
+  snapshot?(runtimeRef: unknown): Promise<{ runtimeSnapshotRef?: unknown }>;
   destroy(runtimeRef: unknown): Promise<void>;
 }
 
 export class SandboxFleetSessionBroker {
   private readonly scheduler: SandboxFleetScheduler;
   private readonly sessions = new Map<string, SandboxFleetSession>();
+  private readonly snapshots = new Map<string, SandboxFleetSessionSnapshot>();
   private readonly activeSessionByMission = new Map<string, string>();
 
   constructor(
@@ -34,6 +38,7 @@ export class SandboxFleetSessionBroker {
     private readonly adapters: Record<string, SandboxFleetRuntimeAdapter> = {},
     private readonly idFactory = () => crypto.randomUUID(),
     private readonly now = () => new Date().toISOString(),
+    private readonly defaultEphemeralTtlMs = 60 * 60 * 1000,
   ) {
     this.scheduler = new SandboxFleetScheduler(registry);
   }
@@ -64,6 +69,9 @@ export class SandboxFleetSessionBroker {
     });
 
     const timestamp = this.now();
+    const expiresAt = request.persistence === "ephemeral"
+      ? new Date(Date.parse(timestamp) + this.defaultEphemeralTtlMs).toISOString()
+      : undefined;
     const session: SandboxFleetSession = {
       sessionId,
       missionId: request.missionId,
@@ -82,6 +90,7 @@ export class SandboxFleetSessionBroker {
       runtimeRef: runtime.runtimeRef,
       createdAt: timestamp,
       updatedAt: timestamp,
+      expiresAt,
       hostFallbackAllowed: false,
     };
 
@@ -109,6 +118,7 @@ export class SandboxFleetSessionBroker {
     const session = this.sessions.get(sessionId);
     if (!session || session.missionId !== missionId) throw new Error("Sandbox session does not belong to this mission.");
     if (session.status === "destroyed") throw new Error("Destroyed sandbox sessions cannot become active.");
+    if (session.status === "expired") throw new Error("Expired sandbox sessions cannot become active.");
     this.activeSessionByMission.set(missionId, sessionId);
     return structuredClone(session);
   }
@@ -116,6 +126,42 @@ export class SandboxFleetSessionBroker {
   getActiveSession(missionId: string): SandboxFleetSession | undefined {
     const sessionId = this.activeSessionByMission.get(missionId);
     return sessionId ? this.get(sessionId) : undefined;
+  }
+
+  listSnapshots(sessionId?: string): SandboxFleetSessionSnapshot[] {
+    return [...this.snapshots.values()]
+      .filter((snapshot) => !sessionId || snapshot.sessionId === sessionId)
+      .map((snapshot) => structuredClone(snapshot));
+  }
+
+  async snapshot(sessionId: string): Promise<SandboxFleetSessionSnapshot> {
+    const session = this.requireSession(sessionId);
+    if (session.status === "destroyed" || session.status === "expired") {
+      throw new Error("Inactive sandbox sessions cannot be snapshotted.");
+    }
+    const adapter = this.requireAdapter(session);
+    const runtimeSnapshot = await adapter.snapshot?.(session.runtimeRef);
+    const capturedAt = this.now();
+    const snapshot: SandboxFleetSessionSnapshot = {
+      snapshotId: this.idFactory(),
+      sessionId: session.sessionId,
+      missionId: session.missionId,
+      status: session.status,
+      backendId: session.backendId,
+      backendKind: session.backendKind,
+      guestOs: session.guestOs,
+      imageId: session.imageId,
+      imageDigest: session.imageDigest,
+      persistence: session.persistence,
+      createdAt: session.createdAt,
+      capturedAt,
+      expiresAt: session.expiresAt,
+      runtimeSnapshotRef: runtimeSnapshot?.runtimeSnapshotRef,
+      hostFallbackAllowed: false,
+    };
+    this.snapshots.set(snapshot.snapshotId, snapshot);
+    this.sessions.set(sessionId, { ...session, lastSnapshotId: snapshot.snapshotId, updatedAt: capturedAt });
+    return structuredClone(snapshot);
   }
 
   async execute(sessionId: string, command: SandboxFleetCommand): Promise<SandboxFleetCommandResult> {
@@ -161,15 +207,57 @@ export class SandboxFleetSessionBroker {
       this.activeSessionByMission.delete(session.missionId);
     }
 
-    const backend = this.registry.get(session.backendId);
-    if (backend) {
-      this.registry.updateHealth(backend.backendId, {
-        available: backend.available,
-        activeSessions: Math.max(0, backend.activeSessions - 1),
-      });
-    }
+    this.releaseBackendCapacity(session.backendId);
 
     return { destroyed: true, sessionId };
+  }
+
+  async expireDueSessions(): Promise<SandboxFleetSessionSnapshot[]> {
+    const nowMs = Date.parse(this.now());
+    const expired: SandboxFleetSessionSnapshot[] = [];
+    for (const session of [...this.sessions.values()]) {
+      if ((session.status === "running" || session.status === "suspended") && session.expiresAt && Date.parse(session.expiresAt) <= nowMs) {
+        const snapshot = await this.snapshot(session.sessionId);
+        const updated = { ...this.requireSession(session.sessionId), status: "expired" as const, updatedAt: this.now() };
+        this.sessions.set(session.sessionId, updated);
+        if (this.activeSessionByMission.get(session.missionId) === session.sessionId) {
+          this.activeSessionByMission.delete(session.missionId);
+        }
+        expired.push(snapshot);
+      }
+    }
+    return expired;
+  }
+
+  async cleanupExpiredSessions(): Promise<SandboxFleetSessionCleanupResult[]> {
+    const nowMs = Date.parse(this.now());
+    const cleaned: SandboxFleetSessionCleanupResult[] = [];
+    for (const session of [...this.sessions.values()]) {
+      const due = session.expiresAt && Date.parse(session.expiresAt) <= nowMs;
+      if (!due && session.status !== "expired") continue;
+
+      const snapshot = session.status === "expired" && session.lastSnapshotId
+        ? this.snapshots.get(session.lastSnapshotId) ?? await this.snapshot(session.sessionId)
+        : await this.snapshot(session.sessionId);
+      const adapter = this.requireAdapter(session);
+      await adapter.destroy(session.runtimeRef);
+      this.sessions.delete(session.sessionId);
+      if (this.activeSessionByMission.get(session.missionId) === session.sessionId) {
+        this.activeSessionByMission.delete(session.missionId);
+      }
+      this.releaseBackendCapacity(session.backendId);
+
+      cleaned.push({
+        sessionId: session.sessionId,
+        missionId: session.missionId,
+        backendId: session.backendId,
+        snapshotId: snapshot.snapshotId,
+        destroyed: true,
+        cleanedAt: this.now(),
+        hostFallbackAllowed: false,
+      });
+    }
+    return cleaned;
   }
 
   private blocked(decision: SandboxFleetCreateSessionResult["decision"], reason: string): SandboxFleetCreateSessionResult {
@@ -192,6 +280,15 @@ export class SandboxFleetSessionBroker {
     return adapter;
   }
 
+  private releaseBackendCapacity(backendId: string): void {
+    const backend = this.registry.get(backendId);
+    if (!backend) return;
+    this.registry.updateHealth(backend.backendId, {
+      available: backend.available,
+      activeSessions: Math.max(0, backend.activeSessions - 1),
+    });
+  }
+
   private updateSessionStatus(
     session: SandboxFleetSession,
     status: SandboxFleetSession["status"],
@@ -201,4 +298,3 @@ export class SandboxFleetSessionBroker {
     return structuredClone(updated);
   }
 }
-

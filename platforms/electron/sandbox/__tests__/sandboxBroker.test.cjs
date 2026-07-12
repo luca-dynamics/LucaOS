@@ -37,6 +37,45 @@ test('passes requested capabilities into automatic backend probing', async () =>
     assert.deepEqual(probes, [{ capabilities: ['terminal'] }]);
 });
 
+test('tracks session expiry and snapshots without exposing host fallback', async () => {
+    const broker = createSandboxBroker({ workspaceRoot: root, fsApi, now: () => new Date('2026-07-12T00:00:00.000Z'), adapter: {
+        kind: 'docker',
+        async probe() { return { available: true, isolated: true, capabilities: ['terminal'] }; },
+        async create() { return { backend: 'docker' }; },
+        async destroy() {}
+    } });
+
+    const session = await broker.create({ missionId: 'mission-snapshot', capabilities: ['terminal'], ttlMs: 60_000 });
+    const snapshot = await broker.snapshot(session.sessionId);
+
+    assert.equal(session.expiresAt, '2026-07-12T00:01:00.000Z');
+    assert.equal(snapshot.sessionId, session.sessionId);
+    assert.equal(snapshot.hostFallbackAllowed, false);
+    assert.equal(broker.listSnapshots(session.sessionId).length, 1);
+});
+
+test('cleans up expired sessions with a final snapshot and runtime destroy', async () => {
+    const destroyed = [];
+    let current = '2026-07-12T00:00:00.000Z';
+    const broker = createSandboxBroker({ workspaceRoot: root, fsApi, now: () => new Date(current), adapter: {
+        kind: 'docker',
+        async probe() { return { available: true, isolated: true, capabilities: ['terminal'] }; },
+        async create(input) { return { backend: 'docker', name: input.sessionId }; },
+        async destroy(runtime) { destroyed.push(runtime.name); }
+    } });
+
+    const session = await broker.create({ missionId: 'mission-cleanup', capabilities: ['terminal'], ttlMs: 60_000 });
+    current = '2026-07-12T00:02:00.000Z';
+    const cleaned = await broker.cleanupExpired();
+
+    assert.equal(cleaned.length, 1);
+    assert.equal(cleaned[0].sessionId, session.sessionId);
+    assert.equal(cleaned[0].hostFallbackAllowed, false);
+    assert.deepEqual(destroyed, [session.sessionId]);
+    assert.equal(broker.list().length, 0);
+    assert.equal(broker.listSnapshots(session.sessionId).length, 1);
+});
+
 
 test('fails closed when adapter is not isolated', async () => {
     const broker = createSandboxBroker({ workspaceRoot: root, fsApi, adapter: { kind: 'docker', async probe() { return { available: true, isolated: false, capabilities: ['terminal'] }; } } });

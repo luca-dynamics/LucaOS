@@ -51,7 +51,7 @@ export interface SandboxPlacementDecision {
   hostFallbackAllowed: false;
 }
 
-export type SandboxFleetSessionStatus = "running" | "suspended" | "destroyed";
+export type SandboxFleetSessionStatus = "running" | "suspended" | "expired" | "destroyed";
 
 export interface SandboxFleetCommand {
   executable: string;
@@ -86,6 +86,8 @@ export interface SandboxFleetSession {
   runtimeRef: unknown;
   createdAt: string;
   updatedAt: string;
+  expiresAt?: string;
+  lastSnapshotId?: string;
   hostFallbackAllowed: false;
 }
 
@@ -93,6 +95,34 @@ export interface SandboxFleetCreateSessionResult {
   status: "created" | "blocked";
   decision: SandboxPlacementDecision;
   session: SandboxFleetSession | null;
+}
+
+export interface SandboxFleetSessionSnapshot {
+  snapshotId: string;
+  sessionId: string;
+  missionId: string;
+  status: SandboxFleetSessionStatus;
+  backendId: string;
+  backendKind: SandboxFleetBackend["kind"];
+  guestOs: SandboxGuestOs;
+  imageId: string;
+  imageDigest: string;
+  persistence: SandboxSessionPersistence;
+  createdAt: string;
+  capturedAt: string;
+  expiresAt?: string;
+  runtimeSnapshotRef?: unknown;
+  hostFallbackAllowed: false;
+}
+
+export interface SandboxFleetSessionCleanupResult {
+  sessionId: string;
+  missionId: string;
+  backendId: string;
+  snapshotId: string;
+  destroyed: boolean;
+  cleanedAt: string;
+  hostFallbackAllowed: false;
 }
 
 export type SandboxArtifactKind = "source_tree" | "build_output" | "test_report" | "package" | "log_bundle";
