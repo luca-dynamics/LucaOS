@@ -8,3 +8,7 @@ certification gates pass. Missing evidence always blocks readiness.
 `SandboxAssetDeliveryService` accepts only unexpired Ed25519-signed manifests,
 HTTPS assets, bounded sizes, resumable range responses, and exact SHA-256
 digests. Installation is committed only after full verification.
+
+`SandboxBackendSetupService` converts the release matrix and live host evidence
+into user-facing readiness, missing-asset, missing-feature, certification, and
+preview blockers. It never weakens placement or enables host fallback.
