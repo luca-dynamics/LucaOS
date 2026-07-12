@@ -1,10 +1,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const path = require('path');
 const { createWsl2SandboxAdapter } = require('../wsl2SandboxAdapter.cjs');
 
-const rootfsPath = 'C:\\luca\\rootfs.tar';
+const rootfsPath = path.resolve('fixtures', 'rootfs.tar');
 const checksumPath = `${rootfsPath}.sha256`;
-const installRoot = 'C:\\luca\\distros';
+const installRoot = path.resolve('fixtures', 'distros');
 const rootfs = Buffer.from('verified-rootfs');
 const checksum = require('crypto').createHash('sha256').update(rootfs).digest('hex');
 const verifiedFs = {

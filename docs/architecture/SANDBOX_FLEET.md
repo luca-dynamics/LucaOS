@@ -136,18 +136,27 @@ microphones, cameras, credentials, signing keys, or LucaLink devices.
    **Implemented:** `SandboxArtifactBridge` for scanned, approved,
    content-addressed handoffs across Linux, Windows, and macOS sessions.
 4. Linux Podman/microVM adapter and macOS Virtualization Framework adapter.
-   **Partially implemented:** rootless Podman adapter is available; microVM and
-   macOS Virtualization Framework adapters remain.
-5. Windows Sandbox or Hyper-V adapter. **Partially implemented:** Windows
-   Sandbox GUI/workspace adapter is available without terminal execution;
-   Hyper-V remains.
+   **Implemented as guarded adapters:** rootless Podman, Firecracker/KVM, and
+   Apple Virtualization Framework. Native helpers and images remain release
+   prerequisites and missing attestation blocks placement.
+5. Windows Sandbox or Hyper-V adapter. **Implemented as guarded adapters:**
+   Windows Sandbox provides GUI/workspace isolation; Hyper-V provides managed
+   VM command execution when its feature and signed guest image are available.
 6. Paired-host and remote placement, including Apple-hardware macOS workers.
+   **Implemented:** trusted worker registration plus an HTTPS runtime client
+   with ephemeral credentials and response-attestation verification.
 7. Fleet UI for capacity, active sessions, switching, persistence, audit, and
    emergency destruction. **Foundation implemented:** `SandboxFleetViewModel`
    produces operator-facing backend capacity, session switching, expiry cleanup,
    artifact gate, snapshot, and host-fallback status. `SandboxFleetPanel` renders
    that state and exposes typed lifecycle callbacks without inventing a
-   renderer-side runtime.
+   renderer-side runtime. `SandboxFleetController` now binds those callbacks to
+   broker-owned switching, snapshot, cleanup, destruction, and artifact gates.
+
+The Electron runtime registers every local adapter with platform-specific
+managed resource paths. The `sandbox-runtime.yml` Windows, Linux, and macOS
+matrix verifies contract behavior on every PR; missing native images, helpers,
+virtualization features, or attestations remain explicit blocked states.
 
 ## Non-goals
 

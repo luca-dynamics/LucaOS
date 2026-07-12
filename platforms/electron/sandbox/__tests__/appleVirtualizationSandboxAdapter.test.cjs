@@ -1,0 +1,4 @@
+const test = require('node:test'); const assert = require('node:assert/strict'); const path = require('path'); const { createAppleVirtualizationSandboxAdapter } = require('../appleVirtualizationSandboxAdapter.cjs');
+const paths = { helperPath: path.resolve('helper'), imagePath: path.resolve('image'), stateRoot: path.resolve('state') };
+test('fails closed away from macOS', async () => { const adapter = createAppleVirtualizationSandboxAdapter({ ...paths, platform: 'linux' }); assert.equal((await adapter.probe()).available, false); });
+test('requires signed helper attestation', async () => { const adapter = createAppleVirtualizationSandboxAdapter({ ...paths, platform: 'darwin', fsApi: { existsSync: () => true }, execFile: async () => ({ stdout: '{"framework":"Virtualization.framework","entitled":false}' }) }); assert.match((await adapter.probe()).reason, /attestation/); });

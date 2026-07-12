@@ -44,9 +44,15 @@ capabilities, enforce resource/network/workspace scope, and implement destroy.
    controlled `/workspace` paths. The rootfs artifact is not bundled yet, so
    this backend remains fail-closed.
 4. Playwright browser inside the sandbox with observation/action policies.
+   **Implemented:** the managed rootfs includes a headless Chromium runner;
+   `SandboxBrowserController` accepts bounded semantic actions and routes them
+   through the broker without exposing arbitrary evaluation or host browsing.
 5. Narrow host capability bridge and LucaLink embodiment grants.
 6. Resource limits, secret injection, persistence controls, audit UI, and
-   recovery/cleanup.
+   recovery/cleanup. **Runtime guardrails implemented:** durable audit storage,
+   scheduled expiry cleanup, one-use scoped secret leases, and a fail-closed
+   ClamAV scanner adapter. Product storage and scanner executors are injected by
+   the host so renderer code never receives their authority.
 
 The first slice is represented by `SandboxHostService`; it deliberately has no
 default adapters, so the product reports a blocked plan until a real backend is

@@ -1,0 +1,25 @@
+name: Sandbox runtime contracts
+on:
+  pull_request:
+    paths:
+      - 'platforms/electron/sandbox/**'
+      - 'src/services/sandbox/**'
+      - 'src/types/sandbox*'
+      - 'ops/scripts/*sandbox*'
+      - '.github/workflows/sandbox-runtime.yml'
+  workflow_dispatch:
+jobs:
+  platform-contracts:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run sandbox:verify-runtime

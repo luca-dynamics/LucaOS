@@ -1,0 +1,3 @@
+const test = require('node:test'); const assert = require('node:assert/strict'); const path = require('path'); const { createHyperVSandboxAdapter } = require('../hypervSandboxAdapter.cjs'); const paths = { imagePath: path.resolve('guest.vhdx'), stateRoot: path.resolve('state') };
+test('fails closed away from Windows', async () => { assert.equal((await createHyperVSandboxAdapter({ ...paths, platform: 'linux' }).probe()).available, false); });
+test('requires a managed guest image', async () => { const probe = await createHyperVSandboxAdapter({ ...paths, platform: 'win32', fsApi: { existsSync: () => false } }).probe(); assert.match(probe.reason, /image is missing/); });
