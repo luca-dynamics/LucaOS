@@ -50,7 +50,7 @@ const VoiceStatusOrb: React.FC<VoiceStatusOrbProps> = ({
       ? "var(--app-danger, #f87171)"
       : intent !== "idle"
         ? "var(--app-id-accent, #ffffff)"
-        : "var(--app-text-main, rgba(255,255,255,0.6))";
+        : "var(--luca-text-primary, var(--app-text-main, rgba(255,255,255,0.6)))";
   const presenceSize = Math.round(Math.min(112, Math.max(72, surfaceHeight * 0.16)));
   const verticalOffset = -Math.min(192, Math.max(58, surfaceHeight * 0.18));
 

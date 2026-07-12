@@ -12,24 +12,36 @@ interface VoiceVisualizerProps {
   transcriptSource: "user" | "model";
   persona: PersonaType;
   lowPower?: boolean;
+  skinColors?: {
+    primary: string;
+    secondary: string;
+    background: string;
+  };
 }
 
-// eslint-disable-next-line react/prop-types
 const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
   amplitude,
   isVadActive,
   transcriptSource,
   persona,
   lowPower = false,
+  skinColors,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [canvasSize, setCanvasSize] = useState({ width: 1024, height: 768 });
+  // Keep one safe logical coordinate space for the lifetime of the HUD. CSS
+  // then scales the whole voice composition with the native window, matching
+  // the fluid placement of the original VoiceHUD without its edge clipping.
+  const [referenceSize, setReferenceSize] = useState({
+    width: 1024,
+    height: 768,
+  });
   const internalAmplitude = useRef(0);
   const amplitudeRef = useRef(amplitude);
   const isVadActiveRef = useRef(isVadActive);
   const transcriptSourceRef = useRef(transcriptSource);
   const personaRef = useRef(persona);
+  const skinColorsRef = useRef(skinColors);
 
   // Direct Event Hub Listening (60FPS smoothness)
   useEffect(() => {
@@ -51,33 +63,18 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
     isVadActiveRef.current = isVadActive;
     transcriptSourceRef.current = transcriptSource;
     personaRef.current = persona;
-  }, [amplitude, isVadActive, transcriptSource, persona]);
+    skinColorsRef.current = skinColors;
+  }, [amplitude, isVadActive, transcriptSource, persona, skinColors]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container || typeof window === "undefined") return;
 
-    const measure = () => {
-      const rect = container.getBoundingClientRect();
-      const width = Math.max(1, Math.round(rect.width || window.innerWidth));
-      const height = Math.max(1, Math.round(rect.height || window.innerHeight));
-      setCanvasSize((current) =>
-        current.width === width && current.height === height
-          ? current
-          : { width, height },
-      );
-    };
-
-    measure();
-
-    if (typeof ResizeObserver !== "undefined") {
-      const observer = new ResizeObserver(measure);
-      observer.observe(container);
-      return () => observer.disconnect();
-    }
-
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    const rect = container.getBoundingClientRect();
+    setReferenceSize({
+      width: Math.max(1, Math.round(rect.width || window.innerWidth)),
+      height: Math.max(1, Math.round(rect.height || window.innerHeight)),
+    });
   }, []);
 
   useEffect(() => {
@@ -92,8 +89,8 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
       typeof window === "undefined"
         ? 1
         : Math.min(window.devicePixelRatio || 1, 2);
-    const displayWidth = Math.max(1, canvasSize.width);
-    const displayHeight = Math.max(1, canvasSize.height);
+    const displayWidth = Math.max(1, referenceSize.width);
+    const displayHeight = Math.max(1, referenceSize.height);
     canvas.width = Math.round(displayWidth * dpr);
     canvas.height = Math.round(displayHeight * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -109,9 +106,14 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
       const currentIsVadActive = isVadActiveRef.current;
       const currentSource = transcriptSourceRef.current;
       const currentPersona = personaRef.current;
-      const themeColors =
+      const personaColors =
         THEME_PALETTE[currentPersona as keyof typeof THEME_PALETTE] ||
         THEME_PALETTE.RUTHLESS;
+      const themeColors = skinColorsRef.current ?? {
+        primary: personaColors.primary,
+        secondary: personaColors.secondary,
+        background: personaColors.dark,
+      };
 
       // Clear canvas
       ctx.clearRect(0, 0, displayWidth, displayHeight);
@@ -182,7 +184,7 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
       } else {
         // STANDBY: Subtle Glow
         gradient.addColorStop(0, themeColors.primary);
-        gradient.addColorStop(0.6, setHexAlpha(themeColors.dark, 0.5)); // 50% opacity
+        gradient.addColorStop(0.6, setHexAlpha(themeColors.background, 0.5));
         gradient.addColorStop(1, "rgba(0,0,0,0)");
       }
 
@@ -198,7 +200,7 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
       }
       ctx.strokeStyle = currentIsVadActive
         ? "#ffffff"
-        : `${themeColors.primary}80`;
+        : setHexAlpha(themeColors.primary, 0.5);
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.shadowBlur = 0; // Reset
@@ -210,7 +212,7 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
       ctx.rotate(tick * 0.2);
       ctx.beginPath();
       ctx.arc(0, 0, baseRadius * 1.8, 0, Math.PI * 2);
-      ctx.strokeStyle = `${themeColors.primary}33`; // 20% opacity
+      ctx.strokeStyle = setHexAlpha(themeColors.primary, 0.2);
       ctx.lineWidth = 1;
       ctx.setLineDash([10, 20]); // Dashed
       ctx.stroke();
@@ -244,7 +246,7 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
         0,
         Math.PI * 2,
       );
-      ctx.strokeStyle = `${themeColors.primary}33`; // 20% opacity
+      ctx.strokeStyle = setHexAlpha(themeColors.primary, 0.2);
       ctx.lineWidth = 1;
       ctx.stroke();
       ctx.restore();
@@ -254,7 +256,7 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
 
     draw();
     return () => cancelAnimationFrame(animationId);
-  }, [canvasSize.height, canvasSize.width, lowPower]); // Loop uses refs for live voice state.
+  }, [referenceSize.height, referenceSize.width, lowPower]); // Loop uses refs for live voice state.
 
   return (
     <div
@@ -266,7 +268,7 @@ const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
       <div
         className="absolute inset-0 pointer-events-none opacity-20 bg-[size:60px_60px]"
         style={{
-          backgroundImage: `linear-gradient(${(THEME_PALETTE[persona as keyof typeof THEME_PALETTE] || THEME_PALETTE.RUTHLESS).primary}1A 1px, transparent 1px), linear-gradient(90deg, ${(THEME_PALETTE[persona as keyof typeof THEME_PALETTE] || THEME_PALETTE.RUTHLESS).primary}1A 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(${setHexAlpha(skinColors?.primary ?? (THEME_PALETTE[persona as keyof typeof THEME_PALETTE] || THEME_PALETTE.RUTHLESS).primary, 0.1)} 1px, transparent 1px), linear-gradient(90deg, ${setHexAlpha(skinColors?.primary ?? (THEME_PALETTE[persona as keyof typeof THEME_PALETTE] || THEME_PALETTE.RUTHLESS).primary, 0.1)} 1px, transparent 1px)`,
         }}
       ></div>
     </div>
