@@ -30,7 +30,7 @@ const continuationRecordsSource = lucaLinkSource.slice(
 );
 
 describe("Settings LucaLink Device Center", () => {
-  it("renders the LucaLink runtime authority boundary near the dry-run governance cards", () => {
+  it("renders the LucaLink runtime authority boundary near the safety governance cards", () => {
     expect(lucaLinkSource).toContain(
       "import { SettingsLucaLinkRuntimeAuthority }",
     );
@@ -54,14 +54,14 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain('{ id: "advanced", label: "Advanced" }');
   });
 
-  it("renders the model-only pairing request preview card", () => {
-    expect(lucaLinkSource).toContain("Pairing request");
-    expect(lucaLinkSource).toContain("Preview code");
+  it("renders the creator-only pairing policy review card", () => {
+    expect(lucaLinkSource).toContain("Pairing policy review");
+    expect(lucaLinkSource).toContain("Pairing code");
     expect(lucaLinkSource).toContain("Primary Host approval required");
     expect(lucaLinkSource).toContain("Limited trust");
     expect(lucaLinkSource).toContain("Sensitive access remains blocked");
-    expect(lucaLinkSource).toContain("No real pairing started");
-    expect(lucaLinkSource).toContain("No QR scanner, network discovery, WebRTC, socket, transport, linked-host registry write, or persistent trust change is invoked here.");
+    expect(lucaLinkSource).toContain("Review only");
+    expect(lucaLinkSource).toContain("This review does not pair a device or change trust.");
   });
 
   it("creates continuation tokens only after approved queue decisions", () => {
@@ -128,7 +128,7 @@ describe("Settings LucaLink Device Center", () => {
     );
   });
 
-  it("renders continuation summary and model-only safety copy in Advanced", () => {
+  it("renders continuation summary and read-only safety copy in Advanced", () => {
     expect(lucaLinkSource).toContain('label="Continuation tokens"');
     expect(lucaLinkSource).toContain('label="Valid continuations"');
     expect(lucaLinkSource).toContain('label="Consumed"');
@@ -274,17 +274,17 @@ describe("Settings LucaLink Device Center", () => {
       "prepares a reviewable payload preview",
     );
     expect(lucaLinkSource).not.toContain(
-      "Create sample conversation handoff",
+      "Create draft conversation handoff",
     );
   });
 
-  it("renders handoff payloadPreview only and avoids raw payload controls", () => {
+  it("renders handoff payload summaries and avoids raw payload controls", () => {
     expect(lucaLinkSource).toContain(
       "renderPayloadPreview(handoff.payloadPreview)",
     );
     expect(lucaLinkSource).toContain("Payload preview only");
     expect(lucaLinkSource).toContain(
-      "No send-now action is exposed in this PR",
+      "No send-now action is exposed from settings.",
     );
     expect(lucaLinkSource).not.toMatch(/handoff\.payload(?!Preview)/);
     expect(lucaLinkSource).not.toContain("sync full memory database");
@@ -390,20 +390,19 @@ describe("Settings LucaLink Device Center host connections", () => {
     );
   });
 
-  it("shows host class, connection class, runtime surface, approval capability, and model-only adaptation copy", () => {
+  it("shows host class, connection class, runtime surface, approval capability, and approval-first adaptation copy", () => {
     expect(hostsSectionSource).toContain("host.hostClass");
     expect(hostsSectionSource).toContain("host.connectionClass");
     expect(hostsSectionSource).toContain("host.runtimeSurfaces.join");
     expect(hostsSectionSource).toContain("host.approvalCapability");
     expect(hostsSectionSource).toContain(
-      "Host adaptation intelligence is model-only.",
+      "Host adaptation stays approval-first.",
     );
     expect(hostsSectionSource).toContain(
-      "generated adapters are not executed in this PR",
+      "it cannot activate adapters without your approval",
     );
-    expect(hostsSectionSource).toContain(
-      "Primary Host approval, sandbox checks, and future execution controls",
-    );
+    expect(hostsSectionSource).toContain("Bridge programs require Primary Host approval");
+    expect(hostsSectionSource).toContain("clear execution permissions before use.");
   });
 
   it("does not expose unsafe host adaptation action labels or reserved device authority language", () => {
@@ -494,7 +493,7 @@ describe("Settings LucaLink Device Center guest and service cleanup", () => {
   });
 });
 
-describe("Settings LucaLink Device Center PR 202 surfaces", () => {
+describe("Settings LucaLink Device Center creator bridge review surfaces", () => {
   const bridgeReviewSectionSource = lucaLinkSource.slice(
     lucaLinkSource.indexOf('deviceCenterTab === "bridge-review"'),
     lucaLinkSource.indexOf('deviceCenterTab === "devices"'),
@@ -552,8 +551,8 @@ describe("Settings LucaLink Device Center PR 202 surfaces", () => {
     expect(bridgeReviewSectionSource).toContain("canInstall false");
   });
 
-  it("keeps PR 202 UI actions model-only and avoids forbidden action labels", () => {
-    expect(bridgeReviewSectionSource).toContain("Create sample review");
+  it("keeps bridge review actions approval-gated and avoids forbidden action labels", () => {
+    expect(bridgeReviewSectionSource).toContain("Create review draft");
     expect(bridgeReviewSectionSource).toContain("Approve for sandbox only");
     expect(bridgeReviewSectionSource).toContain("Create text draft");
     expect(bridgeReviewSectionSource).toContain("Clear drafts");

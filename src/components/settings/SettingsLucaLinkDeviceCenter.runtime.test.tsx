@@ -55,10 +55,10 @@ describe("Settings LucaLink Device Center runtime safety", () => {
   it("shows read-only adapter sandbox status without execution controls", () => {
     expect(lucaLinkSource).toContain("Adapter Sandbox Runtime");
     expect(lucaLinkSource).toContain('label="Runtime status"');
-    expect(lucaLinkSource).toContain('label="Dry-run"');
+    expect(lucaLinkSource).toContain('label="Safety check"');
     expect(lucaLinkSource).toContain('label="Code and shell"');
     expect(lucaLinkSource).toContain('label="Host approval"');
-    expect(lucaLinkSource).toContain("Sample dry-run plan status");
+    expect(lucaLinkSource).toContain("Safety-check plan");
     expect(lucaLinkSource).toContain("sideEffectsPerformed");
     expect(lucaLinkSource).not.toMatch(/>Execute adapter</i);
     expect(lucaLinkSource).not.toMatch(/>Install adapter</i);
@@ -79,21 +79,21 @@ describe("Settings LucaLink Device Center runtime safety", () => {
     expect(lucaLinkSource).not.toMatch(/>Execute notification</i);
   });
 
-  it("shows the Web Display Bridge MVP as read-only and approval-gated", () => {
-    expect(lucaLinkSource).toContain("Web Display Bridge MVP");
-    expect(lucaLinkSource).toContain("Read-only MVP");
+  it("shows the Display Bridge as read-only and approval-gated", () => {
+    expect(lucaLinkSource).toContain("Display Bridge");
+    expect(lucaLinkSource).toContain("Read-only");
     expect(lucaLinkSource).toContain(
       "Presentation requires target-host approval",
     );
-    expect(lucaLinkSource).toContain("Sample display session intent status");
-    expect(lucaLinkSource).toContain("sample preview payload status");
+    expect(lucaLinkSource).toContain("Display session status");
+    expect(lucaLinkSource).toContain("display package status");
     expect(lucaLinkSource).not.toMatch(/>Execute display</i);
     expect(lucaLinkSource).not.toMatch(/>Cast</i);
     expect(lucaLinkSource).not.toMatch(/>Control browser</i);
     expect(lucaLinkSource).not.toMatch(/>Open browser</i);
   });
 
-  it("uses host-aware terminology and explicit model-only safety copy", () => {
+  it("uses host-aware terminology and explicit safety copy", () => {
     expect(lucaLinkSource).toContain('label="Primary Host"');
     expect(lucaLinkSource).not.toMatch(/Origin approval/i);
     expect(lucaLinkSource).toContain(

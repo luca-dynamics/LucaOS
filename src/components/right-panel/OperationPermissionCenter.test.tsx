@@ -35,7 +35,7 @@ describe("OperationPermissionCenter", () => {
     expect(markup).toContain("Personal Intelligence");
     expect(markup).toContain("LucaLink");
     expect(markup).toContain("Runtime");
-    expect(markup).toContain("Preview only — nothing has run yet.");
+    expect(markup).toContain("Review status only - no action has run.");
   });
 
   it("shows safety copy and no operational action buttons (creator mode)", () => {

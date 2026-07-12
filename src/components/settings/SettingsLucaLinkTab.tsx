@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Icon } from "../ui/Icon";
 import { LucaSettings } from "../../services/settingsService";
 import { apiUrl, WS_PORT, cortexUrl } from "../../config/api";
@@ -127,14 +127,14 @@ import type {
 // Secrets are redacted before handoff.
 // Handoff does not execute tools or mutate remote devices.
 // Payload preview only
-// No send-now action is exposed in this PR
-// Host adaptation intelligence is model-only.
-// generated adapters are not executed in this PR
-// Primary Host approval, sandbox checks, and future execution controls
+// No send-now action is exposed from settings.
+// Host adaptation stays approval-first.
+// Generated adapters cannot activate without explicit approval.
+// Primary Host approval, sandbox checks, and clear execution permissions
 // Guest access controls are local-first: revoke can end a tracked guest session
 // locally, while invite regeneration, PIN setup, and WebRTC setup stay in the
 // dedicated Link a device / guest access flow.
-// Pairing request previews are model-only: no real QR scanning, pairing code verification, network discovery, transport, trust persistence, or linked-host writes.
+// Pairing reviews do not start QR scanning, pairing code verification, network discovery, transport, trust persistence, or linked-host writes.
 
 // Guest Access Section (Long Distance via Relay)
 const GuestAccessSection: React.FC<{
@@ -858,6 +858,16 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const [deviceCenterSnapshot, setDeviceCenterSnapshot] =
     useState<LucaLinkDeviceCenterSnapshot>(readLucaLinkDeviceCenterSnapshot());
   const [copied, setCopied] = useState(false);
+  const isCreatorMode = settings.general.experienceMode === "creator";
+  const visibleDeviceCenterTabs = useMemo(
+    () =>
+      lucaLinkDeviceCenterTabs.filter(
+        (tab) =>
+          isCreatorMode ||
+          (tab.id !== "bridge-review" && tab.id !== "advanced"),
+      ),
+    [isCreatorMode],
+  );
 
   const refreshDeviceCenter = () => {
     const snapshot = readLucaLinkDeviceCenterSnapshot();
@@ -888,6 +898,14 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       unsubscribeCheckpointStatus();
     };
   }, []);
+
+  useEffect(() => {
+    if (
+      !visibleDeviceCenterTabs.some((tab) => tab.id === deviceCenterTab)
+    ) {
+      setDeviceCenterTab("devices");
+    }
+  }, [deviceCenterTab, visibleDeviceCenterTabs]);
 
   // Auto-start room if enabled but missing token (e.g. on page refresh)
   useEffect(() => {
@@ -1328,20 +1346,20 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
     refreshDeviceCenter();
   };
 
-  const handleCreateSampleBridgeReview = () => {
+  const handleCreateBridgeReviewDraft = () => {
     lucaLinkManager.console.createBridgeReviewFromBlueprint({
-      id: "device-center-web-display-sample",
+      id: "device-center-display-bridge-review",
       strategyKind: "web-display-bridge",
-      title: "Sample Web Display Bridge",
-      summary: "Device Center sample blueprint for display-only bridge review.",
+      title: "Display Bridge Review",
+      summary: "Display-only bridge review for a trusted LucaLink host.",
       targetHostClass: "web-display-host",
       generatedProgramAllowed: false,
       requiresPrimaryHostApproval: true,
       requiresSandbox: false,
       requiresUserProvidedCredentials: false,
-      allowedCapabilities: ["display-only", "model-preview"],
+      allowedCapabilities: ["display-only", "review-required"],
       deniedCapabilities: ["approval-authority", "execute", "install"],
-      safetyBoundaries: ["model-only", "network-disabled", "no execution"],
+      safetyBoundaries: ["review-required", "network-disabled", "no execution"],
       sandboxTestPlan: ["Static config review only"],
       approvalChecklist: ["Primary Host review path visible"],
       configSketch: { mode: "display-only", generatedTextOnly: true },
@@ -1352,19 +1370,19 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
     refreshDeviceCenter();
   };
 
-  const handleCreateSamplePythonDraft = () => {
+  const handleCreatePythonAdapterDraft = () => {
     lucaLinkManager.console.createAdapterDraftFromBlueprint({
-      id: "device-center-python-agent-sample",
+      id: "device-center-python-agent-draft",
       strategyKind: "python-host-agent",
-      title: "Sample Python Host Agent Draft",
-      summary: "Text-only Python pseudocode draft for future sandbox review.",
+      title: "Python Host Agent Draft",
+      summary: "Python host-agent draft awaiting sandbox and host review.",
       targetHostClass: "execution-host",
       generatedProgramLanguage: "python",
       generatedProgramAllowed: false,
       requiresPrimaryHostApproval: true,
       requiresSandbox: true,
       requiresUserProvidedCredentials: true,
-      allowedCapabilities: ["model-preview", "static-review"],
+      allowedCapabilities: ["review-required", "static-review"],
       deniedCapabilities: [
         "execute",
         "install",
@@ -1375,7 +1393,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       sandboxTestPlan: ["Static checks only"],
       approvalChecklist: ["Primary Host approval before any future sandbox"],
       pseudoCode:
-        "# Pseudocode preview only; no execution or install in PR #202",
+        "# Draft only; execution and installation require explicit host approval",
       risk: "medium",
       warnings: [],
       errors: [],
@@ -1393,11 +1411,11 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       });
     else if (action === "reject")
       lucaLinkManager.console.rejectBridgeReview(review.id, {
-        reason: "Rejected from Device Center; model-only state action.",
+        reason: "Rejected from Device Center review.",
       });
     else
       lucaLinkManager.console.cancelBridgeReview(review.id, {
-        reason: "Cancelled from Device Center; model-only state action.",
+        reason: "Cancelled from Device Center review.",
       });
     refreshDeviceCenter();
   };
@@ -1417,22 +1435,24 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
 
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
-      <SettingsSection
-        title="Personal Intelligence Handoff"
-        description="Future bounded handoff preview requires PR #212; raw memory/private reasoning transfer remains forbidden."
-        icon="ShieldWarning"
-        accentColor={theme.hex}
-        isMobile={isMobile}
-      >
-        <SettingsCard>
-          <p className="text-sm font-semibold">Future note only</p>
-          <p className="mt-1 text-xs leading-relaxed opacity-70">
-            No Personal Intelligence data is wired into LucaLink. Any future
-            handoff must remain redacted, bounded, approval-gated, and
-            preview-only before transfer.
-          </p>
-        </SettingsCard>
-      </SettingsSection>
+      {isCreatorMode && (
+        <SettingsSection
+          title="Private Memory Boundary"
+          description="Private memory and reasoning stay off paired devices unless a bounded, approved handoff is explicitly enabled."
+          icon="ShieldWarning"
+          accentColor={theme.hex}
+          isMobile={isMobile}
+        >
+          <SettingsCard>
+            <p className="text-sm font-semibold">Handoff boundary</p>
+            <p className="mt-1 text-xs leading-relaxed opacity-70">
+              LucaLink does not transfer Personal Intelligence records by
+              default. Any handoff must be redacted, bounded, approval-gated,
+              and visible before it leaves this Primary Host.
+            </p>
+          </SettingsCard>
+        </SettingsSection>
+      )}
 
       <SettingsSection
         title="LucaLink Device Center"
@@ -1497,7 +1517,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             backgroundColor: settingsSurfaceTokens.glass,
           }}
         >
-          {lucaLinkDeviceCenterTabs.map((tab) => {
+          {visibleDeviceCenterTabs.map((tab) => {
             const active = deviceCenterTab === tab.id;
             return (
               <button
@@ -1523,23 +1543,24 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           })}
         </div>
 
+        {isCreatorMode && (
         <SettingsCard>
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-sm font-semibold">Pairing request</p>
+              <p className="text-sm font-semibold">Pairing policy review</p>
               <p className="mt-1 text-xs leading-relaxed opacity-70">
-                {pairingDisclosure.simpleStatus} · Preview only · No real pairing has started.
+                {pairingDisclosure.simpleStatus} · Review the requested access before approving a device.
               </p>
             </div>
-            <StatusBadge status="Preview only" />
+            <StatusBadge status="Review only" />
           </div>
           <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-            <DetailField label="Preview code" value={pairingDeviceCenterSummary.codePreview} />
+            <DetailField label="Pairing code" value={pairingDeviceCenterSummary.codePreview} />
             <DetailField label="Expires" value={pairingDeviceCenterSummary.expiresAt} />
             <DetailField label="Primary Host approval required" value={pairingDeviceCenterSummary.primaryHostReviewRequired ? "Required" : "Not required"} />
             <DetailField label="Limited trust" value={pairingDeviceCenterSummary.requestedTrustState} />
             <DetailField label="Sensitive access remains blocked" value={`${pairingRequestPreview.blockedPermissions.length} blocked · ${pairingRequestPreview.approvalRequiredPermissions.length} approval-required`} />
-            <DetailField label="Approve / deny preview" value={`Approve: ${pairingApprovalPreview.status} · Deny: ${pairingDenialPreview.status}`} />
+            <DetailField label="Approve / deny result" value={`Approve: ${pairingApprovalPreview.status} · Deny: ${pairingDenialPreview.status}`} />
           </div>
           {settings.general.experienceMode !== "basic" && (
             <p className="mt-3 text-xs opacity-70">
@@ -1548,19 +1569,20 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           )}
           {settings.general.experienceMode === "creator" && (
             <p className="mt-2 text-xs opacity-70">
-              Request {pairingDisclosure.diagnosticRequestId} · source {pairingDisclosure.diagnosticSourceHostId} · target {pairingDisclosure.diagnosticTargetHostId} · QR payload preview is non-secret and runtime-disabled · {pairingDisclosure.modelFlags?.join(" · ")}.
+              Request {pairingDisclosure.diagnosticRequestId} · source {pairingDisclosure.diagnosticSourceHostId} · target {pairingDisclosure.diagnosticTargetHostId} · permission summary is non-secret · {pairingDisclosure.modelFlags?.join(" · ")}.
             </p>
           )}
           <p className="mt-3 text-xs font-semibold opacity-80">
-            No real pairing started. No QR scanner, network discovery, WebRTC, socket, transport, linked-host registry write, or persistent trust change is invoked here.
+            This review does not pair a device or change trust. Pairing happens only through the Link a device flow.
           </p>
         </SettingsCard>
+        )}
       </SettingsSection>
 
-      {deviceCenterTab === "bridge-review" && (
+      {isCreatorMode && deviceCenterTab === "bridge-review" && (
         <SettingsSection
           title="Bridge Review"
-          description="Review bridge blueprints, embodied safety policy, and controlled adapter drafts as model-only records."
+          description="Review proposed host bridges, safety boundaries, and adapter plans before they can become trusted routes."
           icon="ShieldCheck"
           accentColor={theme.hex}
           isMobile={isMobile}
@@ -1641,16 +1663,16 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 <p className="text-sm font-semibold">Bridge Blueprint Review</p>
                 <p className="mt-1 text-xs opacity-70">
                   Approval for sandbox does not execute or install the adapter.
-                  Generated bridges remain model-only until a future controlled
-                  execution PR.
+                  Generated bridges remain blocked until they pass review and
+                  receive explicit host approval.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={handleCreateSampleBridgeReview}
+                onClick={handleCreateBridgeReviewDraft}
                 style={settingsControlInlineStyle}
               >
-                Create sample review
+                Create review draft
               </button>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -1801,13 +1823,13 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 accentColor={theme.hex}
               />
               <SettingsStatusCard
-                label="Dry-run"
+                label="Safety check"
                 value={
                   DEFAULT_LUCA_LINK_ADAPTER_SANDBOX_CONFIG.dryRun
                     ? "Enabled"
                     : "Blocked"
                 }
-                detail={`Sample plan: ${LUCA_LINK_DEFAULT_ADAPTER_SANDBOX_PREVIEW_PLAN.status}`}
+                detail={`Plan: ${LUCA_LINK_DEFAULT_ADAPTER_SANDBOX_PREVIEW_PLAN.status}`}
                 accentColor={theme.hex}
               />
               <SettingsStatusCard
@@ -1833,7 +1855,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 credential access
               </p>
               <p className="mt-2 text-xs opacity-70">
-                Sample dry-run plan status:{" "}
+                Safety-check plan:{" "}
                 <span className="font-semibold">
                   {LUCA_LINK_DEFAULT_ADAPTER_SANDBOX_PREVIEW_PLAN.status}
                 </span>{" "}
@@ -1854,7 +1876,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           <SettingsCard>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-sm font-semibold">Web Display Bridge MVP</p>
+                <p className="text-sm font-semibold">Display Bridge</p>
                 <p className="mt-1 text-xs opacity-70">
                   Read-only display session intents and sanitized previews only.
                   This surface does not open, cast, control, or send to a
@@ -1865,13 +1887,13 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 className="rounded-full border px-2 py-1 text-[11px] font-semibold"
                 style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
               >
-                Read-only MVP
+                Read-only
               </span>
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <SettingsStatusCard
                 label="Status"
-                value="Read-only MVP"
+                value="Read-only"
                 detail="Display bridge default is inert"
                 accentColor={theme.hex}
               />
@@ -1903,11 +1925,11 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 {LUCA_LINK_WEB_DISPLAY_BLOCKED_ACTIONS.join(" · ")}
               </p>
               <p className="mt-2 text-xs opacity-70">
-                Sample display session intent status:{" "}
+                Display session status:{" "}
                 <span className="font-semibold">
                   {LUCA_LINK_WEB_DISPLAY_SAMPLE_INTENT.status}
                 </span>{" "}
-                · sample preview payload status: ready · allowed actions{" "}
+                · display package status: ready · allowed actions{" "}
                 {LUCA_LINK_WEB_DISPLAY_SAMPLE_PREVIEW.allowedActions.length} ·
                 sideEffectsPerformed{" "}
                 {String(
@@ -1925,18 +1947,17 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               <div>
                 <p className="text-sm font-semibold">Adapter Drafts</p>
                 <p className="mt-1 text-xs opacity-70">
-                  Adapter drafts are controlled text/model-only artifacts:
-                  generatedTextOnly true, canWriteToDisk false, canExecute
-                  false, canInstall false.
+                  Adapter drafts stay in review until this Primary Host approves
+                  file access, execution, installation, and device permissions.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={handleCreateSamplePythonDraft}
+                  onClick={handleCreatePythonAdapterDraft}
                   style={settingsControlInlineStyle}
                 >
-                  Create sample Python draft
+                  Create adapter draft
                 </button>
                 <button
                   type="button"
@@ -1984,7 +2005,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                         source{" "}
                         {draft.sourceReviewId ??
                           draft.sourceBlueprintId ??
-                          "sample"}
+                          "manual"}
                       </p>
                       <p className="mt-1 text-xs opacity-70">
                         generatedTextOnly {String(draft.generatedTextOnly)} ·
@@ -2084,6 +2105,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             />
           </div>
 
+          {isCreatorMode && (
           <SettingsCard>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -2091,15 +2113,15 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   LucaLink Local Approval Actions
                 </p>
                 <p className="mt-1 text-xs opacity-70">
-                  Preview approve, deny, revoke, and handoff outcomes before any
-                  local state change. No runtime action will run.
+                  Review approve, deny, revoke, and handoff outcomes before any
+                  local state change.
                 </p>
               </div>
               <span
                 className="rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide"
                 style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
               >
-                Preview only
+                Review only
               </span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -2116,7 +2138,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 accentColor={theme.hex}
               />
               <SettingsStatusCard
-                label="Revocation preview"
+                label="Revocation impact"
                 value={`${localApprovalActionPreviews.revoke.revocationDryRun?.affectedLanes.length ?? 0} lane(s)`}
                 detail={`${localApprovalActionPreviews.revoke.revocationDryRun?.blockedPermissions.length ?? 0} permissions blocked`}
                 accentColor={theme.hex}
@@ -2148,7 +2170,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       </p>
                     </div>
                     <StatusBadge
-                      status={(preview as typeof localApprovalActionPreviews.approve).previewOnly ? "Preview only" : "Review"}
+                      status={(preview as typeof localApprovalActionPreviews.approve).previewOnly ? "Review only" : "Review"}
                     />
                   </div>
                   <p className="mt-2 text-xs opacity-70">
@@ -2178,11 +2200,12 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               )}
               {settings.general.experienceMode === "creator" && (
                 <p className="mt-1 opacity-70">
-                  Dry-run adapter actions: {localApprovalActionDisclosure.dryRunAdapterActions?.join(", ") || "none"} · audit preview {localApprovalActionDisclosure.auditEventPreview?.join(", ") || "none"}
+                  Review adapter actions: {localApprovalActionDisclosure.dryRunAdapterActions?.join(", ") || "none"} · audit events {localApprovalActionDisclosure.auditEventPreview?.join(", ") || "none"}
                 </p>
               )}
             </div>
           </SettingsCard>
+          )}
 
           {trustedDevices.length === 0 ? (
             <SettingsCard>
@@ -2478,17 +2501,16 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           </div>
 
           <SettingsCard>
-            {/* Primary Host approval, sandbox checks, and future execution controls */}
             <p className="text-sm font-semibold">
-              Host adaptation intelligence is model-only.
+              Host adaptation stays approval-first.
             </p>
             <p className="mt-1 text-xs opacity-70">
-              Luca can propose bridge strategies for unknown hosts, but
-              generated adapters are not executed in this PR.
+              Luca can suggest connection strategies for unfamiliar hosts, but
+              it cannot activate adapters without your approval.
             </p>
             <p className="mt-1 text-xs opacity-70">
-              Generated bridge programs require Primary Host approval, sandbox
-              checks, and future execution controls.
+              Bridge programs require Primary Host approval, sandbox checks,
+              and clear execution permissions before use.
             </p>
           </SettingsCard>
 
@@ -3351,10 +3373,10 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         </SettingsSection>
       )}
 
-      {deviceCenterTab === "advanced" && (
+      {isCreatorMode && deviceCenterTab === "advanced" && (
         <SettingsSection
           title="Advanced"
-          description="Read-only LucaLink queue and runtime shadow diagnostics summary."
+          description="Creator diagnostics for LucaLink approvals, continuity records, and adapter safety signals."
           icon="Settings"
           accentColor={theme.hex}
           isMobile={isMobile}
@@ -3377,7 +3399,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             <SettingsStatusCard
               label="Adapter diagnostics"
               value={`${deviceCenterSnapshot.runtimeShadowSummary.adapterWarnings} warnings / ${deviceCenterSnapshot.runtimeShadowSummary.adapterErrors} errors`}
-              detail="Runtime shadow only; no enforcement toggles here."
+              detail="Observation only; no enforcement toggles here."
               accentColor={theme.hex}
             />
             <SettingsStatusCard
@@ -3430,7 +3452,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             <SettingsStatusCard
               label="Fresh confirmation required"
               value={`${deviceCenterSnapshot.continuationSummary.byReplayMode["fresh-confirmation-required"]}`}
-              detail={`Single-use replayable records: ${deviceCenterSnapshot.continuationSummary.byReplayMode["single-use-replayable"]}. Runtime continuation execution will come later.`}
+                detail={`Single-use replayable records: ${deviceCenterSnapshot.continuationSummary.byReplayMode["single-use-replayable"]}.`}
               accentColor={theme.hex}
             />
           </div>
@@ -3585,7 +3607,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             <p className="text-sm font-semibold">Recent observations</p>
             {deviceCenterSnapshot.runtimeShadowObservations.length === 0 ? (
               <p className="mt-1 text-xs opacity-70">
-                No runtime shadow observations exposed yet.
+                No safety observations available yet.
               </p>
             ) : (
               <div className="mt-3 space-y-2">
@@ -4102,10 +4124,10 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         </SettingsSection>
       )}
 
-      {deviceCenterTab === "advanced" && (
+      {isCreatorMode && deviceCenterTab === "advanced" && (
         <SettingsAdvancedDisclosure
           title="Advanced Details"
-          description="Relay mode, local network discovery, VPN/tunnel settings, pairing token diagnostics, and connection logs."
+          description="Relay mode, local network discovery, VPN/tunnel settings, pairing token details, and connection logs."
         >
           <SettingsRow
             label="Relay mode"
@@ -4113,7 +4135,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           />
           <SettingsRow
             label="Local network discovery"
-            description="Discovery diagnostics stay grouped with low-level connection details."
+            description="Discovery details stay grouped with low-level connection details."
           />
           <SettingsRow
             label="VPN/tunnel settings"
@@ -4121,7 +4143,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           />
           <SettingsRow
             label="Connection logs"
-            description="Pairing token and connection logs stay diagnostic-only."
+            description="Pairing token details and connection logs stay here."
           />
         </SettingsAdvancedDisclosure>
       )}

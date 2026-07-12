@@ -99,7 +99,7 @@ function OperationCenterCard({ item }: { item: OperationCenterItem }) {
         </p>
       )}
       <p className="mt-2 text-[8px] text-[var(--app-text-muted)]">
-        Preview only — nothing has run yet.
+        Review status only - no action has run.
       </p>
     </article>
   );
