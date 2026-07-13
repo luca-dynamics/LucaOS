@@ -443,6 +443,32 @@ export const RuntimeDiagnosticsPanel: React.FC<RuntimeDiagnosticsPanelProps> = (
             <div>Installed: {formatValue(diagnostics.localRuntime.ollama.installed)}</div>
             <div>Cortex: {formatValue(diagnostics.localRuntime.cortex.available)}</div>
           </div>
+          {diagnostics.localRuntime.facade && (
+            <div className="mt-3 border-t pt-3 uppercase tracking-widest" style={{ borderColor: "var(--app-border-main)" }}>
+              <div>
+                Runtime facade:{" "}
+                {diagnostics.localRuntime.facade.registeredRuntimes.length > 0
+                  ? diagnostics.localRuntime.facade.registeredRuntimes.join(", ")
+                  : "no adapters registered"}
+              </div>
+              {diagnostics.localRuntime.facade.runtimes.map((runtime) => (
+                <div key={runtime.runtime}>
+                  {runtime.runtime}: {runtime.status}
+                  {typeof runtime.modelCount === "number"
+                    ? ` · ${runtime.modelCount} models`
+                    : ""}
+                  {runtime.message ? ` · ${runtime.message}` : ""}
+                </div>
+              ))}
+              <div>
+                Active requests: {diagnostics.localRuntime.facade.activeRequests}
+                {" · "}Leases: {diagnostics.localRuntime.facade.activeLeases}
+                {diagnostics.localRuntime.facade.leaseUnderflows > 0
+                  ? ` · Lease underflows: ${diagnostics.localRuntime.facade.leaseUnderflows}`
+                  : ""}
+              </div>
+            </div>
+          )}
           {audience === "origin" && (
             <div className="mt-3 border-t pt-3 uppercase tracking-widest" style={{ borderColor: "var(--app-border-main)" }}>
               Key sources: {diagnostics.keyReadiness.sources.join(", ")}
