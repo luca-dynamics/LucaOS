@@ -104,6 +104,7 @@ import {
   SettingsCard,
   SettingsRow,
   SettingsSection,
+  SettingsStatList,
   SettingsStatusCard,
   settingsControlInlineStyle,
 } from "./SettingsLayout";
@@ -1474,52 +1475,45 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         accentColor={theme.hex}
         isMobile={isMobile}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
-          <SettingsStatusCard
-            label="Primary Host"
-            value={currentDeviceId ? "This device" : "Not confirmed"}
-            detail={
-              currentDeviceId
+        <SettingsStatList
+          items={[
+            {
+              label: "Primary Host",
+              value: currentDeviceId ? "This device" : "Not confirmed",
+              detail: currentDeviceId
                 ? `Device ID: ${currentDeviceId}`
-                : "Primary Host identity is not exposed yet."
-            }
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Connected Devices"
-            value={`${connectedDevices.length}`}
-            detail={
-              connectedDevices.length > 0
-                ? `${connectedDevices.length} device record${connectedDevices.length === 1 ? "" : "s"} visible.`
-                : "No connected devices exposed yet."
-            }
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Pending Approvals"
-            value={`${deviceCenterSnapshot.pendingApprovals.length}`}
-            detail={
-              pendingHighOrCritical > 0
-                ? `${pendingHighOrCritical} high or critical request${pendingHighOrCritical === 1 ? "" : "s"}.`
-                : "No high-risk pending requests."
-            }
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Guest Sessions"
-            value={`${deviceCenterSnapshot.guestSecuritySummary.total} tracked`}
-            detail={`${deviceCenterSnapshot.guestSecuritySummary.active} active · ${deviceCenterSnapshot.guestSecuritySummary.authenticated} authenticated · ${deviceCenterSnapshot.guestSecuritySummary.expired} expired · ${deviceCenterSnapshot.guestSecuritySummary.disconnected} disconnected · ${deviceCenterSnapshot.guestSecuritySummary.deniedGuestInbound} denied · ${deviceCenterSnapshot.guestSecuritySummary.rateLimitedGuestInbound} rate-limited`}
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Security Mode"
-            value={getLucaLinkSecurityModeLabel(
-              deviceCenterSnapshot.softEnforcementMode,
-            )}
-            detail={`Soft enforcement: ${deviceCenterSnapshot.softEnforcementMode}`}
-            accentColor={theme.hex}
-          />
-        </div>
+                : "Primary Host identity is not exposed yet.",
+            },
+            {
+              label: "Connected devices",
+              value: `${connectedDevices.length}`,
+              detail:
+                connectedDevices.length > 0
+                  ? `${connectedDevices.length} device record${connectedDevices.length === 1 ? "" : "s"} visible.`
+                  : "No connected devices exposed yet.",
+            },
+            {
+              label: "Pending approvals",
+              value: `${deviceCenterSnapshot.pendingApprovals.length}`,
+              detail:
+                pendingHighOrCritical > 0
+                  ? `${pendingHighOrCritical} high or critical request${pendingHighOrCritical === 1 ? "" : "s"}.`
+                  : "No high-risk pending requests.",
+            },
+            {
+              label: "Guest sessions",
+              value: `${deviceCenterSnapshot.guestSecuritySummary.total} tracked`,
+              detail: `${deviceCenterSnapshot.guestSecuritySummary.active} active · ${deviceCenterSnapshot.guestSecuritySummary.authenticated} authenticated · ${deviceCenterSnapshot.guestSecuritySummary.expired} expired · ${deviceCenterSnapshot.guestSecuritySummary.disconnected} disconnected · ${deviceCenterSnapshot.guestSecuritySummary.deniedGuestInbound} denied · ${deviceCenterSnapshot.guestSecuritySummary.rateLimitedGuestInbound} rate-limited`,
+            },
+            {
+              label: "Security mode",
+              value: getLucaLinkSecurityModeLabel(
+                deviceCenterSnapshot.softEnforcementMode,
+              ),
+              detail: `Soft enforcement: ${deviceCenterSnapshot.softEnforcementMode}`,
+            },
+          ]}
+        />
 
         <div
           className="mt-4 flex gap-1 overflow-x-auto border-b pb-px"
@@ -2084,36 +2078,32 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             </SettingsCard>
           )}
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-            <SettingsStatusCard
-              label="Known devices"
-              value={`${deviceCenterSnapshot.deviceTrustSummary.total}`}
-              detail={`${deviceCenterSnapshot.deviceTrustSummary.connected} connected · ${deviceCenterSnapshot.deviceTrustSummary.disconnected} disconnected`}
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Revoked / blocked"
-              value={`${deviceCenterSnapshot.deviceTrustSummary.revoked} / ${deviceCenterSnapshot.deviceTrustSummary.blocked}`}
-              detail="Local-only state; no remote disconnect is sent."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Trusted / admin"
-              value={`${deviceCenterSnapshot.deviceTrustSummary.trusted} / ${deviceCenterSnapshot.deviceTrustSummary.admin}`}
-              detail="Admin is advanced device management only."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Trust audit"
-              value={`${deviceCenterSnapshot.deviceTrustSummary.auditCount}`}
-              detail={
-                deviceCenterSnapshot.deviceTrustSummary.latestMutation
+          <SettingsStatList
+            items={[
+              {
+                label: "Known devices",
+                value: `${deviceCenterSnapshot.deviceTrustSummary.total}`,
+                detail: `${deviceCenterSnapshot.deviceTrustSummary.connected} connected · ${deviceCenterSnapshot.deviceTrustSummary.disconnected} disconnected`,
+              },
+              {
+                label: "Revoked / blocked",
+                value: `${deviceCenterSnapshot.deviceTrustSummary.revoked} / ${deviceCenterSnapshot.deviceTrustSummary.blocked}`,
+                detail: "Local-only state; no remote disconnect is sent.",
+              },
+              {
+                label: "Trusted / admin",
+                value: `${deviceCenterSnapshot.deviceTrustSummary.trusted} / ${deviceCenterSnapshot.deviceTrustSummary.admin}`,
+                detail: "Admin is advanced device management only.",
+              },
+              {
+                label: "Trust audit",
+                value: `${deviceCenterSnapshot.deviceTrustSummary.auditCount}`,
+                detail: deviceCenterSnapshot.deviceTrustSummary.latestMutation
                   ? `${deviceCenterSnapshot.deviceTrustSummary.latestMutation.mutation} · ${formatLucaLinkTimestamp(deviceCenterSnapshot.deviceTrustSummary.latestMutation.timestamp)}`
-                  : "No trust mutations yet."
-              }
-              accentColor={theme.hex}
-            />
-          </div>
+                  : "No trust mutations yet.",
+              },
+            ]}
+          />
 
           {isCreatorMode && (
           <SettingsCard>
@@ -2471,44 +2461,41 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           accentColor={theme.hex}
           isMobile={isMobile}
         >
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-6">
-            <SettingsStatusCard
-              label="Host connections"
-              value={`${deviceCenterSnapshot.hostConnectionSummary.total}`}
-              detail={`${deviceCenterSnapshot.hostConnectionSummary.online} online or locally visible.`}
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Display hosts"
-              value={`${deviceCenterSnapshot.hostConnectionSummary.displayHosts}`}
-              detail="Can host read-only Luca UI or display surfaces."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Approval-capable hosts"
-              value={`${deviceCenterSnapshot.hostConnectionSummary.approvalCapable}`}
-              detail="Approval boundaries remain governed by Primary Host policy."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Sensor hosts"
-              value={`${deviceCenterSnapshot.hostConnectionSummary.sensorHosts}`}
-              detail="Read-only sensor eligibility model."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Embodied hosts"
-              value={`${deviceCenterSnapshot.hostConnectionSummary.embodiedHosts}`}
-              detail="Physical action is denied by default."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Unknown hosts"
-              value={`${deviceCenterSnapshot.hostConnectionSummary.unknownHosts}`}
-              detail="Require diagnosis before bridge planning."
-              accentColor={theme.hex}
-            />
-          </div>
+          <SettingsStatList
+            items={[
+              {
+                label: "Host connections",
+                value: `${deviceCenterSnapshot.hostConnectionSummary.total}`,
+                detail: `${deviceCenterSnapshot.hostConnectionSummary.online} online or locally visible.`,
+              },
+              {
+                label: "Display hosts",
+                value: `${deviceCenterSnapshot.hostConnectionSummary.displayHosts}`,
+                detail: "Can host read-only Luca UI or display surfaces.",
+              },
+              {
+                label: "Approval-capable hosts",
+                value: `${deviceCenterSnapshot.hostConnectionSummary.approvalCapable}`,
+                detail:
+                  "Approval boundaries remain governed by Primary Host policy.",
+              },
+              {
+                label: "Sensor hosts",
+                value: `${deviceCenterSnapshot.hostConnectionSummary.sensorHosts}`,
+                detail: "Read-only sensor eligibility model.",
+              },
+              {
+                label: "Embodied hosts",
+                value: `${deviceCenterSnapshot.hostConnectionSummary.embodiedHosts}`,
+                detail: "Physical action is denied by default.",
+              },
+              {
+                label: "Unknown hosts",
+                value: `${deviceCenterSnapshot.hostConnectionSummary.unknownHosts}`,
+                detail: "Require diagnosis before bridge planning.",
+              },
+            ]}
+          />
 
           <SettingsCard>
             <p className="text-sm font-semibold">
@@ -2635,6 +2622,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             </SettingsCard>
           )}
 
+          {isCreatorMode && (
           <SettingsCard>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -2642,13 +2630,13 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   Companion Approval Notifications
                 </p>
                 <p className="mt-1 text-xs opacity-70">
-                  Intent-only notification preview. No execution, queue
-                  mutation, socket send, display cast, browser open, or device
-                  control is performed.
+                  Sample data — an intent-only notification preview. No
+                  execution, queue mutation, socket send, display cast, browser
+                  open, or device control is performed.
                 </p>
               </div>
               <span className="rounded-full border px-2 py-0.5 text-xs font-medium">
-                intent-only
+                Sample · intent-only
               </span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -2710,6 +2698,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               </p>
             </div>
           </SettingsCard>
+          )}
 
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
             <div className="space-y-3">
@@ -3003,32 +2992,30 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             </SettingsCard>
           )}
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-            <SettingsStatusCard
-              label="Tracked guests"
-              value={`${deviceCenterSnapshot.guestSecuritySummary.total}`}
-              detail={`${deviceCenterSnapshot.guestSecuritySummary.connected} connected · ${deviceCenterSnapshot.guestSecuritySummary.authChallenge} awaiting auth`}
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Authenticated / active"
-              value={`${deviceCenterSnapshot.guestSecuritySummary.authenticated} / ${deviceCenterSnapshot.guestSecuritySummary.active}`}
-              detail="Read-only guest security session state."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Expired / disconnected"
-              value={`${deviceCenterSnapshot.guestSecuritySummary.expired} / ${deviceCenterSnapshot.guestSecuritySummary.disconnected}`}
-              detail={`${deviceCenterSnapshot.guestSecuritySummary.revoked} revoked locally.`}
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Denied / rate-limited"
-              value={`${deviceCenterSnapshot.guestSecuritySummary.deniedGuestInbound} / ${deviceCenterSnapshot.guestSecuritySummary.rateLimitedGuestInbound}`}
-              detail="Inbound guest policy counters only."
-              accentColor={theme.hex}
-            />
-          </div>
+          <SettingsStatList
+            items={[
+              {
+                label: "Tracked guests",
+                value: `${deviceCenterSnapshot.guestSecuritySummary.total}`,
+                detail: `${deviceCenterSnapshot.guestSecuritySummary.connected} connected · ${deviceCenterSnapshot.guestSecuritySummary.authChallenge} awaiting auth`,
+              },
+              {
+                label: "Authenticated / active",
+                value: `${deviceCenterSnapshot.guestSecuritySummary.authenticated} / ${deviceCenterSnapshot.guestSecuritySummary.active}`,
+                detail: "Read-only guest security session state.",
+              },
+              {
+                label: "Expired / disconnected",
+                value: `${deviceCenterSnapshot.guestSecuritySummary.expired} / ${deviceCenterSnapshot.guestSecuritySummary.disconnected}`,
+                detail: `${deviceCenterSnapshot.guestSecuritySummary.revoked} revoked locally.`,
+              },
+              {
+                label: "Denied / rate-limited",
+                value: `${deviceCenterSnapshot.guestSecuritySummary.deniedGuestInbound} / ${deviceCenterSnapshot.guestSecuritySummary.rateLimitedGuestInbound}`,
+                detail: "Inbound guest policy counters only.",
+              },
+            ]}
+          />
           <SettingsCard>
             <p className="text-sm font-semibold">
               Guest access controls
@@ -3120,38 +3107,36 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           accentColor={theme.hex}
           isMobile={isMobile}
         >
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
-            <SettingsStatusCard
-              label="Pending handoffs"
-              value={`${deviceCenterSnapshot.pendingHandoffs.length}`}
-              detail="Awaiting state action or Primary Host approval."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Conversation handoffs"
-              value={`${deviceCenterSnapshot.handoffSummary.byKind.conversation}`}
-              detail="Hidden system prompts and private reasoning are excluded."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Memory intent handoffs"
-              value={`${deviceCenterSnapshot.handoffSummary.byKind["memory-intent"]}`}
-              detail="Intent-only; no raw memory database transfer."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Artifact / mission handoffs"
-              value={`${deviceCenterSnapshot.handoffSummary.byKind.artifact + deviceCenterSnapshot.handoffSummary.byKind.mission}`}
-              detail="Metadata only; no raw file transfer."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Blocked / expired"
-              value={`${deviceCenterSnapshot.handoffSummary.blocked} / ${deviceCenterSnapshot.handoffSummary.expired}`}
-              detail="Unsafe or stale handoff records remain visible."
-              accentColor={theme.hex}
-            />
-          </div>
+          <SettingsStatList
+            items={[
+              {
+                label: "Pending handoffs",
+                value: `${deviceCenterSnapshot.pendingHandoffs.length}`,
+                detail: "Awaiting state action or Primary Host approval.",
+              },
+              {
+                label: "Conversation handoffs",
+                value: `${deviceCenterSnapshot.handoffSummary.byKind.conversation}`,
+                detail:
+                  "Hidden system prompts and private reasoning are excluded.",
+              },
+              {
+                label: "Memory intent handoffs",
+                value: `${deviceCenterSnapshot.handoffSummary.byKind["memory-intent"]}`,
+                detail: "Intent-only; no raw memory database transfer.",
+              },
+              {
+                label: "Artifact / mission handoffs",
+                value: `${deviceCenterSnapshot.handoffSummary.byKind.artifact + deviceCenterSnapshot.handoffSummary.byKind.mission}`,
+                detail: "Metadata only; no raw file transfer.",
+              },
+              {
+                label: "Blocked / expired",
+                value: `${deviceCenterSnapshot.handoffSummary.blocked} / ${deviceCenterSnapshot.handoffSummary.expired}`,
+                detail: "Unsafe or stale handoff records remain visible.",
+              },
+            ]}
+          />
 
           <SettingsCard>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

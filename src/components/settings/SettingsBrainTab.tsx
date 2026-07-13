@@ -1008,7 +1008,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             }
           />
         ) : (
-          <WebUnavailableState featureName="Local Ollama installation and service control" />
+          <div className="pb-4">
+            <WebUnavailableState featureName="Local Ollama installation and service control" />
+          </div>
         )}
         <SettingsAdvancedDisclosure
           title="Routing diagnostics"

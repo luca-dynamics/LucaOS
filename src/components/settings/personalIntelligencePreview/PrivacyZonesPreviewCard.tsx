@@ -9,13 +9,13 @@ export const PrivacyZonesPreviewCard: React.FC<{
 }> = ({ zones }) => (
   <PreviewCardFrame
     title="Privacy Zones"
-    description="Sensitive zones remain blocked until a future governed adapter authorizes access."
+    description="Sensitive zones stay blocked; only the governed memory approval flow below can authorize writes."
     badges={["Preview only", "Not applied"]}
   >
     {zones.map(({ zone, sensitive, blocked }) => (
       <PreviewField
         key={zone}
-        label={zone}
+        label={zone.charAt(0).toUpperCase() + zone.slice(1).toLowerCase()}
         value={
           sensitive && blocked ? "Sensitive — blocked" : "Preview metadata only"
         }

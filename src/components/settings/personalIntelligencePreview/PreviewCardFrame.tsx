@@ -55,7 +55,7 @@ export const PreviewField: React.FC<{
 }> = ({ label, value }) => (
   <div className="grid gap-1 sm:grid-cols-[9rem_1fr]">
     <span
-      className="text-[11px] font-semibold uppercase tracking-wide"
+      className="text-[12px] font-medium"
       style={{ color: settingsSurfaceTokens.textTertiary }}
     >
       {label}

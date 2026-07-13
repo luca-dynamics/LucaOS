@@ -127,6 +127,47 @@ export const SettingsStatusCard: React.FC<
   </SettingsCard>
 );
 
+export interface SettingsStatItem {
+  label: string;
+  value: React.ReactNode;
+  /** Optional explanation, shown as a native tooltip — never as filler prose. */
+  detail?: string;
+}
+
+/**
+ * Quiet label/value stat rows — the Claude-style alternative to a wall of
+ * metric boxes. Use for telemetry/summary counts; details live in tooltips.
+ */
+export const SettingsStatList: React.FC<
+  BaseProps & { items: SettingsStatItem[]; columns?: 1 | 2 }
+> = ({ items, columns = 2, className = "" }) => (
+  <div
+    className={`grid grid-cols-1 gap-x-10 ${columns === 2 ? "md:grid-cols-2" : ""} ${className}`}
+  >
+    {items.map((item) => (
+      <div
+        key={item.label}
+        title={item.detail}
+        className="flex items-baseline justify-between gap-4 border-b py-2.5"
+        style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+      >
+        <span
+          className="text-[13px]"
+          style={{ color: settingsSurfaceTokens.textSecondary }}
+        >
+          {item.label}
+        </span>
+        <span
+          className="text-right font-mono text-[13px]"
+          style={{ color: settingsSurfaceTokens.textPrimary }}
+        >
+          {item.value}
+        </span>
+      </div>
+    ))}
+  </div>
+);
+
 export const SettingsRow: React.FC<
   BaseProps & {
     label: string;

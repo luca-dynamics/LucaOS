@@ -165,28 +165,9 @@ class LucaService {
           this.setPersona(gen.persona as PersonaType);
         }
 
-        // 2. SYNC: If sync is ON, ensure the theme follows the persona
-        // SKIP during onboarding (setupComplete = false) to allow theme preview
-        const personaToThemeMap: Record<string, string> = {
-          RUTHLESS: "MASTER_SYSTEM",
-          ENGINEER: "BUILDER",
-          ASSISTANT: "PROFESSIONAL",
-          HACKER: "TERMINAL",
-        };
-        const syncedThemeId = personaToThemeMap[gen.persona] || "PROFESSIONAL";
-
-        if (
-          gen.syncThemeWithPersona &&
-          gen.theme !== syncedThemeId &&
-          gen.setupComplete
-        ) {
-          console.log(
-            `[LUCA] Syncing Theme aesthetic with Persona: ${gen.persona} -> ${syncedThemeId}`,
-          );
-          settingsService.saveSettings({
-            general: { ...gen, theme: syncedThemeId },
-          });
-        }
+        // Persona is behavior only (prompt, voice, tools). Appearance belongs
+        // to the skin system — the old persona→theme sync fought the user's
+        // chosen skin, so persona changes no longer touch visual state.
       }
 
       // Always mark session as dirty to pick up Model/Temperature changes

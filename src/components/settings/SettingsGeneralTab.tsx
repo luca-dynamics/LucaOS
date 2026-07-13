@@ -91,6 +91,18 @@ const personaOptions: PersonaMode[] = [
   "HACKER",
 ];
 
+// Human names for the behavior modes. The wire keys stay unchanged — the
+// prompt config, tool map, and voice selection all index by them.
+const PERSONA_DISPLAY: Record<
+  string,
+  { label: string; desc: string }
+> = {
+  RUTHLESS: { label: "Direct", desc: "Minimum words, maximum action" },
+  ENGINEER: { label: "Technical", desc: "Precise, code-first reasoning" },
+  ASSISTANT: { label: "Warm", desc: "Thorough, patient, explains itself" },
+  HACKER: { label: "Security", desc: "Authorized security analysis" },
+};
+
 const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
   settings,
   onUpdate,
@@ -258,52 +270,48 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
 
         <motion.div variants={item}>
           <SettingsSection
-            title="Appearance"
-            description="Choose Luca's persona and visual operating environment."
-            icon="Palette"
+            title="Luca Persona"
+            description={`How Luca thinks and speaks — changes tone, speaking voice, and available tools, never appearance. Current: ${PERSONA_DISPLAY[personaLabel]?.label ?? "Warm"}.`}
+            icon="Sparkles"
             accentColor={theme.hex}
             isMobile={isMobile}
           >
-            <div>
-              <div className="mb-2">
-                <p
-                  className="text-[13.5px] font-medium"
-                  style={{ color: settingsSurfaceTokens.textPrimary }}
-                >
-                  Luca Persona
-                </p>
-                <p
-                  className="text-[12.5px]"
-                  style={{ color: settingsSurfaceTokens.textSecondary }}
-                >
-                  Current mode: {personaLabel}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {personaOptions.map((p) => {
-                  const isActive = personaLabel === p;
-                  return (
-                    <button
-                      key={p}
-                      onClick={() => onUpdate("general", "persona", p)}
-                      className="rounded-lg border px-3 py-1.5 text-[12.5px] font-medium transition-colors"
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+              {personaOptions.map((p) => {
+                const isActive = personaLabel === p;
+                const display = PERSONA_DISPLAY[p];
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => onUpdate("general", "persona", p)}
+                    className="rounded-lg border p-3 text-left transition-colors"
+                    style={{
+                      ...settingsControlInlineStyle,
+                      borderColor: isActive
+                        ? theme.hex
+                        : settingsSurfaceTokens.borderSubtle,
+                    }}
+                  >
+                    <p
+                      className="text-[13px] font-medium"
                       style={{
-                        borderColor: isActive
-                          ? theme.hex
-                          : settingsSurfaceTokens.borderSubtle,
-                        backgroundColor: isActive
-                          ? `${theme.hex}14`
-                          : "transparent",
                         color: isActive
-                          ? settingsSurfaceTokens.textPrimary
-                          : settingsSurfaceTokens.textSecondary,
+                          ? theme.hex
+                          : settingsSurfaceTokens.textPrimary,
                       }}
                     >
-                      {p.charAt(0) + p.slice(1).toLowerCase()}
-                    </button>
-                  );
-                })}
-              </div>
+                      {display.label}
+                    </p>
+                    <p
+                      className="mt-0.5 text-[11.5px] leading-snug"
+                      style={{ color: settingsSurfaceTokens.textSecondary }}
+                    >
+                      {display.desc}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           </SettingsSection>
         </motion.div>

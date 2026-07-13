@@ -5,7 +5,7 @@ import {
   SettingsCard,
   SettingsRow,
   SettingsSection,
-  SettingsStatusCard,
+  SettingsStatList,
   settingsControlInlineStyle,
   settingsInputClassName,
 } from "./SettingsLayout";
@@ -34,32 +34,32 @@ const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
         accentColor={theme?.hex}
         isMobile={isMobile}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <SettingsStatusCard
-            label="Connected home"
-            value={isConnected ? "Configured" : "Not connected"}
-            detail="Home Assistant connection details are kept under Advanced Details."
-            accentColor={theme?.hex}
-          />
-          <SettingsStatusCard
-            label="Available devices"
-            value="Ready to sync"
-            detail="Lights, climate, locks, cameras, speakers, and sensors sync through the existing integration."
-            accentColor={theme?.hex}
-          />
-          <SettingsStatusCard
-            label="Last sync"
-            value="When connected"
-            detail="Device sync logs stay in Advanced Details."
-            accentColor={theme?.hex}
-          />
-          <SettingsStatusCard
-            label="Connection health"
-            value={isConnected ? "Ready" : "Needs setup"}
-            detail="No runtime behavior changes in this migration."
-            accentColor={theme?.hex}
-          />
-        </div>
+        <SettingsStatList
+          items={[
+            {
+              label: "Connected home",
+              value: isConnected ? "Configured" : "Not connected",
+              detail:
+                "Home Assistant connection details are kept under Advanced Details.",
+            },
+            {
+              label: "Available devices",
+              value: "Ready to sync",
+              detail:
+                "Lights, climate, locks, cameras, speakers, and sensors sync through the existing integration.",
+            },
+            {
+              label: "Last sync",
+              value: "When connected",
+              detail: "Device sync logs stay in Advanced Details.",
+            },
+            {
+              label: "Connection health",
+              value: isConnected ? "Ready" : "Needs setup",
+              detail: "No runtime behavior changes in this migration.",
+            },
+          ]}
+        />
       </SettingsSection>
 
       <SettingsSection

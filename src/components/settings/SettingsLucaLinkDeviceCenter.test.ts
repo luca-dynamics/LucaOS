@@ -44,11 +44,11 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain(
       "Manage trusted devices, approval requests, guest sessions, and mesh security.",
     );
-    expect(lucaLinkSource).toContain('label="Primary Host"');
-    expect(lucaLinkSource).toContain('label="Connected Devices"');
-    expect(lucaLinkSource).toContain('label="Pending Approvals"');
-    expect(lucaLinkSource).toContain('label="Guest Sessions"');
-    expect(lucaLinkSource).toContain('label="Security Mode"');
+    expect(lucaLinkSource).toContain('label: "Primary Host"');
+    expect(lucaLinkSource).toContain('label: "Connected devices"');
+    expect(lucaLinkSource).toContain('label: "Pending approvals"');
+    expect(lucaLinkSource).toContain('label: "Guest sessions"');
+    expect(lucaLinkSource).toContain('label: "Security mode"');
     expect(lucaLinkSource).toContain('{ id: "devices", label: "Devices" }');
     expect(lucaLinkSource).toContain('{ id: "approvals", label: "Approvals" }');
     expect(lucaLinkSource).toContain('{ id: "advanced", label: "Advanced" }');
@@ -254,11 +254,11 @@ describe("Settings LucaLink Device Center", () => {
   });
 
   it("renders Device Center Sync handoff summary and safe copy", () => {
-    expect(lucaLinkSource).toContain('label="Pending handoffs"');
-    expect(lucaLinkSource).toContain('label="Conversation handoffs"');
-    expect(lucaLinkSource).toContain('label="Memory intent handoffs"');
-    expect(lucaLinkSource).toContain('label="Artifact / mission handoffs"');
-    expect(lucaLinkSource).toContain('label="Blocked / expired"');
+    expect(lucaLinkSource).toContain('label: "Pending handoffs"');
+    expect(lucaLinkSource).toContain('label: "Conversation handoffs"');
+    expect(lucaLinkSource).toContain('label: "Memory intent handoffs"');
+    expect(lucaLinkSource).toContain('label: "Artifact / mission handoffs"');
+    expect(lucaLinkSource).toContain('label: "Blocked / expired"');
     expect(lucaLinkSource).toContain(
       "Memory handoff is intent-only; raw memory databases are not transferred.",
     );
@@ -366,12 +366,12 @@ describe("Settings LucaLink Device Center host connections", () => {
   it("renders a Hosts tab with multi-host connection summary cards", () => {
     expect(lucaLinkSource).toContain('{ id: "hosts", label: "Hosts" }');
     expect(hostsSectionSource).toContain("Host Connections / Adaptation");
-    expect(hostsSectionSource).toContain('label="Host connections"');
-    expect(hostsSectionSource).toContain('label="Display hosts"');
-    expect(hostsSectionSource).toContain('label="Approval-capable hosts"');
-    expect(hostsSectionSource).toContain('label="Sensor hosts"');
-    expect(hostsSectionSource).toContain('label="Embodied hosts"');
-    expect(hostsSectionSource).toContain('label="Unknown hosts"');
+    expect(hostsSectionSource).toContain('label: "Host connections"');
+    expect(hostsSectionSource).toContain('label: "Display hosts"');
+    expect(hostsSectionSource).toContain('label: "Approval-capable hosts"');
+    expect(hostsSectionSource).toContain('label: "Sensor hosts"');
+    expect(hostsSectionSource).toContain('label: "Embodied hosts"');
+    expect(hostsSectionSource).toContain('label: "Unknown hosts"');
   });
 
   it("reads host connection state into the Device Center snapshot", () => {

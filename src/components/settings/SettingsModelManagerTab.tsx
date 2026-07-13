@@ -1,12 +1,13 @@
 import React from "react";
 import { ModelManager } from "../ModelManager";
+import { settingsService } from "../../services/settingsService";
 import RuntimeDiagnosticsPanel from "../runtime/RuntimeDiagnosticsPanel";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
   SettingsRow,
   SettingsSection,
-  SettingsStatusCard,
+  SettingsStatList,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 import {
@@ -86,32 +87,34 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
         accentColor={theme.hex}
         isMobile={isMobile}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <SettingsStatusCard
-            label="Installed models"
-            value="Managed below"
-            detail="Brain, vision, voice, TTS, and memory models stay grouped by capability."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Available updates"
-            value="Review in Model Manager"
-            detail="Downloads and compatible upgrades remain in the model manager queue."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Storage used"
-            value="Shown in model details"
-            detail="Downloaded GGUF and ONNX assets remain in the application data directory."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Runtime health"
-            value="See Runtime Status"
-            detail="Ollama, local runtime, and CPU/GPU readiness are summarized before raw logs."
-            accentColor={theme.hex}
-          />
-        </div>
+        <SettingsStatList
+          items={[
+            {
+              label: "Installed models",
+              value: "Managed below",
+              detail:
+                "Brain, vision, voice, TTS, and memory models stay grouped by capability.",
+            },
+            {
+              label: "Available updates",
+              value: "Review in Model Manager",
+              detail:
+                "Downloads and compatible upgrades remain in the model manager queue.",
+            },
+            {
+              label: "Storage used",
+              value: "Shown in model details",
+              detail:
+                "Downloaded GGUF and ONNX assets remain in the application data directory.",
+            },
+            {
+              label: "Runtime health",
+              value: "See Runtime Status",
+              detail:
+                "Ollama, local runtime, and CPU/GPU readiness are summarized before raw logs.",
+            },
+          ]}
+        />
       </SettingsSection>
 
       <SettingsSection
@@ -165,8 +168,12 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
         isMobile={isMobile}
       >
         <RuntimeDiagnosticsPanel title="Runtime Status" />
-        <ExecutionDoctrinePreviewCard doctrine={doctrinePreview} />
-        <IntegrationReadinessPreviewCard readiness={readinessPreview} />
+        {settingsService.get("general").experienceMode !== "basic" && (
+          <>
+            <ExecutionDoctrinePreviewCard doctrine={doctrinePreview} />
+            <IntegrationReadinessPreviewCard readiness={readinessPreview} />
+          </>
+        )}
       </SettingsSection>
 
       <SettingsAdvancedDisclosure

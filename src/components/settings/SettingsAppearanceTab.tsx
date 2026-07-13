@@ -137,9 +137,6 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                 }}
               />
             </SettingsCard>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <SettingsCard>
               <div
                 className="flex justify-between text-sm font-medium"

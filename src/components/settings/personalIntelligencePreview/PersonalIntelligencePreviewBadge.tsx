@@ -17,7 +17,7 @@ export const PersonalIntelligencePreviewBadge: React.FC<
   PersonalIntelligencePreviewBadgeProps
 > = ({ label = "Preview only" }) => (
   <span
-    className="inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider"
+    className="inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium"
     style={{
       borderColor: settingsSurfaceTokens.borderSubtle,
       backgroundColor: settingsSurfaceTokens.accentSoft,

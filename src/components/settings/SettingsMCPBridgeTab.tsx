@@ -10,7 +10,7 @@ import {
   SettingsCard,
   SettingsRow,
   SettingsSection,
-  SettingsStatusCard,
+  SettingsStatList,
 } from "./SettingsLayout";
 
 interface SettingsMCPBridgeTabProps {
@@ -70,15 +70,17 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
 
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
-      <SettingsSection
-        title="Personal Intelligence Preview"
-        description="Inspect a declarative Skill Manifest without loading tools, workflows, or entrypoints."
-        icon="Eye"
-        accentColor={theme.hex}
-        isMobile={isMobile}
-      >
-        <SkillManifestPreviewCard manifest={skillManifestPreview} />
-      </SettingsSection>
+      {settings.general.experienceMode !== "basic" && (
+        <SettingsSection
+          title="Personal Intelligence Preview"
+          description="Inspect a declarative Skill Manifest without loading tools, workflows, or entrypoints."
+          icon="Eye"
+          accentColor={theme.hex}
+          isMobile={isMobile}
+        >
+          <SkillManifestPreviewCard manifest={skillManifestPreview} />
+        </SettingsSection>
+      )}
 
       <SettingsSection
         title="MCP Status"
@@ -87,26 +89,28 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
         accentColor={theme.hex}
         isMobile={isMobile}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <SettingsStatusCard
-            label="Bridge"
-            value={settings.mcp.servers.length > 0 ? "Configured" : "Ready"}
-            detail="MCP Bridge remains available on desktop and mobile Advanced Settings."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Connected servers"
-            value={`${settings.mcp.servers.length}`}
-            detail="Server health and exposed tools stay managed by the existing bridge UI."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Approval policy"
-            value="User reviewed"
-            detail="Tool approvals, blocked tools, and history are grouped below."
-            accentColor={theme.hex}
-          />
-        </div>
+        <SettingsStatList
+          items={[
+            {
+              label: "Bridge",
+              value: settings.mcp.servers.length > 0 ? "Configured" : "Ready",
+              detail:
+                "MCP Bridge remains available on desktop and mobile Advanced Settings.",
+            },
+            {
+              label: "Connected servers",
+              value: `${settings.mcp.servers.length}`,
+              detail:
+                "Server health and exposed tools stay managed by the existing bridge UI.",
+            },
+            {
+              label: "Approval policy",
+              value: "User reviewed",
+              detail:
+                "Tool approvals, blocked tools, and history are grouped below.",
+            },
+          ]}
+        />
       </SettingsSection>
 
       <SettingsSection

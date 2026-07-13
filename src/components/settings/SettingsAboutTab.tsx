@@ -8,7 +8,7 @@ import {
   SettingsCard,
   SettingsRow,
   SettingsSection,
-  SettingsStatusCard,
+  SettingsStatList,
 } from "./SettingsLayout";
 
 interface SettingsAboutTabProps {
@@ -60,26 +60,25 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         accentColor={theme?.hex}
         isMobile={isMobile}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <SettingsStatusCard
-            label="App version"
-            value={`v${version}`}
-            detail="LucaOS application package version."
-            accentColor={theme?.hex}
-          />
-          <SettingsStatusCard
-            label="Build channel"
-            value="Local / Web"
-            detail="Runtime is detected by the current shell."
-            accentColor={theme?.hex}
-          />
-          <SettingsStatusCard
-            label="Update status"
-            value="Manual"
-            detail="Release notes remain available through project updates."
-            accentColor={theme?.hex}
-          />
-        </div>
+        <SettingsStatList
+          items={[
+            {
+              label: "App version",
+              value: `v${version}`,
+              detail: "LucaOS application package version.",
+            },
+            {
+              label: "Build channel",
+              value: "Local / Web",
+              detail: "Runtime is detected by the current shell.",
+            },
+            {
+              label: "Update status",
+              value: "Manual",
+              detail: "Release notes remain available through project updates.",
+            },
+          ]}
+        />
       </SettingsSection>
 
       <SettingsSection
