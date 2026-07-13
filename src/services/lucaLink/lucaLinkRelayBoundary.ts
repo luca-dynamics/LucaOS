@@ -111,6 +111,7 @@ export type LucaLinkConsoleFacade = Pick<
   | "renameTrustedDevice"
   | "revokeTrustedDevice"
   | "setTrustedDeviceTrustLevel"
+  | "transmitHandoff"
   | "unblockTrustedDevice"
   | "validateContinuationToken"
 >;

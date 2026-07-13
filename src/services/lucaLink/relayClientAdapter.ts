@@ -88,6 +88,20 @@ import {
   type LucaLinkHandoffRequestInput,
 } from "./lucaLinkHandoff";
 import { lucaLinkHandoffStore } from "./lucaLinkHandoffStore";
+import {
+  createTransportPermissionDecision,
+  isTransportDecisionSendable,
+} from "./transportPermissions/transportPermissionDecision";
+import type {
+  LucaLinkTransportChannel,
+  LucaLinkTransportTrustLevel,
+} from "./transportPermissions/transportPermissionTypes";
+
+/**
+ * Wire type for live handoff transmission. The inbound dispatcher registers
+ * packets of this type into the receiving host's handoff registry.
+ */
+export const LUCA_LINK_HANDOFF_MESSAGE_TYPE = "lucalink/handoff";
 
 import {
   createLucaLinkHostConnectionRecord,
@@ -670,6 +684,14 @@ class LucaLinkService {
                 console.error("[TELEPORT] Auto-hydration failed:", e);
               });
             });
+          }
+
+          // --- LIVE HANDOFF: register inbound handoff packets ---
+          if (
+            message.type === LUCA_LINK_HANDOFF_MESSAGE_TYPE &&
+            message.payload
+          ) {
+            this.registerInboundHandoff(message);
           }
 
           // --- MESH OBSERVATION: Handle Sensor Pulses (2050 Alien Tech) ---
@@ -1258,6 +1280,183 @@ class LucaLinkService {
     options?: { now?: number; reason?: string },
   ): LucaLinkHandoffMutationResult {
     return this.handoffStore.markAccepted(handoffId, options);
+  }
+
+  private transportTrustLevelForDevice(
+    deviceId?: string,
+  ): LucaLinkTransportTrustLevel {
+    if (!deviceId) return "untrusted";
+    const record = this.deviceTrustStore.get(deviceId);
+    switch (record?.trustLevel) {
+      case "owner":
+      case "admin":
+        return "primary";
+      case "trusted":
+        return "trusted";
+      case "paired":
+        return "paired";
+      case "guest":
+        return "guest";
+      default:
+        return "untrusted";
+    }
+  }
+
+  private currentTransportChannel(): LucaLinkTransportChannel {
+    switch (settingsService.get("lucaLink").connectionMode) {
+      case "local":
+        return "lan";
+      case "vpn":
+        return "vpn";
+      default:
+        return "relay";
+    }
+  }
+
+  /**
+   * Live handoff transmission — the first LucaLink path that actually sends.
+   *
+   * Every prior gate stays intact and is re-checked here: the user-facing
+   * liveHandoffEnabled setting (ships off), the handoff must already be
+   * "approved" in the registry, the transport permission decision for the
+   * bounded_handoff_preview class must allow it, and a secure session with
+   * the target must exist — handoff payloads carry conversation context and
+   * never fall back to an unencrypted beam. beamPacket then applies its own
+   * runtime-enforcement gate before emitting. On acknowledged delivery the
+   * registry moves approved → sent.
+   */
+  async transmitHandoff(
+    handoffId: string,
+    options: { targetDeviceId?: string; reason?: string } = {},
+  ): Promise<{
+    success: boolean;
+    error?: string;
+    request?: LucaLinkHandoffRequest;
+  }> {
+    if (settingsService.get("lucaLink").liveHandoffEnabled !== true) {
+      return {
+        success: false,
+        error:
+          "Live handoff transport is disabled. Enable it in the Luca Link settings to send handoffs between devices.",
+      };
+    }
+
+    const handoff = this.handoffStore.get(handoffId);
+    if (!handoff) {
+      return { success: false, error: `Unknown LucaLink handoff id: ${handoffId}` };
+    }
+    if (handoff.status !== "approved") {
+      return {
+        success: false,
+        error: `Only approved handoffs can be transmitted (status: ${handoff.status}).`,
+      };
+    }
+
+    const targetDeviceId = options.targetDeviceId ?? handoff.targetDeviceId;
+    if (!targetDeviceId) {
+      return {
+        success: false,
+        error: "Handoff has no target device. Choose a trusted device first.",
+      };
+    }
+
+    const decision = createTransportPermissionDecision(
+      {
+        requestId: handoff.id,
+        createdAt: new Date().toISOString(),
+        requestedByHostId: this.state.deviceId || "unknown",
+        targetHostId: targetDeviceId,
+        channel: this.currentTransportChannel(),
+        messageClass: "bounded_handoff_preview",
+        riskLevel: handoff.risk,
+        trustLevel: this.transportTrustLevelForDevice(targetDeviceId),
+        sessionKind: "companion",
+        requiresApproval: true,
+        approvalSatisfied: true,
+        payloadSummary: handoff.summary,
+        privacyLevel: "private",
+        expiresAt: new Date(handoff.expiresAt).toISOString(),
+        warnings: [],
+        blockers: [],
+        sideEffectsPerformed: false,
+      },
+      // The handoff reached "approved" through the primary-host approval
+      // flow, which is the explicit approval this decision requires.
+      { explicitApprovalMetadata: true },
+    );
+    if (!isTransportDecisionSendable(decision, { liveTransportEnabled: true })) {
+      return {
+        success: false,
+        error: `Transport policy refused the send: ${decision.reason}`,
+      };
+    }
+
+    const sessionData =
+      await sessionManager.recoverSessionByDevice(targetDeviceId);
+    if (!sessionData) {
+      return {
+        success: false,
+        error:
+          "No secure session with the target device. Pair it first — handoffs never travel unencrypted.",
+      };
+    }
+
+    const beam = await this.beamPacket(targetDeviceId, {
+      type: LUCA_LINK_HANDOFF_MESSAGE_TYPE,
+      payload: { handoff: { ...handoff, targetDeviceId, status: "sent" } },
+    });
+    if (!beam.success) {
+      return { success: false, error: beam.error ?? "Handoff beam failed." };
+    }
+
+    const marked = this.handoffStore.markSent(handoffId, {
+      reason:
+        options.reason ??
+        `Transmitted encrypted to ${targetDeviceId} after the transport policy allowed the send.`,
+    });
+    return { success: true, request: marked.request };
+  }
+
+  /**
+   * Inbound half of live handoff: register a received handoff packet into
+   * this host's registry as "received" so it appears in the Device Center
+   * for an explicit accept. Registration only — nothing is executed or
+   * replayed here.
+   */
+  private registerInboundHandoff(message: LucaLinkMessage): void {
+    try {
+      const envelope = message.payload as
+        | { handoff?: LucaLinkHandoffRequest }
+        | undefined;
+      const inbound = envelope?.handoff;
+      if (!inbound || typeof inbound.id !== "string" || !inbound.id) {
+        console.warn("[LucaLink] Dropping malformed inbound handoff packet.");
+        return;
+      }
+      if (this.handoffStore.get(inbound.id)) {
+        // Replay or duplicate delivery — the registry already knows it.
+        return;
+      }
+      const request = createLucaLinkHandoffRequest(
+        {
+          ...inbound,
+          status: "sent",
+          warnings: [
+            ...(inbound.warnings ?? []),
+            `Received over LucaLink from ${message.source}.`,
+          ],
+        },
+        { defaultTtlMs: this.handoffStore.defaultTtlMs },
+      );
+      const registered = this.handoffStore.register(request);
+      if (registered.valid && registered.request) {
+        this.handoffStore.markReceived(registered.request.id, {
+          reason: `Marked received on ${this.state.deviceId ?? "this device"}; awaiting explicit accept.`,
+        });
+      }
+    } catch (error) {
+      console.error("[LucaLink] Failed to register inbound handoff:", error);
+    }
   }
 
   getHandoff(handoffId: string): LucaLinkHandoffRequest | undefined {

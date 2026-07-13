@@ -70,6 +70,24 @@ describe("LucaLink transport permission decisions", () => {
       decide(LUCA_LINK_BLOCKED_SENSITIVE_PAYLOAD_TRANSPORT_FIXTURE).status,
     ).toBe("blocked");
   });
+  it("becomes sendable only with an explicit live-transport opt-in on an allowed decision", () => {
+    const allowed = decide(LUCA_LINK_LOCAL_HOST_STATUS_TRANSPORT_FIXTURE);
+    expect(allowed.status).toBe("allowed_preview");
+    expect(isTransportDecisionSendable(allowed)).toBe(false);
+    expect(
+      isTransportDecisionSendable(allowed, { liveTransportEnabled: false }),
+    ).toBe(false);
+    expect(
+      isTransportDecisionSendable(allowed, { liveTransportEnabled: true }),
+    ).toBe(true);
+
+    const blocked = decide(LUCA_LINK_HIGH_RISK_GUEST_MESSAGE_TRANSPORT_FIXTURE);
+    expect(blocked.status).toBe("blocked");
+    expect(
+      isTransportDecisionSendable(blocked, { liveTransportEnabled: true }),
+    ).toBe(false);
+  });
+
   it("keeps WebRTC and VPN unsupported and unsendable", () => {
     for (const request of [
       LUCA_LINK_WEBRTC_FUTURE_TRANSPORT_FIXTURE,

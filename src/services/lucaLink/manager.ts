@@ -123,6 +123,7 @@ export type LucaLinkConsoleFacade = Pick<
   | "revokeGuestSession"
   | "revokeTrustedDevice"
   | "setTrustedDeviceTrustLevel"
+  | "transmitHandoff"
   | "unblockTrustedDevice"
   | "validateContinuationToken"
 >;
@@ -259,6 +260,7 @@ const consoleFacadeKeys = [
   "revokeGuestSession",
   "revokeTrustedDevice",
   "setTrustedDeviceTrustLevel",
+  "transmitHandoff",
   "unblockTrustedDevice",
   "validateContinuationToken",
 ] as const satisfies readonly FacadeKey<LucaLinkConsoleFacade>[];

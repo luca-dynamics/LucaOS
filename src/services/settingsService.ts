@@ -176,6 +176,11 @@ export interface LucaSettings {
     connectionMode: "auto" | "local" | "vpn" | "relay";
     relayServerUrl: string;
     vpnServerUrl: string;
+    /**
+     * Opt-in gate for live handoff transmission. While false (default) every
+     * handoff action remains state-only and nothing leaves this device.
+     */
+    liveHandoffEnabled?: boolean;
   };
   security?: {
     faceData?: string;
@@ -383,6 +388,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     connectionMode: "auto",
     relayServerUrl: "https://lucaos.onrender.com", // Production relay server
     vpnServerUrl: "",
+    liveHandoffEnabled: false,
   },
   mcp: {
     servers: [], // No default MCP servers
