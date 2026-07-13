@@ -11,4 +11,4 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci --ignore-scripts
       - run: npm run sandbox:verify-runtime
-      - run: npx vitest run src/config/sandboxReleaseMatrix.test.ts src/services/sandbox/SandboxAssetDeliveryService.test.ts src/services/sandbox/SandboxBackendSetupService.test.ts src/services/sandbox/SandboxReleaseGate.test.ts src/components/sandbox/SandboxRuntimeSettingsPanel.test.tsx
+      - run: npx vitest run src/config/sandboxReleaseMatrix.test.ts src/services/sandbox/SandboxAssetDeliveryService.test.ts src/services/sandbox/SandboxBackendSetupService.test.ts src/services/sandbox/SandboxReleaseGate.test.ts src/services/sandbox/SandboxFleetLiveBridge.test.ts
