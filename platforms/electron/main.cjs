@@ -2118,10 +2118,11 @@ ipcMain.on('update-system-settings', (event, settings) => {
         }
     }
 
-    // BROADCAST THEME CHANGE (Sync with Tray)
-    if (settings.theme) {
-        switchPersona(settings.theme);
-    }
+    // NOTE: an old tray persona system used to react to theme changes here
+    // (switchPersona). That function no longer exists and the current tray
+    // menu doesn't render theme state, so theme changes need no main-process
+    // work — calling the removed function crashed the main process on every
+    // settings save that carried a theme.
 });
 
 // --- SOCIAL CONNECTORS (GHOST BROWSER) ---
