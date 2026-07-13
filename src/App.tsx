@@ -616,6 +616,20 @@ function AppContent() {
     return () => window.removeEventListener("luca:material-preview", onPreview);
   }, []);
 
+  // Keep the CSS variables the LiquidBackground actually reads in sync with the
+  // live material state. The Appearance/onboarding sliders update this state via
+  // the preview event, but LiquidBackground takes no opacity/blur props — it
+  // reads --app-bg-opacity and --luca-blur-level — and those were previously
+  // only written at save time, so dragging the sliders did nothing. Writing them
+  // here makes the liquid background follow the sliders live.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    root.style.setProperty("--app-bg-opacity", String(backgroundOpacity));
+    root.style.setProperty("--app-bg-blur", `${backgroundBlur}px`);
+    root.style.setProperty("--luca-blur-level", `${backgroundBlur}px`);
+  }, [backgroundOpacity, backgroundBlur]);
+
   useEffect(() => {
     const handleAtmospherePreview = (event: Event) => {
       setAtmosphere(normalizeLucaAtmosphere((event as CustomEvent).detail));

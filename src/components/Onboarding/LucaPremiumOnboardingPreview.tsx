@@ -265,6 +265,8 @@ export const LucaPremiumOnboardingPreview: React.FC<
       hostKind={hostKind}
       reducedMotion={reducedMotion}
       reducedTransparency={reducedTransparency}
+      userMaterialOpacity={flow.materialOpacity}
+      userMaterialBlurPx={flow.materialBlur}
       className={className}
       style={style}
     >
