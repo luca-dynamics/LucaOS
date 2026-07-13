@@ -789,7 +789,7 @@ const ChatWidgetMode: React.FC = () => {
   };
 
   const approvalSurface = state.approvalRequest ? (
-    <div className="p-4 border-t border-white/10 bg-black/40 glass-blur">
+    <div className="p-4 border-t border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_10%,transparent)] bg-[var(--luca-surface-glass,rgba(0,0,0,0.4))] glass-blur">
       <SecurityGate
         toolName={state.approvalRequest.toolName || "SYSTEM_OVERRIDE"}
         args={state.approvalRequest.args || {}}

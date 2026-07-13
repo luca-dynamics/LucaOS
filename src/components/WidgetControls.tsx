@@ -25,8 +25,8 @@ const WidgetControls: React.FC<WidgetControlsProps> = ({
         }}
         className={`p-2 rounded-full glass-blur border transition-all duration-300 ${
           isHUDActive
-            ? "bg-white/15 border-white/30 text-white"
-            : "bg-black/40 border-white/10 text-white/40 hover:bg-black/60 hover:border-white/20 hover:text-white"
+            ? "bg-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_15%,transparent)] border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_30%,transparent)] text-[var(--luca-text-primary,#ffffff)]"
+            : "bg-[var(--luca-surface-glass,rgba(0,0,0,0.4))] border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_10%,transparent)] text-[var(--luca-text-tertiary,rgba(255,255,255,0.4))] hover:bg-[var(--luca-surface-hover,rgba(0,0,0,0.6))] hover:border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_20%,transparent)] hover:text-[var(--luca-text-primary,#ffffff)]"
         }`}
         title={isHUDActive ? "Stop seeing screen" : "See screen"}
       >
@@ -38,7 +38,7 @@ const WidgetControls: React.FC<WidgetControlsProps> = ({
           e.stopPropagation();
           onExpand();
         }}
-        className="p-2 rounded-full bg-black/40 glass-blur border border-white/10 text-white/40 hover:bg-black/60 hover:border-white/20 hover:text-white transition-all duration-300"
+        className="p-2 rounded-full bg-[var(--luca-surface-glass,rgba(0,0,0,0.4))] glass-blur border border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_10%,transparent)] text-[var(--luca-text-tertiary,rgba(255,255,255,0.4))] hover:bg-[var(--luca-surface-hover,rgba(0,0,0,0.6))] hover:border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_20%,transparent)] hover:text-[var(--luca-text-primary,#ffffff)] transition-all duration-300"
         title="Open LucaOS"
       >
         <Icon name="Maximize2" size={14} />

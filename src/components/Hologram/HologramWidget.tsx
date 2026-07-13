@@ -200,7 +200,7 @@ const ContextButton = ({
           >
             {card.type}
           </span>
-          <span className="text-[11px] font-mono font-medium tracking-tight text-white/90">
+          <span className="text-[11px] font-mono font-medium tracking-tight text-[var(--luca-text-primary,rgba(255,255,255,0.9))]">
             {card.label}
           </span>
         </div>
@@ -294,15 +294,15 @@ const PresenceControlBar = ({
           }`}>
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px]"
                  style={{ borderBottomColor: `${primaryColor}66` }} />
-            <div className="bg-black/95 glass-blur p-4 rounded-2xl shadow-2xl relative"
+            <div className="bg-[color-mix(in_srgb,var(--luca-background-elevated,#000000)_95%,transparent)] glass-blur p-4 rounded-2xl shadow-2xl relative"
                  style={{ border: `1px solid ${primaryColor}66`, boxShadow: `0 8px 32px ${primaryColor}33` }}>
-              <p className="text-[10px] font-mono leading-relaxed text-white/90 text-center">
+              <p className="text-[10px] font-mono leading-relaxed text-[var(--luca-text-secondary,rgba(255,255,255,0.9))] text-center">
                 {activeControl?.info}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 glass-blur group/readout cursor-default"
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--luca-surface-glass,rgba(0,0,0,0.6))] glass-blur group/readout cursor-default"
                style={{ border: `1px solid ${primaryColor}44`, boxShadow: `0 0 15px ${primaryColor}22` }}>
             <div 
               onPointerEnter={() => setShowHelp(true)}
@@ -344,7 +344,7 @@ const PresenceControlBar = ({
                 boxShadow: isActive ? `0 0 15px ${primaryColor}66` : "none",
                 border: isActive ? `1px solid ${primaryColor}` : `1px solid ${primaryColor}66`,
                 backgroundColor: isActive ? `${primaryColor}40` : `${primaryColor}1A`,
-                color: isActive ? "#ffffff" : primaryColor,
+                color: isActive ? "var(--luca-text-primary, #ffffff)" : primaryColor,
               }}
             >
               <Icon name={m.icon as string} size={12} />
