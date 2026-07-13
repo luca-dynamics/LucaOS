@@ -169,7 +169,7 @@ export function LucaChatSurface({
         } as React.CSSProperties
       }
     >
-      <div className="absolute inset-0 bg-[#0a0a0a]/95 glass-blur -z-10" />
+      <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--luca-background-elevated,#0a0a0a)_95%,transparent)] glass-blur -z-10" />
       {backgroundOverlay}
 
       {isCompact && !showSuggestions && (
@@ -243,11 +243,11 @@ export function LucaChatSurface({
       {onClose && (
         <button
           onClick={onClose}
-          className={`absolute top-4 right-4 z-[200] p-1.5 rounded-full bg-black/40 border border-white/10 transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] ${showClose ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"}`}
+          className={`absolute top-4 right-4 z-[200] p-1.5 rounded-full bg-[var(--luca-surface-glass,rgba(0,0,0,0.4))] border border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_10%,transparent)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] ${showClose ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"}`}
           style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
           title="Close Luca"
         >
-          <Icon name="Close" size={14} className="text-white/40" />
+          <Icon name="Close" size={14} className="text-[var(--luca-text-tertiary,rgba(255,255,255,0.4))]" />
         </button>
       )}
 

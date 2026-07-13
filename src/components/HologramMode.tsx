@@ -1,8 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import HologramWidget from "./Hologram/HologramWidget";
 import { useSatelliteState } from "../hooks/useSatelliteState";
 import { PERSONA_UI_CONFIG } from "../config/themeColors";
 import { settingsService } from "../services/settingsService";
+import type { LucaSettings } from "../services/settingsService";
+import { getLucaSkinMaterialVariables } from "../styles/lucaSkinMaterialBridge";
 import { awarenessService } from "../services/awarenessService";
 import {
   createHologramPresenceSnapshot,
@@ -19,6 +21,35 @@ const HologramMode: React.FC = () => {
   const state = useSatelliteState();
   const voiceDisplay = getHologramVoiceDisplayState(
     createHologramPresenceSnapshot(state as unknown as HologramLegacyPayload),
+  );
+
+  // The hologram window mounts standalone (no App.tsx), so the selected skin's
+  // material variables must be resolved and scoped here — same pattern as
+  // WidgetMode / ChatWidgetMode.
+  const [selectedSkinId, setSelectedSkinId] = useState<unknown>(
+    () => settingsService.getSettings().general.selectedSkinId,
+  );
+
+  useEffect(() => {
+    const handleSettingsChange = (settings: LucaSettings) => {
+      setSelectedSkinId(settings.general.selectedSkinId);
+    };
+
+    settingsService.on("settings-changed", handleSettingsChange);
+    return () => {
+      settingsService.off("settings-changed", handleSettingsChange);
+    };
+  }, []);
+
+  const hologramSkinVariables = useMemo(
+    () =>
+      getLucaSkinMaterialVariables({
+        skinId: selectedSkinId,
+        hostKind: "desktop-app",
+        reducedMotion: false,
+        reducedTransparency: true,
+      }),
+    [selectedSkinId],
   );
 
   const handleToggleVoice = () => {
@@ -64,13 +95,20 @@ const HologramMode: React.FC = () => {
     };
   }, [state.persona]);
 
-  // Resolve Theme Color dynamically from Central Config
+  // Resolve accent from the live session first, then the selected skin, then
+  // the legacy persona palette as a last-resort fallback.
   const activeConfig =
     PERSONA_UI_CONFIG[state.persona] || PERSONA_UI_CONFIG.DEFAULT;
-  const primaryColor = state.themeHex || activeConfig.hex;
+  const primaryColor =
+    state.themeHex ||
+    hologramSkinVariables["--luca-accent-primary"] ||
+    activeConfig.hex;
 
   return (
-    <div className="w-screen h-screen bg-transparent overflow-hidden flex items-end justify-end p-0">
+    <div
+      className="w-screen h-screen bg-transparent overflow-hidden flex items-end justify-end p-0"
+      style={hologramSkinVariables as React.CSSProperties}
+    >
       <HologramWidget
         isVoiceActive={true} // Always visible in Hologram Mode
         isMicOpen={voiceDisplay.isListening} // Visual Feedback for Mic Status

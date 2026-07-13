@@ -173,7 +173,7 @@ const WidgetMode: React.FC = () => {
 
       {/* Ephemeral caption — silent at rest, words only when light can't say it */}
       <div
-        className="mt-2 px-4 py-1.5 rounded-full bg-black/60 border border-white/10 max-w-[180px]"
+        className="mt-2 px-4 py-1.5 rounded-full bg-[var(--luca-surface-glass,rgba(0,0,0,0.6))] border border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_10%,transparent)] max-w-[180px]"
         style={{
           opacity: captionText ? 1 : 0,
           transform: captionText ? "translateY(0)" : "translateY(4px)",
@@ -183,7 +183,7 @@ const WidgetMode: React.FC = () => {
           pointerEvents: "none",
         }}
       >
-        <span className="block text-xs text-white/75 whitespace-nowrap overflow-hidden text-ellipsis text-center">
+        <span className="block text-xs text-[var(--luca-text-secondary,rgba(255,255,255,0.75))] whitespace-nowrap overflow-hidden text-ellipsis text-center">
           {captionText || " "}
         </span>
       </div>
