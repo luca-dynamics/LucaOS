@@ -696,7 +696,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                       />
                                       <div className="text-center">
                                         <div
-                                          className={`text-base font-bold truncate max-w-[200px] text-[var(--app-text-main)]`}
+                                          className={`text-[13.5px] font-medium truncate max-w-[200px] text-[var(--app-text-main)]`}
                                         >
                                           {file.name}
                                         </div>
@@ -1030,7 +1030,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                 />
                 <div>
                   <div
-                    className={`text-base font-bold`}
+                    className={`text-sm font-semibold`}
                     style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
                   >
                     Google Drive
@@ -1137,7 +1137,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                 />
                 <div>
                   <div
-                    className={`text-base font-bold`}
+                    className={`text-sm font-semibold`}
                     style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
                   >
                     Obsidian

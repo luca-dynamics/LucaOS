@@ -424,14 +424,14 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
         <div className={`flex p-1 rounded-xl border rounded-lg`} style={{ backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))", borderColor: "var(--luca-border-subtle, var(--app-border-main))" }}>
           <button
             onClick={() => setActiveView("active")}
-            className={`px-4 py-1.5 rounded-lg text-sm font-black transition-all ${activeView === "active" ? "text-[var(--app-text-main)] shadow-sm" : "text-[var(--app-text-muted)]"}`}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeView === "active" ? "text-[var(--app-text-main)] shadow-sm" : "text-[var(--app-text-muted)]"}`}
             style={activeView === "active" ? { backgroundColor: setHexAlpha(theme.hex, 0.2), color: "var(--luca-text-primary, var(--app-text-main))" } : {}}
           >
             Active
           </button>
           <button
             onClick={() => setActiveView("marketplace")}
-            className={`px-4 py-1.5 rounded-lg text-sm font-black transition-all ${activeView === "marketplace" ? "text-[var(--app-text-main)] shadow-sm" : "text-[var(--app-text-muted)]"}`}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeView === "marketplace" ? "text-[var(--app-text-main)] shadow-sm" : "text-[var(--app-text-muted)]"}`}
             style={activeView === "marketplace" ? { backgroundColor: setHexAlpha(theme.hex, 0.2), color: "var(--luca-text-primary, var(--app-text-main))" } : {}}
           >
             Discover
@@ -443,7 +443,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
       <div className={`flex flex-wrap gap-2 ${isMobile ? "px-4" : ""}`}>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black border transition-all shadow-sm hover:bg-[var(--luca-surface-glass)] rounded-lg`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-all shadow-sm hover:bg-[var(--luca-surface-glass)] rounded-lg`}
           style={{
             borderColor: "var(--luca-border-strong, var(--app-border-main))",
             color: "var(--luca-text-primary, var(--app-text-main))",
@@ -456,7 +456,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
         <button
           onClick={handleSync}
           disabled={loading}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-all shadow-sm disabled:opacity-50 border rounded-lg`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 border rounded-lg`}
           style={{
             borderColor: "var(--luca-border-subtle, var(--app-border-main))",
             backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
@@ -489,7 +489,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
 
           {/* Server Name */}
           <div>
-            <label className="block text-[10px] text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
+            <label className="block text-[10px] text-[var(--app-text-muted)] mb-1">
               Server Name
             </label>
             <input
@@ -510,13 +510,13 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
 
           {/* Transport Type */}
           <div>
-            <label className="block text-[10px] text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
+            <label className="block text-[10px] text-[var(--app-text-muted)] mb-1">
               Transport Type
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setFormData((p) => ({ ...p, type: "stdio" }))}
-                className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg text-sm font-black transition-all ${
+                className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   formData.type === "stdio" ? "text-[var(--app-text-main)]" : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
                 }`}
                 style={{
@@ -532,7 +532,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
               </button>
               <button
                 onClick={() => setFormData((p) => ({ ...p, type: "sse" }))}
-                className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg text-sm font-black transition-all ${
+                className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   formData.type === "sse" ? "text-[var(--app-text-main)]" : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
                 }`}
                 style={{
@@ -553,7 +553,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           {formData.type === "stdio" && (
             <>
               <div>
-                <label className="block text-xs uppercase tracking-widest text-[var(--app-text-muted)] mb-1 font-bold">
+                <label className="block text-xs text-[var(--app-text-muted)] mb-1 font-bold">
                   Command
                 </label>
                 <input
@@ -572,7 +572,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-widest text-[var(--app-text-muted)] mb-1 font-bold">
+                <label className="block text-xs text-[var(--app-text-muted)] mb-1 font-bold">
                   Arguments (space-separated)
                 </label>
                 <input
@@ -596,7 +596,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           {/* SSE Fields */}
           {formData.type === "sse" && (
             <div>
-              <label className="block text-[10px] text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
+              <label className="block text-[10px] text-[var(--app-text-muted)] mb-1">
                 Server URL
               </label>
               <input
@@ -658,7 +658,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             {showAdvanced && (
               <div className="mt-3 space-y-3">
                 <div>
-                  <label className="block text-xs uppercase tracking-widest text-[var(--app-text-muted)] mb-1 font-bold">
+                  <label className="block text-xs text-[var(--app-text-muted)] mb-1 font-bold">
                     Environment Variables
                   </label>
                   <p className="text-xs text-[var(--app-text-muted)] mb-2 italic">
@@ -717,7 +717,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                     onClick={() =>
                       setEnvVars([...envVars, { key: "", value: "" }])
                     }
-                    className={`flex items-center gap-1 ${isMobile ? "text-sm" : "text-lg"} px-2 py-1 rounded transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]`}
+                    className={`flex items-center gap-1 text-[12.5px] px-2 py-1 rounded transition-colors text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]`}
                     style={{
                       border: `1px solid var(--app-border-main)`,
                       backgroundColor: "var(--app-bg-tint)",
@@ -735,7 +735,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           <button
             onClick={handleAddServer}
             disabled={loading}
-            className="w-full py-2.5 rounded-lg text-sm font-black border transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-2.5 rounded-lg text-sm font-medium border transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
               borderColor: setHexAlpha(theme.hex, 0.4),
               backgroundColor: setHexAlpha(theme.hex, 0.08),
@@ -758,7 +758,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           /* Server List */
           <div className="space-y-3">
             {servers.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
-              <div className={`text-center py-12 text-[var(--app-text-muted)] ${isMobile ? "text-base" : "text-lg"}`}>
+              <div className={`text-center py-12 text-[var(--app-text-muted)] text-sm`}>
                 <Icon name="Plug" className="w-8 h-8 mx-auto mb-3 opacity-30" />
                 {searchQuery ? "No matching servers found." : "No connected tool servers."}
               </div>
@@ -801,13 +801,13 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           </div>
                           <div className="min-w-0">
                             <h4
-                              className={`${isMobile ? "text-base" : "text-lg"} font-bold truncate`}
+                              className={`text-[13.5px] font-medium truncate`}
                               style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
                             >
                               {server.name}
                             </h4>
                             <p
-                              className={`${isMobile ? "text-sm" : "text-base"} truncate`}
+                              className={`text-[12.5px] truncate`}
                               style={{ color: "var(--app-text-muted, #94a3b8)" }}
                             >
                               {server.type === "stdio"
@@ -858,7 +858,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                         >
                           {/* Tools List */}
                           <div>
-                            <h5 className={`${isMobile ? "text-sm" : "text-base"} text-[var(--app-text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1`}>
+                            <h5 className={`text-[12.5px] text-[var(--app-text-muted)] mb-2 flex items-center gap-1`}>
                               <Icon name="Wrench" className="w-3 h-3" />
                               Available Capabilities
                             </h5>
@@ -868,7 +868,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                                   {serverTools[server.id].map((tool: any) => (
                                     <span
                                       key={tool.name}
-                                      className={`px-2 py-1 rounded-md text-base transition-all border rounded-lg`}
+                                      className={`px-2 py-0.5 rounded-md text-[11.5px] border`}
                                       style={{
                                         borderColor: "var(--luca-border-subtle, var(--app-border-main))",
                                         backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
@@ -898,7 +898,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                                 e.stopPropagation();
                                 handleRemoveServer(server.id);
                               }}
-                              className="flex-1 py-2 rounded-lg text-lg font-bold border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] transition-all flex items-center justify-center gap-2"
+                              className="flex-1 py-2 rounded-lg text-[12.5px] font-medium border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] transition-colors flex items-center justify-center gap-2"
                             >
                               <Icon name="Trash2" className="w-3 h-3" />
                               Remove
@@ -976,14 +976,14 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                             )}
                           </div>
                           <span
-                            className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                            className="text-[10px] font-medium px-2 py-0.5 rounded-full"
                             style={{ backgroundColor: setHexAlpha(item.color, 0.12), color: item.color }}
                           >
                             {item.isLive ? "Live" : item.category}
                           </span>
                         </div>
 
-                        <h4 className={`text-base font-black mb-1 truncate`} style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}>
+                        <h4 className={`text-base font-medium mb-1 truncate`} style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}>
                           {item.name}
                         </h4>
                         <p className={`text-sm leading-snug mb-4 line-clamp-2`} style={{ color: "var(--app-text-muted, #94a3b8)" }}>

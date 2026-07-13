@@ -51,7 +51,7 @@ export const AtmosphereStudio: React.FC<AtmosphereStudioProps> = ({
       </div>
 
       <div
-        className="relative mt-4 h-44 overflow-hidden rounded-2xl border transition-all duration-500"
+        className="relative mt-4 h-44 overflow-hidden rounded-xl border transition-all duration-500"
         style={{
           background: atmosphere.enabled
             ? buildLucaAtmosphereBackground(atmosphere)

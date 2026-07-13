@@ -207,13 +207,15 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
         icon="Shield"
         isMobile={isMobile}
       >
-        <PersonalIntelligencePersistencePreview />
-        <PersonalIntelligenceMemoryApprovalPilot
-          pendingProposals={pilotQueue.pendingProposals}
-          buildBundleForProposal={pilotQueue.buildBundleForProposal}
-          buildProposalBundle={pilotQueue.buildProposalBundle}
-          initialAuditSummary={initialAuditSummary}
-        />
+        <div className="space-y-4">
+          <PersonalIntelligencePersistencePreview />
+          <PersonalIntelligenceMemoryApprovalPilot
+            pendingProposals={pilotQueue.pendingProposals}
+            buildBundleForProposal={pilotQueue.buildBundleForProposal}
+            buildProposalBundle={pilotQueue.buildProposalBundle}
+            initialAuditSummary={initialAuditSummary}
+          />
+        </div>
         <PersonalIntelligenceRuntimeTracePanel />
         <PersonalIntelligenceMissionRuntimePanel />
       </SettingsSection>

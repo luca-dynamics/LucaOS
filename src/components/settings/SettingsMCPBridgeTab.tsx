@@ -170,7 +170,7 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
         >
           <button
             onClick={() => setBridgeMode("inbound")}
-            className={`flex items-center gap-2 px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+            className={`flex items-center gap-2 px-6 py-2 rounded-lg text-[12.5px] font-medium transition-colors ${
               bridgeMode === "inbound"
                 ? "text-[var(--app-text-main)] shadow-sm"
                 : "text-[var(--app-text-muted)] opacity-60 hover:opacity-100"
@@ -186,7 +186,7 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
           </button>
           <button
             onClick={() => setBridgeMode("outbound")}
-            className={`flex items-center gap-2 px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+            className={`flex items-center gap-2 px-6 py-2 rounded-lg text-[12.5px] font-medium transition-colors ${
               bridgeMode === "outbound"
                 ? "text-[var(--app-text-main)] shadow-sm"
                 : "text-[var(--app-text-muted)] opacity-60 hover:opacity-100"

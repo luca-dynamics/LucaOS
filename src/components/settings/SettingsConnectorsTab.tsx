@@ -119,22 +119,10 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
             return (
               <div
                 key={app.id}
-                className={`relative group overflow-hidden border ${isMobile ? "border-x-0 border-b rounded-none p-6" : "rounded-2xl p-5 hover:-translate-y-1 shadow-xl"} transition-all duration-500 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] glass-blur`}
+                className={`relative border ${isMobile ? "border-x-0 border-b rounded-none p-6" : "rounded-xl p-5"} bg-[var(--app-bg-tint)] border-[var(--app-border-main)]`}
               >
-                {/* Premium Glassmorphic Overlay: Multi-point Glow */}
-                <div
-                  className="absolute inset-0 opacity-10 group-hover:opacity-25 transition-opacity duration-1000 pointer-events-none"
-                  style={{
-                    background: `radial-gradient(circle at top right, var(--app-text-main) 0%, transparent 60%),
-                               radial-gradient(circle at bottom left, var(--app-text-main) 0%, transparent 40%)`,
-                  }}
-                />
-
-                {/* Animated Top-Edge Accent */}
-                <div className="absolute top-0 left-0 w-full h-[1px] opacity-0 group-hover:opacity-100 transition-all duration-500 scale-x-0 group-hover:scale-x-100 origin-center bg-gradient-to-r from-transparent via-[var(--app-text-main)] to-transparent" />
-
                 <div className="flex items-start gap-4 mb-4 relative z-10">
-                  <div className="flex-shrink-0 w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center transition-all duration-500 group-hover:scale-105 group-hover:rotate-1 shadow-lg relative bg-[var(--app-bg-tint)] mt-0.5 border border-[var(--luca-border-subtle)]">
+                  <div className="flex-shrink-0 w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center relative bg-[var(--app-bg-tint)] mt-0.5 border border-[var(--luca-border-subtle)]">
                     <div className="w-full h-full flex items-center justify-center relative p-2">
                       <img
                         src={app.logo}
@@ -147,7 +135,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                   <div className="flex-1 min-w-0 pr-1">
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <h4
-                        className={`text-lg font-bold text-[var(--app-text-main)] tracking-tight truncate`}
+                        className={`text-[15px] font-semibold text-[var(--app-text-main)] tracking-tight truncate`}
                       >
                         {app.name}
                       </h4>
@@ -248,7 +236,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                       onClick={() =>
                         startConnectorAuth(app, { onError: setStatusMsg })
                       }
-                      className={`w-full py-2.5 rounded-xl text-sm font-semibold border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:border-[var(--app-text-main)] glass-blur`}
+                      className={`w-full py-2.5 rounded-lg text-sm font-medium border transition-colors bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]`}
                     >
                       {isChromeSynced ? "Connect session" : "Connect account"}
                     </button>

@@ -295,7 +295,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
         <div className="flex flex-col space-y-2 shrink-0">
           <div className="flex justify-between items-center px-1">
             <h3
-              className="text-base font-bold flex items-center gap-2"
+              className="text-[15px] font-semibold flex items-center gap-2"
               style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
             >
               <Icon
@@ -445,9 +445,8 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                           "var(--luca-border-subtle, var(--app-border-main))",
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-tr from-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] to-transparent pointer-events-none" />
                       <div
-                        className={`w-full min-h-[140px] p-4 text-base font-mono whitespace-pre-wrap leading-relaxed`}
+                        className={`w-full min-h-[140px] p-4 text-[13px] font-mono whitespace-pre-wrap leading-relaxed`}
                         style={{ color: "var(--app-text-muted, #94a3b8)" }}
                       >
                         {resolvedBase ||

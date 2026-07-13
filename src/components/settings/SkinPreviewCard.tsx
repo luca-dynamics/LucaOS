@@ -79,6 +79,14 @@ export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
   const isInteractive = typeof onSelect === "function";
   const CardElement = isInteractive ? "button" : "div";
 
+  const tooltip = [
+    metadata.tagline,
+    metadata.description,
+    indicators.map((capability) => CAPABILITY_LABELS[capability]).join(" · "),
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   return (
     <CardElement
       type={isInteractive ? "button" : undefined}
@@ -89,14 +97,13 @@ export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
           : undefined
       }
       onClick={isInteractive ? () => onSelect?.(metadata.id) : undefined}
-      className="flex w-full flex-col gap-3 rounded-2xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+      title={tooltip}
+      className="flex w-full flex-col gap-2 rounded-xl border p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
       style={{
         backgroundColor: settingsSurfaceTokens.glass,
         borderColor: isSelected
           ? settingsSurfaceTokens.accentPrimary
-          : isRecommended
-            ? settingsSurfaceTokens.accentPrimary
-            : settingsSurfaceTokens.borderSubtle,
+          : settingsSurfaceTokens.borderSubtle,
         color: settingsSurfaceTokens.textPrimary,
         boxShadow: isSelected
           ? `0 0 0 1px ${settingsSurfaceTokens.accentPrimary}`
@@ -104,65 +111,6 @@ export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
       }}
       data-skin-preview-card={metadata.id}
     >
-      {/* Header: label + recommended marker */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h4
-              className="truncate text-sm font-semibold tracking-tight"
-              style={{ color: settingsSurfaceTokens.textPrimary }}
-            >
-              {metadata.label}
-            </h4>
-            <span
-              className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium"
-              style={{
-                borderColor: settingsSurfaceTokens.borderSubtle,
-                color: settingsSurfaceTokens.textTertiary,
-              }}
-            >
-              {MOOD_LABELS[metadata.mood]}
-            </span>
-          </div>
-          <p
-            className="mt-1 text-xs leading-relaxed"
-            style={{ color: settingsSurfaceTokens.textSecondary }}
-          >
-            {metadata.tagline}
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
-          {isSelected && (
-            <span
-              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-              style={{
-                backgroundColor: settingsSurfaceTokens.accentSoft,
-                color: settingsSurfaceTokens.accentPrimary,
-              }}
-            >
-              <Icon
-                name="CheckCircle"
-                variant="BoldDuotone"
-                className="h-3 w-3"
-              />
-              Current
-            </span>
-          )}
-          {isRecommended && (
-            <span
-              className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-              style={{
-                backgroundColor: settingsSurfaceTokens.accentSoft,
-                color: settingsSurfaceTokens.accentPrimary,
-              }}
-            >
-              <Icon name="Star" variant="BoldDuotone" className="h-3 w-3" />
-              Recommended
-            </span>
-          )}
-        </div>
-      </div>
-
       {/* Visual sample: an "operating environment sample", not a swatch. */}
       <div
         className="overflow-hidden rounded-xl border"
@@ -245,31 +193,49 @@ export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
         </div>
       </div>
 
-      {/* Description */}
-      <p
-        className="text-xs leading-relaxed"
-        style={{ color: settingsSurfaceTokens.textSecondary }}
-      >
-        {metadata.description}
-      </p>
-
-      {/* Accessibility / capability indicators */}
-      {indicators.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {indicators.map((capability) => (
-            <span
-              key={capability}
-              className="rounded-full border px-2 py-0.5 text-[10px] font-medium"
-              style={{
-                borderColor: settingsSurfaceTokens.borderSubtle,
-                color: settingsSurfaceTokens.textTertiary,
-              }}
-            >
-              {CAPABILITY_LABELS[capability]}
-            </span>
-          ))}
+      {/* Footer: label + mood, with current/recommended markers */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p
+            className="truncate text-[13px] font-medium"
+            style={{
+              color: isSelected
+                ? settingsSurfaceTokens.accentPrimary
+                : settingsSurfaceTokens.textPrimary,
+            }}
+          >
+            {metadata.label}
+          </p>
+          <p
+            className="mt-0.5 truncate text-[11px]"
+            style={{ color: settingsSurfaceTokens.textTertiary }}
+          >
+            {MOOD_LABELS[metadata.mood]}
+          </p>
         </div>
-      )}
+        <div className="flex shrink-0 items-center gap-1 pt-0.5">
+          {isRecommended && (
+            <span aria-label="Recommended" title="Recommended">
+              <Icon
+                name="Star"
+                variant="BoldDuotone"
+                className="h-3.5 w-3.5"
+                style={{ color: settingsSurfaceTokens.accentPrimary }}
+              />
+            </span>
+          )}
+          {isSelected && (
+            <span aria-label="Current skin" title="Current skin">
+              <Icon
+                name="CheckCircle"
+                variant="BoldDuotone"
+                className="h-3.5 w-3.5"
+                style={{ color: settingsSurfaceTokens.accentPrimary }}
+              />
+            </span>
+          )}
+        </div>
+      </div>
     </CardElement>
   );
 };

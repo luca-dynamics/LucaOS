@@ -53,7 +53,7 @@ export const SkinPreviewSection: React.FC<SkinPreviewSectionProps> = ({
         The selected skin is the active LucaOS visual environment across
         Settings, boot, onboarding, dashboard, and mobile-safe surfaces.
       </p>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         {skins.map((metadata) => (
           <SkinPreviewCard
             key={metadata.id}

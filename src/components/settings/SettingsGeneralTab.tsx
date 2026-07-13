@@ -391,6 +391,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
             accentColor={theme.hex}
             isMobile={isMobile}
           >
+            <div className="space-y-4">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <SettingsStatusCard
                 label="Session status"
@@ -441,6 +442,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
               />
               {profileStatus?.imported ? "Re-import session" : "Import session"}
             </button>
+            </div>
           </SettingsSection>
         </motion.div>
 

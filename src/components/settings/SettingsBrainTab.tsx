@@ -757,7 +757,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             ))}
 
             <SettingsAdvancedDisclosure
-              title="Advanced details"
+              title="Advanced Details"
               description="Custom provider endpoints, proxy base URLs, and validation diagnostics."
             >
               <div className="grid grid-cols-1 gap-3">

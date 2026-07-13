@@ -40,15 +40,18 @@ describe("Settings Personal Intelligence preview integration", () => {
     }
   });
 
-  it("keeps LucaLink future-only and forbids raw private transfer", () => {
+  it("keeps LucaLink handoff transport gated and PI data out of LucaLink", () => {
+    // Live handoff exists now, but it ships dark behind an explicit
+    // user-facing toggle and refuses unencrypted sends.
+    expect(lucaLinkSource).toContain("Live handoff transport");
+    expect(lucaLinkSource).toContain("liveHandoffEnabled");
+    expect(lucaLinkSource).toContain("unencrypted sends are always refused");
+    // Memory handoff stays intent-only, and no Personal Intelligence
+    // subsystem data is wired into LucaLink surfaces.
     expect(lucaLinkSource).toContain(
-      "Future bounded handoff preview requires PR #212",
+      "raw memory databases are not transferred",
     );
-    expect(lucaLinkSource).toContain(
-      "raw memory/private reasoning transfer remains forbidden",
-    );
-    expect(lucaLinkSource).toContain(
-      "No Personal Intelligence data is wired into LucaLink",
-    );
+    expect(lucaLinkSource).not.toContain("personalIntelligence");
+    expect(lucaLinkSource).not.toContain("personal-intelligence");
   });
 });
