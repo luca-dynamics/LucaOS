@@ -68,6 +68,54 @@ export function resolveDesktopPanelWidths({
   return { sidebar, right: Math.max(minimumSide, sideBudget - sidebar) };
 }
 
+/**
+ * Comfortable minimum for the center workspace (chat). The auto-collapse below
+ * protects this — side panels hide before the center is squeezed under it.
+ */
+export const DESKTOP_CENTER_MIN_PX = 460;
+
+/** Minimum useful width for an expanded side panel before it's worth hiding. */
+export const DESKTOP_SIDE_MIN_PX = 260;
+
+/**
+ * Priority auto-collapse. As the window narrows, hide the side panels — right
+ * first, then left — instead of shrinking all three columns together, so the
+ * center workspace keeps a usable width. Layers ON TOP of the user's manual
+ * collapse: a panel the user already collapsed stays collapsed, and one hidden
+ * only by auto-collapse reappears when the window widens again (the caller keeps
+ * the user's own preference untouched and OR-combines it with this result).
+ */
+export function resolveAutoPanelCollapse({
+  viewportWidth,
+  leftCollapsed,
+  rightCollapsed,
+}: {
+  viewportWidth: number;
+  leftCollapsed: boolean;
+  rightCollapsed: boolean;
+}): { left: boolean; right: boolean } {
+  let left = leftCollapsed;
+  let right = rightCollapsed;
+
+  // Each check counts the panel under test plus any other side still open —
+  // e.g. below center-min + two side-mins (980px) both can't fit, so the right
+  // hides; below center-min + one side-min (720px) even the left alone can't
+  // fit, so it hides too.
+  if (!right) {
+    const openSides = left ? 1 : 2;
+    if (viewportWidth < DESKTOP_CENTER_MIN_PX + DESKTOP_SIDE_MIN_PX * openSides) {
+      right = true;
+    }
+  }
+  if (!left) {
+    const openSides = right ? 1 : 2;
+    if (viewportWidth < DESKTOP_CENTER_MIN_PX + DESKTOP_SIDE_MIN_PX * openSides) {
+      left = true;
+    }
+  }
+  return { left, right };
+}
+
 // Accessible labels for the icon-only collapse/expand controls.
 export const COLLAPSE_APPS_LABEL = "Collapse Apps panel";
 export const EXPAND_APPS_LABEL = "Expand Apps panel";
