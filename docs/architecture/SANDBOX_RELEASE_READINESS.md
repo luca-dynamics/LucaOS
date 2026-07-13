@@ -13,9 +13,12 @@ digests. Installation is committed only after full verification.
 into user-facing readiness, missing-asset, missing-feature, certification, and
 preview blockers. It never weakens placement or enables host fallback.
 
-`SandboxRuntimeSettingsPanel` is mounted in advanced Autonomy settings and reads
-only the narrow Electron sandbox bridge. It exposes status, sessions, snapshots,
-expiry cleanup, and emergency destruction without renderer command authority.
+`SandboxFleetLivePanel` is mounted in advanced Autonomy settings and reads only
+the narrow Electron sandbox bridge, mapping broker state into the fleet operator
+view (`SandboxFleetLiveBridge` → `SandboxFleetViewModel` → `SandboxFleetPanel`).
+It exposes backend readiness, sessions, snapshots, expiry cleanup, and emergency
+destruction without renderer command authority; switch and artifact review stay
+hidden until they gain live IPC.
 
 Electron owns the production security executors: `sandboxSecurityServices.cjs`
 uses OS-backed encryption for scoped one-use secret leases and invokes ClamAV on

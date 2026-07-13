@@ -1,12 +1,15 @@
-import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+// @vitest-environment jsdom
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+
+afterEach(cleanup);
 import type { SandboxFleetOperatorView } from "../../types/sandboxFleet";
 import { SandboxFleetPanel } from "./SandboxFleetPanel";
 
 const view: SandboxFleetOperatorView = {
   missionId: "mission-1", hostFallbackAllowed: false, cleanupCount: 1, snapshots: [],
   backends: [{ backendId: "docker-1", kind: "docker", hostId: "host-1", hostPlatform: "linux", locality: "local", isolationTier: "container", available: true, trust: "local_trusted", capacity: 2, activeSessions: 1, remainingSlots: 1, guestOs: ["linux"], capabilities: ["terminal"] }],
-  sessions: [{ sessionId: "session-1", missionId: "mission-1", status: "running", backendId: "docker-1", guestOs: "linux", imageId: "ubuntu", persistence: "mission", active: false, switchable: true, emergencyDestroyAllowed: true, expired: false, needsCleanup: false }],
+  sessions: [{ sessionId: "session-1", missionId: "mission-1", status: "running", backendId: "docker-1", guestOs: "linux", imageId: "ubuntu", persistence: "ephemeral", active: false, switchable: true, emergencyDestroyAllowed: true, expired: false, needsCleanup: false }],
   artifacts: [{ artifactId: "artifact-1", missionId: "mission-1", sourceSessionId: "session-1", kind: "build_output", name: "build.zip", digest: "sha256:test", scanStatus: "passed", approvalStatus: "pending", importCount: 0, blockedReason: "Artifact transfer is pending approval." }],
 };
 
