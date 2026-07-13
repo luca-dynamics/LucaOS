@@ -245,11 +245,21 @@ export function summarizeTransportPermissionDecision(
   return `${value.status}: ${value.reason} Side effects performed: false.`;
 }
 
+export interface TransportSendableOptions {
+  /**
+   * Live transport ships dark. Callers must pass an explicit runtime opt-in
+   * (sourced from the user-facing setting) for a decision to become sendable;
+   * without it every decision stays preview-only, exactly as before.
+   */
+  liveTransportEnabled?: boolean;
+}
+
 export function isTransportDecisionSendable(
   decision: LucaLinkTransportPermissionDecision,
-): false {
-  void decision;
-  return false;
+  options: TransportSendableOptions = {},
+): boolean {
+  if (options.liveTransportEnabled !== true) return false;
+  return decision.status === "allowed_preview";
 }
 
 interface DisplayIntentModel {

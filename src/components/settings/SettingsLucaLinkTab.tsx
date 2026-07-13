@@ -1281,9 +1281,24 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             : lucaLinkManager.console.markHandoffAccepted(handoff.id, { reason });
     setHandoffActionMessage(
       result.valid
-        ? `${handoff.title} marked ${action}. No handoff payload was sent.`
+        ? action === "approve"
+          ? `${handoff.title} approved. Nothing has been sent yet — use "Send to device" to transmit it while live handoff transport is on.`
+          : `${handoff.title} marked ${action}. No handoff payload was sent.`
         : result.errors.concat(result.warnings).join(" ") ||
             "Handoff action was not applied.",
+    );
+    refreshDeviceCenter();
+  };
+
+  const handleTransmitHandoff = async (handoff: LucaLinkHandoffRequest) => {
+    setHandoffActionMessage(`Sending ${handoff.title} over LucaLink…`);
+    const result = await lucaLinkManager.console.transmitHandoff(handoff.id, {
+      targetDeviceId: handoff.targetDeviceId,
+    });
+    setHandoffActionMessage(
+      result.success
+        ? `${handoff.title} transmitted encrypted to its target device and marked sent.`
+        : (result.error ?? "Handoff transmission failed."),
     );
     refreshDeviceCenter();
   };
@@ -3235,6 +3250,36 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 Continue on another host
               </button>
             </div>
+            <div
+              className="mt-3 flex items-center justify-between gap-3 rounded-lg border p-3"
+              style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+            >
+              <div>
+                <p className="text-sm font-semibold">Live handoff transport</p>
+                <p className="mt-1 text-xs opacity-70">
+                  Off by default. When on, an approved handoff can be
+                  transmitted encrypted to its target device with the Send
+                  action — every approval and transport policy gate still
+                  applies, and unencrypted sends are always refused.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={settings.lucaLink.liveHandoffEnabled === true}
+                onClick={() =>
+                  onUpdate(
+                    "lucaLink",
+                    "liveHandoffEnabled",
+                    settings.lucaLink.liveHandoffEnabled !== true,
+                  )
+                }
+                className="rounded-lg border px-3 py-2 text-sm font-semibold"
+                style={settingsControlInlineStyle}
+              >
+                {settings.lucaLink.liveHandoffEnabled === true ? "On" : "Off"}
+              </button>
+            </div>
             {handoffActionMessage && (
               <p className="mt-3 text-xs opacity-70">{handoffActionMessage}</p>
             )}
@@ -3323,6 +3368,16 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                         </div>
                       </div>
                       <div className="flex min-w-[10rem] flex-row gap-2 md:flex-col">
+                        {handoff.status === "approved" && (
+                          <button
+                            type="button"
+                            onClick={() => void handleTransmitHandoff(handoff)}
+                            className="rounded-lg border px-3 py-2 text-sm font-semibold"
+                            style={settingsControlInlineStyle}
+                          >
+                            Send to device
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() =>
