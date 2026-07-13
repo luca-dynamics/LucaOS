@@ -287,6 +287,16 @@ export function useVoiceEngine({
   // Helper to trigger the proactively generated greeting
   const triggerGreeting = async (service: any, type: string, persona: string, context: string) => {
     try {
+      // One spoken greeting per session, shared with the boot announcement
+      // (useAppSystem) and the ChatPanel awakening pulse — without this, a
+      // voice session opened right after onboarding delivered a second,
+      // overlapping welcome message.
+      if (sessionStorage.getItem("LUCA_SPOKEN_GREETING") === "true") {
+        console.log(
+          "[VOICE ENGINE] Greeting already delivered this session, skipping.",
+        );
+        return;
+      }
       const general = settingsService.get("general") as any;
       const prompt = await awarenessService.triggerAwakeningPulse(
         {
@@ -299,6 +309,7 @@ export function useVoiceEngine({
 
       if (prompt) {
         console.log(`[VOICE ENGINE] 🌅 Sending Awakening Pulse via ${type}...`);
+        sessionStorage.setItem("LUCA_SPOKEN_GREETING", "true");
         await service.sendText(prompt);
       }
     } catch (e) {

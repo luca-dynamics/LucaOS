@@ -451,11 +451,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             if (prompt) {
               // 4th arg: sendHidden=true, 5th arg: hideResponse=false
               const response = await handleSendMessage(prompt, null, undefined, true, false);
-              
+
               // If no response (undefined), treat as failure and trigger local fallback
               if (!response) {
                 throw new Error("No AI response for awakening pulse");
               }
+              // The response is the session's greeting (spoken via chat TTS in
+              // voice mode) — mark it delivered so the voice-engine connect
+              // greeting doesn't add a second overlapping welcome.
+              sessionStorage.setItem("LUCA_SPOKEN_GREETING", "true");
             }
           } catch (err) {
             console.warn("[AWARENESS] AI Awakening failed, triggering local fallback:", err);

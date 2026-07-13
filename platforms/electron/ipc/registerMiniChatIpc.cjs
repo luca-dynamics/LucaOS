@@ -62,20 +62,25 @@ function registerMiniChatIpc({ ipcMain, getWidgetWindow, getChatWindow, getMainW
         }
     });
 
-    ipcMain.on('chat-widget-resize', (event, { height, resizable }) => {
+    ipcMain.on('chat-widget-resize', (event, { height, width, resizable }) => {
         const chatWindow = getChatWindow();
         if (chatWindow) {
-            const [currentW] = chatWindow.getSize();
+            const [currentW, currentH] = chatWindow.getSize();
+            const nextHeight = typeof height === 'number' ? height : currentH;
+            // Renderer drag-resize caps at 1200 — keep the window max in sync.
+            const nextWidth = typeof width === 'number'
+                ? Math.max(200, Math.min(1200, width))
+                : currentW;
 
             if (resizable) {
                 chatWindow.setMinimumSize(300, 200);
-                chatWindow.setMaximumSize(1000, 900);
-            } else {
+                chatWindow.setMaximumSize(1200, 900);
+            } else if (typeof height === 'number') {
                 chatWindow.setMinimumSize(300, height);
-                chatWindow.setMaximumSize(1000, height);
+                chatWindow.setMaximumSize(1200, height);
             }
 
-            chatWindow.setSize(currentW, height, true);
+            chatWindow.setSize(nextWidth, nextHeight, true);
 
             if (typeof resizable === 'boolean') {
                 chatWindow.setResizable(resizable);

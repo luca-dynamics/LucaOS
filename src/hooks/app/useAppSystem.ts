@@ -487,8 +487,24 @@ export const useAppSystem = ({
                 const currentUserName =
                   profile?.userName || profile?.name || "Commander";
 
-                if (isColdBoot && !hasAnnouncedRef.current && scannedHealth) {
+                console.log("[BOOT] KERNEL tasks complete. Transitioning...");
+                const destination = resolveDestination();
+                console.log("[BOOT] Setup destination:", destination);
+
+                // Speak the boot announcement only when this boot lands on the
+                // READY workspace. A fresh install heading into ONBOARDING must
+                // stay silent: this "Welcome back" line talking over the
+                // onboarding screens was one of the two overlapping greeting
+                // voices (the post-onboarding awakening pulse is the other —
+                // see LUCA_SPOKEN_GREETING).
+                if (
+                  destination === "READY" &&
+                  isColdBoot &&
+                  !hasAnnouncedRef.current &&
+                  scannedHealth
+                ) {
                   hasAnnouncedRef.current = true;
+                  sessionStorage.setItem("LUCA_SPOKEN_GREETING", "true");
                   runNonBlockingBootPhase({
                     phaseId: "kernel-self-expression-announcement",
                     label: "Self-expression announcement",
@@ -503,10 +519,6 @@ export const useAppSystem = ({
                       "Self-expression announcement failed or timed out.",
                   }).then(recordPhase);
                 }
-
-                console.log("[BOOT] KERNEL tasks complete. Transitioning...");
-                const destination = resolveDestination();
-                console.log("[BOOT] Setup destination:", destination);
                 if (destination === "READY") {
                   console.log("[BOOT] App ready.");
                   sessionStorage.setItem("LUCA_HAS_BOOTED", "true");
