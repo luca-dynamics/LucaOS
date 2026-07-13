@@ -95,12 +95,12 @@ export const RuntimeStatusChip: React.FC<RuntimeStatusChipProps> = ({
 
   return (
     <div
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-mono font-black uppercase tracking-widest ${compact ? "text-[8px]" : "text-[9px]"} ${SEVERITY_CLASS[severity]} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium ${compact ? "text-[11px]" : "text-[12px]"} ${SEVERITY_CLASS[severity]} ${className}`}
       title={diagnostics?.summary.description || "Checking Luca runtime status"}
     >
       <Icon
         name={iconForSeverity(severity)}
-        size={compact ? 10 : 12}
+        size={compact ? 12 : 13}
         variant="Linear"
         className={loading ? "animate-pulse" : ""}
       />

@@ -113,6 +113,7 @@ import {
   RIGHT_PANEL_COLLAPSED_KEY,
   leftToggleIcon,
   readCollapsedPreference,
+  resolveAutoPanelCollapse,
   resolveDesktopPanelWidths,
   rightToggleIcon,
   writeCollapsedPreference,
@@ -543,15 +544,34 @@ function AppContent() {
   const [atmosphere, setAtmosphere] = useState(() =>
     normalizeLucaAtmosphere(settingsService.getSettings().general.atmosphere),
   );
+  // Priority auto-collapse: under compression the side panels hide (right
+  // first, then left) so the center workspace keeps its minimum width instead
+  // of all three columns shrinking. OR-combined with the user's own collapse;
+  // a panel hidden only by narrow width reappears when the window widens.
+  const { left: effectiveLeftCollapsed, right: effectiveRightCollapsed } =
+    useMemo(
+      () =>
+        resolveAutoPanelCollapse({
+          viewportWidth: desktopViewportWidth,
+          leftCollapsed: leftPanelCollapsed,
+          rightCollapsed: rightPanelCollapsed,
+        }),
+      [desktopViewportWidth, leftPanelCollapsed, rightPanelCollapsed],
+    );
   const renderedPanelWidths = useMemo(
     () =>
       resolveDesktopPanelWidths({
         viewportWidth: desktopViewportWidth,
         requested: panelWidths,
-        leftVisible: !leftPanelCollapsed,
-        rightVisible: !rightPanelCollapsed,
+        leftVisible: !effectiveLeftCollapsed,
+        rightVisible: !effectiveRightCollapsed,
       }),
-    [desktopViewportWidth, panelWidths, leftPanelCollapsed, rightPanelCollapsed],
+    [
+      desktopViewportWidth,
+      panelWidths,
+      effectiveLeftCollapsed,
+      effectiveRightCollapsed,
+    ],
   );
   // Live material preview: the Appearance sliders broadcast while dragging;
   // the boundary recomputes and the WHOLE app follows. Cancel/close restores
@@ -2945,34 +2965,42 @@ function AppContent() {
                   className="flex items-center gap-1 pl-3"
                   style={hasMacTrafficLights() ? { paddingLeft: 76 } : undefined}
                 >
-                  {/* Identity anchors the band's left edge (unplugged from
-                      the sidebar sheet) — the menu and toggle sit beside it,
-                      and the brand stays present even with panels collapsed. */}
-                  <span className="mr-2 flex items-center gap-2.5">
-                    <SafeComponent componentName="PresenceMark">
-                      <ShellPresenceMark size={24} />
-                    </SafeComponent>
-                    <span className="min-w-0 flex flex-col justify-center leading-none">
-                      <span
-                        className="text-[14px]"
-                        style={{
-                          color: "var(--luca-text-primary, var(--app-text-main))",
-                          ...lucaBrandDisplayStyle,
-                        }}
-                      >
-                        LucaOS
-                      </span>
-                      <span
-                        className="mt-1 truncate text-[10px]"
-                        style={{
-                          color:
-                            "var(--luca-text-tertiary, var(--app-text-muted))",
-                        }}
-                      >
-                        {desktopPlatformLabel} · present
+                  {/* Identity anchors the band's left edge. As the window
+                      compresses it sheds progressively so the header never
+                      crowds: the platform caption drops first (< 1120px), then
+                      the whole brand block (mark + wordmark) hides (< 900px) —
+                      the presence mark still lives atop the left rail, so
+                      nothing is lost. The menu + panel toggle always stay. */}
+                  {desktopViewportWidth >= 900 && (
+                    <span className="mr-2 flex items-center gap-2.5">
+                      <SafeComponent componentName="PresenceMark">
+                        <ShellPresenceMark size={24} />
+                      </SafeComponent>
+                      <span className="min-w-0 flex flex-col justify-center leading-none">
+                        <span
+                          className="text-[14px]"
+                          style={{
+                            color:
+                              "var(--luca-text-primary, var(--app-text-main))",
+                            ...lucaBrandDisplayStyle,
+                          }}
+                        >
+                          LucaOS
+                        </span>
+                        {desktopViewportWidth >= 1120 && (
+                          <span
+                            className="mt-1 truncate text-[10px]"
+                            style={{
+                              color:
+                                "var(--luca-text-tertiary, var(--app-text-muted))",
+                            }}
+                          >
+                            {desktopPlatformLabel} · present
+                          </span>
+                        )}
                       </span>
                     </span>
-                  </span>
+                  )}
                   <AppMenu
                     onNewSession={handleClearChat}
                     onOpenSettings={() => setShowSettingsModal(true)}
@@ -2985,13 +3013,13 @@ function AppContent() {
                   />
                   <button
                     type="button"
-                    aria-label={leftToggleIcon(leftPanelCollapsed).label}
-                    title={leftToggleIcon(leftPanelCollapsed).label}
+                    aria-label={leftToggleIcon(effectiveLeftCollapsed).label}
+                    title={leftToggleIcon(effectiveLeftCollapsed).label}
                     onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
                     className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
                     style={lucaShellHeaderGhostControlStyle}
                   >
-                    <Icon name={leftToggleIcon(leftPanelCollapsed).name} size={16} />
+                    <Icon name={leftToggleIcon(effectiveLeftCollapsed).name} size={16} />
                   </button>
                 </div>
                 <div className="luca-band-embed flex-1 min-w-0 flex flex-col">
@@ -3026,19 +3054,20 @@ function AppContent() {
                     isLockdown={isLockdown}
                     connectionTier={effectiveConnectionTier}
                     tier={toHeaderTier(experienceMode)}
+                    viewportWidth={desktopViewportWidth}
                   />
                 </SafeComponent>
                 </div>
                 <div className="flex items-center gap-1 pr-2">
                   <button
                     type="button"
-                    aria-label={rightToggleIcon(rightPanelCollapsed).label}
-                    title={rightToggleIcon(rightPanelCollapsed).label}
+                    aria-label={rightToggleIcon(effectiveRightCollapsed).label}
+                    title={rightToggleIcon(effectiveRightCollapsed).label}
                     onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
                     className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
                     style={lucaShellHeaderGhostControlStyle}
                   >
-                    <Icon name={rightToggleIcon(rightPanelCollapsed).name} size={16} />
+                    <Icon name={rightToggleIcon(effectiveRightCollapsed).name} size={16} />
                   </button>
                   {/* Window controls: the shell's OWN buttons (no native
                       overlay) — same ghost skin and size as every other
@@ -3057,7 +3086,7 @@ function AppContent() {
             className={`flex-1 min-h-0 flex ${lucaShellClassNames.workspace}`}
             style={lucaShellWorkspaceSurfaceStyle}
           >
-          {!isMobile && !leftPanelCollapsed && (
+          {!isMobile && !effectiveLeftCollapsed && (
             <>
               <div
                 className={`flex-none h-full overflow-hidden flex flex-col relative border-r ${lucaShellClassNames.panel}`}
@@ -3277,7 +3306,7 @@ function AppContent() {
           )}
 
           {/* Right Panel or Data Panel */}
-          {!isMobile && !rightPanelCollapsed && (
+          {!isMobile && !effectiveRightCollapsed && (
             <>
               <PanelResizer
                 themeColor={theme.hex}

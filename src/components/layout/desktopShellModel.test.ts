@@ -11,6 +11,7 @@ import {
   leftToggleIcon,
   parseCollapsedPreference,
   readCollapsedPreference,
+  resolveAutoPanelCollapse,
   resolveDesktopPanelWidths,
   rightToggleIcon,
   writeCollapsedPreference,
@@ -135,5 +136,36 @@ describe("desktopShellModel", () => {
       requested: { sidebar: 320, right: 380 },
       leftVisible: false,
     })).toEqual({ sidebar: 0, right: 372 });
+  });
+});
+
+describe("resolveAutoPanelCollapse", () => {
+  const call = (viewportWidth: number, leftCollapsed = false, rightCollapsed = false) =>
+    resolveAutoPanelCollapse({ viewportWidth, leftCollapsed, rightCollapsed });
+
+  it("keeps both panels open on a wide desktop window", () => {
+    expect(call(1440)).toEqual({ left: false, right: false });
+    expect(call(1000)).toEqual({ left: false, right: false });
+  });
+
+  it("auto-hides the right panel first as the window narrows", () => {
+    // Below center-min + two side-mins (460 + 520 = 980) the right hides.
+    expect(call(900)).toEqual({ left: false, right: true });
+  });
+
+  it("auto-hides the left panel too when even one side won't fit", () => {
+    // Below center-min + one side-min (460 + 260 = 720) the left hides as well.
+    expect(call(700)).toEqual({ left: true, right: true });
+  });
+
+  it("never re-opens a panel the user manually collapsed", () => {
+    expect(call(1440, true, false)).toEqual({ left: true, right: false });
+    expect(call(1440, false, true)).toEqual({ left: false, right: true });
+  });
+
+  it("keeps the left open longer when the user already collapsed the right", () => {
+    // With right user-collapsed, left only needs center-min + one side-min.
+    expect(call(760, false, true)).toEqual({ left: false, right: true });
+    expect(call(700, false, true)).toEqual({ left: true, right: true });
   });
 });

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../ui/Icon";
 // Holographic icon removed in favor of static branding
 import AmbientVisionIndicator from "../AmbientVisionIndicator";
@@ -49,6 +49,14 @@ interface HeaderProps {
    * then renders only the status/controls cluster.
    */
   hideBrand?: boolean;
+  /**
+   * Current desktop window width, used to prioritise header controls under
+   * compression. The essential controls (panel toggles, settings, window
+   * controls) always stay; credits and runtime status yield first — compacting,
+   * then hiding — so the essential icons never get squeezed. Undefined (mobile
+   * / standalone) renders everything.
+   */
+  viewportWidth?: number;
 }
 
 // Tier-aware wordmark. The canonical brand form is "LucaOS" (matches the
@@ -98,9 +106,41 @@ const Header: React.FC<HeaderProps> = ({
   connectionTier = "LOCAL",
   tier = "BASIC",
   hideBrand = false,
+  viewportWidth,
 }) => {
   const credits = useCredits();
   const brand = wordmark(tier);
+
+  // Priority under compression. Essential controls (panel toggles, settings,
+  // window controls, quick-controls) always render at full size. Non-essential
+  // status yields first: runtime chip hides, then credits compacts, then hides.
+  const w = viewportWidth ?? Infinity;
+  const showRuntimeChip = w >= 900;
+  const showCredits = w >= 780;
+  const compactCredits = w < 880;
+
+  // Quick controls popover: Voice, Vision, and monitoring live here instead of
+  // as persistent header pills, so the bar stays calm and never crowds. Closes
+  // on outside click or Escape.
+  const [quickOpen, setQuickOpen] = useState(false);
+  const quickRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!quickOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (quickRef.current && !quickRef.current.contains(e.target as Node)) {
+        setQuickOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setQuickOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [quickOpen]);
 
   const creditColor =
     credits.status === "CRITICAL"
@@ -241,62 +281,132 @@ const Header: React.FC<HeaderProps> = ({
           </span>
         )}
 
-        {/* Credits */}
-        <div
-          className={`${isMobile ? "hidden sm:flex" : "flex"} items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-default`}
-          style={surfaceStyle}
-          title={`Credits${credits.isLocal ? " · running on local models" : credits.isBYOK ? " · using your own API key" : ""}`}
-        >
-          <Icon name="Wallet" size={15} variant="Linear" color={creditColor} />
-          <span
-            className="text-[13px] font-semibold tabular-nums"
-            style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
+        {/* Credits — compacts (drops the plan badge) then hides under
+            compression, so the essential controls keep their room. */}
+        {showCredits && (
+          <div
+            className={`${isMobile ? "hidden sm:flex" : "flex"} items-center gap-2 ${compactCredits ? "px-2.5" : "px-3"} py-1.5 rounded-full border transition-all cursor-default shrink-0`}
+            style={surfaceStyle}
+            title={`Credits${credits.isLocal ? " · running on local models" : credits.isBYOK ? " · using your own API key" : ""}`}
           >
-            {!isFinite(credits.balance)
-              ? "∞"
-              : Math.floor(credits.balance).toLocaleString()}
-          </span>
-          <span
-            className="text-[10px] font-medium px-1.5 py-0.5 rounded-md"
-            style={{
-              color: creditColor,
-              backgroundColor: `${creditColor}1a`,
-            }}
-          >
-            {planLabel}
-          </span>
-        </div>
-
-        {!isMobile && <RuntimeStatusChip compact />}
-
-        {/* Voice HUD toggle */}
-        {setShowVoiceHud && (
-          <button
-            type="button"
-            onClick={() => setShowVoiceHud(!showVoiceHud)}
-            aria-label={showVoiceHud ? "Close voice" : "Open voice"}
-            title={showVoiceHud ? "Close voice" : "Voice"}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all app-region-no-drag"
-            style={{
-              ...surfaceStyle,
-              color: showVoiceHud
-                ? "var(--luca-accent-primary)"
-                : "var(--luca-text-secondary, var(--app-text-muted))",
-            }}
-          >
-            <Icon
-              name="Microphone"
-              size={14}
-              variant="Linear"
-              color="currentColor"
-            />
-            <span className="text-[11px] font-medium">
-              {showVoiceHud ? "Voice on" : "Voice"}
+            <Icon name="Wallet" size={15} variant="Linear" color={creditColor} />
+            <span
+              className="text-[13px] font-semibold tabular-nums"
+              style={{
+                color: "var(--luca-text-primary, var(--app-text-main))",
+              }}
+            >
+              {!isFinite(credits.balance)
+                ? "∞"
+                : Math.floor(credits.balance).toLocaleString()}
             </span>
-          </button>
+            {!compactCredits && (
+              <span
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded-md"
+                style={{
+                  color: creditColor,
+                  backgroundColor: `${creditColor}1a`,
+                }}
+              >
+                {planLabel}
+              </span>
+            )}
+          </div>
         )}
 
-        {/* Ambient vision toggle */}
+        {!isMobile && showRuntimeChip && <RuntimeStatusChip compact />}
+
+        {/* Quick controls: Voice, Vision, and monitoring live in this popover
+            instead of as persistent header pills, keeping the bar calm. */}
+        {!isMobile && (
+          <div className="relative shrink-0" ref={quickRef}>
+            <button
+              type="button"
+              onClick={() => setQuickOpen((v) => !v)}
+              aria-label="Quick controls"
+              aria-haspopup="menu"
+              aria-expanded={quickOpen}
+              title="Quick controls"
+              className="flex items-center justify-center w-9 h-9 rounded-full border transition-all app-region-no-drag shrink-0"
+              style={{
+                ...surfaceStyle,
+                color: quickOpen
+                  ? "var(--luca-accent-primary)"
+                  : "var(--luca-text-secondary, var(--app-text-muted))",
+              }}
+            >
+              <Icon name="MoreHorizontal" size={16} variant="Linear" />
+            </button>
+            {quickOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-full mt-2 z-[60] w-56 rounded-xl border p-1.5 glass-blur"
+                style={{
+                  ...lucaMaterialPanelStyle,
+                  borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+                }}
+              >
+                <p
+                  className="px-2.5 pt-1.5 pb-1 text-[10px] tracking-wide"
+                  style={{
+                    color: "var(--luca-text-tertiary, var(--app-text-muted))",
+                  }}
+                >
+                  Quick controls
+                </p>
+                {setShowVoiceHud && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setShowVoiceHud(!showVoiceHud);
+                      setQuickOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition-colors hover:bg-[var(--luca-surface-hover,rgba(255,255,255,0.05))]"
+                    style={{
+                      color: "var(--luca-text-primary, var(--app-text-main))",
+                    }}
+                  >
+                    <Icon
+                      name="Microphone"
+                      size={16}
+                      variant="Linear"
+                      style={{
+                        color: showVoiceHud
+                          ? "var(--luca-accent-primary)"
+                          : "var(--luca-text-secondary, var(--app-text-muted))",
+                      }}
+                    />
+                    Voice
+                    <span
+                      className="ml-auto text-[11px]"
+                      style={{
+                        color: showVoiceHud
+                          ? "var(--luca-accent-primary)"
+                          : "var(--luca-text-tertiary, var(--app-text-muted))",
+                      }}
+                    >
+                      {showVoiceHud ? "On" : "Off"}
+                    </span>
+                  </button>
+                )}
+                <div className="px-1 py-1">
+                  <AlwaysOnControls
+                    onVisionToggle={(active) =>
+                      setVisionMonitoringActive(active)
+                    }
+                    onAudioToggle={(active) => setAudioMonitoringActive(active)}
+                    isMobile={isMobile}
+                    isWakeWordActive={isWakeWordActive}
+                    theme={theme}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Ambient vision status (null unless Luca is actively watching). */}
         <div className={isMobile ? "hidden sm:block" : "block"}>
           <AmbientVisionIndicator
             active={ambientVisionActive}
@@ -328,17 +438,6 @@ const Header: React.FC<HeaderProps> = ({
             isMobile={isMobile}
           />
         </div>
-
-        {/* Always-on monitoring controls */}
-        {!isMobile && (
-          <AlwaysOnControls
-            onVisionToggle={(active) => setVisionMonitoringActive(active)}
-            onAudioToggle={(active) => setAudioMonitoringActive(active)}
-            isMobile={isMobile}
-            isWakeWordActive={isWakeWordActive}
-            theme={theme}
-          />
-        )}
 
         {/* Connection status */}
         <div
@@ -381,7 +480,7 @@ const Header: React.FC<HeaderProps> = ({
           onClick={() => setIsSettingsOpen(true)}
           aria-label="Open settings"
           title="Settings"
-          className="flex items-center justify-center w-9 h-9 rounded-full border transition-all group app-region-no-drag"
+          className="flex items-center justify-center w-9 h-9 rounded-full border transition-all group app-region-no-drag shrink-0"
           style={{
             ...surfaceStyle,
             color: "var(--luca-text-secondary, var(--app-text-muted))",
