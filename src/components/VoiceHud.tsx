@@ -10,6 +10,8 @@ import {
   getFriendlyLocalCoreLabel,
 } from "../utils/voiceDisplay";
 import { voiceSessionOrchestrator } from "../services/voiceSessionOrchestrator";
+import { settingsService } from "../services/settingsService";
+import type { LucaSettings } from "../services/settingsService";
 
 // Removed local CANVAS_THEME_COLORS map to use central THEME_PALETTE from themeColors.ts
 
@@ -146,6 +148,32 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
     };
   }, []);
 
+  // The surface is pure — the adapter owns the settings subscription and
+  // hands the live skin + chosen voice avatar down as props.
+  const [surfaceAppearance, setSurfaceAppearance] = useState<{
+    selectedSkinId: unknown;
+    hudAvatar: "plasma" | "face";
+  }>(() => {
+    const settings = settingsService.getSettings();
+    return {
+      selectedSkinId: settings.general.selectedSkinId,
+      hudAvatar: settings.voice.hudAvatar ?? "plasma",
+    };
+  });
+
+  useEffect(() => {
+    const handleSettingsChange = (settings: LucaSettings) => {
+      setSurfaceAppearance({
+        selectedSkinId: settings.general.selectedSkinId,
+        hudAvatar: settings.voice.hudAvatar ?? "plasma",
+      });
+    };
+    settingsService.on("settings-changed", handleSettingsChange);
+    return () => {
+      settingsService.off("settings-changed", handleSettingsChange);
+    };
+  }, []);
+
   const responseLatency = voiceSessionOrchestrator.responseLatencyMs;
   const telemetrySummary = getFriendlyVoiceTelemetrySummary({
     latencyMs: responseLatency,
@@ -203,6 +231,8 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
       runtimeFallbackActive={runtimeFallbackActive}
       dynamicProtocols={dynamicProtocols}
       totalToolCount={getAllTools().length}
+      selectedSkinId={surfaceAppearance.selectedSkinId}
+      hudAvatar={surfaceAppearance.hudAvatar}
       renderSettingsModal={(onSettingsClose) => (
         <SettingsModal
           onClose={onSettingsClose}

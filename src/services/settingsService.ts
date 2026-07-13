@@ -147,6 +147,8 @@ export interface LucaSettings {
     byokEnabled?: boolean;
     hfRealtimeEnabled?: boolean;
     hfRealtimeEndpoint?: string;
+    /** Which visual Luca shows on the voice screen. */
+    hudAvatar?: "plasma" | "face";
   };
   iot: {
     haUrl: string;
@@ -356,6 +358,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     wakeWordEnabled: false,
     hfRealtimeEnabled: false,
     hfRealtimeEndpoint: "ws://127.0.0.1:8765/v1/realtime",
+    hudAvatar: "plasma",
   },
   iot: {
     haUrl: "",

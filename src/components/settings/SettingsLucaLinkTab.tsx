@@ -547,10 +547,8 @@ const GuestAccessSection: React.FC<{
                       }
                     }}
                     disabled={loading}
-                    className="flex-[2] py-2 rounded-lg text-sm font-semibold text-[var(--app-text-main)] transition-all shadow-sm"
-                    style={{
-                      background: `linear-gradient(135deg, ${theme.hex}, ${theme.hex}aa)`,
-                    }}
+                    className="flex-[2] py-2 rounded-lg text-sm font-semibold text-[var(--app-text-main)] transition-colors"
+                    style={{ backgroundColor: theme.hex }}
                   >
                     {loading
                       ? "Processing..."
@@ -776,7 +774,7 @@ const continuationReplayModeLabels: Record<string, string> = {
 
 const RiskBadge: React.FC<{ risk?: LucaLinkApprovalRisk }> = ({ risk }) => (
   <span
-    className="rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide"
+    className="rounded-full border px-2 py-0.5 text-[11px] font-medium"
     style={{
       borderColor: settingsSurfaceTokens.borderSubtle,
       color: settingsSurfaceTokens.textPrimary,
@@ -789,7 +787,7 @@ const RiskBadge: React.FC<{ risk?: LucaLinkApprovalRisk }> = ({ risk }) => (
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => (
   <span
-    className="rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide"
+    className="rounded-full border px-2 py-0.5 text-[11px] font-medium"
     style={{
       borderColor: settingsSurfaceTokens.borderSubtle,
       color: settingsSurfaceTokens.textSecondary,
@@ -809,7 +807,7 @@ const DetailField: React.FC<{ label: string; value?: React.ReactNode }> = ({
     style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
   >
     <p
-      className="text-[11px] font-semibold uppercase tracking-wide"
+      className="text-[11px] font-medium"
       style={{ color: settingsSurfaceTokens.textTertiary }}
     >
       {label}
@@ -1524,13 +1522,10 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         </div>
 
         <div
-          className="flex gap-2 overflow-x-auto rounded-2xl border p-2"
+          className="mt-4 flex gap-1 overflow-x-auto border-b pb-px"
           role="tablist"
           aria-label="LucaLink Device Center sections"
-          style={{
-            borderColor: settingsSurfaceTokens.borderSubtle,
-            backgroundColor: settingsSurfaceTokens.glass,
-          }}
+          style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
         >
           {visibleDeviceCenterTabs.map((tab) => {
             const active = deviceCenterTab === tab.id;
@@ -1541,15 +1536,15 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 role="tab"
                 aria-selected={active}
                 onClick={() => setDeviceCenterTab(tab.id)}
-                className="whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-all"
+                className="whitespace-nowrap rounded-t-md px-3 py-2 text-[13px] transition-colors"
                 style={{
-                  backgroundColor: active
-                    ? settingsSurfaceTokens.elevated
-                    : "transparent",
                   color: active
                     ? settingsSurfaceTokens.textPrimary
                     : settingsSurfaceTokens.textSecondary,
-                  border: `1px solid ${active ? settingsSurfaceTokens.borderStrong : "transparent"}`,
+                  fontWeight: active ? 600 : 400,
+                  boxShadow: active
+                    ? `inset 0 -2px 0 ${theme.hex}`
+                    : undefined,
                 }}
               >
                 {tab.label}
@@ -2133,7 +2128,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 </p>
               </div>
               <span
-                className="rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide"
+                className="rounded-full border px-2 py-0.5 text-[11px] font-medium"
                 style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
               >
                 Review only
@@ -2652,7 +2647,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   control is performed.
                 </p>
               </div>
-              <span className="rounded-full border px-2 py-1 text-xs font-semibold uppercase tracking-wide">
+              <span className="rounded-full border px-2 py-0.5 text-xs font-medium">
                 intent-only
               </span>
             </div>
@@ -2963,7 +2958,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     </div>
                   )}
                   <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide opacity-70">
+                    <p className="mb-1 text-xs font-medium opacity-70">
                       Payload preview
                     </p>
                     <pre
@@ -3308,7 +3303,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                           <StatusBadge status={handoff.status} />
                           <RiskBadge risk={handoff.risk} />
                           <span
-                            className="rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide"
+                            className="rounded-full border px-2 py-0.5 text-[11px] font-medium"
                             style={{
                               borderColor: settingsSurfaceTokens.borderSubtle,
                             }}
@@ -3352,7 +3347,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                           />
                         </div>
                         <div>
-                          <p className="mb-1 text-xs font-semibold uppercase tracking-wide opacity-70">
+                          <p className="mb-1 text-xs font-medium opacity-70">
                             Payload preview only
                           </p>
                           <pre
@@ -3738,7 +3733,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           >
             {/* Connection status */}
             <div
-              className={`p-6 border transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-[var(--luca-surface-glass)]" : "rounded-2xl shadow-sm"}`}
+              className={`p-4 border ${isMobile ? "border-x-0 border-y rounded-none bg-[var(--luca-surface-glass)]" : "rounded-xl"}`}
               style={{
                 backgroundColor: settingsSurfaceTokens.glass,
                 borderColor: settingsSurfaceTokens.borderSubtle,
@@ -3746,7 +3741,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             >
               <div className="flex items-center justify-between mb-3">
                 <label
-                  className={`text-base font-semibold text-[var(--app-text-main)]`}
+                  className={`text-sm font-semibold text-[var(--app-text-main)]`}
                 >
                   {isMobile ? "Primary Host connection" : "Connection status"}
                 </label>

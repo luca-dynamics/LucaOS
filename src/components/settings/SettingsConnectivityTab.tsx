@@ -41,7 +41,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
       >
         <div className="flex-1 min-w-0">
           <h4
-            className="text-base font-black flex items-center gap-2 mb-1 text-[var(--app-text-main)] uppercase"
+            className="text-[15px] font-semibold flex items-center gap-2 mb-1 text-[var(--app-text-main)]"
           >
             <Icon name="Plug" variant="BoldDuotone" className="w-4 h-4 text-[var(--app-text-main)] opacity-80" />
             Luca Capability Sharing
@@ -53,7 +53,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
           </p>
         </div>
         <div
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-medium border transition-all ${
             bridgeStatus === "active"
               ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] shadow-[0_0_10px_rgba(34,197,94,0.1)]"
               : "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
@@ -70,13 +70,13 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
       >
         <button
           onClick={() => setMode("stdio")}
-          className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 border ${mode === "stdio" ? "bg-[var(--luca-surface-hover)] text-[var(--app-text-main)] border-[var(--app-border-main)] shadow-sm" : "bg-transparent text-[var(--app-text-muted)] border-transparent hover:text-[var(--app-text-main)] opacity-60 hover:opacity-100"}`}
+          className={`px-5 py-2 rounded-lg text-[10px] font-medium transition-all duration-300 border ${mode === "stdio" ? "bg-[var(--luca-surface-hover)] text-[var(--app-text-main)] border-[var(--app-border-main)] shadow-sm" : "bg-transparent text-[var(--app-text-muted)] border-transparent hover:text-[var(--app-text-main)] opacity-60 hover:opacity-100"}`}
         >
           Direct (STDIO)
         </button>
         <button
           onClick={() => setMode("sse")}
-          className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 border ${mode === "sse" ? "bg-[var(--luca-surface-hover)] text-[var(--app-text-main)] border-[var(--app-border-main)] shadow-sm" : "bg-transparent text-[var(--app-text-muted)] border-transparent hover:text-[var(--app-text-main)] opacity-60 hover:opacity-100"}`}
+          className={`px-5 py-2 rounded-lg text-[10px] font-medium transition-all duration-300 border ${mode === "sse" ? "bg-[var(--luca-surface-hover)] text-[var(--app-text-main)] border-[var(--app-border-main)] shadow-sm" : "bg-transparent text-[var(--app-text-muted)] border-transparent hover:text-[var(--app-text-main)] opacity-60 hover:opacity-100"}`}
         >
           Production (SSE)
         </button>
@@ -84,7 +84,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
 
       {/* Connection Guide */}
       <div className="space-y-4">
-        <h5 className={`text-[10px] text-[var(--app-text-muted)] uppercase tracking-[0.2em] font-black opacity-60 ${isMobile ? "px-4" : ""}`}>
+        <h5 className={`text-[10px] text-[var(--app-text-muted)] font-medium opacity-60 ${isMobile ? "px-4" : ""}`}>
           1. Configure External Apps
         </h5>
 
@@ -97,13 +97,13 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
             >
               <div className="flex items-center gap-2">
                 <Icon name="FileCode" className="w-4 h-4 text-[var(--app-text-muted)] opacity-60" />
-                <span className="text-xs font-mono text-[var(--app-text-muted)] uppercase tracking-widest opacity-80">
+                <span className="text-xs font-mono text-[var(--app-text-muted)] opacity-80">
                   claude_desktop_config.json
                 </span>
               </div>
               <button
                 onClick={copyToClipboard}
-                className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]`}
+                className={`flex items-center gap-2 text-[10px] font-medium transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]`}
               >
                 {copied ? (
                   <Icon name="Check" className="w-3.5 h-3.5 text-[var(--luca-success,#4fbf7a)]" />
@@ -125,7 +125,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
           >
             <div className="space-y-3">
               <h6
-                className={`text-xs font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
+                className={`text-xs font-medium text-[var(--app-text-main)] opacity-60`}
               >
                 SSE Connection URL
               </h6>
@@ -167,7 +167,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
           className={`p-5 space-y-3 transition-all ${isMobile ? "border-x-0 border-b rounded-none bg-[var(--luca-surface-glass)]" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-sm"} glass-blur`}
         >
           <div
-            className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
+            className={`flex items-center gap-2 text-xs font-medium text-[var(--app-text-main)] opacity-60`}
           >
             <Icon name="Terminal" variant="BoldDuotone" className="w-4 h-4 text-[var(--app-text-main)]" />
             Local Bridge Command
@@ -183,7 +183,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
           className={`p-5 space-y-3 transition-all ${isMobile ? "border-x-0 border-b rounded-none bg-[var(--luca-surface-glass)]" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-sm"} glass-blur`}
         >
           <div
-            className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
+            className={`flex items-center gap-2 text-xs font-medium text-[var(--app-text-main)] opacity-60`}
           >
             <Icon name="Shield" variant="BoldDuotone" className="w-4 h-4 text-[var(--app-text-main)]" />
             Access Scope
@@ -193,7 +193,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
           >
             Bridge access is currently in{" "}
             <span
-              className={`text-[var(--app-text-main)] font-black italic`}
+              className={`text-[var(--app-text-main)] font-medium`}
             >
               Direct local mode
             </span>
@@ -208,7 +208,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
           onClick={() =>
             window.open("https://modelcontextprotocol.io", "_blank")
           }
-          className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] opacity-60 hover:opacity-100 group`}
+          className={`flex items-center gap-2 text-[10px] font-medium transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] opacity-60 hover:opacity-100 group`}
         >
           <Icon name="ExternalLink" className="w-3.5 h-3.5" />
           <span>View Protocol Docs</span>
@@ -219,7 +219,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
               "Opening Config Folder is currently disabled on this widget.",
             );
           }}
-          className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] opacity-60 hover:opacity-100 group`}
+          className={`flex items-center gap-2 text-[10px] font-medium transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] opacity-60 hover:opacity-100 group`}
         >
           <Icon name="Settings" className="w-3.5 h-3.5" />
           <span>Open Config Folder</span>

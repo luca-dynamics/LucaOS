@@ -493,7 +493,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {isMobile && activeTab === settingsAdvancedGroup.id && (
               <div className="space-y-5">
                 <div
-                  className="rounded-2xl border p-4"
+                  className="rounded-xl border p-4"
                   style={{
                     borderColor: "var(--app-border-main)",
                     backgroundColor: "var(--app-bg-tint)",
@@ -508,7 +508,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     />
                     <div>
                       <h3
-                        className="text-base font-bold"
+                        className="text-[15px] font-semibold"
                         style={{ color: "var(--app-text-main)" }}
                       >
                         {settingsAdvancedGroup.label}
