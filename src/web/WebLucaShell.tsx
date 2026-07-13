@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LucaDashboardSurface } from "../components/dashboard/LucaDashboardSurface";
 import type { WebCapability } from "./browserHostCapabilities";
 import { WebRealChatPanel } from "./chat/WebRealChatPanel";
 import { resolveLucaDashboardSkinBoundary } from "../styles/lucaDashboardSkinBoundary";
 import { readWebPremiumPreferences } from "./webLifecycleStorage";
+import {
+  LEFT_PANEL_COLLAPSED_KEY,
+  RIGHT_PANEL_COLLAPSED_KEY,
+  readCollapsedPreference,
+  resolveAutoPanelCollapse,
+  writeCollapsedPreference,
+} from "../components/layout/desktopShellModel";
 import {
   RIGHT_PANEL_LABELS,
   type RightPanelMode,
@@ -53,6 +60,71 @@ export function WebLucaShell({
   );
   const [showVoiceHud, setShowVoiceHud] = useState(false);
 
+  // Responsive panel shell — same model as desktop App.tsx: as the browser
+  // window narrows, the side panels auto-hide (right first, then left) instead
+  // of squeezing the center workspace; the header toggles then open them as
+  // drawer overlays on top of the workspace. User collapse preferences share
+  // the desktop's storage keys via desktopShellModel.
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window === "undefined" ? 1440 : window.innerWidth,
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onResize = () => setViewportWidth(window.innerWidth);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const [leftCollapsed, setLeftCollapsed] = useState(() =>
+    readCollapsedPreference(LEFT_PANEL_COLLAPSED_KEY),
+  );
+  const [rightCollapsed, setRightCollapsed] = useState(() =>
+    readCollapsedPreference(RIGHT_PANEL_COLLAPSED_KEY),
+  );
+
+  // Narrowness thresholds are independent of the user's own collapse state.
+  const narrow = resolveAutoPanelCollapse({
+    viewportWidth,
+    leftCollapsed: false,
+    rightCollapsed: false,
+  });
+  const leftDocked = !leftCollapsed && !narrow.left;
+  const rightDocked = !rightCollapsed && !narrow.right;
+
+  const [leftDrawerOpen, setLeftDrawerOpen] = useState(false);
+  const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
+  useEffect(() => {
+    if (!narrow.left) setLeftDrawerOpen(false);
+  }, [narrow.left]);
+  useEffect(() => {
+    if (!narrow.right) setRightDrawerOpen(false);
+  }, [narrow.right]);
+
+  const handleToggleLeftPanel = (collapsed: boolean) => {
+    if (narrow.left) {
+      setLeftDrawerOpen(!collapsed);
+      return;
+    }
+    setLeftCollapsed(collapsed);
+    writeCollapsedPreference(LEFT_PANEL_COLLAPSED_KEY, collapsed);
+  };
+  const handleToggleRightPanel = (collapsed: boolean) => {
+    if (narrow.right) {
+      setRightDrawerOpen(!collapsed);
+      return;
+    }
+    setRightCollapsed(collapsed);
+    writeCollapsedPreference(RIGHT_PANEL_COLLAPSED_KEY, collapsed);
+  };
+
+  // Keep drawers usable on small windows: never wider than the viewport
+  // minus a strip of workspace peeking through the scrim.
+  const panelWidths = {
+    sidebar: Math.min(320, Math.max(240, viewportWidth - 72)),
+    right: Math.min(360, Math.max(260, viewportWidth - 72)),
+  };
+
   return (
     <section className="absolute inset-0 z-10 p-3 sm:p-5">
       <LucaDashboardSurface
@@ -76,6 +148,17 @@ export function WebLucaShell({
         activeRightPanelMode={rightMode}
         onRightPanelModeChange={setRightMode}
         getRightPanelLabel={(mode) => RIGHT_PANEL_LABELS[mode]}
+        leftPanelCollapsed={!leftDocked}
+        rightPanelCollapsed={!rightDocked}
+        onToggleLeftPanel={handleToggleLeftPanel}
+        onToggleRightPanel={handleToggleRightPanel}
+        leftDrawerOpen={leftDrawerOpen}
+        rightDrawerOpen={rightDrawerOpen}
+        onCloseDrawers={() => {
+          setLeftDrawerOpen(false);
+          setRightDrawerOpen(false);
+        }}
+        panelWidths={panelWidths}
         settingsSurface={
           isSettingsOpen ? (
             <WebRealSettingsSurface onClose={() => setIsSettingsOpen(false)} />

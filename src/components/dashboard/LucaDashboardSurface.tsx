@@ -60,6 +60,16 @@ export interface LucaDashboardSurfaceProps {
   rightPanelCollapsed?: boolean;
   onToggleLeftPanel?: (collapsed: boolean) => void;
   onToggleRightPanel?: (collapsed: boolean) => void;
+  /**
+   * Drawer overlays for narrow viewports: the panel floats OVER the center
+   * workspace (with a scrim) instead of compressing it — same behaviour as
+   * the desktop shell. The host owns the open state; the collapsed rails'
+   * toggle buttons still fire onToggleLeft/RightPanel and the host decides
+   * whether that means dock or drawer.
+   */
+  leftDrawerOpen?: boolean;
+  rightDrawerOpen?: boolean;
+  onCloseDrawers?: () => void;
   onOpenSettings?: () => void;
   onOpenVoice?: () => void;
   onOpenChat?: () => void;
@@ -102,6 +112,9 @@ export function LucaDashboardSurface({
   rightPanelCollapsed = false,
   onToggleLeftPanel,
   onToggleRightPanel,
+  leftDrawerOpen = false,
+  rightDrawerOpen = false,
+  onCloseDrawers,
   rightPanelModes = DEFAULT_RIGHT_PANEL_MODES,
   activeRightPanelMode = rightPanelModes[0] ?? "CONTROL",
   getRightPanelLabel = (mode) => mode,
@@ -125,6 +138,13 @@ export function LucaDashboardSurface({
       {headerSurface}
       {capabilityStrip}
       <main className="flex-1 overflow-hidden relative z-10 flex h-full gap-0 p-0">
+        {!isMobile && (leftDrawerOpen || rightDrawerOpen) && (
+          <div
+            className="absolute inset-0 z-30 bg-black/40"
+            aria-hidden="true"
+            onClick={() => onCloseDrawers?.()}
+          />
+        )}
         {!isMobile && leftPanelCollapsed && (
           <div
             className={`flex-none h-full overflow-hidden flex flex-col items-center gap-4 py-3 border-r ${lucaShellClassNames.rail}`}
@@ -155,10 +175,10 @@ export function LucaDashboardSurface({
             </div>
           </div>
         )}
-        {!isMobile && !leftPanelCollapsed && leftPanel && (
+        {!isMobile && (!leftPanelCollapsed || leftDrawerOpen) && leftPanel && (
           <>
             <div
-              className={`flex-none h-full overflow-hidden flex flex-col relative border-r ${lucaShellClassNames.panel}`}
+              className={`${leftDrawerOpen ? "absolute left-0 top-0 z-40" : "relative flex-none"} h-full overflow-hidden flex flex-col border-r ${lucaShellClassNames.panel}`}
               style={{
                 ...lucaMaterialPanelStyle,
                 width: `${sidebarWidth}px`,
@@ -176,7 +196,7 @@ export function LucaDashboardSurface({
               </button>
               {leftPanel}
             </div>
-            {onResizeLeftPanel && (
+            {!leftDrawerOpen && onResizeLeftPanel && (
               <PanelResizer
                 themeColor={themeColor}
                 onResize={onResizeLeftPanel}
@@ -255,16 +275,16 @@ export function LucaDashboardSurface({
             </div>
           </div>
         )}
-        {!isMobile && !rightPanelCollapsed && rightPanel && (
+        {!isMobile && (!rightPanelCollapsed || rightDrawerOpen) && rightPanel && (
           <>
-            {onResizeRightPanel && (
+            {!rightDrawerOpen && onResizeRightPanel && (
               <PanelResizer
                 themeColor={themeColor}
                 onResize={onResizeRightPanel}
               />
             )}
             <section
-              className={`flex-none h-full border-l relative overflow-hidden flex flex-col ${lucaShellClassNames.panel}`}
+              className={`${rightDrawerOpen ? "absolute right-0 top-0 z-40" : "relative flex-none"} h-full border-l overflow-hidden flex flex-col ${lucaShellClassNames.panel}`}
               style={{
                 ...lucaMaterialPanelStyle,
                 width: `${rightWidth}px`,

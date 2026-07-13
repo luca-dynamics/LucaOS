@@ -48,6 +48,19 @@ export function WebRealHeader({
   const [isSettingsOpen, setIsSettingsOpenState] = useState(
     readInitialWebSettingsOpen,
   );
+  // Feed the shared Header the live viewport width so its priority shed
+  // (credits/runtime compacting then hiding under compression) works in the
+  // browser exactly as it does on desktop.
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window === "undefined" ? 1440 : window.innerWidth,
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onResize = () => setViewportWidth(window.innerWidth);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   const [ambientVisionActive, setAmbientVisionActive] = useState(false);
   const [audioMonitoringActive, setAudioMonitoringActive] = useState(false);
   const [_ambientSuggestions, setAmbientSuggestions] = useState<unknown[]>([]);
@@ -102,6 +115,7 @@ export function WebRealHeader({
         isLockdown={false}
         connectionTier="CLOUD"
         tier="BASIC"
+        viewportWidth={viewportWidth}
       />
     </div>
   );
