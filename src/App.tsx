@@ -544,34 +544,63 @@ function AppContent() {
   const [atmosphere, setAtmosphere] = useState(() =>
     normalizeLucaAtmosphere(settingsService.getSettings().general.atmosphere),
   );
-  // Priority auto-collapse: under compression the side panels hide (right
-  // first, then left) so the center workspace keeps its minimum width instead
-  // of all three columns shrinking. OR-combined with the user's own collapse;
-  // a panel hidden only by narrow width reappears when the window widens.
-  const { left: effectiveLeftCollapsed, right: effectiveRightCollapsed } =
-    useMemo(
-      () =>
-        resolveAutoPanelCollapse({
-          viewportWidth: desktopViewportWidth,
-          leftCollapsed: leftPanelCollapsed,
-          rightCollapsed: rightPanelCollapsed,
-        }),
-      [desktopViewportWidth, leftPanelCollapsed, rightPanelCollapsed],
-    );
+  // Width-only "can this panel dock?" signal (ignores the user's own collapse):
+  // the right panel loses dock room first, then the left, protecting the center.
+  const { left: narrowLeft, right: narrowRight } = useMemo(
+    () =>
+      resolveAutoPanelCollapse({
+        viewportWidth: desktopViewportWidth,
+        leftCollapsed: false,
+        rightCollapsed: false,
+      }),
+    [desktopViewportWidth],
+  );
+  // A panel docks inline only when the user wants it open AND the window is wide
+  // enough. When it can't dock, the header toggle instead opens it as a drawer
+  // overlay (below), the way mobile does — desktop just keeps its header icons.
+  const leftDocked = !leftPanelCollapsed && !narrowLeft;
+  const rightDocked = !rightPanelCollapsed && !narrowRight;
+  const [leftOverlayOpen, setLeftOverlayOpen] = useState(false);
+  const [rightOverlayOpen, setRightOverlayOpen] = useState(false);
+  useEffect(() => {
+    if (!narrowLeft) setLeftOverlayOpen(false);
+  }, [narrowLeft]);
+  useEffect(() => {
+    if (!narrowRight) setRightOverlayOpen(false);
+  }, [narrowRight]);
+  const leftDrawer = narrowLeft && leftOverlayOpen;
+  const rightDrawer = narrowRight && rightOverlayOpen;
+  const leftDrawerWidth = Math.min(
+    panelWidths.sidebar,
+    Math.max(280, desktopViewportWidth - 72),
+  );
+  const rightDrawerWidth = Math.min(
+    panelWidths.right,
+    Math.max(300, desktopViewportWidth - 72),
+  );
+  // The header toggle docks/undocks when there's room, else opens/closes the
+  // drawer. Icon reflects whichever affordance is active.
+  const handleToggleLeftPanel = useCallback(() => {
+    if (narrowLeft) setLeftOverlayOpen((o) => !o);
+    else setLeftPanelCollapsed((c) => !c);
+  }, [narrowLeft]);
+  const handleToggleRightPanel = useCallback(() => {
+    if (narrowRight) setRightOverlayOpen((o) => !o);
+    else setRightPanelCollapsed((c) => !c);
+  }, [narrowRight]);
+  const leftIconCollapsed = narrowLeft ? !leftOverlayOpen : leftPanelCollapsed;
+  const rightIconCollapsed = narrowRight
+    ? !rightOverlayOpen
+    : rightPanelCollapsed;
   const renderedPanelWidths = useMemo(
     () =>
       resolveDesktopPanelWidths({
         viewportWidth: desktopViewportWidth,
         requested: panelWidths,
-        leftVisible: !effectiveLeftCollapsed,
-        rightVisible: !effectiveRightCollapsed,
+        leftVisible: leftDocked,
+        rightVisible: rightDocked,
       }),
-    [
-      desktopViewportWidth,
-      panelWidths,
-      effectiveLeftCollapsed,
-      effectiveRightCollapsed,
-    ],
+    [desktopViewportWidth, panelWidths, leftDocked, rightDocked],
   );
   // Live material preview: the Appearance sliders broadcast while dragging;
   // the boundary recomputes and the WHOLE app follows. Cancel/close restores
@@ -3004,22 +3033,18 @@ function AppContent() {
                   <AppMenu
                     onNewSession={handleClearChat}
                     onOpenSettings={() => setShowSettingsModal(true)}
-                    onToggleLeftPanel={() =>
-                      setLeftPanelCollapsed(!leftPanelCollapsed)
-                    }
-                    onToggleRightPanel={() =>
-                      setRightPanelCollapsed(!rightPanelCollapsed)
-                    }
+                    onToggleLeftPanel={handleToggleLeftPanel}
+                    onToggleRightPanel={handleToggleRightPanel}
                   />
                   <button
                     type="button"
-                    aria-label={leftToggleIcon(effectiveLeftCollapsed).label}
-                    title={leftToggleIcon(effectiveLeftCollapsed).label}
-                    onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
+                    aria-label={leftToggleIcon(leftIconCollapsed).label}
+                    title={leftToggleIcon(leftIconCollapsed).label}
+                    onClick={handleToggleLeftPanel}
                     className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
                     style={lucaShellHeaderGhostControlStyle}
                   >
-                    <Icon name={leftToggleIcon(effectiveLeftCollapsed).name} size={16} />
+                    <Icon name={leftToggleIcon(leftIconCollapsed).name} size={16} />
                   </button>
                 </div>
                 <div className="luca-band-embed flex-1 min-w-0 flex flex-col">
@@ -3061,13 +3086,13 @@ function AppContent() {
                 <div className="flex items-center gap-1 pr-2">
                   <button
                     type="button"
-                    aria-label={rightToggleIcon(effectiveRightCollapsed).label}
-                    title={rightToggleIcon(effectiveRightCollapsed).label}
-                    onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
+                    aria-label={rightToggleIcon(rightIconCollapsed).label}
+                    title={rightToggleIcon(rightIconCollapsed).label}
+                    onClick={handleToggleRightPanel}
                     className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
                     style={lucaShellHeaderGhostControlStyle}
                   >
-                    <Icon name={rightToggleIcon(effectiveRightCollapsed).name} size={16} />
+                    <Icon name={rightToggleIcon(rightIconCollapsed).name} size={16} />
                   </button>
                   {/* Window controls: the shell's OWN buttons (no native
                       overlay) — same ghost skin and size as every other
@@ -3083,17 +3108,29 @@ function AppContent() {
           {/* The environment: the canvas surface spans the whole row; the
               side panels are chrome surfaces sitting ON TOP of it. */}
           <div
-            className={`flex-1 min-h-0 flex ${lucaShellClassNames.workspace}`}
+            className={`relative flex-1 min-h-0 flex ${lucaShellClassNames.workspace}`}
             style={lucaShellWorkspaceSurfaceStyle}
           >
-          {!isMobile && !effectiveLeftCollapsed && (
+          {/* Drawer scrim: when a side panel is opened as an overlay on a
+              compact window, a backdrop dims the content and closes it. */}
+          {!isMobile && (leftDrawer || rightDrawer) && (
+            <div
+              className="absolute inset-0 z-30 bg-black/40"
+              onClick={() => {
+                setLeftOverlayOpen(false);
+                setRightOverlayOpen(false);
+              }}
+              aria-hidden="true"
+            />
+          )}
+          {!isMobile && (leftDocked || leftDrawer) && (
             <>
               <div
-                className={`flex-none h-full overflow-hidden flex flex-col relative border-r ${lucaShellClassNames.panel}`}
+                className={`h-full overflow-hidden flex flex-col relative border-r ${lucaShellClassNames.panel} ${leftDrawer ? "absolute left-0 top-0 z-40" : "flex-none"}`}
                 style={{
                   ...lucaShellPanelSurfaceStyle,
                   boxShadow: "6px 0 18px -10px rgba(0,0,0,0.5)",
-                  width: `${renderedPanelWidths.sidebar}px`,
+                  width: `${leftDrawer ? leftDrawerWidth : renderedPanelWidths.sidebar}px`,
                 }}
               >
                 <SafeComponent componentName="SessionsRail">
@@ -3145,15 +3182,17 @@ function AppContent() {
                 </SafeComponent>
                 </div>
               </div>
-              <PanelResizer
-                themeColor={theme.hex}
-                onResize={(delta) =>
-                  setPanelWidths((p: any) => ({
-                    ...p,
-                    sidebar: Math.max(250, p.sidebar + delta),
-                  }))
-                }
-              />
+              {leftDocked && (
+                <PanelResizer
+                  themeColor={theme.hex}
+                  onResize={(delta) =>
+                    setPanelWidths((p: any) => ({
+                      ...p,
+                      sidebar: Math.max(250, p.sidebar + delta),
+                    }))
+                  }
+                />
+              )}
             </>
           )}
 
@@ -3306,23 +3345,25 @@ function AppContent() {
           )}
 
           {/* Right Panel or Data Panel */}
-          {!isMobile && !effectiveRightCollapsed && (
+          {!isMobile && (rightDocked || rightDrawer) && (
             <>
-              <PanelResizer
-                themeColor={theme.hex}
-                onResize={(delta) =>
-                  setPanelWidths((p: any) => ({
-                    ...p,
-                    right: Math.max(250, p.right - delta),
-                  }))
-                }
-              />
+              {rightDocked && (
+                <PanelResizer
+                  themeColor={theme.hex}
+                  onResize={(delta) =>
+                    setPanelWidths((p: any) => ({
+                      ...p,
+                      right: Math.max(250, p.right - delta),
+                    }))
+                  }
+                />
+              )}
               <section
-                className={`flex-none h-full border-l relative overflow-hidden flex flex-col ${lucaShellClassNames.panel}`}
+                className={`h-full border-l relative overflow-hidden flex flex-col ${lucaShellClassNames.panel} ${rightDrawer ? "absolute right-0 top-0 z-40" : "flex-none"}`}
                 style={{
                   ...lucaShellPanelSurfaceStyle,
                   boxShadow: "-6px 0 18px -10px rgba(0,0,0,0.5)",
-                  width: `${renderedPanelWidths.right}px`,
+                  width: `${rightDrawer ? rightDrawerWidth : renderedPanelWidths.right}px`,
                 }}
               >
                 <div className="flex flex-col h-full w-full overflow-hidden">
