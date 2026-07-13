@@ -1,3 +1,6 @@
+// @vitest-environment jsdom
+// The service's import graph reaches creditService, which reads localStorage
+// at module scope — the suite needs a DOM environment to even import.
 import { describe, expect, it } from "vitest";
 import type { LucaSettings } from "../settingsService";
 import {

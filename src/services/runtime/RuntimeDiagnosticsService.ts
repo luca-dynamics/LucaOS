@@ -23,6 +23,7 @@ import {
   type ModelRouteDecision,
 } from "../../types/modelRouting";
 import type { MemoryReadinessState, MemoryRouteDecision } from "../../types/memoryRouting";
+import { localRuntimeDiagnostics } from "../local-models/LocalRuntimeDiagnostics";
 import { runtimeContinuityService } from "./RuntimeContinuityService";
 import { runtimeContinuityLoopService } from "./RuntimeContinuityLoopService";
 import { schedulerRegistryService } from "../scheduler/SchedulerRegistryService";
@@ -117,6 +118,27 @@ export interface RuntimeMemoryDiagnostics {
   localRuntimeAvailable?: boolean;
 }
 
+/**
+ * Snapshot of the local model runtime facade (Phase 3 of
+ * docs/local-model-runtime-plan.md): registered runtime adapters with their
+ * health, plus admission (active request) and lease pressure. Absent when the
+ * facade snapshot itself fails — the legacy ollama/cortex probes still report.
+ */
+export interface RuntimeLocalRuntimeFacadeDiagnostics {
+  generatedAt: number;
+  registeredRuntimes: string[];
+  runtimes: Array<{
+    runtime: string;
+    status: string;
+    reachable?: boolean;
+    modelCount?: number;
+    message?: string;
+  }>;
+  activeRequests: number;
+  activeLeases: number;
+  leaseUnderflows: number;
+}
+
 export interface RuntimeLocalRuntimeDiagnostics {
   ollama: {
     available: boolean;
@@ -126,6 +148,7 @@ export interface RuntimeLocalRuntimeDiagnostics {
   cortex: {
     available: boolean | "unknown";
   };
+  facade?: RuntimeLocalRuntimeFacadeDiagnostics;
 }
 
 export interface RuntimeOnboardingWarning {
@@ -731,6 +754,42 @@ async function getLocalRuntimeDiagnostics(
       )
     : "unknown";
 
+  // Local model runtime facade snapshot (registered adapters + admission /
+  // lease pressure). Degrades to undefined — the legacy probes above remain
+  // the baseline signal.
+  let facade: RuntimeLocalRuntimeFacadeDiagnostics | undefined;
+  try {
+    const snapshot = await localRuntimeDiagnostics.snapshot();
+    facade = {
+      generatedAt: snapshot.generatedAt,
+      registeredRuntimes: snapshot.registeredRuntimes,
+      runtimes: snapshot.registeredRuntimes.map((runtime) => {
+        const entry = snapshot.healthByRuntime[runtime];
+        return {
+          runtime,
+          status:
+            entry?.health?.status ?? (entry?.error ? "error" : "unknown"),
+          reachable: entry?.health?.reachable,
+          modelCount: entry?.health?.modelIds.length,
+          message: sanitizeDiagnosticText(
+            entry?.error ?? entry?.health?.message ?? "",
+          ),
+        };
+      }),
+      activeRequests: snapshot.admission.globalActive,
+      activeLeases: Object.values(snapshot.leases.activeByModel).reduce(
+        (sum, count) => sum + count,
+        0,
+      ),
+      leaseUnderflows: snapshot.leases.releaseUnderflows,
+    };
+  } catch (error) {
+    console.warn(
+      "[RuntimeDiagnostics] Local runtime facade snapshot unavailable",
+      error,
+    );
+  }
+
   return {
     ollama: {
       available: ollama.available,
@@ -738,6 +797,7 @@ async function getLocalRuntimeDiagnostics(
       installedModelCount: ollama.models.length,
     },
     cortex: { available: cortexAvailable },
+    facade,
   };
 }
 
