@@ -43,6 +43,9 @@ export interface LucaOnboardingSkinBoundaryOptions {
   surface?: LucaOnboardingSkinBoundarySurface;
   reducedMotion?: boolean;
   reducedTransparency?: boolean;
+  /** User-chosen material (onboarding sliders) — overrides the skin defaults. */
+  userMaterialOpacity?: number;
+  userMaterialBlurPx?: number;
 }
 
 export interface LucaOnboardingSkinBoundaryState {
@@ -140,6 +143,8 @@ export function resolveLucaOnboardingSkinBoundary(
       hostKind,
       reducedMotion,
       reducedTransparency,
+      userMaterialOpacity: options.userMaterialOpacity,
+      userMaterialBlurPx: options.userMaterialBlurPx,
     }),
     presenceVariables: getLucaSkinPresenceVariables({
       skinId,

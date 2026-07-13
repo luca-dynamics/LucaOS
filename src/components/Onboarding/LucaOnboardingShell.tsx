@@ -36,6 +36,9 @@ export interface LucaOnboardingShellProps {
   surface?: LucaOnboardingSkinBoundarySurface;
   reducedMotion?: boolean;
   reducedTransparency?: boolean;
+  /** User-chosen material (onboarding sliders) — overrides the skin defaults. */
+  userMaterialOpacity?: number;
+  userMaterialBlurPx?: number;
   /** Render the ambient blurred-face presence behind content (default true). */
   ambientPresence?: boolean;
   /** Where the ambient face sits behind content. */
@@ -51,6 +54,8 @@ export const LucaOnboardingShell: React.FC<LucaOnboardingShellProps> = ({
   surface,
   reducedMotion,
   reducedTransparency,
+  userMaterialOpacity,
+  userMaterialBlurPx,
   ambientPresence = true,
   ambientPosition = "top-right",
   className,
@@ -63,6 +68,8 @@ export const LucaOnboardingShell: React.FC<LucaOnboardingShellProps> = ({
     surface,
     reducedMotion,
     reducedTransparency,
+    userMaterialOpacity,
+    userMaterialBlurPx,
   });
 
   // Scope the resolved material + presence variables to this subtree only.
