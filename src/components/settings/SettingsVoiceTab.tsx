@@ -309,6 +309,42 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             </button>
           ))}
         </div>
+        <SettingsRow
+          label="Voice avatar"
+          description="The visual Luca shows on the voice screen. Swap anytime."
+          control={
+            <div
+              className="inline-flex gap-1 rounded-lg border p-1"
+              style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+            >
+              {(
+                [
+                  { id: "plasma", label: "Plasma orb" },
+                  { id: "face", label: "Luca face" },
+                ] as const
+              ).map((avatar) => {
+                const active =
+                  (settings.voice.hudAvatar ?? "plasma") === avatar.id;
+                return (
+                  <button
+                    key={avatar.id}
+                    type="button"
+                    onClick={() => onUpdate("voice", "hudAvatar", avatar.id)}
+                    className="rounded-md px-2.5 py-1 text-[12.5px] transition-colors"
+                    style={{
+                      color: active
+                        ? theme.hex
+                        : settingsSurfaceTokens.textSecondary,
+                      fontWeight: active ? 500 : 400,
+                    }}
+                  >
+                    {avatar.label}
+                  </button>
+                );
+              })}
+            </div>
+          }
+        />
       </SettingsSection>
 
       <SettingsSection
@@ -665,7 +701,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         isMobile={isMobile}
       >
         <SettingsAdvancedDisclosure
-          title="Advanced voice routing"
+          title="Advanced Voice Routing"
           description="Technical routing, fallback, network, and local model policy."
         >
           <SettingsRow

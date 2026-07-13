@@ -3,11 +3,10 @@ import { Icon } from "../ui/Icon";
 import VoiceVisualizer from "./VoiceVisualizer";
 import VoiceControls from "./VoiceControls";
 import VoiceStatusOrb from "./VoiceStatusOrb";
+import LucaPresence from "../presence/LucaPresence";
 import TacticalStream from "../visual/TacticalStream";
 import { THEME_PALETTE, MISSION_COLORS } from "../../config/themeColors";
 import { useTheme } from "../../hooks/useTheme";
-import { settingsService } from "../../services/settingsService";
-import type { LucaSettings } from "../../services/settingsService";
 import { getLucaSkinMaterialVariables } from "../../styles/lucaSkinMaterialBridge";
 import { resolveVoiceHudSkinPalette } from "./voiceHudSkinModel";
 
@@ -91,6 +90,12 @@ export interface VoiceHudSurfaceProps {
   onContinue?: () => void;
   onTypedFallbackChange?: (value: string) => void;
   renderSettingsModal?: (onClose: () => void) => React.ReactNode;
+  /**
+   * Runtime state is passed in by the host adapter (VoiceHud on desktop) so
+   * this surface stays pure — it never reads services directly.
+   */
+  selectedSkinId?: unknown;
+  hudAvatar?: "plasma" | "face";
 }
 
 export function VoiceHudSurface({
@@ -141,14 +146,13 @@ export function VoiceHudSurface({
   onContinue,
   onTypedFallbackChange,
   renderSettingsModal,
+  selectedSkinId,
+  hudAvatar = "plasma",
 }: VoiceHudSurfaceProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVideoActive, setIsVideoActive] = useState(false);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [selectedSkinId, setSelectedSkinId] = useState<unknown>(
-    () => settingsService.getSettings().general.selectedSkinId,
-  );
   const { isTactical } = useTheme();
   const showTechnicalPanels =
     !hideDebugPanels &&
@@ -189,17 +193,6 @@ export function VoiceHudSurface({
       }) as React.CSSProperties,
     [voiceSkinVariables],
   );
-
-  useEffect(() => {
-    const handleSettingsChange = (settings: LucaSettings) => {
-      setSelectedSkinId(settings.general.selectedSkinId);
-    };
-
-    settingsService.on("settings-changed", handleSettingsChange);
-    return () => {
-      settingsService.off("settings-changed", handleSettingsChange);
-    };
-  }, []);
 
   useEffect(
     () => () => videoStream?.getTracks().forEach((track) => track.stop()),
@@ -295,16 +288,29 @@ export function VoiceHudSurface({
           </div>
         )}
       </div>
-      <VoiceVisualizer
-        amplitude={amplitude}
-        isVadActive={isVadActive}
-        transcriptSource={
-          transcriptSource === "system" ? "user" : transcriptSource
-        }
-        persona={persona as any}
-        lowPower={isVisionActive}
-        skinColors={voiceVisualizerSkinColors}
-      />
+      {hudAvatar === "plasma" ? (
+        <VoiceVisualizer
+          amplitude={amplitude}
+          isVadActive={isVadActive}
+          transcriptSource={
+            transcriptSource === "system" ? "user" : transcriptSource
+          }
+          persona={persona as any}
+          lowPower={isVisionActive}
+          skinColors={voiceVisualizerSkinColors}
+        />
+      ) : (
+        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+          <LucaPresence
+            state="identity"
+            size={220}
+            breathing
+            skinId={selectedSkinId}
+            label="Luca"
+            style={{ transform: "translateY(-14%)" }}
+          />
+        </div>
+      )}
       <VoiceStatusOrb
         isVadActive={isVadActive}
         transcriptSource={
@@ -317,6 +323,7 @@ export function VoiceHudSurface({
         statusMessage={statusMessage}
         voiceModeLabel={modelName}
         detailLabel={telemetrySummary}
+        showMark={false}
       />
 
       {visualData && (
@@ -570,7 +577,13 @@ export function VoiceHudSurface({
         canvasThemeColor={themeColor}
         hideControls={hideControls}
       />
-      {isSettingsOpen && renderSettingsModal?.(() => setIsSettingsOpen(false))}
+      {/* Settings renders above every HUD layer (ticker z-[60], controls) in
+          its own stacking context, so HUD chrome can never bleed through. */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-[300]">
+          {renderSettingsModal?.(() => setIsSettingsOpen(false))}
+        </div>
+      )}
       <div className="absolute bottom-4 md:bottom-8 flex flex-wrap items-center justify-center gap-3 md:gap-12 text-[8px] md:text-[10px] font-mono text-[var(--app-text-muted)] uppercase tracking-widest z-[60] pointer-events-none px-4 w-full text-center">
         <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap">
           <Icon

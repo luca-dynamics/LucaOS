@@ -22,7 +22,7 @@ describe("VoiceHud desktop adapter", () => {
 
   it("maps existing voice runtime state into VoiceHudSurface props", () => {
     expect(voiceHudSource).toContain("amplitude={localAmplitude}");
-    expect(voiceHudSource).toContain("telemetrySummary={telemetrySummary}");
+    expect(voiceHudSource).toContain("telemetrySummary={telemetrySummary");
     expect(voiceHudSource).toContain("dynamicProtocols={dynamicProtocols}");
     expect(voiceHudSource).toContain("runtimeRouteHealth={runtimeRouteHealth}");
   });

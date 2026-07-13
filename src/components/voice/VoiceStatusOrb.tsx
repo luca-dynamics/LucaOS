@@ -13,6 +13,11 @@ interface VoiceStatusOrbProps {
   statusMessage?: string | null;
   voiceModeLabel?: string;
   detailLabel?: string | null;
+  /**
+   * Render the Presence mark above the labels. Off when the plasma
+   * visualizer is the chosen voice avatar so the scene has one being.
+   */
+  showMark?: boolean;
 }
 
 // Sentence-case, plain-language labels (Quiet Machine: no uppercase, no mono).
@@ -35,6 +40,7 @@ const VoiceStatusOrb: React.FC<VoiceStatusOrbProps> = ({
   statusMessage,
   voiceModeLabel = "Voice",
   detailLabel,
+  showMark = true,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [surfaceHeight, setSurfaceHeight] = useState(768);
@@ -79,12 +85,14 @@ const VoiceStatusOrb: React.FC<VoiceStatusOrbProps> = ({
           transform: `translateY(${verticalOffset}px)`,
         }}
       >
-        <Presence
-          intent={intent}
-          color={canvasThemeColor}
-          size={presenceSize}
-          reactToAudio
-        />
+        {showMark && (
+          <Presence
+            intent={intent}
+            color={canvasThemeColor}
+            size={presenceSize}
+            reactToAudio
+          />
+        )}
         <div
           className="text-sm font-medium transition-colors duration-300"
           style={{ color: labelColor }}

@@ -1,7 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { readFileSync } from "fs";
 import { describe, expect, it } from "vitest";
 import VoiceHudSurface from "./VoiceHudSurface";
+
+// Read the real source file, bypassing vite's `fs` -> node_polyfills mock
+// alias (which returns an empty string and silently voids every assertion).
+const { readFileSync } = process.getBuiltinModule("fs");
 
 const source = readFileSync("src/components/voice/VoiceHudSurface.tsx", "utf8");
 const forbidden = [
