@@ -79,18 +79,19 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
             <button
               key={id}
               onClick={() => onStyleChange(id)}
-              className={`py-2 rounded px-1 flex flex-col items-center gap-1 border transition-all glass-blur
-                ${isActive ? "bg-[var(--app-bg-tint)]" : "bg-transparent"}
-                ${isActive ? "border-[var(--app-border-main)]" : "border-transparent"}
-                hover:bg-[var(--app-bg-tint)]/20
-              `}
+              className="rounded-lg border px-2 py-2 text-center transition-colors"
               style={{
-                borderColor: isActive ? themeHex : "var(--luca-border-subtle, var(--app-border-main))",
-                color: isActive ? "var(--luca-text-primary, var(--app-text-main))" : "var(--luca-text-secondary, var(--app-text-muted))",
+                borderColor: isActive
+                  ? themeHex
+                  : "var(--luca-border-subtle, var(--app-border-main))",
+                backgroundColor: isActive ? `${themeHex}14` : "transparent",
+                color: isActive
+                  ? "var(--luca-text-primary, var(--app-text-main))"
+                  : "var(--luca-text-secondary, var(--app-text-muted))",
               }}
             >
-              <span className="text-[9px] font-bold uppercase tracking-tighter">
-                {config.name}
+              <span className="text-[12.5px] font-medium">
+                {config.name.charAt(0) + config.name.slice(1).toLowerCase()}
               </span>
             </button>
           );
@@ -98,33 +99,31 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
       </div>
 
       {/* Fine-tuning Sliders */}
-      <div className={`space-y-3 p-3 rounded-lg border transition-all glass-blur`}
-           style={{ backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))", borderColor: "var(--luca-border-subtle, var(--app-border-main))" }}>
-        <div className="flex items-center gap-2 mb-1">
-          <Icon name="Settings2" className="w-3 h-3 text-[var(--app-text-muted)]" />
-          <span className="text-[9px] font-bold text-[var(--app-text-muted)] uppercase tracking-widest">
-            Delivery Dimensions {currentStyleId !== "CUSTOM" && "(Locked)"}
-          </span>
-        </div>
+      <div className="space-y-3 pt-1">
+        <p className="text-[12.5px] text-[var(--app-text-muted)]">
+          {currentStyleId === "CUSTOM"
+            ? "Fine-tune how Luca delivers responses."
+            : "Delivery dimensions follow the selected style. Pick Custom to fine-tune."}
+        </p>
 
         {dimensionIcons.map((d) => (
           <div key={d.key} className="space-y-1">
-            <div className="flex justify-between items-center text-[8px] font-mono">
-              <div className="flex items-center gap-1.5 text-[var(--app-text-muted)]">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-1.5 text-[12.5px] text-[var(--app-text-muted)]">
                 <Icon
                   name={d.icon}
-                  className="w-3 h-3"
+                  className="w-3.5 h-3.5"
                   style={{
                     color: currentStyleId === "CUSTOM" ? themeHex : undefined,
                   }}
                 />
-                <span>{d.label.toUpperCase()}</span>
+                <span>{d.label}</span>
               </div>
-              <div className="flex gap-2 text-[7px] tracking-tighter">
+              <div className="flex items-center gap-2 text-[11.5px]">
                 <span
                   className={
                     activeDimensions[d.key as keyof ToneDimensions] < 40
-                      ? "text-[var(--app-text-main)] font-bold"
+                      ? "text-[var(--app-text-main)] font-medium"
                       : "text-[var(--app-text-muted)] opacity-60"
                   }
                 >
@@ -133,13 +132,13 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
                 <span
                   className={
                     activeDimensions[d.key as keyof ToneDimensions] > 60
-                      ? "text-[var(--app-text-main)] font-bold"
+                      ? "text-[var(--app-text-main)] font-medium"
                       : "text-[var(--app-text-muted)] opacity-60"
                   }
                 >
                   {d.high}
                 </span>
-                <span style={{ color: themeHex }}>
+                <span className="font-mono text-[11.5px]" style={{ color: themeHex }}>
                   {activeDimensions[d.key as keyof ToneDimensions]}%
                 </span>
               </div>

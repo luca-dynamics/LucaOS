@@ -33,7 +33,7 @@ export const visionAdvancedDetailsControlIds = [
 
 export const settingsPremiumTabStructure = {
   general: [
-    "Appearance",
+    "Luca Persona",
     "Material & Display",
     "Luca Behavior",
     "Privacy & Awareness",

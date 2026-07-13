@@ -6,7 +6,7 @@ import {
   SettingsAdvancedDisclosure,
   SettingsRow,
   SettingsSection,
-  SettingsStatusCard,
+  SettingsStatList,
   settingsControlInlineStyle,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
@@ -65,30 +65,32 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
         accentColor={theme?.hex}
         isMobile={isMobile}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <SettingsStatusCard
-            label="Workspace"
-            value={settings.connectors?.google ? "Google connected" : "Ready"}
-            detail="Gmail, Calendar, and Drive connect through the existing Google auth flow."
-            accentColor={theme?.hex}
-          />
-          <SettingsStatusCard
-            label="Developer"
-            value={
-              settings.connectors?.linkedin
+        <SettingsStatList
+          items={[
+            {
+              label: "Workspace",
+              value: settings.connectors?.google
+                ? "Google connected"
+                : "Ready",
+              detail:
+                "Gmail, Calendar, and Drive connect through the existing Google auth flow.",
+            },
+            {
+              label: "Developer",
+              value: settings.connectors?.linkedin
                 ? "Developer apps ready"
-                : "Add when available"
-            }
-            detail="Developer connectors stay grouped with recommended apps."
-            accentColor={theme?.hex}
-          />
-          <SettingsStatusCard
-            label="Community"
-            value="Optional"
-            detail="Slack, Discord, Telegram, and social connectors remain opt-in."
-            accentColor={theme?.hex}
-          />
-        </div>
+                : "Add when available",
+              detail:
+                "Developer connectors stay grouped with recommended apps.",
+            },
+            {
+              label: "Community",
+              value: "Optional",
+              detail:
+                "Slack, Discord, Telegram, and social connectors remain opt-in.",
+            },
+          ]}
+        />
       </SettingsSection>
 
       <SettingsSection

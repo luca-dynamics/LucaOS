@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Icon } from "../ui/Icon";
 import { memoryService } from "../../services/memoryService";
+import { settingsService } from "../../services/settingsService";
 import { memoryProposalService } from "../../services/memory/MemoryProposalService";
 import {
   buildBundleFromPendingProposals,
@@ -15,7 +16,7 @@ import {
   SettingsDangerZone,
   SettingsRow,
   SettingsSection,
-  SettingsStatusCard,
+  SettingsStatList,
   settingsControlInlineStyle,
   settingsInputClassName,
   settingsSelectClassName,
@@ -150,22 +151,28 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
   });
   const persistenceReadinessPreview = evaluateIntegrationReadinessPreview();
 
+  // Governance previews are Pro/Creator surfaces; Basic stays calm.
+  const showGovernancePreviews =
+    settingsService.get("general").experienceMode !== "basic";
+
   return (
     <div className={`space-y-6 flex flex-col h-full ${isMobile ? "px-0" : ""}`}>
-      <SettingsSection
-        title="Personal Intelligence Preview"
-        description="Review privacy, learning, and persistence boundaries without changing current memory behavior."
-        icon="Eye"
-        isMobile={isMobile}
-      >
-        <div className="space-y-3">
-          <PrivacyZonesPreviewCard zones={privacyZonesPreview} />
-          <LearningEventPreviewCard event={learningEventPreview} />
-          <IntegrationReadinessPreviewCard
-            readiness={persistenceReadinessPreview}
-          />
-        </div>
-      </SettingsSection>
+      {showGovernancePreviews && (
+        <SettingsSection
+          title="Personal Intelligence Preview"
+          description="Review privacy, learning, and persistence boundaries without changing current memory behavior."
+          icon="Eye"
+          isMobile={isMobile}
+        >
+          <div className="space-y-3">
+            <PrivacyZonesPreviewCard zones={privacyZonesPreview} />
+            <LearningEventPreviewCard event={learningEventPreview} />
+            <IntegrationReadinessPreviewCard
+              readiness={persistenceReadinessPreview}
+            />
+          </div>
+        </SettingsSection>
+      )}
 
       <SettingsSection
         title="Memory Status"
@@ -173,52 +180,55 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
         icon="Database"
         isMobile={isMobile}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <SettingsStatusCard
-            label="Memory"
-            value="On-device"
-            detail="Local memory is loaded from Luca's archive."
-          />
-          <SettingsStatusCard
-            label="Total facts"
-            value={`${memoryStats.count}`}
-            detail="Personal details, preferences, projects, devices, and work context."
-          />
-          <SettingsStatusCard
-            label="Last updated"
-            value={
-              memories[0]
+        <SettingsStatList
+          items={[
+            {
+              label: "Memory",
+              value: "On-device",
+              detail: "Local memory is loaded from Luca's archive.",
+            },
+            {
+              label: "Total facts",
+              value: `${memoryStats.count}`,
+              detail:
+                "Personal details, preferences, projects, devices, and work context.",
+            },
+            {
+              label: "Last updated",
+              value: memories[0]
                 ? new Date(memories[0].timestamp).toLocaleDateString()
-                : "No memories"
-            }
-            detail="Sorted by most recent memory."
-          />
-          <SettingsStatusCard
-            label="Sync status"
-            value="Local first"
-            detail="Backend save is attempted when memory changes."
-          />
-        </div>
+                : "No memories",
+              detail: "Sorted by most recent memory.",
+            },
+            {
+              label: "Sync status",
+              value: "Local first",
+              detail: "Backend save is attempted when memory changes.",
+            },
+          ]}
+        />
       </SettingsSection>
 
-      <SettingsSection
-        title="Personal Intelligence Persistence"
-        description="Review the governed memory adapter status and persistence prerequisites without triggering a write."
-        icon="Shield"
-        isMobile={isMobile}
-      >
-        <div className="space-y-4">
-          <PersonalIntelligencePersistencePreview />
-          <PersonalIntelligenceMemoryApprovalPilot
-            pendingProposals={pilotQueue.pendingProposals}
-            buildBundleForProposal={pilotQueue.buildBundleForProposal}
-            buildProposalBundle={pilotQueue.buildProposalBundle}
-            initialAuditSummary={initialAuditSummary}
-          />
-        </div>
-        <PersonalIntelligenceRuntimeTracePanel />
-        <PersonalIntelligenceMissionRuntimePanel />
-      </SettingsSection>
+      {showGovernancePreviews && (
+        <SettingsSection
+          title="Personal Intelligence Persistence"
+          description="Review the governed memory adapter status and persistence prerequisites without triggering a write."
+          icon="Shield"
+          isMobile={isMobile}
+        >
+          <div className="space-y-4">
+            <PersonalIntelligencePersistencePreview />
+            <PersonalIntelligenceMemoryApprovalPilot
+              pendingProposals={pilotQueue.pendingProposals}
+              buildBundleForProposal={pilotQueue.buildBundleForProposal}
+              buildProposalBundle={pilotQueue.buildProposalBundle}
+              initialAuditSummary={initialAuditSummary}
+            />
+          </div>
+          <PersonalIntelligenceRuntimeTracePanel />
+          <PersonalIntelligenceMissionRuntimePanel />
+        </SettingsSection>
+      )}
 
       <SettingsSection
         title="What Luca Remembers"

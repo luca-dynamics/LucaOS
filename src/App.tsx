@@ -754,15 +754,13 @@ function AppContent() {
       setIsRebooting(true);
       try {
         const currentGeneral = settingsService.get("general");
-        const updates: any = { persona: mode };
-
-        // Auto-sync theme if enabled
-        if (currentGeneral.syncThemeWithPersona) {
-          updates.theme = mode;
-        }
-
+        // Persona is behavior only (prompt, voice, tools); the skin system
+        // owns appearance, so switching persona never changes the theme.
         settingsService.saveSettings({
-          general: { ...currentGeneral, ...updates },
+          general: {
+            ...currentGeneral,
+            persona: mode as typeof currentGeneral.persona,
+          },
         });
       } catch (err) {
         console.error("[App] Persona switch failed:", err);

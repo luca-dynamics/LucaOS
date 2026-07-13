@@ -10,7 +10,7 @@ import {
   SettingsCard,
   SettingsRow,
   SettingsSection,
-  SettingsStatusCard,
+  SettingsStatList,
 } from "./SettingsLayout";
 
 interface PersonalityDashboardProps {
@@ -189,15 +189,20 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
 
   return (
     <div className={`space-y-4 flex flex-col ${isMobile ? "px-0 pb-16" : ""}`}>
-      <SettingsSection
-        title="Personal Intelligence Preview"
-        description="Inspect how the current personality surface could map into Identity Core without saving or applying it."
-        icon="Eye"
-        accentColor={theme.hex}
-        isMobile={isMobile}
-      >
-        <IdentityCorePreviewCard identity={identityPreview} live={identityIsLive} />
-      </SettingsSection>
+      {settingsService.get("general").experienceMode !== "basic" && (
+        <SettingsSection
+          title="Personal Intelligence Preview"
+          description="Inspect how the current personality surface could map into Identity Core without saving or applying it."
+          icon="Eye"
+          accentColor={theme.hex}
+          isMobile={isMobile}
+        >
+          <IdentityCorePreviewCard
+            identity={identityPreview}
+            live={identityIsLive}
+          />
+        </SettingsSection>
+      )}
 
       <SettingsSection
         title="Luca Personality"
@@ -206,32 +211,31 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
         accentColor={theme.hex}
         isMobile={isMobile}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <SettingsStatusCard
-            label="Personality mode"
-            value={selectedPersona || "Choose mode"}
-            detail="Everyday companion, copilot, researcher, operator, and creator modes stay role-based."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Tone"
-            value="Editable"
-            detail="Tone and warmth remain user-facing preferences."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Formality"
-            value="Configurable"
-            detail="Response style is controlled by the selected role profile."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Response style"
-            value="Guided"
-            detail="Raw persona logic is kept under Advanced / Origin-only."
-            accentColor={theme.hex}
-          />
-        </div>
+        <SettingsStatList
+          items={[
+            {
+              label: "Personality mode",
+              value: selectedPersona || "Choose mode",
+              detail:
+                "Everyday companion, copilot, researcher, operator, and creator modes stay role-based.",
+            },
+            {
+              label: "Tone",
+              value: "Editable",
+              detail: "Tone and warmth remain user-facing preferences.",
+            },
+            {
+              label: "Formality",
+              value: "Configurable",
+              detail: "Response style is controlled by the selected role profile.",
+            },
+            {
+              label: "Response style",
+              value: "Guided",
+              detail: "Raw persona logic is kept under Advanced / Origin-only.",
+            },
+          ]}
+        />
       </SettingsSection>
 
       <SettingsSection

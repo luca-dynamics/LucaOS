@@ -5,7 +5,7 @@ import {
   SettingsAdvancedDisclosure,
   SettingsRow,
   SettingsSection,
-  SettingsStatusCard,
+  SettingsStatList,
   SettingsToggle,
   settingsControlInlineStyle,
 } from "./SettingsLayout";
@@ -58,36 +58,32 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
         accentColor={theme.hex}
         isMobile={isMobile}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <SettingsStatusCard
-            label="Autonomy"
-            value={autonomy.backgroundMissionsEnabled ? "Enabled" : "Paused"}
-            detail="Background missions only continue when this is enabled."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Current mode"
-            value={
-              autonomy.backgroundMissionsEnabled
+        <SettingsStatList
+          items={[
+            {
+              label: "Autonomy",
+              value: autonomy.backgroundMissionsEnabled ? "Enabled" : "Paused",
+              detail: "Background missions only continue when this is enabled.",
+            },
+            {
+              label: "Current mode",
+              value: autonomy.backgroundMissionsEnabled
                 ? "Ask before acting"
-                : "Suggest only"
-            }
-            detail="Risky actions remain user-reviewed."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Active missions"
-            value="User approved"
-            detail="Mission execution continues through existing services."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Safety state"
-            value={`${activeSafety}/3 safeguards`}
-            detail="Shadow preview, consensus, and resource limits."
-            accentColor={theme.hex}
-          />
-        </div>
+                : "Suggest only",
+              detail: "Risky actions remain user-reviewed.",
+            },
+            {
+              label: "Active missions",
+              value: "User approved",
+              detail: "Mission execution continues through existing services.",
+            },
+            {
+              label: "Safety state",
+              value: `${activeSafety}/3 safeguards`,
+              detail: "Shadow preview, consensus, and resource limits.",
+            },
+          ]}
+        />
       </SettingsSection>
 
       <SettingsSection

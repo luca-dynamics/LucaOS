@@ -17,7 +17,7 @@ import {
   SettingsAdvancedDisclosure,
   SettingsRow,
   SettingsSection,
-  SettingsStatusCard,
+  SettingsStatList,
   settingsControlInlineStyle,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
@@ -265,32 +265,32 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         accentColor={theme.hex}
         isMobile={isMobile}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <SettingsStatusCard
-            label="Name"
-            value={profile.identity.name || "Set profile"}
-            detail="Primary operator identity."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Role"
-            value={profile.identity.designation || "Personal operator"}
-            detail="Used for everyday personalization."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Work context"
-            value={`${insights.length} signals`}
-            detail="Projects, goals, workflows, and preferences remain user-reviewed."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Identity lock"
-            value={referenceImage ? "Face enrolled" : "Optional"}
-            detail="Trusted-device and verification controls stay grouped below."
-            accentColor={theme.hex}
-          />
-        </div>
+        <SettingsStatList
+          items={[
+            {
+              label: "Name",
+              value: profile.identity.name || "Set profile",
+              detail: "Primary operator identity.",
+            },
+            {
+              label: "Role",
+              value: profile.identity.designation || "Personal operator",
+              detail: "Used for everyday personalization.",
+            },
+            {
+              label: "Work context",
+              value: `${insights.length} signals`,
+              detail:
+                "Projects, goals, workflows, and preferences remain user-reviewed.",
+            },
+            {
+              label: "Identity lock",
+              value: referenceImage ? "Face enrolled" : "Optional",
+              detail:
+                "Trusted-device and verification controls stay grouped below.",
+            },
+          ]}
+        />
       </SettingsSection>
 
       <SettingsSection

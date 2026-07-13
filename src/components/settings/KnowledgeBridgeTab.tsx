@@ -8,7 +8,7 @@ import {
   SettingsCard,
   SettingsRow,
   SettingsSection,
-  SettingsStatusCard,
+  SettingsStatList,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
@@ -426,15 +426,17 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
 
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
-      <SettingsSection
-        title="Personal Intelligence Preview"
-        description="Preview a privacy-aware Memory Item alongside the existing Knowledge Base controls."
-        icon="Eye"
-        accentColor={theme.hex}
-        isMobile={isMobile}
-      >
-        <MemoryItemPreviewCard preview={memoryPreview} />
-      </SettingsSection>
+      {settingsService.get("general").experienceMode !== "basic" && (
+        <SettingsSection
+          title="Personal Intelligence Preview"
+          description="Preview a privacy-aware Memory Item alongside the existing Knowledge Base controls."
+          icon="Eye"
+          accentColor={theme.hex}
+          isMobile={isMobile}
+        >
+          <MemoryItemPreviewCard preview={memoryPreview} />
+        </SettingsSection>
+      )}
 
       <SettingsSection
         title="Knowledge Status"
@@ -443,35 +445,38 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
         accentColor={theme.hex}
         isMobile={isMobile}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <SettingsStatusCard
-            label="Indexed sources"
-            value={`${importedFacts.length}`}
-            detail="Files, folders, websites, docs, repos, and connected apps stay grouped below."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Last sync"
-            value="When connected"
-            detail="Notion, Google Drive, and Obsidian sync through existing flows."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Storage used"
-            value="Local knowledge"
-            detail="Distilled facts are stored by the existing memory/knowledge services."
-            accentColor={theme.hex}
-          />
-          <SettingsStatusCard
-            label="Search readiness"
-            value={status === "success" ? "Ready" : "Ready to index"}
-            detail="Retrieval controls remain in this tab."
-            accentColor={theme.hex}
-          />
-        </div>
+        <SettingsStatList
+          items={[
+            {
+              label: "Indexed sources",
+              value: `${importedFacts.length}`,
+              detail:
+                "Files, folders, websites, docs, repos, and connected apps stay grouped below.",
+            },
+            {
+              label: "Last sync",
+              value: "When connected",
+              detail:
+                "Notion, Google Drive, and Obsidian sync through existing flows.",
+            },
+            {
+              label: "Storage used",
+              value: "Local knowledge",
+              detail:
+                "Distilled facts are stored by the existing memory/knowledge services.",
+            },
+            {
+              label: "Search readiness",
+              value: status === "success" ? "Ready" : "Ready to index",
+              detail: "Retrieval controls remain in this tab.",
+            },
+          ]}
+        />
       </SettingsSection>
 
-      <PersonalIntelligencePersistencePreview compact />
+      {settingsService.get("general").experienceMode !== "basic" && (
+        <PersonalIntelligencePersistencePreview compact />
+      )}
 
       <SettingsSection
         title="Sources"

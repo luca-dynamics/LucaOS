@@ -287,7 +287,8 @@ const DEFAULT_SETTINGS: LucaSettings = {
     theme: "PROFESSIONAL",
     selectedSkinId: DEFAULT_LUCA_SKIN_ID,
     preferredMode: "text",
-    syncThemeWithPersona: true,
+    // Persona no longer drives appearance; the skin system owns visuals.
+    syncThemeWithPersona: false,
     toneStyle: "CHILL",
     experimentalMode: false,
     fontScale: 1.0,
