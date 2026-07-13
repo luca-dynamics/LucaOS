@@ -2,11 +2,13 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 const { readFileSync } = process.getBuiltinModule("node:fs");
+// Normalize line endings so exact-string assertions survive git autocrlf
+// checkouts on Windows.
 const source = readFileSync(
   "src/components/dashboard/LucaDashboardSurface.tsx",
   "utf8",
-);
-const appSource = readFileSync("src/App.tsx", "utf8");
+).replace(/\r\n/g, "\n");
+const appSource = readFileSync("src/App.tsx", "utf8").replace(/\r\n/g, "\n");
 
 import { LucaDashboardSurface } from "./LucaDashboardSurface";
 
@@ -53,6 +55,43 @@ describe("LucaDashboardSurface", () => {
     expect(html).toContain("visual slot");
     expect(html).toContain("right slot");
     expect(html).toContain("settings slot");
+  });
+
+  it("renders side panels as drawer overlays above a scrim when open", () => {
+    const html = renderToStaticMarkup(
+      <LucaDashboardSurface
+        leftPanel={<div>left slot</div>}
+        chatSurface={<div>chat slot</div>}
+        rightPanel={<div>right slot</div>}
+        leftPanelCollapsed
+        rightPanelCollapsed
+        leftDrawerOpen
+        rightDrawerOpen
+      />,
+    );
+
+    expect(html).toContain("absolute left-0 top-0 z-40");
+    expect(html).toContain("absolute right-0 top-0 z-40");
+    expect(html).toContain("bg-black/40");
+    expect(html).toContain("left slot");
+    expect(html).toContain("right slot");
+    expect(html).toContain("chat slot");
+  });
+
+  it("keeps panels docked in normal flow when drawers are closed", () => {
+    const html = renderToStaticMarkup(
+      <LucaDashboardSurface
+        leftPanel={<div>left slot</div>}
+        chatSurface={<div>chat slot</div>}
+        rightPanel={<div>right slot</div>}
+      />,
+    );
+
+    expect(html).not.toContain("absolute left-0 top-0 z-40");
+    expect(html).not.toContain("absolute right-0 top-0 z-40");
+    expect(html).not.toContain("bg-black/40");
+    expect(html).toContain("left slot");
+    expect(html).toContain("right slot");
   });
 
   it("uses original LucaOS dashboard layout primitives instead of WebBridge shell copy", () => {
