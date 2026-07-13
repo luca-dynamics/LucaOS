@@ -98,7 +98,19 @@ const ChatWidgetMode: React.FC = () => {
   const [width, setWidth] = useState(() => {
     const saved = localStorage.getItem("LUCA_CHAT_WIDTH");
     return saved ? parseInt(saved, 10) : 800;
-  }); // Widget width
+  }); // Widget width (user preference — rendering clamps to the window below)
+  // The Electron mini-chat window opens at 600px and the user can resize it,
+  // so the preferred width must never overflow the actual window — otherwise
+  // the surface renders clipped and ignores OS-level window resizes.
+  const [windowWidth, setWindowWidth] = useState(() => window.innerWidth);
+
+  useEffect(() => {
+    const handleWindowResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleWindowResize);
+    return () => window.removeEventListener("resize", handleWindowResize);
+  }, []);
+
+  const renderWidth = Math.min(width, windowWidth);
   const [isResizing, setIsResizing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const historyContainerRef = useRef<HTMLDivElement>(null); // NEW: To measure content height
@@ -757,6 +769,12 @@ const ChatWidgetMode: React.FC = () => {
       setIsResizing(false);
       // PERSISTENCE: Save new width
       localStorage.setItem("LUCA_CHAT_WIDTH", finalWidth.toString());
+      // Grow/shrink the Electron window with the drag — the surface itself is
+      // clamped to the window, so without this the drag hits the window edge
+      // and appears to do nothing.
+      window.electron?.ipcRenderer?.send("chat-widget-resize", {
+        width: finalWidth,
+      });
 
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
@@ -853,7 +871,7 @@ const ChatWidgetMode: React.FC = () => {
         pending={state.isProcessing}
         suggestions={suggestions}
         showSuggestions={state.history.length > 0 && showChips}
-        width={`${width}px`}
+        width={`${renderWidth}px`}
         attachment={attachment}
         isEyeActive={isEyeActive}
         isScanning={isScanning}
