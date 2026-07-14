@@ -43,5 +43,11 @@ orb, a face, and a small set of high-value controls without losing its skin.
 - The avatar face uses `lucaFacePlasmaMaterial` directly on its mesh, with no
   glass lens or circular overlay. The obsolete scanline/grid/glitch hologram
   material has been retired.
-- Voice settings, vision, and termination controls use the shared optical tier
-  while keeping their existing semantic colours and actions.
+- Shared material roles now carry texture without extra component markup:
+  panels, cards, rails, and dialogs use the `quiet` optical texture; controls,
+  floating panels, popovers, and HUDs use the clearer `standard` texture.
+- Dense metrics, tabs, workspace backgrounds, overlays, semantic status colour,
+  and the face remain untextured so hierarchy and legibility stay calm.
+- Pressable shell and Voice controls use a 140ms `scale(0.97)` response with a
+  strong ease-out curve. Hover glint is limited to fine pointers and all
+  movement collapses under reduced motion.

@@ -14,6 +14,7 @@ import {
   lucaMaterialMobilePanelChromeStyle,
   lucaMaterialPanelStyle,
 } from "../../styles/lucaMaterialSystem";
+import { lucaShellClassNames } from "../../styles/lucaShellStyles";
 
 interface HeaderProps {
   theme: any;
@@ -327,7 +328,7 @@ const Header: React.FC<HeaderProps> = ({
               aria-haspopup="menu"
               aria-expanded={quickOpen}
               title="Quick controls"
-              className="flex items-center justify-center w-9 h-9 rounded-full border transition-all app-region-no-drag shrink-0"
+              className={`${lucaShellClassNames.control} flex items-center justify-center w-9 h-9 rounded-full border app-region-no-drag shrink-0`}
               style={{
                 ...surfaceStyle,
                 color: quickOpen
