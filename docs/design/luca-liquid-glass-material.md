@@ -57,3 +57,18 @@ orb, a face, and a small set of high-value controls without losing its skin.
 - Optical polarity is explicit (`materialTone`) rather than inferred from mode
   affinity, so adaptive Flow receives light-surface optics without losing its
   adaptive behavior.
+
+## Whole-interface coverage contract
+
+`src/styles/lucaInterfaceMaterialCoverage.ts` is the product-wide guardrail for
+material adoption. It covers the native boot splash, browser post-boot states,
+all onboarding screens, desktop and mobile shells, Settings, VoiceHUD, Mini
+Chat, the presence widgets, overlays, shared dialogs, and loading/error/empty
+states. Each area names its owning files, semantic material roles, optical tier,
+skin boundary, and reduced-transparency behavior.
+
+Coverage does not mean equal visual weight. Large structural regions use quiet
+texture, small premium controls may use the standard optical tier, mobile keeps
+its capped stable material, and semantic status states retain their dedicated
+colors. Full matched-background WebGL remains reserved for valid premium
+presence optics; it is never multiplied across panels, cards, or buttons.
