@@ -17,6 +17,10 @@ interface SceneProps {
   isVisionActive?: boolean;
 }
 
+interface HologramFrameState {
+  clock: { elapsedTime: number };
+}
+
 const SceneWithMaterial: React.FC<SceneProps> = ({
   color,
   audioLevel,
@@ -34,7 +38,7 @@ const SceneWithMaterial: React.FC<SceneProps> = ({
   const smoothedLevel = useRef(0);
 
   useEffect(() => {
-    scene.traverse((child) => {
+    scene.traverse((child: THREE.Object3D) => {
       if ((child as THREE.Mesh).isMesh) (child as THREE.Mesh).material = face.material;
     });
     return () => face.dispose();
@@ -56,7 +60,7 @@ const SceneWithMaterial: React.FC<SceneProps> = ({
     };
   }, []);
 
-  useFrame((state, delta) => {
+  useFrame((state: HologramFrameState, delta: number) => {
     const rawLevel = Math.max(audioLevel, eventAmplitude.current);
     const normalized = rawLevel > 1 ? rawLevel / 255 : rawLevel;
     smoothedLevel.current += (normalized - smoothedLevel.current) * 0.22;
