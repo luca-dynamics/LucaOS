@@ -29,6 +29,19 @@ describe("lucaSkinRegistry", () => {
     expect(variables["--luca-skin-glass-blur"]).toBe("4px");
   });
 
+  it("uses contrast-aware glass tokens for light and dark skins", () => {
+    const light = getLucaSkinCssVariables({ skinId: "pearl" });
+    const adaptiveLight = getLucaSkinCssVariables({ skinId: "flow" });
+    const dark = getLucaSkinCssVariables({ skinId: "carbon" });
+
+    expect(light["--luca-skin-glass-rim"]).toContain("#4f5e68");
+    expect(light["--luca-skin-glass-shadow"]).toContain("#17202a");
+    expect(adaptiveLight["--luca-skin-glass-rim"]).toContain("#4e6270");
+    expect(adaptiveLight["--luca-skin-glass-shadow"]).toContain("#17232c");
+    expect(dark["--luca-skin-glass-rim"]).toBe("rgb(255 255 255 / 0.24)");
+    expect(dark["--luca-skin-glass-shadow"]).toBe("rgb(0 0 0 / 0.18)");
+  });
+
   it("returns no blur when reduced transparency is requested", () => {
     const variables = getLucaSkinCssVariables({ skinId: "flow", reducedTransparency: true });
 

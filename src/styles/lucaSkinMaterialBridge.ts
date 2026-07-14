@@ -15,6 +15,10 @@ export const LUCA_SKIN_MATERIAL_VARIABLE_NAMES = [
   "--luca-accent-soft",
   "--luca-material-opacity",
   "--luca-material-blur",
+  "--luca-material-glass-highlight",
+  "--luca-material-glass-rim",
+  "--luca-material-glass-shadow",
+  "--luca-material-glass-sheen",
   "--luca-material-border-strength",
   "--luca-material-shadow",
   "--luca-shadow-soft",
@@ -79,6 +83,10 @@ export function getLucaSkinMaterialVariables(
       options.userMaterialBlurPx !== undefined
         ? `${options.userMaterialBlurPx}px`
         : skinVariables["--luca-skin-glass-blur"],
+    "--luca-material-glass-highlight": skinVariables["--luca-skin-glass-highlight"],
+    "--luca-material-glass-rim": skinVariables["--luca-skin-glass-rim"],
+    "--luca-material-glass-shadow": skinVariables["--luca-skin-glass-shadow"],
+    "--luca-material-glass-sheen": skinVariables["--luca-skin-glass-sheen"],
     "--luca-material-border-strength": skinVariables["--luca-skin-border-strength"],
     "--luca-material-shadow": skinVariables["--luca-skin-shadow-float"],
     "--luca-shadow-soft": skinVariables["--luca-skin-shadow-soft"],

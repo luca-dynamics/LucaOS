@@ -9,6 +9,7 @@ export type LucaSkinId =
   | "mist";
 
 export type LucaSkinModeAffinity = "light" | "dark" | "adaptive" | "warm";
+export type LucaSkinMaterialTone = "light" | "dark";
 
 export type LucaSkinHostKind =
   | "desktop-app"
@@ -47,6 +48,8 @@ export interface LucaSkinDefinition {
   description: string;
   recommendedDefault?: boolean;
   modeAffinity: LucaSkinModeAffinity;
+  /** Optical polarity for rims, highlights, and shadows; independent of mode behavior. */
+  materialTone: LucaSkinMaterialTone;
   backgroundProfile: {
     base: string;
     elevated: string;
@@ -139,6 +142,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "A bright, quiet default environment with pearl-white surfaces, gentle glass, and highly readable graphite text.",
     modeAffinity: "light",
+    materialTone: "light",
     backgroundProfile: {
       base: "#f7f6f2",
       elevated: "#ffffff",
@@ -196,6 +200,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
       "A focused charcoal environment with graphite materials, restrained accents, and comfortable dark-mode readability.",
     recommendedDefault: true,
     modeAffinity: "dark",
+    materialTone: "dark",
     backgroundProfile: {
       base: "#111417",
       elevated: "#1b2025",
@@ -253,6 +258,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "A gently adaptive liquid environment with soft gradients, layered glass, and motion designed to stay behind the work.",
     modeAffinity: "adaptive",
+    materialTone: "light",
     backgroundProfile: {
       base: "#eef5f7",
       elevated: "rgba(255, 255, 255, 0.76)",
@@ -327,6 +333,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "A warm editorial environment with cream paper surfaces, matte separation, and high-contrast text for long thinking sessions.",
     modeAffinity: "warm",
+    materialTone: "light",
     backgroundProfile: {
       base: "#f4eadc",
       elevated: "#fff8ed",
@@ -383,6 +390,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "A neutral grey dark environment — no color cast, steady contrast, easy on the eyes for long sessions.",
     modeAffinity: "dark",
+    materialTone: "dark",
     backgroundProfile: {
       base: "#1a1c1f",
       elevated: "#232629",
@@ -440,6 +448,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "True black with OLED-grade contrast — structure carried by hairlines and one cool accent, nothing else.",
     modeAffinity: "dark",
+    materialTone: "dark",
     backgroundProfile: {
       base: "#0a0a0b",
       elevated: "#141416",
@@ -497,6 +506,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "A warm charcoal environment with a soft amber undertone — dark mode that feels like evening, not machinery.",
     modeAffinity: "dark",
+    materialTone: "dark",
     backgroundProfile: {
       base: "#191512",
       elevated: "#241e19",
@@ -554,6 +564,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "Clean neutral light — quiet grey-white surfaces with no warmth cast, the working daylight environment.",
     modeAffinity: "light",
+    materialTone: "light",
     backgroundProfile: {
       base: "#eef0f2",
       elevated: "#ffffff",

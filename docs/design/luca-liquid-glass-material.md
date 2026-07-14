@@ -51,3 +51,9 @@ orb, a face, and a small set of high-value controls without losing its skin.
 - Pressable shell and Voice controls use a 140ms `scale(0.97)` response with a
   strong ease-out curve. Hover glint is limited to fine pointers and all
   movement collapses under reduced motion.
+- Glass highlights, rims, shadows, and sheens are skin-owned tokens. Light
+  skins use accent/graphite edge definition so white surfaces retain depth;
+  dark skins retain bright specular highlights and neutral black edge shade.
+- Optical polarity is explicit (`materialTone`) rather than inferred from mode
+  affinity, so adaptive Flow receives light-surface optics without losing its
+  adaptive behavior.

@@ -58,6 +58,18 @@ describe("lucaSkinMaterialBridge", () => {
     expect(variables["--luca-shadow-glow"]).toBe("rgba(155, 101, 61, 0.10)");
   });
 
+  it("bridges contrast-aware glass texture tokens", () => {
+    const light = getLucaSkinMaterialVariables({ skinId: "pearl" });
+    const adaptiveLight = getLucaSkinMaterialVariables({ skinId: "flow" });
+    const dark = getLucaSkinMaterialVariables({ skinId: "carbon" });
+
+    expect(light["--luca-material-glass-highlight"]).toContain("#4f7f96");
+    expect(light["--luca-material-glass-rim"]).toContain("#4f5e68");
+    expect(adaptiveLight["--luca-material-glass-highlight"]).toContain("#5f8fa3");
+    expect(adaptiveLight["--luca-material-glass-rim"]).toContain("#4e6270");
+    expect(dark["--luca-material-glass-highlight"]).toBe("rgb(255 255 255 / 0.14)");
+  });
+
   it("keeps material blur at 0px when reduced transparency is requested", () => {
     const variables = getLucaSkinMaterialVariables({
       skinId: "flow",

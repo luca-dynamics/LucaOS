@@ -126,13 +126,13 @@ export const LUCA_MATERIAL_SATURATION = "var(--luca-material-saturation, 1)";
  * only a restrained highlight, accent refraction, and edge depth.
  */
 export const LUCA_MATERIAL_TEXTURE_QUIET = [
-  "radial-gradient(90% 58% at 20% -8%, rgb(255 255 255 / 0.09), transparent 62%)",
-  "linear-gradient(132deg, color-mix(in srgb, var(--luca-accent-primary, #8a8f98) 5%, transparent), transparent 46% 72%, rgb(255 255 255 / 0.035))",
+  "radial-gradient(90% 58% at 20% -8%, color-mix(in srgb, var(--luca-material-glass-highlight, rgb(255 255 255 / 0.09)) 64%, transparent), transparent 62%)",
+  "linear-gradient(132deg, color-mix(in srgb, var(--luca-accent-primary, #8a8f98) 5%, transparent), transparent 46% 72%, var(--luca-material-glass-sheen, rgb(255 255 255 / 0.035)))",
 ].join(", ");
 
 export const LUCA_MATERIAL_TEXTURE_STANDARD = [
-  "radial-gradient(82% 54% at 18% -6%, rgb(255 255 255 / 0.14), transparent 60%)",
-  "linear-gradient(132deg, color-mix(in srgb, var(--luca-accent-primary, #8a8f98) 8%, transparent), transparent 44% 70%, rgb(255 255 255 / 0.055))",
+  "radial-gradient(82% 54% at 18% -6%, color-mix(in srgb, var(--luca-material-glass-highlight, rgb(255 255 255 / 0.14)) 86%, transparent), transparent 60%)",
+  "linear-gradient(132deg, color-mix(in srgb, var(--luca-accent-primary, #8a8f98) 8%, transparent), transparent 44% 70%, var(--luca-material-glass-sheen, rgb(255 255 255 / 0.055)))",
 ].join(", ");
 
 function withMaterialTexture(texture: string, substrate: string): string {
