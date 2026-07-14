@@ -15,6 +15,11 @@ Menu.setApplicationMenu(null);
 require('dotenv').config(); // Load environment variables for Main process (and Medic)
 const path = require('path');
 const fs = require('fs');
+const {
+    getBootWindowBackground,
+    readBootAppearanceSnapshot,
+    writeBootAppearanceSnapshot
+} = require('./bootAppearance.cjs');
 const { findAvailableExecutable, getNodeCandidates, getPythonCandidates } = require('../shared/platform.cjs');
 const {
     createMiniChatWindow: createMiniChatWindowFactory,
@@ -243,12 +248,17 @@ let rebootAttempts = 0;
 function createBootWindow() {
     if (bootWindow) return; // Re-use if exists
 
+    const appearanceSnapshot = readBootAppearanceSnapshot(app.getPath('userData'));
+    if (appearanceSnapshot) {
+        nativeTheme.themeSource = appearanceSnapshot.materialTone;
+    }
+
     bootWindow = new BrowserWindow({
         width: 600,
         height: 400,
         frame: false,
         transparent: false,
-        backgroundColor: '#000000',
+        backgroundColor: getBootWindowBackground(appearanceSnapshot),
         show: false, // Don't show until content is ready
         center: true,
         resizable: true,
@@ -259,6 +269,12 @@ function createBootWindow() {
     });
 
     bootWindow.loadFile(path.join(__dirname, 'boot.html'));
+
+    bootWindow.webContents.once('did-finish-load', () => {
+        if (appearanceSnapshot && bootWindow && !bootWindow.isDestroyed()) {
+            bootWindow.webContents.send('boot-appearance', appearanceSnapshot);
+        }
+    });
     
     // Smooth reveal to avoid blank flash
     bootWindow.once('ready-to-show', () => {
@@ -567,13 +583,18 @@ function createWindow() {
     // Load saved bounds
     const savedBounds = loadWindowState();
 
+    const appearanceSnapshot = readBootAppearanceSnapshot(app.getPath('userData'));
+    if (appearanceSnapshot) {
+        nativeTheme.themeSource = appearanceSnapshot.materialTone;
+    }
+
     mainWindow = new BrowserWindow({
         width: savedBounds.width,
         height: savedBounds.height,
         x: savedBounds.x,
         y: savedBounds.y,
         show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
-        backgroundColor: '#111417', // Carbon theme base (matches boot.html splash) — never flashes a see-through/empty frame
+        backgroundColor: getBootWindowBackground(appearanceSnapshot),
         transparent: false,
         frame: process.platform === 'win32' ? false : true,
         autoHideMenuBar: true,
@@ -2100,6 +2121,21 @@ ipcMain.handle('vault-has', async (event, { site }) => {
 global.minimizeToTray = false;
 
 ipcMain.on('update-system-settings', (event, settings) => {
+    if (!settings || typeof settings !== 'object') return;
+
+    if (settings.appearanceSnapshot) {
+        const appearanceSnapshot = writeBootAppearanceSnapshot(
+            app.getPath('userData'),
+            settings.appearanceSnapshot
+        );
+        if (appearanceSnapshot) {
+            nativeTheme.themeSource = appearanceSnapshot.materialTone;
+            if (bootWindow && !bootWindow.isDestroyed()) {
+                bootWindow.webContents.send('boot-appearance', appearanceSnapshot);
+            }
+        }
+    }
+
     // Start on Boot
     app.setLoginItemSettings({
         openAtLogin: settings.startOnBoot,

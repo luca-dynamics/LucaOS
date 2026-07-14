@@ -19,6 +19,7 @@ import {
   type LucaSkinId,
 } from "../config/lucaSkins";
 import type { LucaAtmosphere } from "../config/lucaAtmospheres";
+import { createLucaNativeBootAppearanceSnapshot } from "../styles/lucaNativeBootAppearance";
 
 export interface NotificationSettings {
   enabled: boolean;
@@ -449,7 +450,24 @@ class SettingsService extends EventEmitter {
 
   private async initialize() {
     this.settings = await this.loadSettings();
+    this.syncSystemAppearanceSnapshot();
     this.emit("settings-changed", this.settings);
+  }
+
+  private syncSystemAppearanceSnapshot() {
+    if (typeof window === "undefined" || !window.luca?.applySystemSettings) {
+      return;
+    }
+
+    const { general } = this.settings;
+    window.luca.applySystemSettings({
+      ...general,
+      appearanceSnapshot: createLucaNativeBootAppearanceSnapshot({
+        skinId: general.selectedSkinId,
+        userMaterialOpacity: general.backgroundOpacity,
+        userMaterialBlurPx: general.backgroundBlur,
+      }),
+    });
   }
 
   private async loadSettings(): Promise<LucaSettings> {
@@ -834,6 +852,8 @@ class SettingsService extends EventEmitter {
       }
 
       console.log("[SETTINGS] Saved to Storage (Sensitive data encrypted).");
+
+      this.syncSystemAppearanceSnapshot();
 
       // Sync embedding model selection with Cortex backend when it changes
       if (newSettings.brain?.embeddingModel) {
