@@ -120,6 +120,25 @@ export const LUCA_MATERIAL_BLUR =
   "var(--luca-material-blur, var(--luca-blur-level, var(--app-bg-blur, 40px)))";
 export const LUCA_MATERIAL_SATURATION = "var(--luca-material-saturation, 1)";
 
+/**
+ * Thin optical texture layers. These are deliberately gradients rather than
+ * blur: the substrate remains owned by each material role and the texture adds
+ * only a restrained highlight, accent refraction, and edge depth.
+ */
+export const LUCA_MATERIAL_TEXTURE_QUIET = [
+  "radial-gradient(90% 58% at 20% -8%, rgb(255 255 255 / 0.09), transparent 62%)",
+  "linear-gradient(132deg, color-mix(in srgb, var(--luca-accent-primary, #8a8f98) 5%, transparent), transparent 46% 72%, rgb(255 255 255 / 0.035))",
+].join(", ");
+
+export const LUCA_MATERIAL_TEXTURE_STANDARD = [
+  "radial-gradient(82% 54% at 18% -6%, rgb(255 255 255 / 0.14), transparent 60%)",
+  "linear-gradient(132deg, color-mix(in srgb, var(--luca-accent-primary, #8a8f98) 8%, transparent), transparent 44% 70%, rgb(255 255 255 / 0.055))",
+].join(", ");
+
+function withMaterialTexture(texture: string, substrate: string): string {
+  return `${texture}, ${substrate}`;
+}
+
 /** Self-contained glass backdrop (blur + identity-safe saturation). */
 const MATERIAL_GLASS_BACKDROP = `blur(${LUCA_MATERIAL_BLUR}) saturate(${LUCA_MATERIAL_SATURATION})`;
 
@@ -137,7 +156,7 @@ export const lucaMaterialRootStyle: CSSProperties = {
 
 /** Default glassy panel surface (calm, AppleOS-like). */
 export const lucaMaterialPanelStyle: CSSProperties = {
-  background: LUCA_MATERIAL_SURFACE,
+  background: withMaterialTexture(LUCA_MATERIAL_TEXTURE_QUIET, LUCA_MATERIAL_SURFACE),
   borderColor: LUCA_MATERIAL_BORDER,
   color: LUCA_MATERIAL_TEXT_PRIMARY,
   boxShadow: LUCA_MATERIAL_SHADOW,
@@ -152,14 +171,17 @@ export const lucaMaterialPanelStyle: CSSProperties = {
  * background / border / shadow through the material engine.
  */
 export const lucaMaterialFloatingPanelStyle: CSSProperties = {
-  background: LUCA_MATERIAL_SURFACE,
+  background: withMaterialTexture(LUCA_MATERIAL_TEXTURE_STANDARD, LUCA_MATERIAL_SURFACE),
   borderColor: LUCA_MATERIAL_BORDER,
   boxShadow: LUCA_MATERIAL_SHADOW,
 };
 
 /** Flat card / section surface — low-alpha, no elevation, no forced panel blur. */
 export const lucaMaterialCardStyle: CSSProperties = {
-  background: LUCA_MATERIAL_FLAT_CARD_SURFACE,
+  background: withMaterialTexture(
+    LUCA_MATERIAL_TEXTURE_QUIET,
+    LUCA_MATERIAL_FLAT_CARD_SURFACE,
+  ),
   borderColor: LUCA_MATERIAL_BORDER,
   color: LUCA_MATERIAL_TEXT_PRIMARY,
   boxShadow: "var(--luca-material-card-shadow, none)",
@@ -175,7 +197,10 @@ export const lucaMaterialMetricStyle: CSSProperties = {
 
 /** Browser-safe card surface — flat tint with no native/liquid assumptions. */
 export const lucaMaterialWebCardStyle: CSSProperties = {
-  background: LUCA_MATERIAL_WEB_CARD_SURFACE,
+  background: withMaterialTexture(
+    LUCA_MATERIAL_TEXTURE_QUIET,
+    LUCA_MATERIAL_WEB_CARD_SURFACE,
+  ),
   borderColor: LUCA_MATERIAL_BORDER,
   color: LUCA_MATERIAL_TEXT_PRIMARY,
   boxShadow:
@@ -184,7 +209,7 @@ export const lucaMaterialWebCardStyle: CSSProperties = {
 
 /** Dashboard rail surface — below panel weight, tokenized border, no extra blur. */
 export const lucaMaterialRailStyle: CSSProperties = {
-  background: LUCA_MATERIAL_RAIL_SURFACE,
+  background: withMaterialTexture(LUCA_MATERIAL_TEXTURE_QUIET, LUCA_MATERIAL_RAIL_SURFACE),
   borderColor: LUCA_MATERIAL_BORDER,
   color: LUCA_MATERIAL_TEXT_SECONDARY,
   boxShadow: "var(--luca-material-rail-shadow, none)",
@@ -192,14 +217,20 @@ export const lucaMaterialRailStyle: CSSProperties = {
 
 /** Neutral control button / small interaction surface — lighter than cards. */
 export const lucaMaterialControlStyle: CSSProperties = {
-  background: LUCA_MATERIAL_CONTROL_SURFACE,
+  background: withMaterialTexture(
+    LUCA_MATERIAL_TEXTURE_STANDARD,
+    LUCA_MATERIAL_CONTROL_SURFACE,
+  ),
   borderColor: LUCA_MATERIAL_BORDER,
   color: LUCA_MATERIAL_TEXT_SECONDARY,
 };
 
 /** Active neutral control state — keeps interaction hierarchy below cards. */
 export const lucaMaterialControlActiveStyle: CSSProperties = {
-  background: LUCA_MATERIAL_SURFACE_HOVER,
+  background: withMaterialTexture(
+    LUCA_MATERIAL_TEXTURE_STANDARD,
+    LUCA_MATERIAL_SURFACE_HOVER,
+  ),
   borderColor: LUCA_MATERIAL_BORDER_STRONG,
   color: LUCA_MATERIAL_TEXT_PRIMARY,
 };
@@ -240,7 +271,10 @@ export const lucaMaterialSheetStyle: CSSProperties = {
 
 /** Popover surface — solid-leaning elevated material. */
 export const lucaMaterialPopoverStyle: CSSProperties = {
-  background: LUCA_MATERIAL_SURFACE_SOLID,
+  background: withMaterialTexture(
+    LUCA_MATERIAL_TEXTURE_STANDARD,
+    LUCA_MATERIAL_SURFACE_SOLID,
+  ),
   borderColor: LUCA_MATERIAL_BORDER,
   color: LUCA_MATERIAL_TEXT_PRIMARY,
   boxShadow: LUCA_MATERIAL_SHADOW,
@@ -249,7 +283,7 @@ export const lucaMaterialPopoverStyle: CSSProperties = {
 
 /** Dialog / modal surface — solid material with stronger framing. */
 export const lucaMaterialDialogStyle: CSSProperties = {
-  background: LUCA_MATERIAL_SURFACE_SOLID,
+  background: withMaterialTexture(LUCA_MATERIAL_TEXTURE_QUIET, LUCA_MATERIAL_SURFACE_SOLID),
   borderColor: LUCA_MATERIAL_BORDER_STRONG,
   color: LUCA_MATERIAL_TEXT_PRIMARY,
   boxShadow: LUCA_MATERIAL_SHADOW,
@@ -267,7 +301,7 @@ export const lucaMaterialOverlayStyle: CSSProperties = {
 
 /** Floating HUD surface — glassy with a soft accent glow. */
 export const lucaMaterialHudStyle: CSSProperties = {
-  background: LUCA_MATERIAL_SURFACE,
+  background: withMaterialTexture(LUCA_MATERIAL_TEXTURE_STANDARD, LUCA_MATERIAL_SURFACE),
   borderColor: LUCA_MATERIAL_BORDER,
   color: LUCA_MATERIAL_TEXT_PRIMARY,
   boxShadow: LUCA_MATERIAL_SHADOW_GLOW,
