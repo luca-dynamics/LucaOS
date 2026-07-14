@@ -5,7 +5,6 @@ import { Center, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { eventBus } from "../../services/eventBus";
 import { createLucaFacePlasmaMaterial } from "../presence/lucaFacePlasmaMaterial";
-import { LucaLiquidGlassLayer } from "../material/LucaLiquidGlass";
 
 const sanitizeColor = (color: string) =>
   color.startsWith("#") && color.length === 9 ? color.substring(0, 7) : color;
@@ -108,7 +107,7 @@ const HologramScene: React.FC<{
   onDragStart?: (event: unknown) => void;
   isVisionActive?: boolean;
 }> = ({ color = "#8a8f98", audioLevel = 0, onClick, onDragStart, isVisionActive }) => (
-  <div className="luca-liquid-glass relative h-full w-full overflow-hidden rounded-[inherit] bg-transparent">
+  <div className="relative h-full w-full bg-transparent">
     <Canvas camera={{ position: [0, 0, 4], fov: 45 }} gl={{ alpha: true, antialias: true }}>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
@@ -122,7 +121,6 @@ const HologramScene: React.FC<{
         />
       </React.Suspense>
     </Canvas>
-    <LucaLiquidGlassLayer depth="quiet" />
   </div>
 );
 

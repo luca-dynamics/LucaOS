@@ -40,7 +40,8 @@ orb, a face, and a small set of high-value controls without losing its skin.
 ## Current promotion
 
 - The presence orb layers the `hero` optical tier over its chromatic renderer.
-- The avatar face uses `lucaFacePlasmaMaterial` and a quiet glass finish; the
-  obsolete scanline/grid/glitch hologram material has been retired.
+- The avatar face uses `lucaFacePlasmaMaterial` directly on its mesh, with no
+  glass lens or circular overlay. The obsolete scanline/grid/glitch hologram
+  material has been retired.
 - Voice settings, vision, and termination controls use the shared optical tier
   while keeping their existing semantic colours and actions.
