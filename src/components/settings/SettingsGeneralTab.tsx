@@ -5,6 +5,7 @@ import { apiUrl } from "../../config/api";
 import { Icon as IconEngine } from "../ui/Icon";
 import ToneStyleSelector from "./ToneStyleSelector";
 import { PersonaMode } from "../../types/lucaPersonality";
+import { PERSONA_DISPLAY } from "../../config/personaDisplay";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
@@ -91,17 +92,9 @@ const personaOptions: PersonaMode[] = [
   "HACKER",
 ];
 
-// Human names for the behavior modes. The wire keys stay unchanged — the
-// prompt config, tool map, and voice selection all index by them.
-const PERSONA_DISPLAY: Record<
-  string,
-  { label: string; desc: string }
-> = {
-  RUTHLESS: { label: "Direct", desc: "Minimum words, maximum action" },
-  ENGINEER: { label: "Technical", desc: "Precise, code-first reasoning" },
-  ASSISTANT: { label: "Warm", desc: "Thorough, patient, explains itself" },
-  HACKER: { label: "Security", desc: "Authorized security analysis" },
-};
+// Human names for the behavior modes live in the shared personaDisplay map —
+// the wire keys stay unchanged (prompt config, tool map, and voice selection
+// all index by them).
 
 const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
   settings,

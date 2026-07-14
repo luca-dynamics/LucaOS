@@ -5,6 +5,7 @@ import { createIdentityProfilePreview } from "../../personal-intelligence";
 import { IdentityCorePreviewCard } from "./personalIntelligencePreview";
 import { settingsService } from "../../services/settingsService";
 import { buildIdentityCoreInputFromOperatorProfile } from "../../services/personalIntelligence/identityCoreBridge";
+import { personaDisplayLabel } from "../../config/personaDisplay";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
@@ -387,7 +388,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                     value={p}
                     className="bg-gray-900 text-[var(--app-text-main)]"
                   >
-                    {p}
+                    {personaDisplayLabel(p)}
                   </option>
                 ))}
               </select>

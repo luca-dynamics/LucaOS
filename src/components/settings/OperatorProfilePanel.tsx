@@ -6,6 +6,7 @@ import { memoryService } from "../../services/memoryService";
 import { personalityService } from "../../services/personalityService";
 import { lucaService } from "../../services/lucaService";
 import { apiUrl } from "../../config/api";
+import { personaDisplayLabel } from "../../config/personaDisplay";
 import AdminEnrollmentModal from "../AdminEnrollmentModal";
 import { OperatorProfile } from "../../types/operatorProfile";
 import {
@@ -658,7 +659,9 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               className="text-[13px]"
               style={{ color: settingsSurfaceTokens.textPrimary }}
             >
-              {profile.assistantPreferences?.preferredPersona || "Neutral"}
+              {personaDisplayLabel(
+                profile.assistantPreferences?.preferredPersona,
+              ) || "Neutral"}
             </span>
           }
         />
