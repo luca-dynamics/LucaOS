@@ -28,6 +28,10 @@ export interface LiquidGlassLensRenderer {
   /** Pointer position in canvas fractions (0..1); null lets the body drift home. */
   setPointer(x: number | null, y?: number): void;
   setAccent(hex: string): void;
+  /** Resize without rebuilding the WebGL context. CSS pixels, DPR-capped internally. */
+  resize(widthPx: number, heightPx?: number): void;
+  /** Suspend animation when the surface is hidden or reduced motion is active. */
+  setPaused(paused: boolean): void;
   dispose(): void;
 }
 
@@ -227,8 +231,15 @@ export function createLiquidGlassLensRenderer(
   if (!gl) return null;
 
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = sizePx * dpr;
-  canvas.height = sizePx * dpr;
+  const resize = (widthPx: number, heightPx = widthPx) => {
+    const width = Math.max(1, Math.round(widthPx * dpr));
+    const height = Math.max(1, Math.round(heightPx * dpr));
+    if (canvas.width === width && canvas.height === height) return;
+    canvas.width = width;
+    canvas.height = height;
+    gl.viewport(0, 0, width, height);
+  };
+  resize(sizePx);
 
   const vs = compile(gl, gl.VERTEX_SHADER, VERTEX_SRC);
   const fs = compile(gl, gl.FRAGMENT_SHADER, FRAGMENT_SRC);
@@ -302,6 +313,7 @@ export function createLiquidGlassLensRenderer(
   const startTime = lastTime;
   let animationId = 0;
   let disposed = false;
+  let paused = false;
 
   const draw = (now: number) => {
     if (disposed) return;
@@ -337,7 +349,7 @@ export function createLiquidGlassLensRenderer(
     gl.uniform3f(locations.accent, accent[0], accent[1], accent[2]);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-    animationId = requestAnimationFrame(draw);
+    if (!paused) animationId = requestAnimationFrame(draw);
   };
 
   draw(performance.now());
@@ -360,6 +372,16 @@ export function createLiquidGlassLensRenderer(
     setAccent(hex: string) {
       const rgb = hexToRgb(hex);
       if (rgb) accent = rgbToUnit(rgb);
+    },
+    resize,
+    setPaused(nextPaused: boolean) {
+      if (disposed || paused === nextPaused) return;
+      paused = nextPaused;
+      cancelAnimationFrame(animationId);
+      if (!paused) {
+        lastTime = performance.now();
+        animationId = requestAnimationFrame(draw);
+      }
     },
     dispose() {
       disposed = true;

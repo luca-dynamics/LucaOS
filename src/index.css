@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;700;900&family=Space+Mono:wght@400;700&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap');
+@import "./styles/lucaLiquidGlass.css";
  
 @tailwind base;
 @tailwind components;
@@ -654,6 +655,35 @@ html.luca-wco .luca-wco-pad-right {
   background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
   border-color: var(--luca-border-strong, var(--app-border-main)) !important;
   color: var(--luca-text-primary, var(--app-text-main)) !important;
+}
+
+/* Frequent controls stay instant: only the physical press receives motion. */
+.luca-shell-control {
+  transition-property: transform, background-color, border-color, color;
+  transition-duration: 140ms;
+  transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.luca-shell-control:active {
+  transform: scale(0.97);
+}
+
+.luca-reduce-motion .luca-shell-control {
+  transition-duration: 0.01ms;
+}
+
+.luca-reduce-motion .luca-shell-control:active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .luca-shell-control {
+    transition-duration: 0.01ms;
+  }
+
+  .luca-shell-control:active {
+    transform: none;
+  }
 }
 
 .luca-shell-tab:hover,

@@ -1,6 +1,7 @@
 import React from "react";
 import { Icon } from "../ui/Icon";
 import type { PersonaType } from "../../services/lucaService";
+import { LucaLiquidGlassLayer } from "../material/LucaLiquidGlass";
 
 interface VoiceControlsProps {
   onSettingsClick: () => void;
@@ -65,7 +66,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           <>
             <button
               onClick={onSettingsClick}
-              className="cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border text-[var(--luca-text-secondary)] hover:text-[var(--luca-text-primary)] transition-all glass-blur"
+              className="luca-liquid-glass-control cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border text-[var(--luca-text-secondary)] hover:text-[var(--luca-text-primary)] transition-all"
               style={{
                 backgroundColor: "var(--luca-surface-glass)",
                 borderColor:
@@ -74,10 +75,11 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
               title="Voice Settings"
             >
               <Icon name="Settings" size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
+              <LucaLiquidGlassLayer shape="circle" depth="standard" />
             </button>
             <button
               onClick={onToggleVideo}
-              className="cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border transition-all"
+              className="luca-liquid-glass-control cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border transition-all"
               style={{
                 backgroundColor: isVideoActive
                   ? "var(--luca-accent-soft)"
@@ -98,13 +100,14 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
                   VISION ON
                 </div>
               )}
+              <LucaLiquidGlassLayer shape="circle" depth={isVideoActive ? "quiet" : "standard"} />
             </button>
           </>
         )}
 
         <button
           onClick={onClose}
-          className="cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border text-[var(--luca-text-secondary)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] hover:text-[var(--luca-text-primary)] transition-all z-[110] glass-blur"
+          className="luca-liquid-glass-control cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border text-[var(--luca-text-secondary)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] hover:text-[var(--luca-text-primary)] transition-all z-[110]"
           style={{
             backgroundColor: "var(--luca-surface-glass)",
             borderColor:
@@ -117,6 +120,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
             size={18}
             className="text-slate-400 group-hover:text-white sm:w-5 sm:h-5 md:w-6 md:h-6"
           />
+          <LucaLiquidGlassLayer shape="circle" depth="quiet" />
         </button>
       </div>
     </div>
