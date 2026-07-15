@@ -24,6 +24,20 @@ describe("Luca optical material settings", () => {
     expect(value.metal.gradient).toEqual(DEFAULT_LUCA_OPTICAL_MATERIAL.metal.gradient);
   });
 
+  it("accepts field-level partial glass and metal settings", () => {
+    const value = normalizeLucaOpticalMaterialSettings({
+      glass: { frost: 0.22 },
+      metal: { offset: 0.5, phase: 0.4, evolution: 0.3 },
+    });
+
+    expect(value.glass.frost).toBe(0.22);
+    expect(value.glass.refraction).toBe(DEFAULT_LUCA_OPTICAL_MATERIAL.glass.refraction);
+    expect(value.metal.offset).toBe(0.5);
+    expect(value.metal.phase).toBe(0.4);
+    expect(value.metal.evolution).toBe(0.3);
+    expect(value.metal.depth).toBe(DEFAULT_LUCA_OPTICAL_MATERIAL.metal.depth);
+  });
+
   it("exports the shared CSS control contract", () => {
     expect(getLucaOpticalMaterialCssVariables()["--luca-glass-refraction"]).toBe("0.58");
     expect(getLucaOpticalMaterialCssVariables()["--luca-metal-rgb-split"]).toBe("0.34");
