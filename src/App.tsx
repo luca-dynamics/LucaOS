@@ -378,10 +378,19 @@ function AppContent() {
     if (hasSignaledHostReadyRef.current) return;
     if (bootSequence === "READY" || bootSequence === "ONBOARDING") {
       hasSignaledHostReadyRef.current = true;
-      const reveal = () =>
-        (
-          window as unknown as { luca?: { notifyReady?: () => void } }
-        ).luca?.notifyReady?.();
+      const host = (
+        window as unknown as {
+          luca?: { notifyReady?: () => void; centerDefault?: () => void };
+        }
+      ).luca;
+      // First-run onboarding always opens at the default centered size, even if
+      // a prior session left maximized/large saved bounds. The window is still
+      // hidden here, so it reveals already centered. READY sessions keep their
+      // restored size.
+      if (bootSequence === "ONBOARDING") {
+        host?.centerDefault?.();
+      }
+      const reveal = () => host?.notifyReady?.();
       // Wait for the destination UI (onboarding/dashboard) to actually paint in
       // the still-hidden window before revealing it — so the boot splash hands
       // off straight to onboarding with no black holding-screen flash in between.

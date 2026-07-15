@@ -1304,6 +1304,28 @@ ipcMain.handle('get-local-ip', async () => {
         if (win) win.close();
     });
 
+    // First-run onboarding: size the window to the default centered layout,
+    // ignoring any restored/maximized bounds from a prior session. READY
+    // (returning) sessions never call this, so their saved size is preserved.
+    ipcMain.on('window-center-default', (event) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        if (!win || win.isDestroyed()) return;
+        try {
+            const wa = screen.getDisplayMatching(win.getBounds()).workArea;
+            const mw = Math.min(1152, wa.width - 40);
+            const mh = Math.min(760, wa.height - 40);
+            if (win.isMaximized()) win.unmaximize();
+            win.setBounds({
+                width: mw,
+                height: mh,
+                x: wa.x + Math.floor((wa.width - mw) / 2),
+                y: wa.y + Math.floor((wa.height - mh) / 2),
+            });
+        } catch (e) {
+            console.warn('[MAIN] window-center-default failed:', e.message);
+        }
+    });
+
     console.log("[MAIN] IPC Handlers Registered.");
 
     // STARTUP CONFIGURATION
