@@ -680,12 +680,17 @@ function createWindow() {
     });
 
     // Catch soft blanks (renderer alive but nothing painted) — see armBlankWatchdog.
+    // Proof-of-life belongs to one document only. A reload/navigation creates a
+    // fresh renderer document that must earn it again; otherwise a failed
+    // module import after one successful paint loops through reload forever.
+    mainWindow.webContents.on('did-start-navigation', (_event, _url, isInPlace, isMainFrame) => {
+        if (isMainFrame && !isInPlace) resetBlankWatchdogState();
+    });
     armBlankWatchdog();
 
     mainWindow.on('closed', function () {
         if (blankWatch) { clearInterval(blankWatch); blankWatch = null; }
-        rendererWasAlive = false;
-        blankStrikes = 0;
+        resetBlankWatchdogState();
         mainWindow = null;
     });
 
@@ -722,6 +727,10 @@ function logSystemResource(context = 'Regular Check') {
 let blankStrikes = 0;
 let rendererWasAlive = false;
 let blankWatch = null;
+function resetBlankWatchdogState() {
+    blankStrikes = 0;
+    rendererWasAlive = false;
+}
 function armBlankWatchdog() {
     if (blankWatch) return;
     blankWatch = setInterval(async () => {
