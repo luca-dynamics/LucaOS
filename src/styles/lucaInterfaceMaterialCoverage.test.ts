@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+const { existsSync } = process.getBuiltinModule("node:fs");
+
 import {
   LUCA_INTERFACE_MATERIAL_AREAS,
   LUCA_INTERFACE_MATERIAL_COVERAGE,
@@ -22,6 +24,14 @@ describe("Luca interface material coverage", () => {
       expect(entry.owners.length, entry.area).toBeGreaterThan(0);
       expect(entry.materialRoles.length, entry.area).toBeGreaterThan(0);
       expect(entry.reducedTransparency, entry.area).toMatch(/solid/);
+    }
+  });
+
+  it("keeps every declared material owner attached to the live repository", () => {
+    for (const entry of LUCA_INTERFACE_MATERIAL_COVERAGE) {
+      for (const owner of entry.owners) {
+        expect(existsSync(owner), `${entry.area}: ${owner}`).toBe(true);
+      }
     }
   });
 
@@ -52,4 +62,3 @@ describe("Luca interface material coverage", () => {
     );
   });
 });
-

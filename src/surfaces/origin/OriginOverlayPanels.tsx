@@ -14,6 +14,10 @@ import {
   type OverlayPanelId,
 } from "../overlaySurfacePolicy";
 import CuratedOriginOverlayPanels from "./CuratedOriginOverlayPanels";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+} from "../../styles/lucaMaterialSystem";
 
 interface OriginOverlayPanelsProps {
   theme: any;
@@ -144,8 +148,20 @@ const OriginOverlayPanels: React.FC<OriginOverlayPanelsProps> = ({
       )}
 
       {isLockdown && shouldRender("lockdown") && (
-        <div className="absolute inset-0 z-[900] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] flex flex-col items-center justify-center animate-in fade-in duration-200 pointer-events-none">
-          <div className="border-4 border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] p-12 rounded-lg bg-[var(--app-bg-tint)] flex flex-col items-center shadow-[0_0_100px_#ef4444] animate-pulse">
+        <div
+          data-luca-material-role="overlay"
+          className="absolute inset-0 z-[900] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] flex flex-col items-center justify-center animate-in fade-in duration-200 pointer-events-none"
+        >
+          <div
+            data-luca-material-role="dialog"
+            className="border-4 p-12 rounded-lg flex flex-col items-center animate-pulse"
+            style={{
+              ...lucaMaterialDialogStyle,
+              borderColor:
+                "color-mix(in srgb, var(--luca-danger,#f87171) 32%, transparent)",
+              boxShadow: "0 0 100px var(--luca-danger,#f87171)",
+            }}
+          >
             <Icon
               name="ShieldAlert"
               size={128}
@@ -161,7 +177,14 @@ const OriginOverlayPanels: React.FC<OriginOverlayPanelsProps> = ({
             <div className="mt-8 text-xs text-[var(--luca-danger,#f87171)] font-mono pointer-events-auto">
               <button
                 onClick={onLockdownOverride}
-                className="border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] px-4 py-2 hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:text-[color:var(--app-text-main)] transition-colors"
+                data-luca-material-role="control"
+                className="luca-shell-control border px-4 py-2"
+                style={{
+                  ...lucaMaterialControlStyle,
+                  borderColor:
+                    "color-mix(in srgb, var(--luca-danger,#f87171) 32%, transparent)",
+                  color: "var(--luca-danger,#f87171)",
+                }}
               >
                 OVERRIDE AUTH CODE: OMEGA-9
               </button>

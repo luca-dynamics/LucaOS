@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Icon } from "./ui/Icon";
+import { lucaMaterialCardStyle } from "../styles/lucaMaterialSystem";
 
 interface Props {
   children: ReactNode;
@@ -44,7 +45,17 @@ export class SafeComponent extends Component<Props, State> {
 
       // Default minimal fallback
       return (
-        <div className="p-4 border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] rounded m-2 flex items-center gap-2 text-[var(--luca-danger,#f87171)] text-xs font-mono" style={{ borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+        <div
+          data-luca-material-role="card"
+          role="alert"
+          className="p-4 border rounded m-2 flex items-center gap-2 text-[var(--luca-danger,#f87171)] text-xs font-mono"
+          style={{
+            ...lucaMaterialCardStyle,
+            borderColor:
+              "color-mix(in srgb, var(--luca-danger,#f87171) 32%, transparent)",
+            color: "var(--luca-danger,#f87171)",
+          }}
+        >
           <Icon name="AlertTriangle" size={16} />
           <span>
             {this.props.componentName || "Component"} Error:{" "}
