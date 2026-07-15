@@ -70,6 +70,26 @@ describe("lucaSkinMaterialBridge", () => {
     expect(dark["--luca-material-glass-highlight"]).toBe("rgb(255 255 255 / 0.14)");
   });
 
+  it.each(["pearl", "flow", "canvas", "mist"])(
+    "gives the %s light skin explicit tonal surfaces and edge depth",
+    (skinId) => {
+      const variables = getLucaSkinMaterialVariables({ skinId });
+
+      expect(variables["--luca-material-card-surface"]).toContain("color-mix");
+      expect(variables["--luca-material-control-surface"]).toContain("color-mix");
+      expect(variables["--luca-material-card-shadow"]).toContain("inset 0 1px");
+      expect(Number(variables["--luca-material-border-strength"])).toBeGreaterThanOrEqual(0.56);
+    },
+  );
+
+  it("preserves the established dark-skin surface formulas", () => {
+    const variables = getLucaSkinMaterialVariables({ skinId: "carbon" });
+
+    expect(variables["--luca-material-card-surface"]).toContain("var(--luca-surface-glass)");
+    expect(variables["--luca-material-card-shadow"]).toBe("none");
+    expect(variables["--luca-material-control-shadow"]).toBe("none");
+  });
+
   it("keeps material blur at 0px when reduced transparency is requested", () => {
     const variables = getLucaSkinMaterialVariables({
       skinId: "flow",

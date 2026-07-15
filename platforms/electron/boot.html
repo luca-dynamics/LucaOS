@@ -51,25 +51,20 @@
         .window-control {
             width: 28px;
             height: 28px;
-            border: 1px solid color-mix(in srgb, var(--luca-material-glass-rim) calc(var(--luca-material-border-strength) * 100%), transparent);
+            border: 0;
             border-radius: 6px;
-            background:
-                radial-gradient(90% 70% at 18% -8%, var(--luca-material-glass-highlight), transparent 66%),
-                color-mix(in srgb, var(--luca-surface-glass) 30%, transparent);
+            background: transparent;
             color: var(--luca-text-secondary);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             padding: 0;
             cursor: pointer;
-            backdrop-filter: blur(var(--luca-material-blur)) saturate(1.08);
-            -webkit-backdrop-filter: blur(var(--luca-material-blur)) saturate(1.08);
             transition: color 140ms cubic-bezier(0.16, 1, 0.3, 1), transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
         }
         @media (hover: hover) and (pointer: fine) {
             .window-control:hover {
                 color: var(--luca-text-primary);
-                background-color: var(--luca-surface-hover);
             }
             .window-control.close:hover {
                 color: #f87171;
@@ -90,21 +85,6 @@
             min-height: min(92vh, 420px);
             padding: 0 28px 26px;
             text-align: center;
-        }
-        .copy-material {
-            position: absolute;
-            inset: auto 8% 8px;
-            z-index: 1;
-            padding: 20px 22px 18px;
-            border: 1px solid color-mix(in srgb, var(--luca-material-glass-rim) calc(var(--luca-material-border-strength) * 100%), transparent);
-            border-radius: 24px;
-            background:
-                radial-gradient(92% 62% at 18% -8%, var(--luca-material-glass-highlight), transparent 64%),
-                linear-gradient(132deg, color-mix(in srgb, var(--luca-accent-primary) 7%, transparent), transparent 52% 72%, var(--luca-material-glass-sheen)),
-                color-mix(in srgb, var(--luca-surface-glass) calc(var(--luca-material-opacity) * 76%), transparent);
-            box-shadow: inset 0 1px 0 var(--luca-material-glass-highlight), var(--luca-material-shadow);
-            backdrop-filter: blur(var(--luca-material-blur)) saturate(1.08);
-            -webkit-backdrop-filter: blur(var(--luca-material-blur)) saturate(1.08);
         }
         /* The Luca face sits fully visible behind the boot copy. */
         .face {
@@ -164,18 +144,9 @@
                 transition-duration: 0.01ms;
             }
         }
-        @media (prefers-reduced-transparency: reduce) {
-            .copy-material,
-            .window-control {
-                background: var(--luca-surface-solid);
-                backdrop-filter: none;
-                -webkit-backdrop-filter: none;
-            }
-        }
         @media (prefers-contrast: more) {
-            .copy-material,
             .window-control {
-                border-color: var(--luca-text-secondary);
+                color: var(--luca-text-primary);
             }
         }
     </style>
@@ -200,12 +171,10 @@
     </div>
     <div class="stage">
         <img class="face" src="luca-hologram.png" alt="Luca" />
-        <div class="copy-material">
-            <div class="wordmark">LucaOS</div>
-            <div class="headline" id="status">Waking Luca</div>
-            <div class="detail" id="detail"></div>
-            <div class="track"><div class="bar" id="progress"></div></div>
-        </div>
+        <div class="wordmark">LucaOS</div>
+        <div class="headline" id="status">Waking Luca</div>
+        <div class="detail" id="detail"></div>
+        <div class="track"><div class="bar" id="progress"></div></div>
     </div>
 
     <script>
@@ -213,27 +182,6 @@
         const progressBar = document.getElementById('progress');
         const statusText = document.getElementById('status');
         const detailText = document.getElementById('detail');
-        const allowedAppearanceVariables = new Set([
-            '--luca-background-base', '--luca-background-elevated', '--luca-background-liquid',
-            '--luca-surface-glass', '--luca-surface-solid', '--luca-surface-hover',
-            '--luca-text-primary', '--luca-text-secondary', '--luca-text-tertiary',
-            '--luca-accent-primary', '--luca-accent-soft', '--luca-material-opacity',
-            '--luca-material-blur', '--luca-material-glass-highlight',
-            '--luca-material-glass-rim', '--luca-material-glass-shadow',
-            '--luca-material-glass-sheen', '--luca-material-border-strength',
-            '--luca-material-shadow', '--luca-shadow-soft', '--luca-shadow-glow'
-        ]);
-
-        ipcRenderer.on('boot-appearance', (event, snapshot) => {
-            if (!snapshot || !snapshot.variables) return;
-            for (const [name, value] of Object.entries(snapshot.variables)) {
-                if (allowedAppearanceVariables.has(name) && typeof value === 'string') {
-                    document.documentElement.style.setProperty(name, value);
-                }
-            }
-            document.documentElement.dataset.lucaSkin = snapshot.skinId || 'carbon';
-            document.documentElement.dataset.lucaMaterialTone = snapshot.materialTone || 'dark';
-        });
         document.querySelectorAll('[data-window-action]').forEach((button) => {
             button.addEventListener('click', () => {
                 ipcRenderer.send(`window-${button.dataset.windowAction}`);

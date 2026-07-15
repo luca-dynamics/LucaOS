@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import type { BootSequence } from "../../hooks/app/useAppSystem";
 import {
   getLucaBootDiagnosticCopy,
@@ -19,8 +19,6 @@ import {
   lucaShellSecondaryTextStyle,
   lucaShellTertiaryTextStyle,
 } from "../../styles/lucaShellStyles";
-import { settingsService } from "../../services/settingsService";
-import type { LucaSettings } from "../../services/settingsService";
 import { resolveLucaBootSkinBoundary } from "../../styles/lucaBootSkinBoundary";
 
 type BootTheme = {
@@ -79,29 +77,13 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
   const bootIntent: PresenceIntent = browserSafeInterface
     ? "idle"
     : BOOT_INTENT[bootSequence] ?? "thinking";
-  const [selectedSkinId, setSelectedSkinId] = useState<unknown>(
-    () => settingsService.getSettings().general.selectedSkinId,
-  );
-
-  useEffect(() => {
-    const handleSettingsChange = (settings: LucaSettings) => {
-      setSelectedSkinId(settings.general.selectedSkinId);
-    };
-
-    settingsService.on("settings-changed", handleSettingsChange);
-    return () => {
-      settingsService.off("settings-changed", handleSettingsChange);
-    };
-  }, []);
-
   const bootSkinBoundary = useMemo(
     () =>
       resolveLucaBootSkinBoundary({
         surface: "boot-window",
-        selectedSkinId,
         hostKind: "desktop-web",
       }),
-    [selectedSkinId],
+    [],
   );
 
   return (

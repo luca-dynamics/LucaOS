@@ -230,6 +230,7 @@ export const lucaMaterialControlStyle: CSSProperties = {
   ),
   borderColor: LUCA_MATERIAL_BORDER,
   color: LUCA_MATERIAL_TEXT_SECONDARY,
+  boxShadow: "var(--luca-material-control-shadow, none)",
 };
 
 /** Active neutral control state — keeps interaction hierarchy below cards. */
@@ -240,6 +241,7 @@ export const lucaMaterialControlActiveStyle: CSSProperties = {
   ),
   borderColor: LUCA_MATERIAL_BORDER_STRONG,
   color: LUCA_MATERIAL_TEXT_PRIMARY,
+  boxShadow: "var(--luca-material-control-shadow, none)",
 };
 
 /** Inactive/default tab state for basic dashboard tab strips. */

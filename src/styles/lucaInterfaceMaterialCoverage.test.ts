@@ -61,4 +61,13 @@ describe("Luca interface material coverage", () => {
       "never receives a circular overlay",
     );
   });
+
+  it("keeps boot fixed while onboarding begins user skin ownership", () => {
+    expect(LUCA_INTERFACE_MATERIAL_COVERAGE_BY_AREA["native-boot"].skinBoundary).toBe(
+      "fixed-boot-identity",
+    );
+    expect(LUCA_INTERFACE_MATERIAL_COVERAGE_BY_AREA.onboarding.skinBoundary).toBe(
+      "onboarding-boundary",
+    );
+  });
 });

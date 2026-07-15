@@ -98,16 +98,16 @@ export function getLucaSkinCssVariables(
 
   const lightSurface = skin.materialTone === "light";
   const glassHighlight = lightSurface
-    ? `color-mix(in srgb, ${skin.accentProfile.primary} 14%, transparent)`
+    ? `color-mix(in srgb, white 78%, ${skin.accentProfile.primary})`
     : "rgb(255 255 255 / 0.14)";
   const glassRim = lightSurface
-    ? `color-mix(in srgb, ${skin.typographyProfile.secondary} 24%, transparent)`
+    ? `color-mix(in srgb, ${skin.typographyProfile.secondary} 42%, transparent)`
     : "rgb(255 255 255 / 0.24)";
   const glassShadow = lightSurface
-    ? `color-mix(in srgb, ${skin.typographyProfile.primary} 16%, transparent)`
+    ? `color-mix(in srgb, ${skin.typographyProfile.primary} 26%, transparent)`
     : "rgb(0 0 0 / 0.18)";
   const glassSheen = lightSurface
-    ? `color-mix(in srgb, ${skin.accentProfile.secondary} 10%, transparent)`
+    ? `color-mix(in srgb, ${skin.accentProfile.secondary} 20%, transparent)`
     : "rgb(255 255 255 / 0.07)";
 
   return {

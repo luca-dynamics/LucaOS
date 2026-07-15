@@ -11,7 +11,6 @@ const BOOT_SURFACES: LucaBootSkinBoundarySurface[] = [
   "boot-window",
   "boot-loading",
   "mode-select",
-  "onboarding",
 ];
 
 const STATUS_OR_SAFETY_NAME_PARTS = [
@@ -63,12 +62,12 @@ describe("lucaBootSkinBoundary", () => {
     expect(boundary.materialVariables["--luca-accent-primary"]).toBe("#9fb3c2");
   });
 
-  it("falls invalid selectedSkinId back to Carbon variables", () => {
-    const boundary = resolveLucaBootSkinBoundary({ selectedSkinId: "invalid-skin" });
+  it("documents that user skin ownership begins at onboarding", () => {
+    const boundary = resolveLucaBootSkinBoundary();
 
-    expect(boundary.skinId).toBe(DEFAULT_LUCA_SKIN_ID);
-    expect(boundary.materialVariables["--luca-background-base"]).toBe("#111417");
-    expect(boundary.safetyNotes.join(" ")).toContain("Carbon");
+    expect(boundary.safetyNotes.join(" ")).toContain(
+      "Boot is locked to Carbon; user skin ownership begins at onboarding.",
+    );
   });
 
   it("defaults surface to boot-window", () => {
@@ -93,22 +92,20 @@ describe("lucaBootSkinBoundary", () => {
     },
   );
 
-  it("forces Flow reducedMotion true and returns static-safe material variables", () => {
+  it("respects an explicit reduced-motion request without changing identity", () => {
     const boundary = resolveLucaBootSkinBoundary({
-      selectedSkinId: "flow",
       hostKind: "desktop-web",
-      reducedMotion: false,
+      reducedMotion: true,
     });
 
-    expect(boundary.skinId).toBe("flow");
+    expect(boundary.skinId).toBe(DEFAULT_LUCA_SKIN_ID);
     expect(boundary.reducedMotion).toBe(true);
-    expect(boundary.materialVariables["--luca-material-blur"]).toBe("16px");
-    expect(boundary.safetyNotes.join(" ")).toContain("Flow remains static");
+    expect(boundary.materialVariables["--luca-material-blur"]).toBe("10px");
+    expect(boundary.safetyNotes.join(" ")).toContain("Reduced motion");
   });
 
   it("respects reducedTransparency with zero blur and solid opacity", () => {
     const boundary = resolveLucaBootSkinBoundary({
-      selectedSkinId: "flow",
       reducedTransparency: true,
     });
 
@@ -119,7 +116,7 @@ describe("lucaBootSkinBoundary", () => {
   });
 
   it("returns the contracted Luca material variable map", () => {
-    const boundary = resolveLucaBootSkinBoundary({ selectedSkinId: "canvas" });
+    const boundary = resolveLucaBootSkinBoundary();
 
     for (const name of LUCA_SKIN_MATERIAL_VARIABLE_NAMES) {
       expect(boundary.materialVariables[name], name).toBeDefined();
@@ -131,7 +128,7 @@ describe("lucaBootSkinBoundary", () => {
   });
 
   it("does not include status or safety variables in the applied map", () => {
-    const boundary = resolveLucaBootSkinBoundary({ selectedSkinId: "flow" });
+    const boundary = resolveLucaBootSkinBoundary();
 
     for (const name of Object.keys(boundary.materialVariables)) {
       for (const statusOrSafetyPart of STATUS_OR_SAFETY_NAME_PARTS) {

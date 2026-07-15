@@ -1,4 +1,8 @@
-import { DEFAULT_LUCA_SKIN_ID, type LucaSkinHostKind } from "../config/lucaSkins";
+import {
+  DEFAULT_LUCA_SKIN_ID,
+  getLucaSkinDefinition,
+  type LucaSkinHostKind,
+} from "../config/lucaSkins";
 import { getLucaSkinCssVariables } from "./lucaSkinRegistry";
 
 export const LUCA_SKIN_MATERIAL_VARIABLE_NAMES = [
@@ -21,6 +25,14 @@ export const LUCA_SKIN_MATERIAL_VARIABLE_NAMES = [
   "--luca-material-glass-sheen",
   "--luca-material-border-strength",
   "--luca-material-shadow",
+  "--luca-material-card-surface",
+  "--luca-material-metric-surface",
+  "--luca-material-web-card-surface",
+  "--luca-material-rail-surface",
+  "--luca-material-control-surface",
+  "--luca-material-tab-active-surface",
+  "--luca-material-card-shadow",
+  "--luca-material-control-shadow",
   "--luca-shadow-soft",
   "--luca-shadow-glow",
 ] as const;
@@ -57,6 +69,20 @@ export function getLucaSkinMaterialVariables(
   options: LucaSkinMaterialBridgeOptions = {},
 ): LucaSkinMaterialVariableMap {
   const skinVariables = getLucaSkinCssVariables(options);
+  const lightSurface = getLucaSkinDefinition(options.skinId).materialTone === "light";
+  const elevated = skinVariables["--luca-skin-bg-elevated"];
+  const base = skinVariables["--luca-skin-bg-base"];
+  const text = skinVariables["--luca-skin-text-primary"];
+  const accent = skinVariables["--luca-skin-accent-primary"];
+
+  const darkSurfaceFallbacks = {
+    card: "color-mix(in srgb, var(--luca-surface-glass) calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 45%), transparent)",
+    metric: "color-mix(in srgb, var(--luca-surface-glass) calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 34%), transparent)",
+    webCard: "color-mix(in srgb, var(--luca-surface-glass) calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 52%), var(--luca-surface-solid, transparent))",
+    rail: "color-mix(in srgb, var(--luca-surface-glass) calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 72%), transparent)",
+    control: "color-mix(in srgb, var(--luca-surface-glass) calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 30%), transparent)",
+    tab: "color-mix(in srgb, var(--luca-surface-hover) calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 38%), transparent)",
+  };
 
   return {
     "--luca-background-base": skinVariables["--luca-skin-bg-base"],
@@ -89,6 +115,30 @@ export function getLucaSkinMaterialVariables(
     "--luca-material-glass-sheen": skinVariables["--luca-skin-glass-sheen"],
     "--luca-material-border-strength": skinVariables["--luca-skin-border-strength"],
     "--luca-material-shadow": skinVariables["--luca-skin-shadow-float"],
+    "--luca-material-card-surface": lightSurface
+      ? `color-mix(in srgb, ${elevated} 92%, ${text})`
+      : darkSurfaceFallbacks.card,
+    "--luca-material-metric-surface": lightSurface
+      ? `color-mix(in srgb, ${elevated} 96%, ${text})`
+      : darkSurfaceFallbacks.metric,
+    "--luca-material-web-card-surface": lightSurface
+      ? `color-mix(in srgb, ${elevated} 94%, ${text})`
+      : darkSurfaceFallbacks.webCard,
+    "--luca-material-rail-surface": lightSurface
+      ? `color-mix(in srgb, ${elevated} 86%, ${base})`
+      : darkSurfaceFallbacks.rail,
+    "--luca-material-control-surface": lightSurface
+      ? `color-mix(in srgb, ${elevated} 88%, ${accent})`
+      : darkSurfaceFallbacks.control,
+    "--luca-material-tab-active-surface": lightSurface
+      ? `color-mix(in srgb, ${elevated} 82%, ${accent})`
+      : darkSurfaceFallbacks.tab,
+    "--luca-material-card-shadow": lightSurface
+      ? `inset 0 1px 0 ${skinVariables["--luca-skin-glass-highlight"]}, 0 1px 3px ${skinVariables["--luca-skin-glass-shadow"]}`
+      : "none",
+    "--luca-material-control-shadow": lightSurface
+      ? `inset 0 1px 0 ${skinVariables["--luca-skin-glass-highlight"]}, inset 0 0 0 1px ${skinVariables["--luca-skin-glass-rim"]}`
+      : "none",
     "--luca-shadow-soft": skinVariables["--luca-skin-shadow-soft"],
     "--luca-shadow-glow": skinVariables["--luca-skin-accent-glow"],
   };

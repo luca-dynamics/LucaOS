@@ -26,7 +26,7 @@ export type LucaInterfaceOpticalTier =
   | "semantic-only";
 
 export type LucaInterfaceSkinBoundary =
-  | "persisted-native-snapshot"
+  | "fixed-boot-identity"
   | "boot-boundary"
   | "onboarding-boundary"
   | "dashboard-boundary"
@@ -57,9 +57,9 @@ export const LUCA_INTERFACE_MATERIAL_COVERAGE: readonly LucaInterfaceMaterialCov
     owners: ["platforms/electron/boot.html"],
     materialRoles: ["root", "webCard", "control"],
     opticalTier: "quiet-css",
-    skinBoundary: "persisted-native-snapshot",
+    skinBoundary: "fixed-boot-identity",
     reducedTransparency: "solid",
-    notes: "The persisted safe appearance snapshot skins boot chrome; the Luca face remains direct image/plasma identity with no glass disc.",
+    notes: "Boot is intentionally fixed to Luca's Carbon identity. User skin ownership begins at onboarding; the face remains direct image/plasma identity with no glass disc or text card.",
   },
   {
     area: "web-post-boot",

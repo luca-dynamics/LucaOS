@@ -60,8 +60,9 @@ orb, a face, and a small set of high-value controls without losing its skin.
 - Detached panels own one backdrop capture; nested composers, headers, and
   cards use textured solid roles so blur is never stacked through the same
   hierarchy.
-- The Electron native splash reads a non-sensitive persisted appearance
-  snapshot, so the chosen skin is present before React mounts. VisualCore,
+- The Electron native splash is deliberately fixed to Luca's dark Carbon
+  identity. It does not read the saved user skin; skin ownership begins when
+  onboarding mounts. VisualCore,
   Mini Chat, the phone manager, VoiceHUD, VisionHUD, transient overlays, and
   failure states now join the same role system. Direct security, profile,
   skills, model, LucaLink, network, remote-control, and agent dialogs use that
