@@ -92,7 +92,8 @@ surfaces; it is never multiplied across panels, cards, or buttons.
 1. **Boot identity boundary:** native boot is fixed to Carbon and never reads
    the saved skin. Skin ownership begins at onboarding.
 2. **Light material polarity:** Pearl, Flow, Canvas, and Mist have explicit
-   root/elevated/surface separation, graphite/accent rims, and grounded shadows.
+   root/elevated/surface separation, graphite/accent rims, grounded shadows,
+   and semantic text contrast instead of compounded low-opacity copy.
 3. **Optical settings contract:** Light, Refraction, Depth, Dispersion, Frost,
    and Edge falloff are normalized and persisted alongside the metal controls.
 4. **Matched-background refraction:** the Appearance material lab displays the
