@@ -531,11 +531,17 @@ function launchInterface(isSilent = false) {
         // (READY/ONBOARDING), signaled via window.luca.notifyReady -> 'renderer-ready'.
         // The native boot splash stays up through the entire React boot, so the
         // redundant in-app boot screen is never seen and the window never flashes empty.
+        //
+        // IMPORTANT: do NOT also reveal on 'ready-to-show' or 'did-finish-load' —
+        // both fire within a second or two of loading the URL, long before React
+        // has finished its own INIT/BIOS/KERNEL boot. Revealing on them exposed
+        // the in-app boot shell as a SECOND scanning-boot screen (with blank
+        // transition frames) before onboarding. 'renderer-ready' is the only
+        // trigger that means "the destination UI has actually painted"; the
+        // timeout below is the safety net if that signal never arrives.
         ipcMain.once('renderer-ready', () => show('renderer-ready'));
-        mainWindow.once('ready-to-show', () => show('ready-to-show'));
-        mainWindow.webContents.once('did-finish-load', () => show('did-finish-load'));
         // Hard fallback so the window can never get stuck hidden if boot ever stalls.
-        fallbackTimer = setTimeout(() => show('timeout'), 12000);
+        fallbackTimer = setTimeout(() => show('timeout'), 20000);
     } else {
         if (bootWindow) bootWindow.close();
     }
