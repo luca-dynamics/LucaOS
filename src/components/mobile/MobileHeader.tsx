@@ -1,6 +1,12 @@
 import React from "react";
 import { Icon } from "../ui/Icon";
 import { SmartDevice } from "../../types";
+import {
+  lucaMaterialControlActiveStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialMetricStyle,
+  lucaMaterialSolidCardStyle,
+} from "../../styles/lucaMaterialSystem";
 
 type MobileTab = "DASH" | "FILES" | "COMMS" | "LIVE" | "EXPLOIT" | "WIRELESS";
 
@@ -23,23 +29,28 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
   isAdbConnected,
   onClose,
 }) => {
+  const isDangerTab = activeTab === "EXPLOIT" || activeTab === "WIRELESS";
+
   return (
     <>
       {/* Header */}
       <div
-        className={`h-16 border-b flex items-center justify-between px-6 ${
-          activeTab === "EXPLOIT" || activeTab === "WIRELESS"
-            ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
-            : "bg-slate-950 border-slate-800"
-        }`}
+        className="flex h-16 items-center justify-between border-b px-6"
+        style={{
+          ...lucaMaterialSolidCardStyle,
+          borderColor: isDangerTab
+            ? "color-mix(in srgb, var(--luca-danger,#f87171) 32%, transparent)"
+            : lucaMaterialSolidCardStyle.borderColor,
+        }}
       >
         <div className="flex items-center gap-4">
           <div
             className={`p-2 rounded-full border flex items-center justify-center ${
-              activeTab === "EXPLOIT" || activeTab === "WIRELESS"
+              isDangerTab
                 ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]"
                 : "bg-rq-blue/10 border-rq-blue/30 text-rq-blue"
             }`}
+            style={!isDangerTab ? lucaMaterialControlStyle : undefined}
           >
             {activeTab === "EXPLOIT" ? (
               <Icon name="Ghost" size={20} variant="BoldDuotone" />
@@ -50,14 +61,14 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
           <div>
             <h2
               className={`font-display text-xl font-bold tracking-widest ${
-                activeTab === "EXPLOIT" || activeTab === "WIRELESS"
+                isDangerTab
                   ? "text-[var(--luca-danger,#f87171)]"
-                  : "text-white"
+                  : "text-[var(--luca-text-primary)]"
               }`}
             >
               {activeTab === "EXPLOIT" ? "ROOT ACCESS SHELL" : device.name}
             </h2>
-            <div className="flex items-center gap-4 text-[10px] font-mono text-slate-500">
+            <div className="flex items-center gap-4 font-mono text-[10px] text-[var(--luca-text-tertiary)]">
               <span className="flex items-center gap-1">
                 <Icon name="Pulse" size={12} variant="BoldDuotone" color="#22c55e" /> ONLINE
               </span>
@@ -84,14 +95,15 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
         </div>
         <button
           onClick={onClose}
-          className="text-slate-500 hover:text-white transition-colors"
+          className="luca-material-pressable rounded-lg border p-1.5 text-[var(--luca-text-secondary)] transition-colors hover:text-[var(--luca-text-primary)]"
+          style={lucaMaterialControlStyle}
         >
           <Icon name="CloseCircle" size={24} />
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-800 bg-slate-900 overflow-x-auto">
+      <div className="flex overflow-x-auto border-b" style={lucaMaterialMetricStyle}>
         {[
           { id: "DASH", label: "DASHBOARD", icon: "Pulse" },
           { id: "LIVE", label: "LIVE VIEW", icon: "PlayCircle" },
@@ -103,14 +115,15 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as MobileTab)}
-            className={`flex-1 py-3 px-4 text-xs font-bold tracking-widest flex items-center justify-center gap-2 transition-colors whitespace-nowrap
+            className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-xs font-bold tracking-widest transition-colors
                         ${
                           activeTab === tab.id
                             ? tab.danger
                               ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] border-b-2 border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
-                              : "bg-rq-blue/10 text-rq-blue border-b-2 border-rq-blue"
-                            : "text-slate-500 hover:text-slate-300"
+                              : "text-[var(--luca-accent-primary)]"
+                            : "border-transparent text-[var(--luca-text-tertiary)] hover:text-[var(--luca-text-primary)]"
                         }`}
+            style={activeTab === tab.id && !tab.danger ? lucaMaterialControlActiveStyle : undefined}
           >
             <Icon name={tab.icon} size={14} variant="BoldDuotone" /> {tab.label}
           </button>

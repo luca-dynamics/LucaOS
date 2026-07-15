@@ -95,6 +95,7 @@ export const LUCA_INTERFACE_MATERIAL_COVERAGE: readonly LucaInterfaceMaterialCov
       "src/components/layout/Header.tsx",
       "src/components/layout/OperationsSidebar.tsx",
       "src/components/layout/ChatPanel.tsx",
+      "src/components/VisualCore.tsx",
       "src/components/right-panel",
     ],
     materialRoles: ["root", "workspace", "panel", "rail", "control", "tab", "tabActive"],
@@ -105,7 +106,12 @@ export const LUCA_INTERFACE_MATERIAL_COVERAGE: readonly LucaInterfaceMaterialCov
   },
   {
     area: "mobile-shell",
-    owners: ["src/App.tsx", "src/components/mobile", "src/styles/lucaMobileShellStyles.ts"],
+    owners: [
+      "src/App.tsx",
+      "src/components/MobileManager.tsx",
+      "src/components/mobile",
+      "src/styles/lucaMobileShellStyles.ts",
+    ],
     materialRoles: [
       "mobilePanel",
       "mobileSheet",
@@ -130,12 +136,16 @@ export const LUCA_INTERFACE_MATERIAL_COVERAGE: readonly LucaInterfaceMaterialCov
   },
   {
     area: "voice-hud",
-    owners: ["src/components/voice/VoiceHudSurface.tsx", "src/components/voice/VoiceControls.tsx"],
+    owners: [
+      "src/components/voice/VoiceHudSurface.tsx",
+      "src/components/voice/VoiceControls.tsx",
+      "src/components/VisionHUD.tsx",
+    ],
     materialRoles: ["root", "hud", "control", "controlActive", "popover"],
     opticalTier: "standard-css",
     skinBoundary: "inherited-boundary",
     reducedTransparency: "solid",
-    notes: "The plasma orb and rings keep their renderer; HUD chrome and controls receive lightweight optics without clipping or extra canvases.",
+    notes: "Voice and vision renderers stay direct; their HUD chrome and controls receive lightweight optics without clipping or extra canvases.",
   },
   {
     area: "mini-chat",
@@ -195,4 +205,3 @@ export const LUCA_INTERFACE_MATERIAL_COVERAGE: readonly LucaInterfaceMaterialCov
 export const LUCA_INTERFACE_MATERIAL_COVERAGE_BY_AREA = Object.fromEntries(
   LUCA_INTERFACE_MATERIAL_COVERAGE.map((entry) => [entry.area, entry]),
 ) as Record<LucaInterfaceMaterialArea, LucaInterfaceMaterialCoverageEntry>;
-

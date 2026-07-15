@@ -57,6 +57,16 @@ orb, a face, and a small set of high-value controls without losing its skin.
 - Optical polarity is explicit (`materialTone`) rather than inferred from mode
   affinity, so adaptive Flow receives light-surface optics without losing its
   adaptive behavior.
+- Detached panels own one backdrop capture; nested composers, headers, and
+  cards use textured solid roles so blur is never stacked through the same
+  hierarchy.
+- The Electron native splash reads a non-sensitive persisted appearance
+  snapshot, so the chosen skin is present before React mounts. VisualCore,
+  Mini Chat, the phone manager, VoiceHUD, VisionHUD, transient overlays, and
+  failure states now join the same role system.
+- Legacy shaped `glass-blur` foregrounds receive the skin substrate and
+  optical texture through a compatibility bridge. Full-screen scrims, real
+  media canvases, and semantic status surfaces are deliberately excluded.
 
 ## Whole-interface coverage contract
 

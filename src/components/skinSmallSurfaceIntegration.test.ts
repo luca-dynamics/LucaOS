@@ -6,6 +6,19 @@ const chatWidgetModeSource = readFileSync("src/components/ChatWidgetMode.tsx", "
 const voiceHudSurfaceSource = readFileSync("src/components/voice/VoiceHudSurface.tsx", "utf8");
 const widgetControlsSource = readFileSync("src/components/WidgetControls.tsx", "utf8");
 const miniChatSurfaceSource = readFileSync("src/components/chat/LucaChatSurface.tsx", "utf8");
+const miniChatComposerSource = readFileSync("src/components/ChatWidgetInput.tsx", "utf8");
+const modelSwitcherSource = readFileSync(
+  "src/components/chat/ChatModelSwitcher.tsx",
+  "utf8",
+);
+const routingSelectorSource = readFileSync(
+  "src/components/runtime/IntentRoutingModeSelector.tsx",
+  "utf8",
+);
+const suggestionChipsSource = readFileSync(
+  "src/components/SuggestionChips.tsx",
+  "utf8",
+);
 const hologramWidgetSource = readFileSync(
   "src/components/Hologram/HologramWidget.tsx",
   "utf8",
@@ -40,6 +53,17 @@ describe("small surface skin integration", () => {
     expect(widgetModeSource).toContain("lucaMaterialHudStyle");
     expect(widgetControlsSource).toContain("lucaMaterialControlStyle");
     expect(miniChatSurfaceSource).toContain("lucaMaterialFloatingPanelStyle");
+    expect(miniChatComposerSource).toContain('data-luca-material-role="composer"');
+    expect(miniChatComposerSource).toContain("lucaMaterialSolidCardStyle");
+    expect(miniChatComposerSource).toContain("lucaMaterialPopoverStyle");
+    expect(miniChatComposerSource).not.toContain('rounded-2xl glass-blur');
+    expect(miniChatComposerSource).not.toContain("var(--luca-background-elevated, var(--app-bg-main, #14181d))");
+    expect(modelSwitcherSource).toContain("lucaMaterialPopoverStyle");
+    expect(modelSwitcherSource).not.toContain("bg-[#1e1e24]");
+    expect(routingSelectorSource).toContain("lucaMaterialPopoverStyle");
+    expect(routingSelectorSource).not.toContain("border-white/20");
+    expect(suggestionChipsSource).toContain("lucaMaterialControlStyle");
+    expect(suggestionChipsSource).not.toContain("onMouseEnter");
     expect(voiceHudSurfaceSource).toContain("lucaMaterialHudStyle");
     expect(hologramWidgetSource).toContain("lucaMaterialPopoverStyle");
     expect(hologramWidgetSource).not.toContain("LucaLiquidGlassLayer");

@@ -8,6 +8,14 @@ import MobileHeader from "./mobile/MobileHeader";
 import MobileScreenMirror from "./mobile/MobileScreenMirror";
 import MobileAppManager from "./mobile/MobileAppManager";
 import MobileFileManager from "./mobile/MobileFileManager";
+import {
+  lucaMaterialCardStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialMetricStyle,
+  lucaMaterialSolidCardStyle,
+  lucaMaterialWorkspaceStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface Props {
   device: SmartDevice | null;
@@ -269,13 +277,17 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
   if (!device) return null;
 
   return (
-    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/90 glass-blur animate-in fade-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/70 animate-in fade-in zoom-in-95 duration-300">
       <div
-        className={`relative w-[90%] max-w-5xl h-[85vh] bg-[#0a0a0a] border shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-lg flex flex-col overflow-hidden transition-all ${
+        className={`relative flex h-[85vh] w-[90%] max-w-5xl flex-col overflow-hidden rounded-lg border transition-all ${
           activeTab === "EXPLOIT" || activeTab === "WIRELESS"
-            ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] shadow-[color:var(--luca-danger,#f87171)]"
-            : "border-rq-blue/30 shadow-rq-blue/15"
+            ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
+            : ""
         }`}
+        data-luca-material-role="dialog"
+        role="dialog"
+        aria-label={`${device.name} mobile manager`}
+        style={lucaMaterialDialogStyle}
       >
         <MobileHeader
           activeTab={activeTab}
@@ -288,37 +300,40 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
         />
 
         {/* Content */}
-        <div className="flex-1 bg-black relative overflow-hidden p-6">
+        <div
+          className="relative flex-1 overflow-hidden p-6"
+          style={lucaMaterialWorkspaceStyle}
+        >
           <div className="absolute inset-0 pointer-events-none opacity-5 bg-[linear-gradient(rgba(59,130,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.1)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
 
           {activeTab === "DASH" && (
             <div className="grid grid-cols-2 gap-6 h-full">
               {/* Storage Map */}
-              <div className="border border-slate-800 bg-slate-900/20 p-4 rounded-sm">
-                <h3 className="text-xs font-bold text-rq-blue tracking-widest mb-4 border-b border-slate-800 pb-2">
+              <div className="rounded-xl border p-4" style={lucaMaterialCardStyle}>
+                <h3 className="mb-4 border-b border-[var(--luca-border-subtle)] pb-2 text-xs font-bold tracking-widest text-[var(--luca-accent-primary)]">
                   BATTERY DIAGNOSTICS
                 </h3>
                 <div className="flex items-center justify-center py-8">
                   <div className="relative w-32 h-32 rounded-full border-8 border-slate-800 flex items-center justify-center">
                     <div className="absolute inset-0 rounded-full border-8 border-rq-blue border-t-transparent border-l-transparent rotate-45"></div>
                     <div className="text-center">
-                      <div className="text-xl font-bold text-white">
+                      <div className="text-xl font-bold text-[var(--luca-text-primary)]">
                         {batteryLevel}%
                       </div>
-                      <div className="text-[8px] text-slate-500">
+                      <div className="text-[8px] text-[var(--luca-text-tertiary)]">
                         {isCharging ? "CHARGING" : "DRAINING"}
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="space-y-2 text-[10px] font-mono text-slate-400 text-center">
+                <div className="space-y-2 text-center font-mono text-[10px] text-[var(--luca-text-secondary)]">
                   <div>REAL-TIME BATTERY API STATUS: ACTIVE</div>
                 </div>
               </div>
 
               {/* Location Map Placeholder */}
-              <div className="border border-slate-800 bg-slate-900/20 p-4 rounded-sm flex flex-col">
-                <h3 className="text-xs font-bold text-rq-blue tracking-widest mb-4 border-b border-slate-800 pb-2">
+              <div className="flex flex-col rounded-xl border p-4" style={lucaMaterialCardStyle}>
+                <h3 className="mb-4 border-b border-[var(--luca-border-subtle)] pb-2 text-xs font-bold tracking-widest text-[var(--luca-accent-primary)]">
                   DEVICE LOCATION
                 </h3>
                 <div className="flex-1 bg-slate-950 border border-slate-800 relative overflow-hidden flex items-center justify-center">
@@ -326,7 +341,7 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
                   <div className="w-3 h-3 bg-rq-blue rounded-full animate-ping absolute"></div>
                   <div className="w-2 h-2 bg-white rounded-full relative z-10"></div>
                 </div>
-                <div className="mt-2 text-[10px] font-mono text-slate-500">
+                <div className="mt-2 font-mono text-[10px] text-[var(--luca-text-tertiary)]">
                   GEOLOCATION: TRACKING
                 </div>
               </div>
@@ -336,11 +351,11 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
           {activeTab === "WIRELESS" && (
             <div className="h-full flex flex-col items-center justify-center gap-8">
               <div className="text-center space-y-2">
-                <Icon name="Wifi" size={48} className="mx-auto text-slate-600" variant="BoldDuotone" />
-                <h3 className="text-xl font-bold text-white">
+                <Icon name="Wifi" size={48} className="mx-auto text-[var(--luca-text-tertiary)]" variant="BoldDuotone" />
+                <h3 className="text-xl font-bold text-[var(--luca-text-primary)]">
                   WIRELESS ADB BRIDGE
                 </h3>
-                <p className="text-xs text-slate-500 font-mono max-w-md">
+                <p className="max-w-md font-mono text-xs text-[var(--luca-text-secondary)]">
                   Connect to devices on the local subnet via TCP/IP (Port 5555).
                   <br />
                   Target device must have &quot;Wireless Debugging&quot;
@@ -353,7 +368,8 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
                   type="text"
                   value={wirelessIp}
                   onChange={(e) => setWirelessIp(e.target.value)}
-                  className="flex-1 bg-slate-900 border border-slate-700 p-3 text-white font-mono text-sm focus:border-rq-blue outline-none"
+                  className="flex-1 border p-3 font-mono text-sm outline-none focus:border-[var(--luca-accent-primary)]"
+                  style={lucaMaterialControlStyle}
                   placeholder="192.168.1.X"
                 />
                 <button
@@ -364,7 +380,10 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
                 </button>
               </div>
 
-              <div className="w-full max-w-md bg-black border border-slate-800 h-32 overflow-y-auto p-2 font-mono text-[10px] text-slate-400">
+              <div
+                className="h-32 w-full max-w-md overflow-y-auto rounded-xl border p-2 font-mono text-[10px] text-[var(--luca-text-secondary)]"
+                style={lucaMaterialSolidCardStyle}
+              >
                 {exploitLogs.map((log, i) => (
                   <div
                     key={i}
@@ -416,21 +435,22 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
               {messages.map((msg, i) => (
                 <div
                   key={i}
-                  className="p-3 bg-slate-900/40 border border-slate-800 rounded flex gap-4 hover:border-rq-blue/30 transition-colors"
+                  className="flex gap-4 rounded-xl border p-3 transition-colors hover:border-[var(--luca-border-strong)]"
+                  style={lucaMaterialCardStyle}
                 >
-                  <div className="p-2 bg-slate-800 rounded-full h-fit">
-                    <Icon name="Chat" size={16} className="text-slate-400" variant="BoldDuotone" />
+                  <div className="h-fit rounded-full p-2" style={lucaMaterialMetricStyle}>
+                    <Icon name="Chat" size={16} className="text-[var(--luca-text-secondary)]" variant="BoldDuotone" />
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-start mb-1">
-                      <span className="text-xs font-bold text-white">
+                      <span className="text-xs font-bold text-[var(--luca-text-primary)]">
                         {msg.from}
                       </span>
-                      <span className="text-[10px] font-mono text-slate-500">
+                      <span className="font-mono text-[10px] text-[var(--luca-text-tertiary)]">
                         {msg.time}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 font-mono">
+                    <p className="font-mono text-xs text-[var(--luca-text-secondary)]">
                       {msg.text}
                     </p>
                   </div>

@@ -163,17 +163,13 @@ export const lucaMaterialPanelStyle: CSSProperties = {
   ...glassBackdrop,
 };
 
-/**
- * Detached / floating panel surface. Intentionally omits `color` and the
- * backdrop filter because the existing `.glass-panel`/`.glass-panel-light`
- * utility supplies blur and per-element text colors are set by the host; this
- * keeps migrated floating panels pixel-identical while still routing
- * background / border / shadow through the material engine.
- */
+/** Detached panel material. It owns its backdrop capture; nested cards do not. */
 export const lucaMaterialFloatingPanelStyle: CSSProperties = {
   background: withMaterialTexture(LUCA_MATERIAL_TEXTURE_STANDARD, LUCA_MATERIAL_SURFACE),
   borderColor: LUCA_MATERIAL_BORDER,
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
   boxShadow: LUCA_MATERIAL_SHADOW,
+  ...glassBackdrop,
 };
 
 /** Flat card / section surface — low-alpha, no elevation, no forced panel blur. */

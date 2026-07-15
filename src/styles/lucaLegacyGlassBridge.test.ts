@@ -15,7 +15,10 @@ describe("legacy Luca glass compatibility bridge", () => {
 
   it("adds optics only to shaped glass-blur foregrounds", () => {
     expect(css).toContain(".glass-blur:is(");
+    expect(css).toContain(".rounded-none");
     expect(css).toContain(".rounded-3xl");
+    expect(css).toContain("background-color: var(--luca-surface-glass");
+    expect(css).toContain(':not([class*="--luca-danger"])');
     expect(css).not.toContain(".glass-blur {\n  background-image:");
   });
 

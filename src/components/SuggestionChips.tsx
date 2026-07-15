@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Icon } from "./ui/Icon";
+import { lucaMaterialControlStyle } from "../styles/lucaMaterialSystem";
 
 export interface Suggestion {
   id: string;
@@ -54,9 +55,6 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
 
   if (!visible || suggestions.length === 0) return null;
 
-  const isLight = theme?.isLight;
-  const isLightCream = theme?.themeName?.toLowerCase() === "lightcream";
-
   // Normalize theme color to ensure it has a hash (prevents browser fallback to white)
   let themeHex = theme?.hex || "#3b82f6";
   if (themeHex && !themeHex.startsWith("#") && !themeHex.startsWith("rgb") && !themeHex.startsWith("var")) {
@@ -77,34 +75,10 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
         <button
           key={suggestion.id}
           onClick={() => onChipClick(suggestion.prompt)}
-          className={`group flex-shrink flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-medium transition-all duration-300 ${
-            isLight
-              ? "shadow-sm hover:shadow-md"
-              : "hover:bg-white/10"
-          }`}
+          className="luca-material-pressable group flex flex-shrink items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-medium transition-colors hover:bg-[var(--luca-surface-hover)]"
           style={{
+            ...lucaMaterialControlStyle,
             transitionDelay: `${index * 60}ms`,
-            backgroundColor: isLight 
-              ? `rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.4) * 0.5))`
-              : `${themeHex}10`,
-            borderColor: isLight ? "rgba(0,0,0,0.1)" : `${themeHex}33`,
-            color: isLight ? (isLightCream ? "#4a483f" : "#334155") : "var(--app-text-main, rgba(234, 230, 230, 0.9))",
-            borderWidth: "1px",
-            borderStyle: "solid"
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = `${themeHex}80`;
-            e.currentTarget.style.boxShadow = `0 0 15px ${themeHex}20`;
-            e.currentTarget.style.transform = "translateY(-2px)";
-            e.currentTarget.style.backgroundColor = isLight ? (isLightCream ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.02)") : `${themeHex}25`;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = isLight ? "rgba(0,0,0,0.1)" : `${themeHex}33`;
-            e.currentTarget.style.boxShadow = "none";
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.backgroundColor = isLight 
-              ? `rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.4) * 0.5))`
-              : `${themeHex}10`;
           }}
         >
           <span className="opacity-70 group-hover:opacity-100 transition-opacity duration-300" style={{ color: themeHex }}>
@@ -118,9 +92,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
       {suggestions.length > 2 && (
         <button
           onClick={onDismissAll}
-          className={`text-[12px] font-medium normal-case opacity-40 hover:opacity-70 transition-opacity px-2 ${
-            isLight ? "text-gray-900" : "text-white"
-          }`}
+          className="px-2 text-[12px] font-medium normal-case text-[var(--luca-text-secondary)] opacity-60 transition-opacity hover:opacity-100"
         >
           Clear
         </button>

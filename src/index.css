@@ -114,6 +114,7 @@ a,
  * foreground chrome instead of being painted across every backdrop.
  */
 .glass-blur:is(
+  .rounded-none,
   .rounded,
   .rounded-md,
   .rounded-lg,
@@ -121,7 +122,8 @@ a,
   .rounded-2xl,
   .rounded-3xl,
   .rounded-full
-) {
+):not([class*="--luca-danger"]):not([class*="--luca-warning"]):not([class*="--luca-success"]):not([class*="--luca-info"]):not([class*="bg-rq-red"]):not([class*="bg-rq-green"]):not([class*="bg-rq-amber"]) {
+  background-color: var(--luca-surface-glass, var(--app-bg-tint, rgb(18 18 18 / 0.3)));
   background-image:
     radial-gradient(90% 58% at 20% -8%, color-mix(in srgb, var(--luca-material-glass-highlight, rgb(255 255 255 / 0.09)) 64%, transparent), transparent 62%),
     linear-gradient(132deg, color-mix(in srgb, var(--luca-accent-primary, #8a8f98) 5%, transparent), transparent 46% 72%, var(--luca-material-glass-sheen, rgb(255 255 255 / 0.035)));
@@ -704,6 +706,7 @@ html.luca-wco .luca-wco-pad-right {
   }
 
   .glass-blur:is(
+    .rounded-none,
     .rounded,
     .rounded-md,
     .rounded-lg,

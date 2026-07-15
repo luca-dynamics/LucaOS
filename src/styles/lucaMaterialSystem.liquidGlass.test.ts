@@ -5,6 +5,7 @@ import {
   lucaMaterialCardStyle,
   lucaMaterialControlStyle,
   lucaMaterialDialogStyle,
+  lucaMaterialFloatingPanelStyle,
   lucaMaterialMetricStyle,
   lucaMaterialPanelStyle,
   lucaMaterialPopoverStyle,
@@ -34,5 +35,10 @@ describe("Luca material role optical textures", () => {
   it("keeps nested solid cards free of stacked backdrop blur", () => {
     expect(lucaMaterialSolidCardStyle.backdropFilter).toBeUndefined();
     expect(lucaMaterialSolidCardStyle.WebkitBackdropFilter).toBeUndefined();
+  });
+
+  it("makes detached floating panels own their optical capture", () => {
+    expect(lucaMaterialFloatingPanelStyle.backdropFilter).toContain("blur(");
+    expect(lucaMaterialFloatingPanelStyle.WebkitBackdropFilter).toContain("blur(");
   });
 });

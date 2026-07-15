@@ -8,6 +8,8 @@ const sharedOverlays = read("src/surfaces/shared/SharedOverlayPanels.tsx");
 const originOverlays = read("src/surfaces/origin/OriginOverlayPanels.tsx");
 const safeComponent = read("src/components/SafeComponent.tsx");
 const errorToast = read("src/components/lucaLink/ErrorToast.tsx");
+const wakeWord = read("src/components/WakeWordListener.tsx");
+const voiceConfirmation = read("src/components/VoiceCommandConfirmation.tsx");
 
 describe("transient material coverage", () => {
   it("materializes overlay foregrounds without texturing their scrims", () => {
@@ -32,5 +34,13 @@ describe("transient material coverage", () => {
   it("provides a reduced-motion fallback for transient toast movement", () => {
     expect(errorToast).toContain("prefers-reduced-motion: reduce");
     expect(errorToast).toContain("transition-duration: 0.01ms");
+  });
+
+  it("materializes voice status and confirmation chrome", () => {
+    expect(wakeWord).toContain("lucaMaterialHudStyle");
+    expect(wakeWord).not.toContain("bg-black/80 glass-blur");
+    expect(voiceConfirmation).toContain("lucaMaterialDialogStyle");
+    expect(voiceConfirmation).toContain('role="alertdialog"');
+    expect(voiceConfirmation).not.toContain("bg-[#0f172a]");
   });
 });

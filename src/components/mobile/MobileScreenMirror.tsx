@@ -2,6 +2,11 @@ import React, { useState } from "react";
 import { Icon } from "../ui/Icon";
 import { SmartDevice } from "../../types";
 import UiTreeOverlay, { UiNode } from "./UiTreeOverlay";
+import {
+  lucaMaterialCardStyle,
+  lucaMaterialControlActiveStyle,
+  lucaMaterialControlStyle,
+} from "../../styles/lucaMaterialSystem";
 
 interface MobileScreenMirrorProps {
   device: SmartDevice;
@@ -54,9 +59,9 @@ const MobileScreenMirror: React.FC<MobileScreenMirrorProps> = ({
   return (
     <div className="h-full flex flex-col items-center justify-center">
       {!isAdbConnected ? (
-        <div className="text-center text-slate-500">
+        <div className="text-center text-[var(--luca-text-secondary)]">
           <Icon name="Cast" size={48} className="mx-auto mb-4 opacity-20" variant="BoldDuotone" />
-          <h3 className="text-lg font-bold text-white mb-2">
+          <h3 className="mb-2 text-lg font-bold text-[var(--luca-text-primary)]">
             ADB LINK OFFLINE
           </h3>
           <p className="text-xs font-mono max-w-md mx-auto">
@@ -114,17 +119,18 @@ const MobileScreenMirror: React.FC<MobileScreenMirrorProps> = ({
           {/* Controls Sidebar */}
           <div className="flex flex-col gap-3 w-48">
             {/* VISION MODES */}
-            <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-sm glass-blur">
-              <div className="text-[10px] font-mono text-rq-blue mb-2 font-bold uppercase tracking-widest">
+            <div className="rounded-xl border p-3" style={lucaMaterialCardStyle}>
+              <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--luca-accent-primary)]">
                 Vision Systems
               </div>
               <button
                 onClick={() => setVisionMode(!visionMode)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-sm text-xs font-bold transition-all ${
                   visionMode
-                    ? "bg-rq-blue/20 text-rq-blue border border-rq-blue/30"
-                    : "bg-slate-800 text-slate-500 border border-slate-700"
+                    ? "text-[var(--luca-accent-primary)]"
+                    : "text-[var(--luca-text-secondary)]"
                 }`}
+                style={visionMode ? lucaMaterialControlActiveStyle : lucaMaterialControlStyle}
               >
                 <span className="flex items-center gap-2">
                   {visionMode ? <Icon name="Eye" size={14} variant="BoldDuotone" /> : <Icon name="EyeOff" size={14} variant="BoldDuotone" />}
@@ -133,40 +139,43 @@ const MobileScreenMirror: React.FC<MobileScreenMirrorProps> = ({
                 <div
                   className={`w-1.5 h-1.5 rounded-full ${
                     visionMode
-                      ? "bg-rq-blue animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]"
-                      : "bg-slate-600"
+                      ? "bg-[var(--luca-accent-primary)] animate-pulse"
+                      : "bg-[var(--luca-text-tertiary)]"
                   }`}
                 ></div>
               </button>
             </div>
 
             {/* NAVIGATION */}
-            <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-sm glass-blur flex flex-col gap-2">
-              <div className="text-[10px] font-mono text-slate-500 mb-1 font-bold uppercase tracking-widest">
+            <div className="flex flex-col gap-2 rounded-xl border p-3" style={lucaMaterialCardStyle}>
+              <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--luca-text-tertiary)]">
                 Hardware Navigation
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => onSendKey(3)}
-                  className="px-3 py-2 bg-slate-800 hover:bg-rq-blue hover:text-black text-white text-[10px] font-bold rounded-sm border border-slate-700 transition-colors"
+                  className="luca-material-pressable rounded-lg border px-3 py-2 text-[10px] font-bold transition-colors hover:text-[var(--luca-text-primary)]"
+                  style={lucaMaterialControlStyle}
                 >
                   HOME
                 </button>
                 <button
                   onClick={() => onSendKey(4)}
-                  className="px-3 py-2 bg-slate-800 hover:bg-rq-blue hover:text-black text-white text-[10px] font-bold rounded-sm border border-slate-700 transition-colors"
+                  className="luca-material-pressable rounded-lg border px-3 py-2 text-[10px] font-bold transition-colors hover:text-[var(--luca-text-primary)]"
+                  style={lucaMaterialControlStyle}
                 >
                   BACK
                 </button>
                 <button
                   onClick={() => onSendKey(187)}
-                  className="px-3 py-2 bg-slate-800 hover:bg-rq-blue hover:text-black text-white text-[10px] font-bold rounded-sm border border-slate-700 transition-colors"
+                  className="luca-material-pressable rounded-lg border px-3 py-2 text-[10px] font-bold transition-colors hover:text-[var(--luca-text-primary)]"
+                  style={lucaMaterialControlStyle}
                 >
                   RECENTS
                 </button>
                 <button
                   onClick={() => onSendKey(26)}
-                  className="px-3 py-2 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] hover:text-white text-[10px] font-bold rounded-sm border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] transition-colors"
+                  className="rounded-lg border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] px-3 py-2 text-[10px] font-bold text-[var(--luca-danger,#f87171)] transition-colors hover:text-[var(--luca-text-primary)]"
                 >
                   POWER
                 </button>
@@ -175,7 +184,7 @@ const MobileScreenMirror: React.FC<MobileScreenMirrorProps> = ({
 
             <button
               onClick={onStartNativeStream}
-              className="group relative flex items-center justify-center gap-2 px-4 py-3 bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] text-[var(--luca-accent-primary,#9b7cff)] hover:text-white text-[10px] font-bold rounded-sm border border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] shadow-[0_0_15px_rgba(168,85,247,0.1)] transition-all overflow-hidden"
+              className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-lg border border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] px-4 py-3 text-[10px] font-bold text-[var(--luca-accent-primary,#9b7cff)] transition-colors hover:text-[var(--luca-text-primary)]"
             >
               <div className="absolute inset-x-0 bottom-0 h-[1px] bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
                <Icon name="Cast" size={14} variant="BoldDuotone" />
@@ -184,7 +193,7 @@ const MobileScreenMirror: React.FC<MobileScreenMirrorProps> = ({
 
             <div className="mt-2 p-2 rounded bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] flex gap-2">
               <Icon name="Target" size={12} className="text-rq-blue shrink-0 mt-0.5" variant="BoldDuotone" />
-              <div className="text-[9px] font-mono text-slate-400 leading-tight">
+              <div className="font-mono text-[9px] leading-tight text-[var(--luca-text-secondary)]">
                 Precision Mode Active. Tap screen to send raw events. Use
                 Inspector to target meta-elements.
               </div>

@@ -1,5 +1,9 @@
 import React from "react";
 import { Icon } from "../ui/Icon";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialMetricStyle,
+} from "../../styles/lucaMaterialSystem";
 
 interface FileItem {
   name: string;
@@ -46,22 +50,23 @@ const MobileFileManager: React.FC<MobileFileManagerProps> = ({
         <div className="relative flex-1 max-w-sm">
           <Icon
             name="Search"
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--luca-text-tertiary)]"
             size={14}
             variant="BoldDuotone"
           />
           <input
             type="text"
             placeholder="Search storage..."
-            className="w-full bg-slate-900 border border-slate-800 rounded pl-10 pr-4 py-2 text-xs font-mono text-white focus:border-rq-blue focus:outline-none"
+            className="w-full rounded border py-2 pl-10 pr-4 font-mono text-xs focus:border-[var(--luca-accent-primary)] focus:outline-none"
+            style={lucaMaterialControlStyle}
           />
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {files.length > 0 ? (
-          <table className="w-full text-left text-xs font-mono text-slate-400">
-            <thead className="text-[10px] text-slate-600 bg-slate-900/50 uppercase tracking-wider sticky top-0">
+          <table className="w-full text-left font-mono text-xs text-[var(--luca-text-secondary)]">
+            <thead className="sticky top-0 text-[10px] uppercase tracking-wider text-[var(--luca-text-tertiary)]" style={lucaMaterialMetricStyle}>
               <tr>
                 <th className="p-3">Name</th>
                 <th className="p-3">Type</th>
@@ -69,15 +74,15 @@ const MobileFileManager: React.FC<MobileFileManagerProps> = ({
                 <th className="p-3 text-right">Modified</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-[var(--luca-border-subtle)]">
               {files.map((file, i) => (
                 <tr
                   key={i}
-                  className="hover:bg-slate-800/30 hover:text-rq-blue cursor-pointer transition-colors group"
+                  className="group cursor-pointer transition-colors hover:bg-[var(--luca-surface-hover)] hover:text-[var(--luca-accent-primary)]"
                 >
                   <td className="p-3 flex items-center gap-3 truncate max-w-[200px]">
                     <FileIcon type={file.type} />
-                    <span className="text-white group-hover:text-rq-blue truncate">
+                    <span className="truncate text-[var(--luca-text-primary)] group-hover:text-[var(--luca-accent-primary)]">
                       {file.name}
                     </span>
                   </td>
@@ -89,10 +94,10 @@ const MobileFileManager: React.FC<MobileFileManagerProps> = ({
             </tbody>
           </table>
         ) : (
-          <div className="h-full flex flex-col items-center justify-center text-slate-500 gap-4 py-20">
+          <div className="flex h-full flex-col items-center justify-center gap-4 py-20 text-[var(--luca-text-tertiary)]">
             <Icon name="Folder" size={48} className="opacity-20" variant="BoldDuotone" />
             <div className="text-center">
-              <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--luca-text-secondary)]">
                 {usingRealFiles
                   ? "No Files Found"
                   : "Secondary Storage Offline"}
@@ -108,7 +113,7 @@ const MobileFileManager: React.FC<MobileFileManagerProps> = ({
       </div>
 
       {!usingRealFiles && (
-        <div className="p-4 text-center text-[10px] text-slate-600 italic border-t border-slate-900 mt-auto">
+        <div className="mt-auto border-t border-[var(--luca-border-subtle)] p-4 text-center text-[10px] italic text-[var(--luca-text-tertiary)]">
           Note: Local Core connection is required for live file synchronization.
         </div>
       )}
