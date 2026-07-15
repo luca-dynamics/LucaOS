@@ -1005,7 +1005,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         <LucaMotionSheet
           edge="bottom"
           aria-label="Conversation composer"
-          className="z-40 border-t px-3 pb-3 pt-0 sm:px-6 sm:pb-4"
+          className="border-t px-3 pb-3 pt-0 sm:px-6 sm:pb-4"
           style={lucaMaterialMobileSheetStyle}
         >
           <div className="mx-auto w-full max-w-3xl">

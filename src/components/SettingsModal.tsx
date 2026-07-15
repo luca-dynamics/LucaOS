@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Icon } from "./ui/Icon";
+import { LucaButton, LucaDialog, lucaLayerStyle } from "./ui/luca";
 import { settingsService, LucaSettings } from "../services/settingsService";
 import { useMobile } from "../hooks/useMobile";
 import { memoryService } from "../services/memoryService";
@@ -309,13 +310,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   return (
     <div
       data-luca-material-role="overlay"
-      className={`fixed inset-0 z-[70] flex items-center justify-center bg-black/60 ${
+      className={`fixed inset-0 flex items-center justify-center bg-black/60 ${
         isMobile ? "p-0" : "p-4"
       } ${isLightSkin ? "luca-skin-light" : ""} font-sans select-none`}
-      style={skinMaterialVariables as React.CSSProperties}
+      style={{ ...skinMaterialVariables, ...lucaLayerStyle("modal") } as React.CSSProperties}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
     >
-      <div
-        data-luca-material-role="dialog"
+      <LucaDialog
+        modal
+        onRequestClose={onClose}
+        aria-labelledby="settings-dialog-title"
         className={`w-full ${
           isMobile
             ? "h-full rounded-none"
@@ -326,6 +332,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           ...(isMobile ? { borderColor: "transparent", boxShadow: "none" } : {}),
         }}
       >
+        <h2 id="settings-dialog-title" className="sr-only">Settings</h2>
         {/* Unified Sidebar Navigation */}
         <div
           data-luca-material-role="sidebar"
@@ -373,13 +380,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* Navigation Tabs */}
           <div
-            className={`flex-1 overflow-y-auto no-scrollbar ${isMobile ? "p-2" : "px-2.5 py-3"} space-y-4`}
+            role="tablist"
+            aria-label="Settings sections"
+            className={`flex flex-1 flex-col gap-4 overflow-y-auto no-scrollbar ${isMobile ? "p-2" : "px-2.5 py-3"}`}
           >
             {(isMobile
               ? [{ id: "mobile", label: "", tabs: visibleTabs }]
               : desktopNavigationGroups
             ).map((group) => (
-              <div key={group.id} className="space-y-2">
+              <div key={group.id} className="flex flex-col gap-2">
                 {!isMobile && (
                   <div className="px-2.5 pt-2 pb-1">
                     <p
@@ -401,6 +410,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     : activeTab === tab.id;
                   return (
                     <button
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      aria-controls={`settings-panel-${tab.id}`}
+                      id={`settings-tab-${tab.id}`}
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       style={{
@@ -482,19 +496,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     ? settingsAdvancedGroup.label
                     : "Settings")}
               </h3>
-              <button
+              <LucaButton
                 onClick={onClose}
-                data-luca-material-role="control"
-                className="luca-shell-control rounded-lg border p-1.5"
+                variant="secondary"
+                size="icon"
+                aria-label="Close settings"
+                className="rounded-lg"
                 style={lucaMaterialControlStyle}
               >
                 <Icon name="CloseCircle" className="w-[18px] h-[18px]" />
-              </button>
+              </LucaButton>
             </div>
           )}
 
           {/* Scrollable Body */}
           <div
+            role="tabpanel"
+            id={`settings-panel-${activeTab}`}
+            aria-labelledby={`settings-tab-${activeTab}`}
+            tabIndex={0}
             className={`flex-1 basis-0 grow overflow-y-auto ${
               isMobile ? "p-4 pb-32" : "px-6 py-6 [&>*]:mx-auto [&>*]:w-full [&>*]:max-w-[860px]"
             }`}
@@ -504,7 +524,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             }}
           >
             {isMobile && activeTab === settingsAdvancedGroup.id && (
-              <div className="space-y-5">
+              <div className="flex flex-col gap-5">
                 <div
                   data-luca-material-role="card"
                   className="rounded-xl border p-4"
@@ -542,9 +562,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </p>
                 </div>
 
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   {mobileAvailableAdvancedSettingsTabs.map((tab) => (
                     <button
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === tab.id}
+                      aria-controls={`settings-panel-${tab.id}`}
+                      id={`settings-tab-${tab.id}`}
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       data-luca-material-role="control"
@@ -706,6 +731,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           >
             <div className="flex items-center gap-4">
               <div
+                role="status"
+                aria-live="polite"
                 className={`text-[10px] md:text-xs ${
                   statusMsg.includes("Error")
                     ? "text-[var(--luca-danger,#f87171)]"
@@ -716,19 +743,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
             </div>
             <div className="flex gap-2 md:gap-3">
-              <button
+              <LucaButton
                 onClick={onClose}
-                data-luca-material-role="control"
-                className="luca-shell-control h-8 px-3.5 rounded-lg border text-xs font-medium"
+                variant="secondary"
+                size="sm"
                 style={lucaMaterialControlStyle}
               >
                 {/* On Personality tab, 'Cancel' is just 'Close' since it saves internally */}
                 {/* Reverted: Unified Save uses Cancel for all tabs */}
                 Cancel
-              </button>
-              <button
+              </LucaButton>
+              <LucaButton
                 onClick={handleSave}
                 disabled={loading}
+                aria-busy={loading}
+                variant="primary"
+                size="sm"
                 style={{
                   backgroundColor: liveTheme.hex,
                   color: liveTheme.isLight ? "#ffffff" : "#0c0e12",
@@ -739,11 +769,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <Icon name="Restart" className="w-3 h-3 animate-spin" />
                 )}
                 {isMobile ? "Save" : "Save Changes"}
-              </button>
+              </LucaButton>
             </div>
           </div>
         </div>
-      </div>
+      </LucaDialog>
     </div>
   );
 };

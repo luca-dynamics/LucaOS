@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useId } from "react";
 import { Icon } from "../ui/Icon";
+import { LucaCard, LucaSwitch } from "../ui/luca";
 import {
   settingsCardStyle,
   settingsControlStyle,
@@ -77,13 +78,12 @@ export const SettingsCard: React.FC<BaseProps> = ({
   children,
   className = "",
 }) => (
-  <div
-    data-luca-material-role="card"
+  <LucaCard
     className={`rounded-xl border p-4 ${className}`}
     style={settingsCardStyle}
   >
     {children}
-  </div>
+  </LucaCard>
 );
 
 export const SettingsStatusCard: React.FC<
@@ -185,8 +185,14 @@ export const SettingsRow: React.FC<
   control,
   children,
   className = "",
-}) => (
+}) => {
+  const labelId = useId();
+  const descriptionId = useId();
+  return (
   <div
+    role="group"
+    aria-labelledby={labelId}
+    aria-describedby={description ? descriptionId : undefined}
     className={`flex items-start justify-between gap-4 border-b py-3.5 last:border-b-0 ${className}`}
     style={settingsRowStyle}
   >
@@ -201,6 +207,7 @@ export const SettingsRow: React.FC<
       )}
       <div className="min-w-0">
         <p
+          id={labelId}
           className="text-[13.5px] font-medium"
           style={{ color: settingsSurfaceTokens.textPrimary }}
         >
@@ -208,6 +215,7 @@ export const SettingsRow: React.FC<
         </p>
         {description && (
           <p
+            id={descriptionId}
             className="mt-0.5 text-[12.5px] leading-relaxed"
             style={{ color: settingsSurfaceTokens.textSecondary }}
           >
@@ -218,7 +226,8 @@ export const SettingsRow: React.FC<
     </div>
     <div className="shrink-0 pt-0.5">{control ?? children}</div>
   </div>
-);
+  );
+};
 
 export const SettingsToggle: React.FC<{
   checked: boolean;
@@ -226,28 +235,12 @@ export const SettingsToggle: React.FC<{
   accentColor?: string;
   ariaLabel: string;
 }> = ({ checked, onChange, accentColor, ariaLabel }) => (
-  <button
-    type="button"
+  <LucaSwitch
     aria-label={ariaLabel}
-    aria-pressed={checked}
-    onClick={onChange}
-    className="luca-material-pressable relative h-7 w-12 rounded-full"
-    style={{
-      backgroundColor: checked
-        ? (accentColor ?? settingsSurfaceTokens.accentPrimary)
-        : settingsSurfaceTokens.borderStrong,
-    }}
-  >
-    <span
-      className="absolute top-1 h-5 w-5 rounded-full transition-all"
-      style={{
-        left: checked ? "1.5rem" : "0.25rem",
-        backgroundColor: checked
-          ? "#ffffff"
-          : settingsSurfaceTokens.textTertiary,
-      }}
-    />
-  </button>
+    checked={checked}
+    onCheckedChange={onChange}
+    accentColor={accentColor}
+  />
 );
 
 export const SettingsAdvancedDisclosure: React.FC<
@@ -287,7 +280,7 @@ export const SettingsAdvancedDisclosure: React.FC<
       />
     </summary>
     <div
-      className="space-y-3 border-t px-5 py-4"
+      className="flex flex-col gap-3 border-t px-5 py-4"
       style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
     >
       {children}

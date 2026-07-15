@@ -25,6 +25,7 @@ import {
   lucaMaterialHudStyle,
   lucaMaterialOverlayStyle,
 } from "../../styles/lucaMaterialSystem";
+import { lucaLayerStyle } from "../ui/luca";
 
 import { awarenessService } from "../../services/awarenessService";
 import { settingsService } from "../../services/settingsService";
@@ -440,9 +441,10 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
       {activeAutonomousAction && (
         <div
           data-luca-material-role="hud"
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] px-4 py-2 rounded-full border flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500"
+          className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full border flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500"
           style={{
             ...lucaMaterialHudStyle,
+            ...lucaLayerStyle("critical"),
             borderColor: `${theme.hex}66`,
             boxShadow: `0 0 20px ${theme.hex}33`,
           }}
@@ -477,8 +479,8 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
       {isRebooting && (
         <div
           data-luca-material-role="overlay"
-          className="absolute inset-0 z-[2000] flex flex-col items-center justify-center font-mono animate-in fade-in duration-200 pointer-events-auto"
-          style={{ ...lucaMaterialOverlayStyle }}
+          className="absolute inset-0 flex flex-col items-center justify-center font-mono animate-in fade-in duration-200 pointer-events-auto"
+          style={{ ...lucaMaterialOverlayStyle, ...lucaLayerStyle("system") }}
         >
           <div
             className="text-4xl font-bold animate-pulse mb-4 tracking-[0.3em] text-center"
