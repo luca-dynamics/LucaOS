@@ -23,7 +23,7 @@ export const LucaMotionPopover = React.forwardRef<
 >(({ originX = 0.5, originY = 0, open = true, onRequestClose, triggerRef, className, style, ...props }, forwardedRef) => {
   const reducedMotion = useReducedMotion() ?? false;
   const popoverMotion = resolveLucaPopoverMotion({ originX, originY, reducedMotion });
-  const internalRef = useRef<HTMLDivElement>(null);
+  const internalRef = useRef<HTMLDivElement | null>(null);
   useLucaDismissableLayer({ open, containerRef: internalRef, triggerRef, onRequestClose });
   return (
     <motion.div

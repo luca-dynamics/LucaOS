@@ -32,7 +32,7 @@ export const LucaDialog = React.forwardRef<HTMLElement, LucaDialogProps>(
     },
     forwardedRef,
   ) => {
-    const internalRef = useRef<HTMLElement>(null);
+    const internalRef = useRef<HTMLElement | null>(null);
     useLucaModalLayer({
       open: modal && open,
       containerRef: internalRef,
