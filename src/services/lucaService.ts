@@ -38,6 +38,7 @@ import {
   PERSONA_CONFIG,
   PERSONA_SPECIALIZED_TOOLS,
 } from "../config/personaConfig";
+import { applyCustomPersonaLayer } from "../config/customPersona";
 import { PERSONA_UI_CONFIG } from "../config/themeColors";
 import { apiUrl, cortexUrl } from "../config/api";
 import {
@@ -393,7 +394,14 @@ class LucaService {
       managementContext,
       this.platform,
     );
-    
+
+    // Optional user-defined persona layer (tone only — boundaries and tool
+    // loadout stay the base persona's). No-op when disabled.
+    systemInstruction = applyCustomPersonaLayer(
+      systemInstruction,
+      settingsService.getSettings().general.customPersona,
+    );
+
     // Inject Persistent Mission context (Phase 1 Sovereign Persistence)
     systemInstruction += `\n\n**MISSION_PERSISTENCE (SOVEREIGN_AGI)**:\n${missionContext}\n`;
 

@@ -20,6 +20,10 @@ import {
 } from "../config/lucaSkins";
 import type { LucaAtmosphere } from "../config/lucaAtmospheres";
 import {
+  DEFAULT_CUSTOM_PERSONA,
+  type CustomPersonaSettings,
+} from "../config/customPersona";
+import {
   DEFAULT_LUCA_OPTICAL_MATERIAL,
   type LucaOpticalMaterialSettings,
 } from "../styles/lucaOpticalMaterialSettings";
@@ -58,6 +62,13 @@ export interface LucaSettings {
     agencyLevel: "PASSIVE" | "PROACTIVE" | "EXECUTIVE";
     autonomousDomains: string[];
     persona: PersonaMode;
+    /**
+     * Optional user-defined persona layer. `persona` always stays a real
+     * preset key (the layer's basePersona) so tools/voice/theme fallbacks
+     * keep working; when enabled, the instruction is layered onto the
+     * assembled system prompt.
+     */
+    customPersona?: CustomPersonaSettings;
     theme: UIThemeId;
     selectedSkinId?: LucaSkinId;
     atmosphere?: LucaAtmosphere;
@@ -289,6 +300,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     agencyLevel: "PROACTIVE",
     autonomousDomains: ["SYSTEM", "TASKS", "ENVIRONMENT"],
     persona: "ASSISTANT",
+    customPersona: DEFAULT_CUSTOM_PERSONA,
     theme: "PROFESSIONAL",
     selectedSkinId: DEFAULT_LUCA_SKIN_ID,
     opticalMaterial: DEFAULT_LUCA_OPTICAL_MATERIAL,

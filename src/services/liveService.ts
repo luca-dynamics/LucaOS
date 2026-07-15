@@ -14,6 +14,7 @@ import {
   getSpecializedToolsForPersona,
   getGenClient,
 } from "./lucaService";
+import { applyCustomPersonaLayer } from "../config/customPersona";
 import { UserProfile } from "../types";
 import { memoryService } from "./memoryService";
 import { taskService } from "./taskService";
@@ -208,6 +209,14 @@ class LucaLiveService {
         managementContext,
         undefined, // platform (optional)
         config.profile, // user profile
+      );
+
+      // Optional user-defined persona layer (tone only) — applies to the
+      // persona-driven voice prompt, never to explicit instructions or
+      // DICTATION above.
+      systemInstruction = applyCustomPersonaLayer(
+        systemInstruction,
+        settingsService.getSettings().general.customPersona,
       );
 
       // DO NOT let the AI get stuck in a diagnostic feedback loop about "corrupted audio"
