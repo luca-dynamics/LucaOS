@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Icon } from "../ui/Icon";
+import { LucaInput, LucaSelect, LucaTextarea } from "../ui/luca";
 import { PersonaConfig, PersonaDefinition } from "../../types";
 import { createIdentityProfilePreview } from "../../personal-intelligence";
 import { IdentityCorePreviewCard } from "./personalIntelligencePreview";
@@ -335,7 +336,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
               className="absolute top-0 left-0 w-1 h-full"
               style={{ backgroundColor: theme.hex }}
             />
-            <textarea
+            <LucaTextarea
               value={globalInstructions}
               onChange={(e) => syncConsciousness(e.target.value)}
               className={`w-full h-[140px] bg-transparent p-3 text-base font-mono outline-none resize-none leading-relaxed custom-scrollbar placeholder-gray-500`}
@@ -372,7 +373,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             </div>
 
             <div className="relative group w-48">
-              <select
+              <LucaSelect
                 value={selectedPersona}
                 onChange={(e) => setSelectedPersona(e.target.value)}
                 className={`w-full appearance-none rounded-lg px-4 py-1 text-base outline-none transition-colors pr-8 cursor-pointer border`}
@@ -391,7 +392,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                     {personaDisplayLabel(p)}
                   </option>
                 ))}
-              </select>
+              </LucaSelect>
               <div
                 className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-50"
                 style={{ color: "var(--app-text-muted)" }}
@@ -480,7 +481,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                           name="Mic"
                           className="w-3 h-3 text-[var(--app-text-muted)]"
                         />
-                        <input
+                        <LucaInput
                           className={`bg-transparent border-none p-0 text-base w-full focus:ring-0 placeholder-gray-800 transition-colors text-[var(--app-text-muted)] focus:text-[var(--app-text-main)]`}
                           value={currentPersona.voiceName}
                           onChange={(e) =>

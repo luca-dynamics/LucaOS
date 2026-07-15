@@ -3,6 +3,7 @@ import { Icon } from "../ui/Icon";
 import type { PersonaType } from "../../services/lucaService";
 import { LucaLiquidGlassLayer } from "../material/LucaLiquidGlass";
 import LucaChromaticMetal from "../material/LucaChromaticMetal";
+import { LucaIconButton } from "../ui/luca/LucaButton";
 
 interface VoiceControlsProps {
   onSettingsClick: () => void;
@@ -65,7 +66,8 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
       <div className="flex max-[560px]:flex-col gap-1.5 sm:gap-2 md:gap-4 pointer-events-auto">
         {!hideControls && (
           <>
-            <button
+            <LucaIconButton
+              aria-label="Open voice settings"
               onClick={onSettingsClick}
               data-luca-material-role="control"
               className="luca-liquid-glass-control luca-premium-stroke cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border text-[var(--luca-text-secondary)] hover:text-[var(--luca-text-primary)]"
@@ -79,8 +81,9 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
               <LucaChromaticMetal shape="orb" className="opacity-45 mix-blend-screen" />
               <Icon name="Settings" size={18} className="relative z-[5] sm:w-5 sm:h-5 md:w-6 md:h-6" />
               <LucaLiquidGlassLayer shape="circle" depth="standard" />
-            </button>
-            <button
+            </LucaIconButton>
+            <LucaIconButton
+              aria-label={isVideoActive ? "Turn vision off" : "Turn vision on"}
               onClick={onToggleVideo}
               data-luca-material-role={isVideoActive ? "control-active" : "control"}
               className="luca-liquid-glass-control cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border"
@@ -105,11 +108,12 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
                 </div>
               )}
               <LucaLiquidGlassLayer shape="circle" depth={isVideoActive ? "quiet" : "standard"} />
-            </button>
+            </LucaIconButton>
           </>
         )}
 
-        <button
+        <LucaIconButton
+          aria-label="Close voice session"
           onClick={onClose}
           data-luca-material-role="control"
           className="luca-liquid-glass-control cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border text-[var(--luca-text-secondary)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] hover:text-[var(--luca-text-primary)] z-[110]"
@@ -126,7 +130,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
             className="text-slate-400 group-hover:text-white sm:w-5 sm:h-5 md:w-6 md:h-6"
           />
           <LucaLiquidGlassLayer shape="circle" depth="quiet" />
-        </button>
+        </LucaIconButton>
       </div>
     </div>
   );

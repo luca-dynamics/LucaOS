@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Icon } from "../ui/Icon";
+import { LucaInput, LucaSelect } from "../ui/luca";
 import { LucaSettings } from "../../services/settingsService";
 import { apiUrl, WS_PORT, cortexUrl } from "../../config/api";
 import { useMobile } from "../../hooks/useMobile";
@@ -476,7 +477,7 @@ const GuestAccessSection: React.FC<{
                       To keep protection, just Continue. To remove it, verify
                       PIN.
                     </p>
-                    <input
+                    <LucaInput
                       type="password"
                       placeholder="Current PIN to Remove (Optional)"
                       value={currentPin}
@@ -493,7 +494,7 @@ const GuestAccessSection: React.FC<{
                     <p className="text-sm text-[var(--app-text-muted)] text-left">
                       Set a PIN (Recommended):
                     </p>
-                    <input
+                    <LucaInput
                       type="password"
                       placeholder="Enter 4-6 digit PIN"
                       value={newPin}
@@ -2372,7 +2373,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     >
                       Rename
                     </button>
-                    <select
+                    <LucaSelect
                       aria-label={`Set trust level for ${device.displayName}`}
                       value={device.trustLevel}
                       onChange={(event) =>
@@ -2402,7 +2403,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       >
                         Admin — requires approvals
                       </option>
-                    </select>
+                    </LucaSelect>
                     <button
                       type="button"
                       onClick={() => handleDeviceTrustAction(device, "revoke")}
@@ -3738,7 +3739,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   <label className="text-base font-medium text-[var(--app-text-muted)]">
                     Connection method
                   </label>
-                  <select
+                  <LucaSelect
                     value={settings.lucaLink.connectionMode}
                     onChange={(e) =>
                       onUpdate("lucaLink", "connectionMode", e.target.value)
@@ -3750,7 +3751,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     <option value="local">Local Network (Same WiFi)</option>
                     <option value="vpn">VPN (Tailscale/ZeroTier)</option>
                     <option value="relay">Cloud Relay</option>
-                  </select>
+                  </LucaSelect>
                   <p className="text-xs text-[var(--app-text-muted)] opacity-70 italic leading-tight">
                     {settings.lucaLink.connectionMode === "auto" &&
                       "Automatically tries local → VPN → cloud relay"}
@@ -3772,7 +3773,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       <Icon name="Smartphone" className="w-4 h-4" />
                       Primary Host address
                     </label>
-                    <input
+                    <LucaInput
                       type="text"
                       value={settings.lucaLink.vpnServerUrl || ""}
                       onChange={(e) =>
@@ -3801,7 +3802,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       />
                       Cloud relay server
                     </label>
-                    <input
+                    <LucaInput
                       type="text"
                       value={settings.lucaLink.relayServerUrl || ""}
                       onChange={(e) =>
@@ -4021,7 +4022,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     <label className="text-base font-bold text-[var(--app-text-muted)]">
                       Custom relay server
                     </label>
-                    <input
+                    <LucaInput
                       type="text"
                       value={settings.lucaLink.relayServerUrl || ""}
                       onChange={(e) =>
@@ -4046,7 +4047,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     <label className="text-base font-bold text-[var(--app-text-muted)]">
                       Trusted VPN server URL (optional)
                     </label>
-                    <input
+                    <LucaInput
                       type="text"
                       value={settings.lucaLink.vpnServerUrl}
                       onChange={(e) =>

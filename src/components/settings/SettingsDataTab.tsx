@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Icon } from "../ui/Icon";
+import { LucaInput, LucaSelect } from "../ui/luca";
 import { memoryService } from "../../services/memoryService";
 import { settingsService } from "../../services/settingsService";
 import { memoryProposalService } from "../../services/memory/MemoryProposalService";
@@ -242,7 +243,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
               name="Search"
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--app-text-muted)] opacity-60"
             />
-            <input
+            <LucaInput
               type="text"
               placeholder="Search memories..."
               value={searchQuery}
@@ -257,7 +258,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
               name="Filter"
               className="w-4 h-4 text-[var(--app-text-muted)] opacity-60"
             />
-            <select
+            <LucaSelect
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               className={settingsSelectClassName}
@@ -268,7 +269,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
                   {cat.replace("_", " ")}
                 </option>
               ))}
-            </select>
+            </LucaSelect>
             <button
               onClick={loadAllMemories}
               className="rounded-xl border px-3 py-2 text-sm transition-all"

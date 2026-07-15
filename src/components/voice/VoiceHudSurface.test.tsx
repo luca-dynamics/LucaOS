@@ -59,8 +59,9 @@ describe("VoiceHudSurface", () => {
 
   it("uses original VoiceHUD structure and components", () => {
     expect(source).toContain(
-      "fixed inset-0 z-[200] flex flex-col items-center justify-center animate-in fade-in duration-500",
+      "fixed inset-0 flex flex-col items-center justify-center animate-in fade-in duration-500",
     );
+    expect(source).toContain('lucaLayerStyle("critical")');
     expect(source).toContain("VoiceVisualizer");
     expect(source).toContain("VoiceStatusOrb");
     expect(source).toContain("VoiceControls");

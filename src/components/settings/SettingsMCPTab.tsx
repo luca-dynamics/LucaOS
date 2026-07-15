@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Icon } from "../ui/Icon";
+import { LucaInput } from "../ui/luca";
 import { LucaSettings } from "../../services/settingsService";
 import { apiUrl } from "../../config/api";
 import { setHexAlpha } from "../../config/themeColors";
@@ -407,7 +408,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
       <div className={`flex flex-col sm:flex-row gap-4 items-center justify-between ${isMobile ? "px-4" : ""}`}>
         <div className="relative flex-1 w-full">
           <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--app-text-muted)]" />
-          <input
+          <LucaInput
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -492,7 +493,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             <label className="block text-[10px] text-[var(--app-text-muted)] mb-1">
               Server Name
             </label>
-            <input
+            <LucaInput
               type="text"
               value={formData.name}
               onChange={(e) =>
@@ -556,7 +557,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                 <label className="block text-xs text-[var(--app-text-muted)] mb-1 font-bold">
                   Command
                 </label>
-                <input
+                <LucaInput
                   type="text"
                   value={formData.command}
                   onChange={(e) =>
@@ -575,7 +576,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                 <label className="block text-xs text-[var(--app-text-muted)] mb-1 font-bold">
                   Arguments (space-separated)
                 </label>
-                <input
+                <LucaInput
                   type="text"
                   value={formData.args}
                   onChange={(e) =>
@@ -599,7 +600,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
               <label className="block text-[10px] text-[var(--app-text-muted)] mb-1">
                 Server URL
               </label>
-              <input
+              <LucaInput
                 type="text"
                 value={formData.url}
                 onChange={(e) =>
@@ -668,7 +669,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
 
                   {envVars.map((env, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
-                      <input
+                      <LucaInput
                         type="text"
                         value={env.key}
                         onChange={(e) => {
@@ -684,7 +685,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           color: "var(--luca-text-primary, var(--app-text-main))"
                         }}
                       />
-                      <input
+                      <LucaInput
                         type="password"
                         value={env.value}
                         onChange={(e) => {

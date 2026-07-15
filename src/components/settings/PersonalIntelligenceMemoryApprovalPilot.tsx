@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { LucaInput, LucaSelect } from "../ui/luca";
 import {
   DEFAULT_MEMORY_APPROVAL_CONFIRMATION_PHRASE,
   buildMemoryApprovalProposal,
@@ -325,7 +326,7 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
           >
             {queue.length} memories waiting for review
           </label>
-          <select
+          <LucaSelect
             aria-label="Select a pending memory to review"
             value={selectedProposalId ?? ""}
             onChange={(e) => selectProposal(e.target.value)}
@@ -340,7 +341,7 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
                 {item.title} · {item.kind}
               </option>
             ))}
-          </select>
+          </LucaSelect>
         </div>
       )}
 
@@ -464,7 +465,7 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
           title="Type the confirmation phrase"
           sub={`Exactly “${DEFAULT_MEMORY_APPROVAL_CONFIRMATION_PHRASE}” to unlock the write.`}
         >
-          <input
+          <LucaInput
             aria-label="Confirmation phrase"
             value={pilotState.confirmationPhrase ?? ""}
             onChange={(e) => patch({ confirmationPhrase: e.target.value })}

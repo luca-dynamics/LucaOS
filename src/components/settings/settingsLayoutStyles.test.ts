@@ -7,7 +7,7 @@ describe("settingsLayoutStyles", () => {
     expect(settingsSurfaceTokens.solid).toContain("--luca-surface-solid");
     expect(settingsSurfaceTokens.hover).toContain("--luca-surface-hover");
     expect(settingsSurfaceTokens.elevated).toContain(
-      "--luca-background-elevated",
+      "--luca-material-control-surface",
     );
     expect(settingsSurfaceTokens.borderSubtle).toContain(
       "--luca-border-subtle",
@@ -29,7 +29,11 @@ describe("settingsLayoutStyles", () => {
     expect(settingsSurfaceTokens.shadowSoft).toContain("--luca-shadow-soft");
 
     for (const token of Object.values(settingsSurfaceTokens)) {
-      expect(token).toContain("var(--app-");
+      expect(token).toContain("var(--");
     }
+
+    expect(settingsSurfaceTokens.shadowSoft).toContain(
+      "var(--luca-material-shadow",
+    );
   });
 });

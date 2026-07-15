@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "../ui/Icon";
+import { LucaInput } from "../ui/luca";
 import { motion, AnimatePresence } from "framer-motion";
 import { settingsService } from "../../services/settingsService";
 import { cortexUrl } from "../../config/api";
@@ -684,7 +685,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                       ?.click()
                                   }
                                 >
-                                  <input
+                                  <LucaInput
                                     id={`file-upload-${cat.id}`}
                                     type="file"
                                     className="hidden"
@@ -1180,7 +1181,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
 
             {!obsidianConnected && (
               <div className="mt-3">
-                <input
+                <LucaInput
                   type="text"
                   placeholder="Paste vault path (e.g. /Users/name/Documents/Vault)"
                   value={vaultPath}

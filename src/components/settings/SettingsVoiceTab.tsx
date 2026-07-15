@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "../ui/Icon";
+import { LucaInput, LucaSelect } from "../ui/luca";
 import { LucaSettings, settingsService } from "../../services/settingsService";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
 import {
@@ -379,7 +380,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           label="Speech-to-text model"
           description="Cloud models are fastest; local models keep audio on this device."
           control={
-            <select
+            <LucaSelect
               value={settings.voice.sttModel || "cloud-gemini"}
               onChange={(e) => {
                 const val = e.target.value;
@@ -421,7 +422,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   })}
                 </optgroup>
               )}
-            </select>
+            </LucaSelect>
           }
         />
       </SettingsSection>
@@ -437,7 +438,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           label="Voice engine"
           description={engineDescription}
           control={
-            <select
+            <LucaSelect
               value={settings.voice.provider || "gemini-genai"}
               onChange={(e) => onUpdate("voice", "provider", e.target.value)}
               disabled={
@@ -452,7 +453,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               <option value="openai">OpenAI TTS</option>
               <option value="deepgram">Deepgram Aura</option>
               <option value="local-luca">Local Offline</option>
-            </select>
+            </LucaSelect>
           }
         />
         <SettingsRow
@@ -463,7 +464,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               : "The speaker used by the selected engine."
           }
           control={
-            <select
+            <LucaSelect
               value={settings.voice.voiceId || "native-browser"}
               onChange={(e) => onUpdate("voice", "voiceId", e.target.value)}
               disabled={settings.voice.provider === "gemini-genai"}
@@ -527,7 +528,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   )}
                 </>
               )}
-            </select>
+            </LucaSelect>
           }
         />
         <SettingsRow
@@ -725,7 +726,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           <SettingsRow
             label="Realtime endpoint"
             control={
-              <input
+              <LucaInput
                 type="url"
                 value={
                   settings.voice.hfRealtimeEndpoint ||

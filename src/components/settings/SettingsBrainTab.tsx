@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "../ui/Icon";
+import { LucaInput, LucaSelect, LucaSlider } from "../ui/luca";
 import { LucaSettings, settingsService } from "../../services/settingsService";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
 import {
@@ -560,7 +561,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           label="Core model"
           description="The primary reasoning model."
           control={
-            <select
+            <LucaSelect
               value={isKnownModel ? settings.brain.model : "custom"}
               onChange={(e) => onUpdate("brain", "model", e.target.value)}
               className={selectClassName}
@@ -631,7 +632,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               <optgroup label="Advanced">
                 <option value="custom">Custom / External (Ollama)</option>
               </optgroup>
-            </select>
+            </LucaSelect>
           }
         />
         {showCustomModelInput && (
@@ -639,7 +640,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             label="External model ID"
             description="Uses your local Ollama service on port 11434."
             control={
-              <input
+              <LucaInput
                 type="text"
                 placeholder="e.g. mistral, deepseek-coder, llama3:70b"
                 value={
@@ -657,8 +658,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           description="Creativity control — lower is more precise, higher is more exploratory."
           control={
             <div className="flex w-48 items-center gap-3">
-              <input
-                type="range"
+              <LucaSlider
                 min="0"
                 max="1"
                 step="0.1"
@@ -743,7 +743,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                     baseUrl={provider.baseUrl}
                   />
                 </div>
-                <input
+                <LucaInput
                   type={provider.value ? "password" : "text"}
                   placeholder={provider.placeholder}
                   value={provider.value || ""}
@@ -801,7 +801,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                     >
                       {endpoint.label}
                     </span>
-                    <input
+                    <LucaInput
                       type="text"
                       placeholder={endpoint.placeholder}
                       value={endpoint.value}
@@ -839,7 +839,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           label="Memory gateway (RAG)"
           description="The model used to index and retrieve local knowledge safely."
           control={
-            <select
+            <LucaSelect
               value={settings.brain.memoryModel || "gemini-2.5-flash"}
               onChange={(e) => onUpdate("brain", "memoryModel", e.target.value)}
               className={selectClassName}
@@ -867,7 +867,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   })}
                 </optgroup>
               )}
-            </select>
+            </LucaSelect>
           }
         />
         <SettingsRow
@@ -910,7 +910,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           label="Indexing interval"
           description="How often the background index refreshes."
           control={
-            <select
+            <LucaSelect
               value={String(backgroundSync?.intervalMinutes ?? 30)}
               onChange={async (e) => {
                 const baseUrl =
@@ -940,7 +940,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               <option value="60">1 Hour</option>
               <option value="720">12 Hours</option>
               <option value="1440">1 Day</option>
-            </select>
+            </LucaSelect>
           }
         />
       </SettingsSection>

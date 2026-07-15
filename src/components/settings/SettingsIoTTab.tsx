@@ -1,5 +1,6 @@
 import React from "react";
 import { LucaSettings } from "../../services/settingsService";
+import { LucaInput, LucaTextarea } from "../ui/luca";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
@@ -137,7 +138,7 @@ const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
           label="Home Assistant endpoint"
           description="The existing endpoint setting is preserved."
           control={
-            <input
+            <LucaInput
               type="text"
               value={settings.iot.haUrl}
               onChange={(e) => onUpdate("iot", "haUrl", e.target.value)}
@@ -149,7 +150,7 @@ const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
         />
         <div className="space-y-2">
           <p className="text-sm font-medium">Access token</p>
-          <textarea
+          <LucaTextarea
             value={settings.iot.haToken}
             onChange={(e) => onUpdate("iot", "haToken", e.target.value)}
             placeholder="eyJhbGciOiJIUzI1NiIsInR5..."

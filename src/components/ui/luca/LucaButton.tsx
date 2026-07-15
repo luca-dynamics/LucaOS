@@ -51,7 +51,7 @@ LucaButton.displayName = "LucaButton";
 export interface LucaIconButtonProps
   extends Omit<LucaButtonProps, "size" | "children"> {
   "aria-label": string;
-  children: React.ReactElement;
+  children: React.ReactNode;
   size?: Extract<LucaButtonSize, "icon">;
 }
 
@@ -60,11 +60,13 @@ export const LucaIconButton = React.forwardRef<
   LucaIconButtonProps
 >(({ children, ...props }, ref) => (
   <LucaButton ref={ref} size="icon" {...props}>
-    {React.cloneElement(children, {
-      "aria-hidden": true,
-      focusable: false,
-      "data-icon": "inline-start",
-    } as React.HTMLAttributes<HTMLElement>)}
+    {React.isValidElement(children)
+      ? React.cloneElement(children, {
+          "aria-hidden": true,
+          focusable: false,
+          "data-icon": "inline-start",
+        } as React.HTMLAttributes<HTMLElement>)
+      : children}
   </LucaButton>
 ));
 

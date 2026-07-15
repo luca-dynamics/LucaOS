@@ -1,5 +1,6 @@
 import React from "react";
 import SandboxFleetLivePanel from "../sandbox/SandboxFleetLivePanel";
+import { LucaSlider } from "../ui/luca";
 import { LucaSettings } from "../../services/settingsService";
 import {
   SettingsAdvancedDisclosure,
@@ -184,8 +185,7 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
           label="Idle threshold"
           description={`${autonomy.idleThresholdMinutes} minutes before Luca considers background work.`}
           control={
-            <input
-              type="range"
+            <LucaSlider
               min="1"
               max="60"
               value={autonomy.idleThresholdMinutes}

@@ -11,6 +11,7 @@ import {
   lucaMaterialDialogStyle,
   lucaMaterialSolidCardStyle,
 } from "../styles/lucaMaterialSystem";
+import { LucaBadge, LucaDialog, LucaDialogOverlay, LucaEmpty, LucaEmptyDescription, LucaInput } from "./ui/luca";
 
 interface AppExplorerModalProps {
   isOpen: boolean;
@@ -85,9 +86,12 @@ const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
   };
 
   if (!isOpen) return null;
+  if (showOfflineManager) {
+    return <OfflineModelManager onClose={() => setShowOfflineManager(false)} />;
+  }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+    <LucaDialogOverlay className="p-4 sm:p-6" onRequestClose={onClose}>
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70 transition-opacity duration-300"
@@ -95,11 +99,10 @@ const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
       />
 
       {/* Modal Content */}
-      <div
+      <LucaDialog
+        modal
+        onRequestClose={onClose}
         className="relative flex h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border shadow-2xl animate-in zoom-in-95 duration-200"
-        data-luca-material-role="dialog"
-        role="dialog"
-        aria-modal="true"
         aria-label="App Explorer"
         style={lucaMaterialDialogStyle}
       >
@@ -132,7 +135,7 @@ const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
         <div className="px-5 py-3 border-b border-white/10">
           <div className="relative">
             <Icon name="Search" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600" size={15} />
-            <input
+            <LucaInput
               type="text"
               placeholder="Search apps…"
               value={searchQuery}
@@ -147,10 +150,10 @@ const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
         {/* App List */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {loading ? (
-            <div className="h-full flex flex-col items-center justify-center gap-3">
+            <LucaEmpty className="h-full">
               <Icon name="Loader" className="animate-spin" size={24} style={{ color: "var(--app-primary)" }} />
               <p className="text-xs text-slate-500">Scanning system registry…</p>
-            </div>
+            </LucaEmpty>
           ) : filteredApps.length > 0 ? (
             <div className="flex flex-col divide-y divide-white/[0.05]">
               {filteredApps.map((app, index) => (
@@ -189,10 +192,11 @@ const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
               ))}
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center gap-2 text-center py-16">
+            <LucaEmpty className="h-full py-16">
               <Icon name="Search" size={28} className="text-slate-700" />
               <p className="text-slate-500 text-sm">No apps match your search</p>
-            </div>
+              <LucaEmptyDescription>Try a broader app name.</LucaEmptyDescription>
+            </LucaEmpty>
           )}
         </div>
 
@@ -202,16 +206,11 @@ const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
             <span className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" />
             <span className="text-[11px] text-slate-500">Cross-platform engine</span>
           </div>
-          <span className="text-[11px] text-slate-600">{filteredApps.length} apps</span>
+          <LucaBadge>{filteredApps.length} apps</LucaBadge>
         </div>
-      </div>
+      </LucaDialog>
 
-      {showOfflineManager && (
-        <OfflineModelManager
-          onClose={() => setShowOfflineManager(false)}
-        />
-      )}
-    </div>
+    </LucaDialogOverlay>
   );
 };
 
