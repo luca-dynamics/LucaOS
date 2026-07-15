@@ -61,10 +61,8 @@ const clamp = (value: unknown, fallback: number, min: number, max: number) =>
 export function normalizeLucaOpticalMaterialSettings(
   value?: Partial<LucaOpticalMaterialSettings> | null,
 ): LucaOpticalMaterialSettings {
-  const glass: Partial<LucaOpticalMaterialSettings["glass"]> =
-    value?.glass ?? {};
-  const metal: Partial<LucaOpticalMaterialSettings["metal"]> =
-    value?.metal ?? {};
+  const glass = value?.glass ?? {};
+  const metal = value?.metal ?? {};
   const defaults = DEFAULT_LUCA_OPTICAL_MATERIAL;
   const gradient = Array.isArray(metal.gradient)
     ? metal.gradient.filter((stop): stop is string => typeof stop === "string").slice(0, 8)

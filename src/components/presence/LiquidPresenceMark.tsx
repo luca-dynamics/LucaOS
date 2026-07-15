@@ -7,7 +7,7 @@ import {
   type LiquidPresenceRenderer,
 } from "./liquidPresenceRenderer";
 import LucaChromaticMetal from "../material/LucaChromaticMetal";
-import { settingsService } from "../../services/settingsService";
+import settingsService from "../../services/settingsService";
 import { normalizeLucaOpticalMaterialSettings } from "../../styles/lucaOpticalMaterialSettings";
 
 /**
