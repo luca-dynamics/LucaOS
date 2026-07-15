@@ -7,6 +7,7 @@ import {
   lucaMaterialDialogStyle,
   lucaMaterialMetricStyle,
 } from "../styles/lucaMaterialSystem";
+import { LucaDialog, LucaDialogOverlay } from "./ui/luca";
 
 interface VoiceCommandConfirmationProps {
   originalTranscript: string;
@@ -28,12 +29,12 @@ export const VoiceCommandConfirmation: React.FC<
   onCancel,
 }) => {
   return (
-    <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/70 p-4">
-      <div
+    <LucaDialogOverlay className="bg-black/70 p-4" layer={isRisky ? "critical" : "modal"} closeOnBackdrop={false} onRequestClose={onCancel}>
+      <LucaDialog
+        modal
+        modalRole="alertdialog"
+        onRequestClose={onCancel}
         className="w-full max-w-md rounded-2xl border p-6 shadow-2xl animate-in zoom-in-95 duration-200"
-        data-luca-material-role="dialog"
-        role="alertdialog"
-        aria-modal="true"
         aria-label={isRisky ? "Confirm risky voice command" : "Confirm voice command"}
         style={{
           ...lucaMaterialDialogStyle,
@@ -131,8 +132,8 @@ export const VoiceCommandConfirmation: React.FC<
             Confirm
           </button>
         </div>
-      </div>
-    </div>
+      </LucaDialog>
+    </LucaDialogOverlay>
   );
 };
 

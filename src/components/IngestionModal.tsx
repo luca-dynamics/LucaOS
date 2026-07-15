@@ -5,6 +5,7 @@ import {
   lucaMaterialControlStyle,
   lucaMaterialDialogStyle,
 } from "../styles/lucaMaterialSystem";
+import { LucaDialog, LucaDialogOverlay, LucaInput } from "./ui/luca";
 
 interface Props {
   onClose: () => void;
@@ -19,12 +20,11 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
   const [url, setUrl] = useState("");
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 animate-in fade-in duration-200 p-4">
-      <div
+    <LucaDialogOverlay className="bg-black/70 animate-in fade-in duration-200 p-4" onRequestClose={onClose}>
+      <LucaDialog
+        modal
+        onRequestClose={onClose}
         className={`relative w-full max-w-lg overflow-hidden rounded-lg border p-4 sm:p-6 ${themeBorder}/30`}
-        data-luca-material-role="dialog"
-        role="dialog"
-        aria-modal="true"
         aria-label="Ingest knowledge source"
         style={{ ...lucaMaterialDialogStyle, boxShadow: `0 0 80px -20px ${themeHex}40` }}
       >
@@ -94,7 +94,7 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
                 size={16}
                 variant="BoldDuotone"
               />
-              <input
+              <LucaInput
                 type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -156,8 +156,8 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
             <Icon name="Download" size={18} variant="BoldDuotone" /> INITIATE TRANSFER
           </button>
         </div>
-      </div>
-    </div>
+      </LucaDialog>
+    </LucaDialogOverlay>
   );
 };
 

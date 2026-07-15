@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Icon } from "../ui/Icon";
+import { LucaPopover } from "../ui/luca";
 import { settingsService, LucaSettings } from "../../services/settingsService";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
 import {
@@ -12,7 +13,6 @@ import {
 import {
   lucaMaterialControlActiveStyle,
   lucaMaterialControlStyle,
-  lucaMaterialPopoverStyle,
 } from "../../styles/lucaMaterialSystem";
 
 interface ChatModelSwitcherProps {
@@ -169,9 +169,12 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ primaryColor = "#
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div
-          className="absolute bottom-full left-0 z-[100] mb-2 w-64 overflow-hidden rounded-xl border shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200"
-          style={lucaMaterialPopoverStyle}
+        <LucaPopover
+          open={isOpen}
+          onRequestClose={() => setIsOpen(false)}
+          role="menu"
+          aria-label="Intelligence models"
+          className="absolute bottom-full left-0 mb-2 w-64 overflow-hidden rounded-xl border shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200"
         >
 
           <div className="p-1 max-h-[350px] overflow-y-auto">
@@ -181,6 +184,9 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ primaryColor = "#
             </div>
             {CLOUD_MODELS.map((model) => (
               <button
+                type="button"
+                role="menuitemradio"
+                aria-checked={currentModel === model.id}
                 key={model.id}
                 onClick={() => handleSelectModel(model.id)}
                 className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-[var(--luca-text-secondary)] transition-colors hover:bg-[var(--luca-surface-hover)] hover:text-[var(--luca-text-primary)]"
@@ -202,6 +208,9 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ primaryColor = "#
                 </div>
                 {localModels.map((model) => (
                   <button
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={currentModel === model.id}
                     key={model.id}
                     onClick={() => handleSelectModel(model.id)}
                     className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-[var(--luca-text-secondary)] transition-colors hover:bg-[var(--luca-surface-hover)] hover:text-[var(--luca-text-primary)]"
@@ -223,6 +232,9 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ primaryColor = "#
             </div>
             {ADVANCED_MODELS.map((model) => (
               <button
+                type="button"
+                role="menuitemradio"
+                aria-checked={currentModel === model.id}
                 key={model.id}
                 onClick={() => handleSelectModel(model.id)}
                 className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-[var(--luca-text-secondary)] transition-colors hover:bg-[var(--luca-surface-hover)] hover:text-[var(--luca-text-primary)]"
@@ -236,7 +248,7 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ primaryColor = "#
               </button>
             ))}
           </div>
-        </div>
+        </LucaPopover>
       )}
     </div>
   );

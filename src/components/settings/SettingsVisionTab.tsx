@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { LucaSelect } from "../ui/luca";
 import { LucaSettings } from "../../services/settingsService";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
 import {
@@ -131,7 +132,7 @@ const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
               >
                 Model Selection
               </label>
-              <select
+              <LucaSelect
                 value={selectedVisionModel}
                 onChange={(e) =>
                   onUpdate("brain", "visionModel", e.target.value)
@@ -161,7 +162,7 @@ const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
                     })}
                   </optgroup>
                 )}
-              </select>
+              </LucaSelect>
             </SettingsCard>
           </SettingsSection>
         </motion.div>

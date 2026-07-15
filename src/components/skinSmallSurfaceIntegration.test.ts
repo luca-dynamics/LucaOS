@@ -58,7 +58,7 @@ describe("small surface skin integration", () => {
     expect(miniChatComposerSource).toContain("lucaMaterialPopoverStyle");
     expect(miniChatComposerSource).not.toContain('rounded-2xl glass-blur');
     expect(miniChatComposerSource).not.toContain("var(--luca-background-elevated, var(--app-bg-main, #14181d))");
-    expect(modelSwitcherSource).toContain("lucaMaterialPopoverStyle");
+    expect(modelSwitcherSource).toContain("<LucaPopover");
     expect(modelSwitcherSource).not.toContain("bg-[#1e1e24]");
     expect(routingSelectorSource).toContain("lucaMaterialPopoverStyle");
     expect(routingSelectorSource).not.toContain("border-white/20");

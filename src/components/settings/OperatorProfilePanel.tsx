@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect } from "react";
 import { Icon } from "../ui/Icon";
+import { LucaInput } from "../ui/luca";
 import { settingsService } from "../../services/settingsService";
 import { memoryService } from "../../services/memoryService";
 import { personalityService } from "../../services/personalityService";
@@ -335,7 +336,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
             <div className="min-w-0">
               {isEditing ? (
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <input
+                  <LucaInput
                     type="text"
                     value={editedName}
                     onChange={(e) => setEditedName(e.target.value)}
@@ -343,7 +344,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                     className={inputClassName}
                     style={settingsControlInlineStyle}
                   />
-                  <input
+                  <LucaInput
                     type="text"
                     value={editedDesignation}
                     onChange={(e) => setEditedDesignation(e.target.value)}

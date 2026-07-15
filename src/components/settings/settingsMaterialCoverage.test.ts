@@ -26,9 +26,10 @@ describe("Settings material coverage", () => {
   });
 
   it("assigns semantic material roles to the modal hierarchy", () => {
-    for (const role of ["overlay", "dialog", "sidebar", "control"]) {
+    for (const role of ["overlay", "sidebar", "control"]) {
       expect(settingsModalSource).toContain(`data-luca-material-role="${role}"`);
     }
+    expect(settingsModalSource).toContain("<LucaDialog");
 
     expect(settingsModalSource).toContain(
       'data-luca-material-role={isActive ? "tab-active" : "tab"}',

@@ -12,6 +12,7 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "../../components/ui/Icon";
 import { lucaMaterialDialogStyle } from "../../styles/lucaMaterialSystem";
+import { LucaDialog, LucaDialogOverlay } from "../ui/luca";
 import { findLucaUnifiedModel } from "../../services/llm/lucaUnifiedModelRegistry";
 import { mobileOfflineBrain } from "../../services/mobile/MobileOfflineBrain";
 import { llmService } from "../../services/llmService";
@@ -203,12 +204,11 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 animate-in fade-in zoom-in-95 duration-200">
-      <div
+    <LucaDialogOverlay className="bg-black/70 p-4 animate-in fade-in zoom-in-95 duration-200" onRequestClose={onClose}>
+      <LucaDialog
+        modal
+        onRequestClose={onClose}
         className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border p-6 shadow-2xl"
-        data-luca-material-role="dialog"
-        role="dialog"
-        aria-modal="true"
         aria-label="Offline model manager"
         style={{
           ...lucaMaterialDialogStyle,
@@ -479,8 +479,8 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
         <p className="text-center text-[10px] text-slate-600 font-mono">
           Local models run entirely in your browser. No data sent to cloud.
         </p>
-      </div>
-    </div>
+      </LucaDialog>
+    </LucaDialogOverlay>
   );
 };
 

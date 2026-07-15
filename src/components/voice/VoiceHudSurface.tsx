@@ -14,6 +14,7 @@ import {
   lucaMaterialHudStyle,
   lucaMaterialRootStyle,
 } from "../../styles/lucaMaterialSystem";
+import { lucaLayerStyle } from "../ui/luca/lucaOverlayFoundation";
 
 const TypewriterText = ({ text }: { text: string }) => {
   const [displayedText, setDisplayedText] = useState("");
@@ -246,8 +247,9 @@ export function VoiceHudSurface({
       aria-label="Luca VoiceHUD original surface"
       data-voice-hud-surface="original"
       data-luca-material-role="root"
-      className="fixed inset-0 z-[200] flex flex-col items-center justify-center animate-in fade-in duration-500"
+      className="fixed inset-0 flex flex-col items-center justify-center animate-in fade-in duration-500"
       style={{
+        ...lucaLayerStyle("critical"),
         ...lucaMaterialRootStyle,
         ...voiceSkinStyle,
         background: transparentBackground
@@ -583,11 +585,7 @@ export function VoiceHudSurface({
       />
       {/* Settings renders above every HUD layer (ticker z-[60], controls) in
           its own stacking context, so HUD chrome can never bleed through. */}
-      {isSettingsOpen && (
-        <div className="fixed inset-0 z-[300]">
-          {renderSettingsModal?.(() => setIsSettingsOpen(false))}
-        </div>
-      )}
+      {isSettingsOpen && renderSettingsModal?.(() => setIsSettingsOpen(false))}
       <div className="absolute bottom-4 md:bottom-8 flex flex-wrap items-center justify-center gap-3 md:gap-12 text-[8px] md:text-[10px] font-mono text-[var(--app-text-muted)] uppercase tracking-widest z-[60] pointer-events-none px-4 w-full text-center">
         <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap">
           <Icon

@@ -20,11 +20,45 @@ export const LucaFieldDescription = ({ className, ...props }: React.HTMLAttribut
   <p className={mergeClassNames("text-xs leading-relaxed text-[var(--luca-text-secondary,var(--app-text-muted))]", className)} {...props} />
 );
 
+export const LucaFieldSet = ({ className, ...props }: React.FieldsetHTMLAttributes<HTMLFieldSetElement>) => (
+  <fieldset className={mergeClassNames("flex min-w-0 flex-col gap-4 border-0 p-0", className)} {...props} />
+);
+
+export const LucaFieldLegend = ({ className, ...props }: React.HTMLAttributes<HTMLLegendElement>) => (
+  <legend className={mergeClassNames("mb-2 text-sm font-semibold text-[var(--luca-text-primary,var(--app-text-main))]", className)} {...props} />
+);
+
+const controlClassName = "w-full rounded-lg border px-3 text-sm outline-none placeholder:text-[var(--luca-text-tertiary,var(--app-text-muted))] focus-visible:ring-2 focus-visible:ring-[var(--luca-accent-primary,var(--app-core-hex))] disabled:cursor-not-allowed disabled:opacity-50";
+
+export const LucaInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  ({ className, style, ...props }, ref) => (
+    <input
+      ref={ref}
+      className={mergeClassNames("h-9", controlClassName, className)}
+      style={{ ...settingsControlStyle, ...style }}
+      {...props}
+    />
+  ),
+);
+LucaInput.displayName = "LucaInput";
+
+export const LucaTextarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
+  ({ className, style, ...props }, ref) => (
+    <textarea
+      ref={ref}
+      className={mergeClassNames("min-h-24 resize-y py-2", controlClassName, className)}
+      style={{ ...settingsControlStyle, ...style }}
+      {...props}
+    />
+  ),
+);
+LucaTextarea.displayName = "LucaTextarea";
+
 export const LucaSelect = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(
   ({ className, style, ...props }, ref) => (
     <select
       ref={ref}
-      className={mergeClassNames("h-9 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--luca-accent-primary,var(--app-core-hex))] disabled:opacity-50", className)}
+      className={mergeClassNames("h-9", controlClassName, className)}
       style={{ ...settingsControlStyle, ...style }}
       {...props}
     />

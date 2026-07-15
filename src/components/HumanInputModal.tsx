@@ -6,6 +6,7 @@ import {
   lucaMaterialDialogStyle,
   lucaMaterialSolidCardStyle,
 } from "../styles/lucaMaterialSystem";
+import { LucaDialog, LucaDialogOverlay, LucaInput } from "./ui/luca";
 
 interface Props {
   isOpen: boolean;
@@ -69,12 +70,11 @@ const HumanInputModal: React.FC<Props> = ({
                              prompt.toLowerCase().includes('login');
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 animate-in fade-in duration-200">
-      <div
+    <LucaDialogOverlay className="bg-black/70 animate-in fade-in duration-200" onRequestClose={onClose}>
+      <LucaDialog
+        modal
+        onRequestClose={onClose}
         className="relative mx-4 w-full max-w-md overflow-hidden rounded-lg border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]"
-        data-luca-material-role="dialog"
-        role="dialog"
-        aria-modal="true"
         aria-label="Agent input request"
         style={lucaMaterialDialogStyle}
       >
@@ -112,7 +112,7 @@ const HumanInputModal: React.FC<Props> = ({
                 <label className="block text-xs text-[var(--luca-info,#4f8cff)] mb-1.5 font-mono">
                   Email / Username
                 </label>
-                <input
+                <LucaInput
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -128,7 +128,7 @@ const HumanInputModal: React.FC<Props> = ({
                   Password
                 </label>
                 <div className="relative">
-                  <input
+                  <LucaInput
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -185,8 +185,8 @@ const HumanInputModal: React.FC<Props> = ({
             SUBMIT
           </button>
         </div>
-      </div>
-    </div>
+      </LucaDialog>
+    </LucaDialogOverlay>
   );
 };
 

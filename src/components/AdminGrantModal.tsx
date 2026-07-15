@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Icon } from "./ui/Icon";
 import { soundService } from "../services/soundService";
 import { lucaMaterialDialogStyle } from "../styles/lucaMaterialSystem";
+import { LucaDialog, LucaDialogOverlay } from "./ui/luca";
 
 interface Props {
   onGrant: () => void;
@@ -27,16 +28,16 @@ const AdminGrantModal: React.FC<Props> = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/75 animate-in fade-in duration-300 font-mono">
+    <LucaDialogOverlay className="bg-black/75 animate-in fade-in duration-300 font-mono" layer="critical" closeOnBackdrop={false} onRequestClose={onDeny}>
       {/* Background Effects */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.15)_0%,transparent_70%)]"></div>
       <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(45deg,rgba(0,0,0,0)_49.9%,rgba(220,38,38,0.5)_50%,rgba(0,0,0,0)_50.1%)] bg-[size:10px_10px]"></div>
 
-      <div
+      <LucaDialog
+        modal
+        modalRole="alertdialog"
+        onRequestClose={onDeny}
         className="relative flex w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
-        data-luca-material-role="dialog"
-        role="alertdialog"
-        aria-modal="true"
         aria-label="Administrator authorization request"
         style={{
           ...lucaMaterialDialogStyle,
@@ -163,8 +164,8 @@ const AdminGrantModal: React.FC<Props> = ({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </LucaDialog>
+    </LucaDialogOverlay>
   );
 };
 

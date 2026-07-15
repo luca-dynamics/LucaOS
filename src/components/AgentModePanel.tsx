@@ -14,6 +14,7 @@ import {
   lucaMaterialDialogStyle,
   lucaMaterialSolidCardStyle,
 } from "../styles/lucaMaterialSystem";
+import { LucaDialog, LucaDialogOverlay } from "./ui/luca";
 
 interface Props {
   task?: AgentTask | null;
@@ -66,16 +67,15 @@ const AgentModePanel: React.FC<Props> = ({
     : 0;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+    <LucaDialogOverlay className="p-4" onRequestClose={onClose}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60" />
 
       {/* Panel Container - Glassmorphic */}
-      <div
-        className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-3xl border"
-        data-luca-material-role="dialog"
-        role="dialog"
-        aria-modal="true"
+      <LucaDialog
+        modal
+        onRequestClose={onClose}
+        className="relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-3xl border"
         aria-label="Agent mode"
         style={{
           ...lucaMaterialDialogStyle,
@@ -397,7 +397,7 @@ const AgentModePanel: React.FC<Props> = ({
             </div>
           </div>
         </div>
-      </div>
+      </LucaDialog>
 
       {/* Shimmer Animation */}
       <style>{`
@@ -406,7 +406,7 @@ const AgentModePanel: React.FC<Props> = ({
           100% { transform: translateX(100%); }
         }
       `}</style>
-    </div>
+    </LucaDialogOverlay>
   );
 };
 

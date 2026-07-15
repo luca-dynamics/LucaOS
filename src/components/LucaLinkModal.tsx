@@ -19,6 +19,7 @@ import {
   lucaMaterialDialogStyle,
   lucaMaterialSolidCardStyle,
 } from "../styles/lucaMaterialSystem";
+import { LucaDialog, LucaDialogOverlay } from "./ui/luca";
 
 interface LucaLinkModalProps {
   onClose: () => void;
@@ -274,12 +275,11 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
   });
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4">
-      <div
+    <LucaDialogOverlay className="bg-black/60 p-4" onRequestClose={onClose}>
+      <LucaDialog
+        modal
+        onRequestClose={onClose}
         className="relative flex max-h-[86vh] w-full max-w-[480px] flex-col overflow-hidden rounded-2xl border"
-        data-luca-material-role="dialog"
-        role="dialog"
-        aria-modal="true"
         aria-label="Link a device"
         style={lucaMaterialDialogStyle}
       >
@@ -486,7 +486,7 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
             Nothing connects without pairing. Unlink any time.
           </span>
         </div>
-      </div>
+      </LucaDialog>
 
       {/* Error toasts */}
       {errors.map((error, index) => (
@@ -499,7 +499,7 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
           themeBg="bg-[var(--luca-surface-glass,rgba(255,255,255,0.03))]"
         />
       ))}
-    </div>
+    </LucaDialogOverlay>
   );
 };
 

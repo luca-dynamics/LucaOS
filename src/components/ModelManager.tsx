@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Icon } from "./ui/Icon";
+import { LucaButton, LucaDialog, LucaDialogOverlay, LucaInput, LucaSwitch } from "./ui/luca";
 import { findLucaUnifiedModel } from "../services/llm/lucaUnifiedModelRegistry";
 import {
   modelManagerService,
@@ -335,8 +336,8 @@ const ProviderHubConfigurationPanel: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60" role="dialog" aria-modal="true">
-      <div className="w-full max-w-xl rounded-xl border shadow-2xl overflow-hidden" style={{ backgroundColor: "var(--app-bg-main)", borderColor: "var(--app-border-main)" }}>
+    <LucaDialogOverlay className="p-4 bg-black/60" onRequestClose={onClose}>
+      <LucaDialog modal onRequestClose={onClose} aria-label={`${intent.title}: ${card.entry.label}`} className="w-full max-w-xl rounded-xl border shadow-2xl overflow-hidden" style={{ backgroundColor: "var(--app-bg-main)", borderColor: "var(--app-border-main)" }}>
         <div className="p-4 border-b flex items-start justify-between gap-3" style={{ borderColor: "var(--app-border-main)" }}>
           <div>
             <h3 className="text-sm font-bold" style={{ color: "var(--app-text-main)" }}>{intent.title}: {card.entry.label}</h3>
@@ -353,22 +354,22 @@ const ProviderHubConfigurationPanel: React.FC<{
           </div>
           {!isManaged && hasApiKeyField && (
             <label className="block text-[10px] font-bold" style={{ color: "var(--app-text-main)" }}>API key
-              <input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder={getProviderHubSafeKeyStatus(settings, card.entry.providerId)} className="mt-1 w-full rounded border px-3 py-2 text-xs outline-none" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)", color: "var(--app-text-main)" }} />
+              <LucaInput type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder={getProviderHubSafeKeyStatus(settings, card.entry.providerId)} className="mt-1" />
             </label>
           )}
           {!isManaged && hasBaseUrlField && (
             <label className="block text-[10px] font-bold" style={{ color: "var(--app-text-main)" }}>Base URL / endpoint
-              <input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-xs outline-none" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)", color: "var(--app-text-main)" }} />
+              <LucaInput value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} className="mt-1" />
             </label>
           )}
           {!isLocal && !isManaged && (
             <label className="block text-[10px] font-bold" style={{ color: "var(--app-text-main)" }}>Selected model ID
-              <input value={modelId} onChange={(event) => setModelId(event.target.value)} placeholder="provider/model-id" className="mt-1 w-full rounded border px-3 py-2 text-xs outline-none" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)", color: "var(--app-text-main)" }} />
+              <LucaInput value={modelId} onChange={(event) => setModelId(event.target.value)} placeholder="provider/model-id" className="mt-1" />
             </label>
           )}
           {!isManaged && (
             <label className="flex items-center gap-2 text-[10px] font-bold" style={{ color: "var(--app-text-main)" }}>
-              <input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} /> Enabled
+              <LucaSwitch checked={enabled} onCheckedChange={setEnabled} /> Enabled
             </label>
           )}
           <div className="rounded-lg border p-3 text-[10px]" style={{ borderColor: "var(--app-border-main)", backgroundColor: "var(--app-bg-tint)", color: "var(--app-text-muted)" }}>
@@ -394,11 +395,11 @@ const ProviderHubConfigurationPanel: React.FC<{
           </div>
         </div>
         <div className="p-4 border-t flex justify-end gap-2" style={{ borderColor: "var(--app-border-main)" }}>
-          <button type="button" onClick={onClose} className="px-3 py-2 rounded text-xs" style={{ color: "var(--app-text-muted)", backgroundColor: "var(--app-bg-tint)" }}>Cancel</button>
-          <button type="button" onClick={isManaged ? onClose : save} className="px-3 py-2 rounded text-xs font-bold" style={{ color: "#050505", backgroundColor: theme.hex }}>{isLocal ? "Review setup" : isManaged ? "Done" : "Save settings"}</button>
+          <LucaButton type="button" variant="secondary" onClick={onClose}>Cancel</LucaButton>
+          <LucaButton type="button" onClick={isManaged ? onClose : save} style={{ backgroundColor: theme.hex }}>{isLocal ? "Review setup" : isManaged ? "Done" : "Save settings"}</LucaButton>
         </div>
-      </div>
-    </div>
+      </LucaDialog>
+    </LucaDialogOverlay>
   );
 };
 

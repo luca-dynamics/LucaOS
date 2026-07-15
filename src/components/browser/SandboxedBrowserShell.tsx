@@ -18,6 +18,7 @@ import {
   type SandboxedBrowserShellOpenEventDetail,
 } from "../../types/sandboxedBrowserShell";
 import LucaBrowser from "../LucaBrowser";
+import { LucaDialog, LucaDialogOverlay } from "../ui/luca";
 import {
   getPreferredBrowserShellAdapter,
   type LucaBrowserShellAdapter,
@@ -117,13 +118,8 @@ const SandboxedBrowserShell: React.FC = () => {
 
   // Web / no-webview runtimes: keep the PR #134 strict iframe fallback shell.
   return (
-    <div
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Luca Sandbox Browser"
-    >
-      <div className="flex h-[88vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[var(--app-bg,#0b0b10)] shadow-2xl">
+    <LucaDialogOverlay className="bg-black/70 p-4" onRequestClose={close}>
+      <LucaDialog modal onRequestClose={close} className="flex h-[88vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[var(--app-bg,#0b0b10)] shadow-2xl" aria-label="Luca Sandbox Browser">
         {/* Safety banner */}
         <div className="border-b border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] px-4 py-3">
           <div className="flex items-start justify-between gap-3">
@@ -213,8 +209,8 @@ const SandboxedBrowserShell: React.FC = () => {
             wallet/payment flows. Browsing here is manual and user-owned. Close or Revoke to end the session.
           </p>
         </div>
-      </div>
-    </div>
+      </LucaDialog>
+    </LucaDialogOverlay>
   );
 };
 

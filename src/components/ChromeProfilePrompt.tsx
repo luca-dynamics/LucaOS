@@ -12,6 +12,7 @@ import {
   lucaMaterialControlStyle,
   lucaMaterialDialogStyle,
 } from "../styles/lucaMaterialSystem";
+import { LucaDialog, LucaDialogOverlay } from "./ui/luca";
 
 interface ChromeProfilePromptProps {
   isOpen: boolean;
@@ -75,8 +76,8 @@ const ChromeProfilePrompt: React.FC<ChromeProfilePromptProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="mx-4 w-full max-w-md rounded-2xl border p-6 shadow-2xl" data-luca-material-role="dialog" role="dialog" aria-modal="true" aria-label="Chrome profile import" style={lucaMaterialDialogStyle}>
+    <LucaDialogOverlay className="bg-black/60" onRequestClose={onClose}>
+      <LucaDialog modal onRequestClose={onClose} className="mx-4 w-full max-w-md rounded-2xl border p-6 shadow-2xl" aria-label="Chrome profile import" style={lucaMaterialDialogStyle}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -153,8 +154,8 @@ const ChromeProfilePrompt: React.FC<ChromeProfilePromptProps> = ({
             Import Chrome
           </button>
         </div>
-      </div>
-    </div>
+      </LucaDialog>
+    </LucaDialogOverlay>
   );
 };
 
