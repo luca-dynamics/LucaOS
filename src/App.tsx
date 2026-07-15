@@ -841,10 +841,21 @@ function AppContent() {
         const currentGeneral = settingsService.get("general");
         // Persona is behavior only (prompt, voice, tools); the skin system
         // owns appearance, so switching persona never changes the theme.
+        // Explicitly picking a preset also turns off the custom persona
+        // layer — otherwise the user's custom tone would silently ride on
+        // top of the freshly chosen preset.
         settingsService.saveSettings({
           general: {
             ...currentGeneral,
             persona: mode as typeof currentGeneral.persona,
+            ...(currentGeneral.customPersona?.enabled
+              ? {
+                  customPersona: {
+                    ...currentGeneral.customPersona,
+                    enabled: false,
+                  },
+                }
+              : {}),
           },
         });
       } catch (err) {

@@ -7,6 +7,12 @@ import ToneStyleSelector from "./ToneStyleSelector";
 import { PersonaMode } from "../../types/lucaPersonality";
 import { PERSONA_DISPLAY } from "../../config/personaDisplay";
 import {
+  CUSTOM_PERSONA_BASE_OPTIONS,
+  CUSTOM_PERSONA_INSTRUCTION_MAX,
+  CUSTOM_PERSONA_LABEL_MAX,
+  normalizeCustomPersona,
+} from "../../config/customPersona";
+import {
   SettingsAdvancedDisclosure,
   SettingsCard,
   SettingsDangerZone,
@@ -103,6 +109,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
   isMobile,
 }) => {
   const personaLabel = normalizeDisplayValue(settings.general.persona);
+  const customPersona = normalizeCustomPersona(settings.general.customPersona);
   const [profileStatus, setProfileStatus] =
     useState<ChromeProfileStatus | null>(null);
 
@@ -264,20 +271,32 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
         <motion.div variants={item}>
           <SettingsSection
             title="Luca Persona"
-            description={`How Luca thinks and speaks — changes tone, speaking voice, and available tools, never appearance. Current: ${PERSONA_DISPLAY[personaLabel]?.label ?? "Warm"}.`}
+            description={`How Luca thinks and speaks — changes tone, speaking voice, and available tools, never appearance. Current: ${
+              customPersona.enabled
+                ? customPersona.label.trim() || "Custom"
+                : (PERSONA_DISPLAY[personaLabel]?.label ?? "Warm")
+            }.`}
             icon="Sparkles"
             accentColor={theme.hex}
             isMobile={isMobile}
           >
-            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
               {personaOptions.map((p) => {
-                const isActive = personaLabel === p;
+                const isActive = !customPersona.enabled && personaLabel === p;
                 const display = PERSONA_DISPLAY[p];
                 return (
                   <button
                     key={p}
                     type="button"
-                    onClick={() => onUpdate("general", "persona", p)}
+                    onClick={() => {
+                      onUpdate("general", "persona", p);
+                      if (customPersona.enabled) {
+                        onUpdate("general", "customPersona", {
+                          ...customPersona,
+                          enabled: false,
+                        });
+                      }
+                    }}
                     className="rounded-lg border p-3 text-left transition-colors"
                     style={{
                       ...settingsControlInlineStyle,
@@ -305,7 +324,120 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                   </button>
                 );
               })}
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdate("general", "customPersona", {
+                    ...customPersona,
+                    enabled: true,
+                  });
+                  onUpdate("general", "persona", customPersona.basePersona);
+                }}
+                className="rounded-lg border p-3 text-left transition-colors"
+                style={{
+                  ...settingsControlInlineStyle,
+                  borderColor: customPersona.enabled
+                    ? theme.hex
+                    : settingsSurfaceTokens.borderSubtle,
+                }}
+              >
+                <p
+                  className="text-[13px] font-medium"
+                  style={{
+                    color: customPersona.enabled
+                      ? theme.hex
+                      : settingsSurfaceTokens.textPrimary,
+                  }}
+                >
+                  {customPersona.label.trim() || "Custom"}
+                </p>
+                <p
+                  className="mt-0.5 text-[11.5px] leading-snug"
+                  style={{ color: settingsSurfaceTokens.textSecondary }}
+                >
+                  Your own style, in your words
+                </p>
+              </button>
             </div>
+            {customPersona.enabled && (
+              <div className="mt-4 space-y-3">
+                <SettingsRow
+                  label="Name"
+                  description="Shown as the persona name in settings."
+                  control={
+                    <input
+                      type="text"
+                      value={customPersona.label}
+                      maxLength={CUSTOM_PERSONA_LABEL_MAX}
+                      placeholder="Custom"
+                      onChange={(e) =>
+                        onUpdate("general", "customPersona", {
+                          ...customPersona,
+                          label: e.target.value,
+                        })
+                      }
+                      className="w-44 rounded-lg border px-3 py-1.5 text-[13px] outline-none"
+                      style={settingsControlInlineStyle}
+                    />
+                  }
+                />
+                <SettingsRow
+                  label="Based on"
+                  description="Supplies the tool loadout and default speaking voice — your text only shapes tone."
+                  control={
+                    <select
+                      value={customPersona.basePersona}
+                      onChange={(e) => {
+                        const basePersona = e.target
+                          .value as typeof customPersona.basePersona;
+                        onUpdate("general", "customPersona", {
+                          ...customPersona,
+                          basePersona,
+                        });
+                        onUpdate("general", "persona", basePersona);
+                      }}
+                      className={settingsSelectClassName}
+                      style={settingsControlInlineStyle}
+                    >
+                      {CUSTOM_PERSONA_BASE_OPTIONS.map((base) => (
+                        <option key={base} value={base}>
+                          {PERSONA_DISPLAY[base]?.label ?? base}
+                        </option>
+                      ))}
+                    </select>
+                  }
+                />
+                <div>
+                  <p
+                    className="text-[13.5px]"
+                    style={{ color: settingsSurfaceTokens.textPrimary }}
+                  >
+                    How Luca should think and speak
+                  </p>
+                  <p
+                    className="mt-0.5 text-[12.5px]"
+                    style={{ color: settingsSurfaceTokens.textSecondary }}
+                  >
+                    Written in your own words. Layered over Luca's identity and
+                    safety boundaries — it can change style, never permissions.
+                  </p>
+                  <textarea
+                    value={customPersona.instruction}
+                    maxLength={CUSTOM_PERSONA_INSTRUCTION_MAX}
+                    rows={4}
+                    placeholder="e.g. Talk like a calm senior colleague. Short sentences. Dry humor is welcome. Always end with the single next step."
+                    onChange={(e) =>
+                      onUpdate("general", "customPersona", {
+                        ...customPersona,
+                        instruction: e.target.value,
+                      })
+                    }
+                    className="mt-2 w-full resize-y rounded-lg border px-3 py-2 text-[13px] leading-relaxed outline-none"
+                    style={settingsControlInlineStyle}
+                  />
+                </div>
+              </div>
+            )}
           </SettingsSection>
         </motion.div>
 
