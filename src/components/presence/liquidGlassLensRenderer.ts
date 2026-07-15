@@ -1,5 +1,10 @@
 import { approach } from "../../styles/lucaPresenceMotion";
 import { hexToRgb, rgbToUnit } from "./presenceColor";
+import {
+  DEFAULT_LUCA_OPTICAL_MATERIAL,
+  normalizeLucaOpticalMaterialSettings,
+  type LucaLiquidGlassTuning,
+} from "../../styles/lucaOpticalMaterialSettings";
 
 /**
  * Liquid glass — the optical body of Luca's material language.
@@ -28,6 +33,7 @@ export interface LiquidGlassLensRenderer {
   /** Pointer position in canvas fractions (0..1); null lets the body drift home. */
   setPointer(x: number | null, y?: number): void;
   setAccent(hex: string): void;
+  setTuning(tuning: Partial<LucaLiquidGlassTuning>): void;
   /** Resize without rebuilding the WebGL context. CSS pixels, DPR-capped internally. */
   resize(widthPx: number, heightPx?: number): void;
   /** Suspend animation when the surface is hidden or reduced motion is active. */
@@ -53,6 +59,8 @@ uniform float u_wobble;
 uniform vec2 u_stretch;
 uniform vec2 u_pull;
 uniform vec3 u_accent;
+uniform vec4 u_optics;
+uniform vec2 u_optics2;
 
 out vec4 outColor;
 
@@ -124,6 +132,16 @@ vec3 sampleBg(vec2 uvTop) {
   return texture(u_bg, uv).rgb;
 }
 
+vec3 sampleFrostedBg(vec2 uvTop, float frost) {
+  vec2 px = 1.5 / u_resolution;
+  vec3 center = sampleBg(uvTop);
+  vec3 ring = sampleBg(uvTop + vec2(px.x, 0.0))
+    + sampleBg(uvTop - vec2(px.x, 0.0))
+    + sampleBg(uvTop + vec2(0.0, px.y))
+    + sampleBg(uvTop - vec2(0.0, px.y));
+  return mix(center, ring * 0.25, frost);
+}
+
 void main() {
   vec2 uvTop = vec2(gl_FragCoord.x / u_resolution.x, 1.0 - gl_FragCoord.y / u_resolution.y);
   vec2 p = (uvTop - u_center) * 2.0;
@@ -140,18 +158,20 @@ void main() {
   vec3 nrm = normalize(vec3(-hX / (2.0 * e.x) * 0.30, -hY / (2.0 * e.x) * 0.30, 1.0));
 
   float grazing = 1.0 - nrm.z;
-  float fres = pow(clamp(grazing * 1.9, 0.0, 1.0), 2.2);
+  float edgePower = mix(3.2, 1.45, u_optics2.y);
+  float fres = pow(clamp(grazing * 1.9, 0.0, 1.0), edgePower);
 
   // Refraction: dead clear where flat, bending exactly where it curves
   vec3 col;
   {
-    float k = 0.12;
-    vec2 offR = -nrm.xy * grazing * k * 1.06;
+    float k = 0.17 * u_optics.y * mix(0.55, 1.35, u_optics.z);
+    float split = 0.025 * u_optics.w;
+    vec2 offR = -nrm.xy * grazing * (k + split);
     vec2 offG = -nrm.xy * grazing * k;
-    vec2 offB = -nrm.xy * grazing * k * 0.94;
-    col.r = sampleBg(uvTop + offR * 0.5).r;
-    col.g = sampleBg(uvTop + offG * 0.5).g;
-    col.b = sampleBg(uvTop + offB * 0.5).b;
+    vec2 offB = -nrm.xy * grazing * max(0.0, k - split);
+    col.r = sampleFrostedBg(uvTop + offR, u_optics2.x).r;
+    col.g = sampleFrostedBg(uvTop + offG, u_optics2.x).g;
+    col.b = sampleFrostedBg(uvTop + offB, u_optics2.x).b;
   }
 
   // Internal reflection: content doubles back where the surface turns away
@@ -174,7 +194,7 @@ void main() {
     pow(clamp(dot(rg, L), 0.0, 1.0), specPow),
     pow(clamp(dot(rb, L), 0.0, 1.0), specPow)
   );
-  col += spec * 0.85;
+  col += spec * (0.32 + 0.78 * u_optics.x);
 
   // Soft sky sheen on upward-facing curvature
   float sheen = smoothstep(0.1, 0.8, -rg.y) * fres;
@@ -292,6 +312,8 @@ export function createLiquidGlassLensRenderer(
     stretch: u("u_stretch"),
     pull: u("u_pull"),
     accent: u("u_accent"),
+    optics: u("u_optics"),
+    optics2: u("u_optics2"),
   };
   gl.uniform1i(locations.bg, 0);
   gl.uniform4f(locations.bgRect, bgRect[0], bgRect[1], bgRect[2], bgRect[3]);
@@ -306,6 +328,7 @@ export function createLiquidGlassLensRenderer(
   const velocity = { x: 0, y: 0 };
   let target: { x: number; y: number } | null = null;
   let accent: [number, number, number] = [138 / 255, 143 / 255, 152 / 255];
+  let tuning = DEFAULT_LUCA_OPTICAL_MATERIAL.glass;
   let wobble = 0;
   const pull = { x: 0, y: 0 };
 
@@ -347,6 +370,8 @@ export function createLiquidGlassLensRenderer(
     gl.uniform2f(locations.stretch, velocity.x * 0.4, velocity.y * 0.4);
     gl.uniform2f(locations.pull, pull.x, pull.y);
     gl.uniform3f(locations.accent, accent[0], accent[1], accent[2]);
+    gl.uniform4f(locations.optics, tuning.light, tuning.refraction, tuning.depth, tuning.dispersion);
+    gl.uniform2f(locations.optics2, tuning.frost, tuning.edgeFalloff);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     if (!paused) animationId = requestAnimationFrame(draw);
@@ -372,6 +397,11 @@ export function createLiquidGlassLensRenderer(
     setAccent(hex: string) {
       const rgb = hexToRgb(hex);
       if (rgb) accent = rgbToUnit(rgb);
+    },
+    setTuning(nextTuning) {
+      tuning = normalizeLucaOpticalMaterialSettings({
+        glass: { ...tuning, ...nextTuning },
+      }).glass;
     },
     resize,
     setPaused(nextPaused: boolean) {
