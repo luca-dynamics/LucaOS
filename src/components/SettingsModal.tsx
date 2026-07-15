@@ -11,6 +11,16 @@ import { PERSONA_UI_CONFIG, getDynamicContrast } from "../config/themeColors";
 import { PersonaConfig } from "../types";
 import { getLucaSkinMaterialVariables } from "../styles/lucaSkinMaterialBridge";
 import { LUCA_SKINS, normalizeLucaSkinId } from "../config/lucaSkins";
+import {
+  lucaMaterialCardStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialDividerStyle,
+  lucaMaterialMobilePanelStyle,
+  lucaMaterialSidebarStyle,
+  lucaMaterialTabActiveStyle,
+  lucaMaterialTabStyle,
+} from "../styles/lucaMaterialSystem";
 
 // Import Refactored Tabs
 import SettingsGeneralTab from "./settings/SettingsGeneralTab";
@@ -86,7 +96,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   // assume dark skins. The class scopes CSS fixes to light skins only.
   const isLightSkin =
     LUCA_SKINS[normalizeLucaSkinId(settings.general.selectedSkinId)]
-      .modeAffinity === "light";
+      .materialTone === "light";
 
   const legacyLiveTheme =
     (settings?.general?.theme
@@ -298,35 +308,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-[70] flex items-center justify-center bg-black/60 glass-blur ${
+      data-luca-material-role="overlay"
+      className={`fixed inset-0 z-[70] flex items-center justify-center bg-black/60 ${
         isMobile ? "p-0" : "p-4"
       } ${isLightSkin ? "luca-skin-light" : ""} font-sans select-none`}
       style={skinMaterialVariables as React.CSSProperties}
     >
       <div
+        data-luca-material-role="dialog"
         className={`w-full ${
           isMobile
             ? "h-full rounded-none"
             : "max-w-[1080px] h-[86%] rounded-2xl border"
-        } flex flex-row overflow-hidden transition-all duration-300 glass-blur`}
+        } flex flex-row overflow-hidden`}
         style={{
-          boxShadow: isMobile
-            ? "none"
-            : "0 30px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)",
-          backgroundColor: "var(--app-bg-main, #0a0a0f)",
-          borderColor: isMobile
-            ? "transparent"
-            : "var(--luca-border-subtle, var(--app-border-main, rgba(255,255,255,0.08)))",
+          ...lucaMaterialDialogStyle,
+          ...(isMobile ? { borderColor: "transparent", boxShadow: "none" } : {}),
         }}
       >
         {/* Unified Sidebar Navigation */}
         <div
+          data-luca-material-role="sidebar"
           className={`luca-settings-nav flex flex-col shrink-0 ${isMobile ? "w-16" : "w-64"}`}
           style={{
-            backgroundColor: isMobile
-              ? "rgba(0,0,0,0.2)"
-              : "var(--app-bg-main, #0a0a0a)",
-            borderRight: "1px solid var(--app-border-main, rgba(0,0,0,0.1))",
+            ...(isMobile
+              ? lucaMaterialMobilePanelStyle
+              : lucaMaterialSidebarStyle),
+            borderRightWidth: 1,
+            borderRightStyle: "solid",
           }}
         >
           {/* Header Area */}
@@ -335,8 +344,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               isMobile ? "p-4 justify-center" : "h-[52px] px-4"
             }`}
             style={{
-              borderBottom:
-                "1px solid var(--luca-border-subtle, var(--app-border-main, rgba(255,255,255,0.07)))",
+              ...lucaMaterialDividerStyle,
+              borderBottomWidth: 1,
+              borderBottomStyle: "solid",
             }}
           >
             <Icon
@@ -394,16 +404,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       style={{
-                        color: isActive
-                          ? "var(--luca-text-primary, var(--app-text-main, #ffffff))"
-                          : "var(--luca-text-secondary, var(--app-text-muted, #9ca3af))",
-                        backgroundColor: isActive
-                          ? "var(--luca-surface-hover, var(--app-bg-tint, rgba(255,255,255,0.06)))"
-                          : "transparent",
-                        borderColor: "transparent",
+                        ...(isActive
+                          ? lucaMaterialTabActiveStyle
+                          : lucaMaterialTabStyle),
                       }}
                       title={tab.label}
-                      className={`w-full flex items-center border border-transparent transition-all hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] ${
+                      data-luca-material-role={isActive ? "tab-active" : "tab"}
+                      className={`luca-shell-tab luca-material-pressable ${
+                        isActive ? "luca-shell-tab-active" : ""
+                      } w-full flex items-center border ${
                         isMobile
                           ? "flex-col justify-center rounded-xl py-3 px-1 gap-1 min-h-[54px]"
                           : "flex-row rounded-lg gap-2.5 h-[34px] px-2.5"
@@ -435,16 +444,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* Mobile Footer Exit - Since we don't have the header X on mobile anymore */}
           {isMobile && (
-            <div
-              className="p-4 flex justify-center border-t"
-              style={{ borderColor: "var(--app-border-main)" }}
+            <button
+              type="button"
+              aria-label="Close settings"
+              className="luca-material-pressable w-full p-4 flex justify-center border-t"
+              style={lucaMaterialDividerStyle}
               onClick={onClose}
             >
               <Icon
                 name="CloseCircle"
-                className="w-5 h-5 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
+                className="w-5 h-5 text-[var(--app-text-muted)]"
               />
-            </div>
+            </button>
           )}
         </div>
 
@@ -455,8 +466,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div
               className="h-[52px] px-6 flex justify-between items-center shrink-0"
               style={{
-                borderBottom:
-                  "1px solid var(--luca-border-subtle, var(--app-border-main, rgba(255,255,255,0.07)))",
+                ...lucaMaterialDividerStyle,
+                borderBottomWidth: 1,
+                borderBottomStyle: "solid",
               }}
             >
               <h3
@@ -472,8 +484,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </h3>
               <button
                 onClick={onClose}
-                className="rounded-lg p-1.5 transition-colors hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
-                style={{ color: "var(--app-text-muted)" }}
+                data-luca-material-role="control"
+                className="luca-shell-control rounded-lg border p-1.5"
+                style={lucaMaterialControlStyle}
               >
                 <Icon name="CloseCircle" className="w-[18px] h-[18px]" />
               </button>
@@ -493,10 +506,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {isMobile && activeTab === settingsAdvancedGroup.id && (
               <div className="space-y-5">
                 <div
+                  data-luca-material-role="card"
                   className="rounded-xl border p-4"
                   style={{
-                    borderColor: "var(--app-border-main)",
-                    backgroundColor: "var(--app-bg-tint)",
+                    ...lucaMaterialCardStyle,
                   }}
                 >
                   <div className="flex items-center gap-3">
@@ -534,11 +547,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className="flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
+                      data-luca-material-role="control"
+                      className="luca-shell-control flex w-full items-center justify-between rounded-xl border p-3 text-left"
                       style={{
-                        borderColor: "var(--app-border-main)",
-                        backgroundColor:
-                          "var(--luca-surface-glass, var(--app-bg-tint))",
+                        ...lucaMaterialControlStyle,
                       }}
                     >
                       <span className="flex items-center gap-3">
@@ -687,8 +699,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               isMobile ? "p-4 pb-8" : "h-[56px] px-6"
             }`}
             style={{
-              borderTop:
-                "1px solid var(--luca-border-subtle, var(--app-border-main, rgba(255,255,255,0.07)))",
+              ...lucaMaterialDividerStyle,
+              borderTopWidth: 1,
+              borderTopStyle: "solid",
             }}
           >
             <div className="flex items-center gap-4">
@@ -705,8 +718,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="flex gap-2 md:gap-3">
               <button
                 onClick={onClose}
-                className="h-8 px-3.5 rounded-lg text-xs font-medium transition-colors hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
-                style={{ color: "var(--app-text-muted)" }}
+                data-luca-material-role="control"
+                className="luca-shell-control h-8 px-3.5 rounded-lg border text-xs font-medium"
+                style={lucaMaterialControlStyle}
               >
                 {/* On Personality tab, 'Cancel' is just 'Close' since it saves internally */}
                 {/* Reverted: Unified Save uses Cancel for all tabs */}
@@ -719,7 +733,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   backgroundColor: liveTheme.hex,
                   color: liveTheme.isLight ? "#ffffff" : "#0c0e12",
                 }}
-                className="luca-settings-save h-8 px-4 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all hover:opacity-90 disabled:opacity-50"
+                className="luca-settings-save luca-material-pressable h-8 px-4 rounded-lg text-xs font-semibold flex items-center gap-2 disabled:opacity-50"
               >
                 {loading && (
                   <Icon name="Restart" className="w-3 h-3 animate-spin" />

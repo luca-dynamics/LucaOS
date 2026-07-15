@@ -1,5 +1,8 @@
 import React from "react";
-import { settingsSurfaceTokens } from "../settingsLayoutStyles";
+import {
+  settingsCardStyle,
+  settingsSurfaceTokens,
+} from "../settingsLayoutStyles";
 import PersonalIntelligencePreviewBadge, {
   type PreviewBadgeLabel,
 } from "./PersonalIntelligencePreviewBadge";
@@ -20,8 +23,7 @@ export const PreviewCardFrame: React.FC<PreviewCardFrameProps> = ({
   <div
     className="rounded-xl border p-4"
     style={{
-      borderColor: settingsSurfaceTokens.borderSubtle,
-      backgroundColor: settingsSurfaceTokens.glass,
+      ...settingsCardStyle,
     }}
   >
     <div className="flex flex-wrap items-start justify-between gap-3">

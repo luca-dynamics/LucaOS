@@ -12,6 +12,7 @@ describe("settings skin integration", () => {
     expect(settingsModalSource).toContain("settings.general.selectedSkinId");
     expect(settingsModalSource).toContain("style={skinMaterialVariables as React.CSSProperties}");
     expect(settingsModalSource).toContain('skinMaterialVariables["--luca-accent-primary"]');
+    expect(settingsModalSource).toContain('data-luca-material-role="dialog"');
   });
 
   it("keeps legacy Settings theme preview scoped to an explicit local boundary", () => {

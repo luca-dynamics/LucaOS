@@ -7,7 +7,10 @@ import {
 } from "../../config/lucaSkinPreviewMetadata";
 import { getLucaSkinMaterialVariables } from "../../styles/lucaSkinMaterialBridge";
 import type { LucaSkinId } from "../../config/lucaSkins";
-import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import {
+  settingsCardStyle,
+  settingsSurfaceTokens,
+} from "./settingsLayoutStyles";
 
 /**
  * Local skin card for Settings.
@@ -100,7 +103,7 @@ export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
       title={tooltip}
       className="flex w-full flex-col gap-2 rounded-xl border p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
       style={{
-        backgroundColor: settingsSurfaceTokens.glass,
+        background: settingsCardStyle.background,
         borderColor: isSelected
           ? settingsSurfaceTokens.accentPrimary
           : settingsSurfaceTokens.borderSubtle,

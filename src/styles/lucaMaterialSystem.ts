@@ -187,6 +187,17 @@ export const lucaMaterialCardStyle: CSSProperties = {
   boxShadow: "var(--luca-material-card-shadow, none)",
 };
 
+/** Solid nested card — texture without adding another blur/elevation layer. */
+export const lucaMaterialSolidCardStyle: CSSProperties = {
+  background: withMaterialTexture(
+    LUCA_MATERIAL_TEXTURE_QUIET,
+    LUCA_MATERIAL_SURFACE_SOLID,
+  ),
+  borderColor: LUCA_MATERIAL_BORDER,
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
+  boxShadow: "var(--luca-material-card-shadow, none)",
+};
+
 /** Compact metric/chip surface — lighter than cards and never elevated. */
 export const lucaMaterialMetricStyle: CSSProperties = {
   background: LUCA_MATERIAL_METRIC_SURFACE,
