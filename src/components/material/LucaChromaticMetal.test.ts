@@ -25,4 +25,12 @@ describe("Luca chromatic metal", () => {
     expect(component).toContain("IntersectionObserver");
     expect(component).toContain("webglcontextlost");
   });
+
+  it("integrates chrome into the face mesh without adding a glass plate", () => {
+    const source = readFileSync("src/components/presence/lucaFacePlasmaMaterial.ts", "utf8");
+    expect(source).toContain("metalCoordinate");
+    expect(source).toContain("setMaterialTuning");
+    expect(source).not.toContain("LucaWebGLLiquidGlass");
+    expect(source).not.toMatch(/from\s+["'][^"']*LucaChromaticMetal["']/);
+  });
 });

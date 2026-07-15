@@ -7,6 +7,7 @@ export const LUCA_INTERFACE_MATERIAL_AREAS = [
   "desktop-shell",
   "mobile-shell",
   "settings",
+  "material-lab",
   "voice-hud",
   "mini-chat",
   "presence-widget",
@@ -133,6 +134,20 @@ export const LUCA_INTERFACE_MATERIAL_COVERAGE: readonly LucaInterfaceMaterialCov
     skinBoundary: "inherited-boundary",
     reducedTransparency: "solid",
     notes: "Appearance previews remain locally scoped while shared settings primitives carry the material hierarchy across every tab.",
+  },
+  {
+    area: "material-lab",
+    owners: [
+      "src/components/settings/OpticalMaterialControls.tsx",
+      "src/components/settings/OpticalMaterialPreview.tsx",
+      "src/components/material/LucaWebGLLiquidGlass.tsx",
+      "src/components/material/LucaChromaticMetal.tsx",
+    ],
+    materialRoles: ["card", "control"],
+    opticalTier: "matched-webgl",
+    skinBoundary: "inherited-boundary",
+    reducedTransparency: "solid",
+    notes: "The visible preview canvas is also the lens texture, so displacement is optically true. It exposes restrained defaults and an advanced tuning disclosure.",
   },
   {
     area: "voice-hud",
