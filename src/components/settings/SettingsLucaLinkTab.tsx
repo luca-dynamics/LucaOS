@@ -105,7 +105,6 @@ import {
   SettingsRow,
   SettingsSection,
   SettingsStatList,
-  SettingsStatusCard,
   settingsControlInlineStyle,
 } from "./SettingsLayout";
 import {
@@ -1606,38 +1605,35 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               Physical/payment/safety actions require fresh Primary Host
               confirmation.
             </p>
-            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <SettingsStatusCard
-                label="Eligible approval surfaces"
-                value={`${deviceCenterSnapshot.approvalSurfaceSummary.eligibleApprovalSurfaces}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Display-only surfaces"
-                value={`${deviceCenterSnapshot.approvalSurfaceSummary.displayOnlySurfaces}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Low/medium approval"
-                value={`${deviceCenterSnapshot.approvalSurfaceSummary.lowMediumRiskApprovalSurfaces}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Primary Host-only"
-                value={`${deviceCenterSnapshot.approvalSurfaceSummary.primaryHostOnlySurfaces}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Blocked surfaces"
-                value={`${deviceCenterSnapshot.approvalSurfaceSummary.blockedSurfaces}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Public surfaces"
-                value={`${deviceCenterSnapshot.approvalSurfaceSummary.publicSurfaces}`}
-                accentColor={theme.hex}
-              />
-            </div>
+            <SettingsStatList
+              className="mt-3"
+              items={[
+                {
+                  label: "Eligible approval surfaces",
+                  value: `${deviceCenterSnapshot.approvalSurfaceSummary.eligibleApprovalSurfaces}`,
+                },
+                {
+                  label: "Display-only surfaces",
+                  value: `${deviceCenterSnapshot.approvalSurfaceSummary.displayOnlySurfaces}`,
+                },
+                {
+                  label: "Low/medium approval",
+                  value: `${deviceCenterSnapshot.approvalSurfaceSummary.lowMediumRiskApprovalSurfaces}`,
+                },
+                {
+                  label: "Primary Host-only",
+                  value: `${deviceCenterSnapshot.approvalSurfaceSummary.primaryHostOnlySurfaces}`,
+                },
+                {
+                  label: "Blocked surfaces",
+                  value: `${deviceCenterSnapshot.approvalSurfaceSummary.blockedSurfaces}`,
+                },
+                {
+                  label: "Public surfaces",
+                  value: `${deviceCenterSnapshot.approvalSurfaceSummary.publicSurfaces}`,
+                },
+              ]}
+            />
             <div className="mt-3 space-y-2">
               {deviceCenterSnapshot.approvalSurfaces.map((surface) => (
                 <div
@@ -1683,28 +1679,27 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 Create review draft
               </button>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <SettingsStatusCard
-                label="Reviews"
-                value={`${deviceCenterSnapshot.bridgeReviewSummary.total}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Pending"
-                value={`${deviceCenterSnapshot.bridgeReviewSummary.pendingReview}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Sandbox approved"
-                value={`${deviceCenterSnapshot.bridgeReviewSummary.approvedForSandbox}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Blocked"
-                value={`${deviceCenterSnapshot.bridgeReviewSummary.blocked}`}
-                accentColor={theme.hex}
-              />
-            </div>
+            <SettingsStatList
+              className="mt-3"
+              items={[
+                {
+                  label: "Reviews",
+                  value: `${deviceCenterSnapshot.bridgeReviewSummary.total}`,
+                },
+                {
+                  label: "Pending",
+                  value: `${deviceCenterSnapshot.bridgeReviewSummary.pendingReview}`,
+                },
+                {
+                  label: "Sandbox approved",
+                  value: `${deviceCenterSnapshot.bridgeReviewSummary.approvedForSandbox}`,
+                },
+                {
+                  label: "Blocked",
+                  value: `${deviceCenterSnapshot.bridgeReviewSummary.blocked}`,
+                },
+              ]}
+            />
             <div className="mt-3 space-y-2">
               {deviceCenterSnapshot.bridgeReviews.map((review) => (
                 <div
@@ -1819,40 +1814,35 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               write files, install adapters, mutate networks, or control
               devices.
             </p>
-            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <SettingsStatusCard
-                label="Runtime status"
-                value={
-                  DEFAULT_LUCA_LINK_ADAPTER_SANDBOX_CONFIG.enabled
+            <SettingsStatList
+              className="mt-3"
+              items={[
+                {
+                  label: "Runtime status",
+                  value: DEFAULT_LUCA_LINK_ADAPTER_SANDBOX_CONFIG.enabled
                     ? "Enabled"
-                    : "Disabled"
-                }
-                detail="Default blocked state"
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Safety check"
-                value={
-                  DEFAULT_LUCA_LINK_ADAPTER_SANDBOX_CONFIG.dryRun
+                    : "Disabled",
+                  detail: "Default blocked state",
+                },
+                {
+                  label: "Safety check",
+                  value: DEFAULT_LUCA_LINK_ADAPTER_SANDBOX_CONFIG.dryRun
                     ? "Enabled"
-                    : "Blocked"
-                }
-                detail={`Plan: ${LUCA_LINK_DEFAULT_ADAPTER_SANDBOX_PREVIEW_PLAN.status}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Code and shell"
-                value="Blocked"
-                detail="Generated-code and shell execution disabled"
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Host approval"
-                value="Required"
-                detail="Approval never grants execution"
-                accentColor={theme.hex}
-              />
-            </div>
+                    : "Blocked",
+                  detail: `Plan: ${LUCA_LINK_DEFAULT_ADAPTER_SANDBOX_PREVIEW_PLAN.status}`,
+                },
+                {
+                  label: "Code and shell",
+                  value: "Blocked",
+                  detail: "Generated-code and shell execution disabled",
+                },
+                {
+                  label: "Host approval",
+                  value: "Required",
+                  detail: "Approval never grants execution",
+                },
+              ]}
+            />
             <div
               className="mt-3 rounded-lg border p-3"
               style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
@@ -1898,32 +1888,31 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 Read-only
               </span>
             </div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              <SettingsStatusCard
-                label="Status"
-                value="Read-only"
-                detail="Display bridge default is inert"
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Host approval"
-                value="Required"
-                detail="Presentation requires target-host approval"
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Display mode"
-                value="Presentation / read-only"
-                detail="No browser or DOM automation"
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Allowed actions"
-                value="None"
-                detail="Preview payload is non-interactive"
-                accentColor={theme.hex}
-              />
-            </div>
+            <SettingsStatList
+              className="mt-3"
+              items={[
+                {
+                  label: "Status",
+                  value: "Read-only",
+                  detail: "Display bridge default is inert",
+                },
+                {
+                  label: "Host approval",
+                  value: "Required",
+                  detail: "Presentation requires target-host approval",
+                },
+                {
+                  label: "Display mode",
+                  value: "Presentation / read-only",
+                  detail: "No browser or DOM automation",
+                },
+                {
+                  label: "Allowed actions",
+                  value: "None",
+                  detail: "Preview payload is non-interactive",
+                },
+              ]}
+            />
             <div
               className="mt-3 rounded-lg border p-3"
               style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
@@ -1947,10 +1936,6 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             </div>
           </SettingsCard>
           <SettingsCard>
-            {/* generatedTextOnly true */}
-            {/* canWriteToDisk false */}
-            {/* canExecute false */}
-            {/* canInstall false */}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-sm font-semibold">Adapter Drafts</p>
@@ -1976,28 +1961,27 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 </button>
               </div>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <SettingsStatusCard
-                label="Drafts"
-                value={`${deviceCenterSnapshot.adapterDraftSummary.total}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Requires review"
-                value={`${deviceCenterSnapshot.adapterDraftSummary.requiresReview}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Sandbox approved"
-                value={`${deviceCenterSnapshot.adapterDraftSummary.approvedForSandbox}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Blocked"
-                value={`${deviceCenterSnapshot.adapterDraftSummary.blocked}`}
-                accentColor={theme.hex}
-              />
-            </div>
+            <SettingsStatList
+              className="mt-3"
+              items={[
+                {
+                  label: "Drafts",
+                  value: `${deviceCenterSnapshot.adapterDraftSummary.total}`,
+                },
+                {
+                  label: "Requires review",
+                  value: `${deviceCenterSnapshot.adapterDraftSummary.requiresReview}`,
+                },
+                {
+                  label: "Sandbox approved",
+                  value: `${deviceCenterSnapshot.adapterDraftSummary.approvedForSandbox}`,
+                },
+                {
+                  label: "Blocked",
+                  value: `${deviceCenterSnapshot.adapterDraftSummary.blocked}`,
+                },
+              ]}
+            />
             <div className="mt-3 space-y-2">
               {deviceCenterSnapshot.adapterDrafts.map((draft) => (
                 <div
@@ -2016,10 +2000,10 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                           "manual"}
                       </p>
                       <p className="mt-1 text-xs opacity-70">
-                        generatedTextOnly {String(draft.generatedTextOnly)} ·
-                        canWriteToDisk {String(draft.canWriteToDisk)} ·
-                        canExecute {String(draft.canExecute)} · canInstall{" "}
-                        {String(draft.canInstall)}
+                        Text only {draft.generatedTextOnly ? "yes" : "no"} ·
+                        Disk write {draft.canWriteToDisk ? "yes" : "no"} ·
+                        Execute {draft.canExecute ? "yes" : "no"} · Install{" "}
+                        {draft.canInstall ? "yes" : "no"}
                       </p>
                       {draft.codePreview && (
                         <pre
@@ -2128,32 +2112,39 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 Review only
               </span>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <SettingsStatusCard
-                label="Needs your approval"
-                value={localApprovalActionPreviews.approve.decision === "approval_required" ? "Pending" : "Review"}
-                detail="Approve device defaults to Limited trust"
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Sensitive access"
-                value="Remains blocked"
-                detail="remote_action/tool_execution/admin_trust disabled"
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Revocation impact"
-                value={`${localApprovalActionPreviews.revoke.revocationDryRun?.affectedLanes.length ?? 0} lane(s)`}
-                detail={`${localApprovalActionPreviews.revoke.revocationDryRun?.blockedPermissions.length ?? 0} permissions blocked`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Primary Host review"
-                value={localApprovalActionPreviews.handoff.requiresPrimaryHostReview ? "Required" : "Not required"}
-                detail={`Handoff readiness: ${localApprovalActionPreviews.handoff.handoffReview?.readiness ?? "review-only"}`}
-                accentColor={theme.hex}
-              />
-            </div>
+            <SettingsStatList
+              className="mt-3"
+              items={[
+                {
+                  label: "Needs your approval",
+                  value:
+                    localApprovalActionPreviews.approve.decision ===
+                    "approval_required"
+                      ? "Pending"
+                      : "Review",
+                  detail: "Approve device defaults to Limited trust",
+                },
+                {
+                  label: "Sensitive access",
+                  value: "Remains blocked",
+                  detail:
+                    "Remote actions, tool execution, and admin trust stay disabled",
+                },
+                {
+                  label: "Revocation impact",
+                  value: `${localApprovalActionPreviews.revoke.revocationDryRun?.affectedLanes.length ?? 0} lane(s)`,
+                  detail: `${localApprovalActionPreviews.revoke.revocationDryRun?.blockedPermissions.length ?? 0} permissions blocked`,
+                },
+                {
+                  label: "Primary Host review",
+                  value: localApprovalActionPreviews.handoff
+                    .requiresPrimaryHostReview
+                    ? "Required"
+                    : "Not required",
+                  detail: `Handoff readiness: ${localApprovalActionPreviews.handoff.handoffReview?.readiness ?? "review-only"}`,
+                },
+              ]}
+            />
             <div className="mt-3 grid gap-3 lg:grid-cols-2">
               {[
                 ["Approve device", localApprovalActionPreviews.approve],
@@ -2643,28 +2634,30 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 Sample · intent-only
               </span>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <SettingsStatusCard
-                label="Pending notifications"
-                value={`${summarizeApprovalNotificationInbox(LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION_INBOX).pending}`}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Risk"
-                value={LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.risk}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Surface decision"
-                value={LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.surfaceDecision}
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Audit only"
-                value={`sideEffectsPerformed ${String(LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.sideEffectsPerformed)}`}
-                accentColor={theme.hex}
-              />
-            </div>
+            <SettingsStatList
+              className="mt-3"
+              items={[
+                {
+                  label: "Pending notifications",
+                  value: `${summarizeApprovalNotificationInbox(LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION_INBOX).pending}`,
+                },
+                {
+                  label: "Risk",
+                  value: LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.risk,
+                },
+                {
+                  label: "Surface decision",
+                  value: LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.surfaceDecision,
+                },
+                {
+                  label: "Side effects performed",
+                  value: LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.sideEffectsPerformed
+                    ? "Yes"
+                    : "None",
+                  detail: "Audit only",
+                },
+              ]}
+            />
             <div
               className="mt-3 rounded-lg border p-3"
               style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
@@ -3420,93 +3413,86 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           accentColor={theme.hex}
           isMobile={isMobile}
         >
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <SettingsStatusCard
-              label="Soft enforcement"
-              value={getLucaLinkSecurityModeLabel(
-                deviceCenterSnapshot.softEnforcementMode,
-              )}
-              detail={deviceCenterSnapshot.softEnforcementMode}
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Runtime observations"
-              value={`${deviceCenterSnapshot.runtimeShadowSummary.total}`}
-              detail={`Allow ${deviceCenterSnapshot.runtimeShadowSummary.wouldAllow} · Deny ${deviceCenterSnapshot.runtimeShadowSummary.wouldDeny} · Approval ${deviceCenterSnapshot.runtimeShadowSummary.wouldRequirePrimaryHostApproval}`}
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Adapter diagnostics"
-              value={`${deviceCenterSnapshot.runtimeShadowSummary.adapterWarnings} warnings / ${deviceCenterSnapshot.runtimeShadowSummary.adapterErrors} errors`}
-              detail="Observation only; no enforcement toggles here."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Device trust"
-              value={`${deviceCenterSnapshot.deviceTrustSummary.total} known`}
-              detail={`${deviceCenterSnapshot.deviceTrustSummary.guests} guests · ${deviceCenterSnapshot.deviceTrustSummary.owner} owner record`}
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Trust audit"
-              value={`${deviceCenterSnapshot.deviceTrustAudit.length}`}
-              detail={
-                deviceCenterSnapshot.deviceTrustSummary.latestMutation
-                  ?.mutation ?? "No trust mutations yet"
-              }
-              accentColor={theme.hex}
-            />
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <SettingsStatusCard
-              label="Continuation tokens"
-              value={`${deviceCenterSnapshot.continuationSummary.total} total · ${deviceCenterSnapshot.continuationSummary.valid} valid`}
-              detail="Continuation model only. Model records only; approvals do not execute actions."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Valid continuations"
-              value={`${deviceCenterSnapshot.validContinuationTokens.length}`}
-              detail="No action replay. Tokens can be validated as state only."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Consumed"
-              value={`${deviceCenterSnapshot.continuationSummary.consumed}`}
-              detail="No runtime execution. Mark consumed only records state."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Expired / blocked"
-              value={`${deviceCenterSnapshot.continuationSummary.expired} expired · ${deviceCenterSnapshot.continuationSummary.blocked} blocked`}
-              detail="Physical-world and payment actions require fresh confirmation."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Manual retry only"
-              value={`${deviceCenterSnapshot.continuationSummary.byReplayMode["manual-retry-only"]}`}
-              detail="Manual retry only is a classification, not an automatic action."
-              accentColor={theme.hex}
-            />
-            <SettingsStatusCard
-              label="Fresh confirmation required"
-              value={`${deviceCenterSnapshot.continuationSummary.byReplayMode["fresh-confirmation-required"]}`}
-                detail={`Single-use replayable records: ${deviceCenterSnapshot.continuationSummary.byReplayMode["single-use-replayable"]}.`}
-              accentColor={theme.hex}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-            {(
+          <SettingsStatList
+            items={[
+              {
+                label: "Soft enforcement",
+                value: getLucaLinkSecurityModeLabel(
+                  deviceCenterSnapshot.softEnforcementMode,
+                ),
+                detail: deviceCenterSnapshot.softEnforcementMode,
+              },
+              {
+                label: "Runtime observations",
+                value: `${deviceCenterSnapshot.runtimeShadowSummary.total}`,
+                detail: `Allow ${deviceCenterSnapshot.runtimeShadowSummary.wouldAllow} · Deny ${deviceCenterSnapshot.runtimeShadowSummary.wouldDeny} · Approval ${deviceCenterSnapshot.runtimeShadowSummary.wouldRequirePrimaryHostApproval}`,
+              },
+              {
+                label: "Adapter diagnostics",
+                value: `${deviceCenterSnapshot.runtimeShadowSummary.adapterWarnings} warnings / ${deviceCenterSnapshot.runtimeShadowSummary.adapterErrors} errors`,
+                detail: "Observation only; no enforcement toggles here.",
+              },
+              {
+                label: "Device trust",
+                value: `${deviceCenterSnapshot.deviceTrustSummary.total} known`,
+                detail: `${deviceCenterSnapshot.deviceTrustSummary.guests} guests · ${deviceCenterSnapshot.deviceTrustSummary.owner} owner record`,
+              },
+              {
+                label: "Trust audit",
+                value: `${deviceCenterSnapshot.deviceTrustAudit.length}`,
+                detail:
+                  deviceCenterSnapshot.deviceTrustSummary.latestMutation
+                    ?.mutation ?? "No trust mutations yet",
+              },
+            ]}
+          />
+          <SettingsStatList
+            className="mt-3"
+            items={[
+              {
+                label: "Continuation tokens",
+                value: `${deviceCenterSnapshot.continuationSummary.total} total · ${deviceCenterSnapshot.continuationSummary.valid} valid`,
+                detail:
+                  "Model records only; approvals do not execute actions.",
+              },
+              {
+                label: "Valid continuations",
+                value: `${deviceCenterSnapshot.validContinuationTokens.length}`,
+                detail: "No action replay. Tokens can be validated as state only.",
+              },
+              {
+                label: "Consumed",
+                value: `${deviceCenterSnapshot.continuationSummary.consumed}`,
+                detail: "No runtime execution. Mark consumed only records state.",
+              },
+              {
+                label: "Expired / blocked",
+                value: `${deviceCenterSnapshot.continuationSummary.expired} expired · ${deviceCenterSnapshot.continuationSummary.blocked} blocked`,
+                detail:
+                  "Physical-world and payment actions require fresh confirmation.",
+              },
+              {
+                label: "Manual retry only",
+                value: `${deviceCenterSnapshot.continuationSummary.byReplayMode["manual-retry-only"]}`,
+                detail:
+                  "Manual retry only is a classification, not an automatic action.",
+              },
+              {
+                label: "Fresh confirmation required",
+                value: `${deviceCenterSnapshot.continuationSummary.byReplayMode["fresh-confirmation-required"]}`,
+                detail: `Single-use replayable records: ${deviceCenterSnapshot.continuationSummary.byReplayMode["single-use-replayable"]}.`,
+              },
+            ]}
+          />
+          <SettingsStatList
+            className="mt-3"
+            items={(
               ["pending", "approved", "denied", "expired", "cancelled"] as const
-            ).map((key) => (
-              <SettingsStatusCard
-                key={key}
-                label={`Queue ${key}`}
-                value={`${deviceCenterSnapshot.approvalSummary[key]}`}
-                accentColor={theme.hex}
-              />
-            ))}
-          </div>
+            ).map((key) => ({
+              label: `Queue ${key}`,
+              value: `${deviceCenterSnapshot.approvalSummary[key]}`,
+            }))}
+          />
           <SettingsCard>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -3685,32 +3671,32 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             accentColor={theme.hex}
             isMobile={isMobile}
           >
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-              <SettingsStatusCard
-                label="Primary Host"
-                value={!isMobile ? status.text : "Available"}
-                detail="This LucaOS session can pair with trusted clients."
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Phone"
-                value={isMobile ? status.text : "Pair below"}
-                detail="Companion hosts remain available through Luca Link."
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Tablet / browser"
-                value="Supported"
-                detail="Browser sessions and future devices use the same pairing surface."
-                accentColor={theme.hex}
-              />
-              <SettingsStatusCard
-                label="Connection health"
-                value={linkState.connected ? "Connected" : "Ready"}
-                detail="Relay, local, and VPN status remains in existing controls."
-                accentColor={theme.hex}
-              />
-            </div>
+            <SettingsStatList
+              items={[
+                {
+                  label: "Primary Host",
+                  value: !isMobile ? status.text : "Available",
+                  detail: "This LucaOS session can pair with trusted clients.",
+                },
+                {
+                  label: "Phone",
+                  value: isMobile ? status.text : "Pair below",
+                  detail: "Companion hosts remain available through Luca Link.",
+                },
+                {
+                  label: "Tablet / browser",
+                  value: "Supported",
+                  detail:
+                    "Browser sessions and future devices use the same pairing surface.",
+                },
+                {
+                  label: "Connection health",
+                  value: linkState.connected ? "Connected" : "Ready",
+                  detail:
+                    "Relay, local, and VPN status remains in existing controls.",
+                },
+              ]}
+            />
           </SettingsSection>
 
           <SettingsSection

@@ -54,10 +54,10 @@ describe("Settings LucaLink Device Center runtime safety", () => {
 
   it("shows read-only adapter sandbox status without execution controls", () => {
     expect(lucaLinkSource).toContain("Adapter Sandbox Runtime");
-    expect(lucaLinkSource).toContain('label="Runtime status"');
-    expect(lucaLinkSource).toContain('label="Safety check"');
-    expect(lucaLinkSource).toContain('label="Code and shell"');
-    expect(lucaLinkSource).toContain('label="Host approval"');
+    expect(lucaLinkSource).toContain('label: "Runtime status"');
+    expect(lucaLinkSource).toContain('label: "Safety check"');
+    expect(lucaLinkSource).toContain('label: "Code and shell"');
+    expect(lucaLinkSource).toContain('label: "Host approval"');
     expect(lucaLinkSource).toContain("Safety-check plan");
     expect(lucaLinkSource).toContain("sideEffectsPerformed");
     expect(lucaLinkSource).not.toMatch(/>Execute adapter</i);
@@ -66,10 +66,10 @@ describe("Settings LucaLink Device Center runtime safety", () => {
 
   it("shows companion approval notifications as intent-only read-only cards", () => {
     expect(lucaLinkSource).toContain("Companion Approval Notifications");
-    expect(lucaLinkSource).toContain("Intent-only notification preview");
-    expect(lucaLinkSource).toMatch(/No execution, queue\s+mutation/);
-    expect(lucaLinkSource).toContain('label="Risk"');
-    expect(lucaLinkSource).toContain('label="Surface decision"');
+    expect(lucaLinkSource).toContain("intent-only notification preview");
+    expect(lucaLinkSource).toMatch(/No\s+execution, queue\s+mutation/);
+    expect(lucaLinkSource).toContain('label: "Risk"');
+    expect(lucaLinkSource).toContain('label: "Surface decision"');
     expect(lucaLinkSource).toContain("Allowed notification actions");
     expect(lucaLinkSource).toContain("Blocked actions");
     expect(lucaLinkSource).toContain("sideEffectsPerformed");
@@ -94,15 +94,17 @@ describe("Settings LucaLink Device Center runtime safety", () => {
   });
 
   it("uses host-aware terminology and explicit safety copy", () => {
-    expect(lucaLinkSource).toContain('label="Primary Host"');
+    expect(lucaLinkSource).toContain('label: "Primary Host"');
     expect(lucaLinkSource).not.toMatch(/Origin approval/i);
     expect(lucaLinkSource).toContain(
       "Memory handoff is intent-only; raw memory databases are not",
     );
-    expect(lucaLinkSource).toContain("generatedTextOnly true");
-    expect(lucaLinkSource).toContain("canWriteToDisk false");
-    expect(lucaLinkSource).toContain("canExecute false");
-    expect(lucaLinkSource).toContain("canInstall false");
+    // Adapter draft safety flags render as humanized copy, not raw camelCase
+    // field dumps.
+    expect(lucaLinkSource).toContain("Text only {draft.generatedTextOnly");
+    expect(lucaLinkSource).toContain("Disk write {draft.canWriteToDisk");
+    expect(lucaLinkSource).toContain('Execute {draft.canExecute ? "yes" : "no"}');
+    expect(lucaLinkSource).toContain("{draft.canInstall ? \"yes\" : \"no\"}");
     expect(lucaLinkSource).toContain(
       "Approval for sandbox does not execute or install the adapter.",
     );

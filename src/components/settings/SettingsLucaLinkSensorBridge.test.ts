@@ -55,7 +55,8 @@ describe("SettingsLucaLinkSensorBridge", () => {
     expect(markup).toContain(
       "No transport send or device control is performed.",
     );
-    expect(markup).toContain("sideEffectsPerformed: false");
+    expect(markup).toContain("Side effects");
+    expect(markup).toContain("Static fixtures only");
   });
 
   it("exposes no live collection, permission, or polling controls", () => {

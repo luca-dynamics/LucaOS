@@ -5,7 +5,7 @@ import {
   createCapabilityStatusSummary,
   createPermissionReadinessSummary,
 } from "../../services/lucaLink/sensors";
-import { SettingsCard, SettingsStatusCard } from "./SettingsLayout";
+import { SettingsCard, SettingsStatList } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 export interface SettingsLucaLinkSensorBridgeProps {
@@ -36,32 +36,31 @@ export const SettingsLucaLinkSensorBridge: React.FC<
         </span>
       </div>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        <SettingsStatusCard
-          label="Status"
-          value="Model-only / read-only"
-          detail={`${readiness.readySnapshots} ready snapshot(s)`}
-          accentColor={accentColor}
-        />
-        <SettingsStatusCard
-          label="Live collection"
-          value="Disabled"
-          detail="Readiness preview only"
-          accentColor={accentColor}
-        />
-        <SettingsStatusCard
-          label="Sample host / device"
-          value={sample.hostId}
-          detail={sample.deviceId ?? "Host summary only"}
-          accentColor={accentColor}
-        />
-        <SettingsStatusCard
-          label="Side effects"
-          value="None"
-          detail={`sideEffectsPerformed: ${String(readiness.sideEffectsPerformed)}`}
-          accentColor={accentColor}
-        />
-      </div>
+      <SettingsStatList
+        className="mt-3"
+        items={[
+          {
+            label: "Status",
+            value: "Model-only / read-only",
+            detail: `${readiness.readySnapshots} ready snapshot(s)`,
+          },
+          {
+            label: "Live collection",
+            value: "Disabled",
+            detail: "Readiness preview only",
+          },
+          {
+            label: "Sample host / device",
+            value: sample.hostId,
+            detail: sample.deviceId ?? "Host summary only",
+          },
+          {
+            label: "Side effects",
+            value: readiness.sideEffectsPerformed ? "Yes" : "None",
+            detail: "Static fixtures only",
+          },
+        ]}
+      />
 
       <div
         className="mt-3 rounded-lg border p-3"

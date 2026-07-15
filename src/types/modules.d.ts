@@ -98,6 +98,15 @@ declare namespace THREE {
     constructor(x?: number, y?: number);
   }
 
+  class Vector4 {
+    x: number;
+    y: number;
+    z: number;
+    w: number;
+    constructor(x?: number, y?: number, z?: number, w?: number);
+    set(x: number, y: number, z: number, w: number): this;
+  }
+
   class Color {
     constructor(color?: string | number);
     set(color: string | number): this;
@@ -157,6 +166,7 @@ declare module "three" {
   export import Group = THREE.Group;
   export import Vector2 = THREE.Vector2;
   export import Vector3 = THREE.Vector3;
+  export import Vector4 = THREE.Vector4;
   export import Color = THREE.Color;
   export import BufferGeometry = THREE.BufferGeometry;
   export import CatmullRomCurve3 = THREE.CatmullRomCurve3;

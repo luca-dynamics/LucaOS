@@ -5,7 +5,10 @@ import { Center, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { eventBus } from "../../services/eventBus";
 import { createLucaFacePlasmaMaterial } from "../presence/lucaFacePlasmaMaterial";
-import settingsService, { type LucaSettings } from "../../services/settingsService";
+import {
+  settingsService,
+  type LucaSettings,
+} from "../../services/settingsService";
 
 const sanitizeColor = (color: string) =>
   color.startsWith("#") && color.length === 9 ? color.substring(0, 7) : color;
