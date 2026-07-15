@@ -129,13 +129,15 @@ describe("Settings LucaLink Device Center", () => {
   });
 
   it("renders continuation summary and read-only safety copy in Advanced", () => {
-    expect(lucaLinkSource).toContain('label="Continuation tokens"');
-    expect(lucaLinkSource).toContain('label="Valid continuations"');
-    expect(lucaLinkSource).toContain('label="Consumed"');
-    expect(lucaLinkSource).toContain('label="Expired / blocked"');
-    expect(lucaLinkSource).toContain('label="Manual retry only"');
-    expect(lucaLinkSource).toContain('label="Fresh confirmation required"');
-    expect(lucaLinkSource).toContain("Continuation model only");
+    expect(lucaLinkSource).toContain('label: "Continuation tokens"');
+    expect(lucaLinkSource).toContain('label: "Valid continuations"');
+    expect(lucaLinkSource).toContain('label: "Consumed"');
+    expect(lucaLinkSource).toContain('label: "Expired / blocked"');
+    expect(lucaLinkSource).toContain('label: "Manual retry only"');
+    expect(lucaLinkSource).toContain('label: "Fresh confirmation required"');
+    expect(lucaLinkSource).toContain(
+      "Model records only; approvals do not execute actions.",
+    );
     expect(lucaLinkSource).toContain("No action replay");
     expect(lucaLinkSource).toContain("No runtime execution");
   });
@@ -545,10 +547,19 @@ describe("Settings LucaLink Device Center creator bridge review surfaces", () =>
       "Approval for sandbox does not execute or install the adapter.",
     );
     expect(bridgeReviewSectionSource).toContain("Sensor read is read-only.");
-    expect(bridgeReviewSectionSource).toContain("generatedTextOnly true");
-    expect(bridgeReviewSectionSource).toContain("canWriteToDisk false");
-    expect(bridgeReviewSectionSource).toContain("canExecute false");
-    expect(bridgeReviewSectionSource).toContain("canInstall false");
+    // Adapter draft safety flags render humanized, not as camelCase dumps.
+    expect(bridgeReviewSectionSource).toContain(
+      "Text only {draft.generatedTextOnly",
+    );
+    expect(bridgeReviewSectionSource).toContain(
+      "Disk write {draft.canWriteToDisk",
+    );
+    expect(bridgeReviewSectionSource).toContain(
+      'Execute {draft.canExecute ? "yes" : "no"}',
+    );
+    expect(bridgeReviewSectionSource).toContain(
+      '{draft.canInstall ? "yes" : "no"}',
+    );
   });
 
   it("keeps bridge review actions approval-gated and avoids forbidden action labels", () => {
