@@ -1,5 +1,9 @@
 import React from "react";
 import { Icon } from "./ui/Icon";
+import {
+  lucaMaterialControlActiveStyle,
+  lucaMaterialControlStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface WidgetControlsProps {
   isHovered: boolean;
@@ -23,11 +27,9 @@ const WidgetControls: React.FC<WidgetControlsProps> = ({
           e.stopPropagation();
           onToggleHUD();
         }}
-        className={`p-2 rounded-full glass-blur border transition-all duration-300 ${
-          isHUDActive
-            ? "bg-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_15%,transparent)] border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_30%,transparent)] text-[var(--luca-text-primary,#ffffff)]"
-            : "bg-[var(--luca-surface-glass,rgba(0,0,0,0.4))] border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_10%,transparent)] text-[var(--luca-text-tertiary,rgba(255,255,255,0.4))] hover:bg-[var(--luca-surface-hover,rgba(0,0,0,0.6))] hover:border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_20%,transparent)] hover:text-[var(--luca-text-primary,#ffffff)]"
-        }`}
+        data-luca-material-role={isHUDActive ? "control-active" : "control"}
+        className="luca-shell-control p-2 rounded-full border"
+        style={isHUDActive ? lucaMaterialControlActiveStyle : lucaMaterialControlStyle}
         title={isHUDActive ? "Stop seeing screen" : "See screen"}
       >
         <Icon name="Monitor" size={14} />
@@ -38,7 +40,9 @@ const WidgetControls: React.FC<WidgetControlsProps> = ({
           e.stopPropagation();
           onExpand();
         }}
-        className="p-2 rounded-full bg-[var(--luca-surface-glass,rgba(0,0,0,0.4))] glass-blur border border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_10%,transparent)] text-[var(--luca-text-tertiary,rgba(255,255,255,0.4))] hover:bg-[var(--luca-surface-hover,rgba(0,0,0,0.6))] hover:border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_20%,transparent)] hover:text-[var(--luca-text-primary,#ffffff)] transition-all duration-300"
+        data-luca-material-role="control"
+        className="luca-shell-control p-2 rounded-full border"
+        style={lucaMaterialControlStyle}
         title="Open LucaOS"
       >
         <Icon name="Maximize2" size={14} />

@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+
+const { readFileSync } = process.getBuiltinModule("node:fs");
 
 describe("Hologram presence controls", () => {
   const source = readFileSync("src/components/Hologram/HologramWidget.tsx", "utf8");
@@ -20,5 +21,12 @@ describe("Hologram presence controls", () => {
     expect(source).not.toContain("1-WAY TRANSLATE");
     expect(source).not.toContain("INTERPRETER MODE");
     expect(source).not.toContain("LIVE TRANSCRIPT");
+  });
+
+  it("materializes helper chrome while leaving the hologram scene direct", () => {
+    expect(source).toContain("lucaMaterialCardStyle");
+    expect(source).toContain("lucaMaterialHudStyle");
+    expect(source).toContain("lucaMaterialControlStyle");
+    expect(source).not.toContain("LucaLiquidGlassLayer");
   });
 });

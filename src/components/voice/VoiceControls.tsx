@@ -66,6 +66,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           <>
             <button
               onClick={onSettingsClick}
+              data-luca-material-role="control"
               className="luca-liquid-glass-control cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border text-[var(--luca-text-secondary)] hover:text-[var(--luca-text-primary)] transition-all"
               style={{
                 backgroundColor: "var(--luca-surface-glass)",
@@ -79,6 +80,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
             </button>
             <button
               onClick={onToggleVideo}
+              data-luca-material-role={isVideoActive ? "control-active" : "control"}
               className="luca-liquid-glass-control cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border transition-all"
               style={{
                 backgroundColor: isVideoActive
@@ -107,6 +109,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
 
         <button
           onClick={onClose}
+          data-luca-material-role="control"
           className="luca-liquid-glass-control cursor-pointer group p-2.5 sm:p-3 md:p-4 rounded-full border text-[var(--luca-text-secondary)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] hover:text-[var(--luca-text-primary)] transition-all z-[110]"
           style={{
             backgroundColor: "var(--luca-surface-glass)",

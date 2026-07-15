@@ -2,14 +2,18 @@ import React from "react";
 import HologramScene from "./HologramScene";
 import { ContextCard } from "../../services/ContextCardService";
 import { PERSONA_UI_CONFIG } from "../../config/themeColors";
-import {
-  translationService,
-  TranslationMode,
-} from "../../services/TranslationService";
+import { TranslationMode } from "../../services/TranslationService";
 import { MissionScope } from "../../services/toolRegistry";
 import { MISSION_COLORS } from "../../config/themeColors";
 import { eventBus } from "../../services/eventBus";
 import { Icon } from "../ui/Icon";
+import {
+  lucaMaterialCardStyle,
+  lucaMaterialControlActiveStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialHudStyle,
+  lucaMaterialPopoverStyle,
+} from "../../styles/lucaMaterialSystem";
 
 interface TranslationResult {
   originalText: string;
@@ -176,10 +180,11 @@ const ContextButton = ({
       style={pos as any}
     >
       <button
-        className="pointer-events-auto px-4 py-2 rounded-xl glass-blur flex items-center gap-3 group/card transition-all duration-300 hover:scale-105"
+        data-luca-material-role="card"
+        className="luca-shell-control pointer-events-auto px-4 py-2 rounded-xl border flex items-center gap-3 group/card"
         style={{
-          border: `1px solid ${primaryColor}66`,
-          backgroundColor: `${activeConfig.bg ? "transparent" : `${primaryColor}15`}`,
+          ...lucaMaterialCardStyle,
+          borderColor: `${primaryColor}66`,
           boxShadow: shadowValue,
         }}
       >
@@ -294,16 +299,30 @@ const PresenceControlBar = ({
           }`}>
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px]"
                  style={{ borderBottomColor: `${primaryColor}66` }} />
-            <div className="bg-[color-mix(in_srgb,var(--luca-background-elevated,#000000)_95%,transparent)] glass-blur p-4 rounded-2xl shadow-2xl relative"
-                 style={{ border: `1px solid ${primaryColor}66`, boxShadow: `0 8px 32px ${primaryColor}33` }}>
+            <div
+              data-luca-material-role="popover"
+              className="p-4 rounded-2xl border relative"
+              style={{
+                ...lucaMaterialPopoverStyle,
+                borderColor: `${primaryColor}66`,
+                boxShadow: `0 8px 32px ${primaryColor}33`,
+              }}
+            >
               <p className="text-[10px] font-mono leading-relaxed text-[var(--luca-text-secondary,rgba(255,255,255,0.9))] text-center">
                 {activeControl?.info}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--luca-surface-glass,rgba(0,0,0,0.6))] glass-blur group/readout cursor-default"
-               style={{ border: `1px solid ${primaryColor}44`, boxShadow: `0 0 15px ${primaryColor}22` }}>
+          <div
+            data-luca-material-role="hud"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full border group/readout cursor-default"
+            style={{
+              ...lucaMaterialHudStyle,
+              borderColor: `${primaryColor}44`,
+              boxShadow: `0 0 15px ${primaryColor}22`,
+            }}
+          >
             <div 
               onPointerEnter={() => setShowHelp(true)}
               onPointerLeave={() => setShowHelp(false)}
@@ -333,17 +352,20 @@ const PresenceControlBar = ({
               onClick={() => {
                 m.onClick?.();
               }}
-              className={`absolute pointer-events-auto w-7 h-7 rounded-full glass-blur flex items-center justify-center transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 ${
+              data-luca-material-role={isActive ? "control-active" : "control"}
+              className={`luca-anchored-control absolute pointer-events-auto w-7 h-7 rounded-full border flex items-center justify-center -translate-x-1/2 -translate-y-1/2 ${
                 isActive
-                  ? "scale-110"
-                  : "opacity-60 hover:opacity-100 hover:scale-105"
+                  ? "opacity-100"
+                  : "opacity-60"
               }`}
               style={{
+                ...(isActive
+                  ? lucaMaterialControlActiveStyle
+                  : lucaMaterialControlStyle),
                 left: `${m.x}px`,
                 top: `${m.y}px`,
                 boxShadow: isActive ? `0 0 15px ${primaryColor}66` : "none",
-                border: isActive ? `1px solid ${primaryColor}` : `1px solid ${primaryColor}66`,
-                backgroundColor: isActive ? `${primaryColor}40` : `${primaryColor}1A`,
+                borderColor: isActive ? primaryColor : `${primaryColor}66`,
                 color: isActive ? "var(--luca-text-primary, #ffffff)" : primaryColor,
               }}
             >

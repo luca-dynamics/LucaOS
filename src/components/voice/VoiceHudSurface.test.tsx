@@ -64,6 +64,8 @@ describe("VoiceHudSurface", () => {
     expect(source).toContain("VoiceVisualizer");
     expect(source).toContain("VoiceStatusOrb");
     expect(source).toContain("VoiceControls");
+    expect(source).toContain('data-luca-material-role="root"');
+    expect(source).toContain("lucaMaterialHudStyle");
   });
 
   it("gates technical panels behind explicit telemetry and tactical flags", () => {

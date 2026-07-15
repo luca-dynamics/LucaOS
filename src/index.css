@@ -799,6 +799,28 @@ html.luca-wco .luca-wco-pad-right {
   color: var(--luca-text-primary, var(--app-text-main));
 }
 
+/* Hologram controls are centered with translate; preserve that geometry while
+ * adding the same physical press response as other Luca controls. */
+.luca-anchored-control {
+  transition-property: transform, opacity, background-color, border-color, color;
+  transition-duration: 140ms;
+  transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.luca-anchored-control:active {
+  transform: translate(-50%, -50%) scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .luca-anchored-control {
+    transition-duration: 0.01ms;
+  }
+
+  .luca-anchored-control:active {
+    transform: translate(-50%, -50%);
+  }
+}
+
 .luca-shell-active-indicator {
   background: var(--luca-accent-primary);
   border-color: var(--luca-accent-soft);

@@ -30,7 +30,8 @@ describe("LucaChatSurface", () => {
     expect(LucaChatSurface).toBeTypeOf("function");
     expect(source).toContain('data-luca-chat-surface="original-mini-chat-extraction"');
     expect(source).toContain("L.U.C.A OS");
-    expect(source).toContain("glass-blur");
+    expect(source).toContain("lucaMaterialFloatingPanelStyle");
+    expect(source).toContain('data-luca-material-role="floating-panel"');
     expect(source).toContain("ChatWidgetHistory");
     expect(source).toContain("ChatWidgetInput");
   });

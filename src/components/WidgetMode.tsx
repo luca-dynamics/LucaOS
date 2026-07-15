@@ -17,6 +17,7 @@ import {
   getWidgetDictationState,
   type WidgetLegacyPayload,
 } from "../presence/bridges";
+import { lucaMaterialHudStyle } from "../styles/lucaMaterialSystem";
 
 const WidgetMode: React.FC = () => {
   const { isDictating, toggleDictation, setDictationState } = useDictation();
@@ -173,8 +174,10 @@ const WidgetMode: React.FC = () => {
 
       {/* Ephemeral caption — silent at rest, words only when light can't say it */}
       <div
-        className="mt-2 px-4 py-1.5 rounded-full bg-[var(--luca-surface-glass,rgba(0,0,0,0.6))] border border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_10%,transparent)] max-w-[180px]"
+        data-luca-material-role="hud"
+        className="mt-2 px-4 py-1.5 rounded-full border max-w-[180px]"
         style={{
+          ...lucaMaterialHudStyle,
           opacity: captionText ? 1 : 0,
           transform: captionText ? "translateY(0)" : "translateY(4px)",
           transitionProperty: "opacity, transform",
