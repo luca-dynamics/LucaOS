@@ -6,10 +6,15 @@ import {
   SettingsRow,
   SettingsSection,
   SettingsToggle,
-  settingsControlInlineStyle,
-  settingsSelectClassName,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import {
+  LucaField,
+  LucaFieldDescription,
+  LucaFieldLabel,
+  LucaSelect,
+  LucaSlider,
+} from "../ui/luca";
 import AtmosphereStudio from "./AtmosphereStudio";
 import OpticalMaterialControls from "./OpticalMaterialControls";
 
@@ -40,7 +45,7 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
   isMobile,
 }) => {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <SkinPreviewSection
         accentColor={theme.hex}
         isMobile={isMobile}
@@ -78,13 +83,14 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
         >
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <SettingsCard>
-              <label
-                className="text-sm font-medium"
-                style={{ color: settingsSurfaceTokens.textPrimary }}
-              >
-                Interface font
-              </label>
-              <select
+              <LucaField>
+              <LucaFieldLabel htmlFor="appearance-interface-font">Interface font</LucaFieldLabel>
+              <LucaFieldDescription id="appearance-interface-font-description">
+                Choose the typeface used throughout LucaOS.
+              </LucaFieldDescription>
+              <LucaSelect
+                id="appearance-interface-font"
+                aria-describedby="appearance-interface-font-description"
                 value={
                   settings.general.fontFamily ||
                   '"Inter", system-ui, sans-serif'
@@ -92,8 +98,6 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                 onChange={(e) =>
                   onUpdate("general", "fontFamily", e.target.value)
                 }
-                className={`${settingsSelectClassName} mt-2`}
-                style={settingsControlInlineStyle}
               >
                 <option value='"Inter", system-ui, sans-serif'>
                   Inter — Standard
@@ -109,7 +113,8 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                   Space Mono — Tactical
                 </option>
                 <option value="system-ui, sans-serif">System Native</option>
-              </select>
+              </LucaSelect>
+              </LucaField>
             </SettingsCard>
 
             <SettingsCard>
@@ -122,8 +127,9 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                   {Math.round((settings.general.fontScale || 1.0) * 100)}%
                 </span>
               </div>
-              <input
-                type="range"
+              <LucaSlider
+                aria-label="UI scale"
+                aria-valuetext={`${Math.round((settings.general.fontScale || 1.0) * 100)} percent`}
                 min="80"
                 max="150"
                 value={Math.round((settings.general.fontScale || 1.0) * 100)}
@@ -131,7 +137,7 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                   const val = parseInt(e.target.value) / 100;
                   onUpdate("general", "fontScale", val);
                 }}
-                className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"
+                className="mt-3"
                 style={{
                   accentColor: theme.hex,
                   backgroundColor: settingsSurfaceTokens.borderSubtle,
@@ -151,8 +157,9 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                   %
                 </span>
               </div>
-              <input
-                type="range"
+              <LucaSlider
+                aria-label="Background opacity"
+                aria-valuetext={`${Math.round((settings.general.backgroundOpacity ?? 0.75) * 100)} percent`}
                 min="0"
                 max="100"
                 value={Math.round(
@@ -167,7 +174,7 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                     }),
                   );
                 }}
-                className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"
+                className="mt-3"
                 style={{
                   accentColor: theme.hex,
                   backgroundColor: settingsSurfaceTokens.borderSubtle,
@@ -182,8 +189,9 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                 <span>Background blur</span>
                 <span>{settings.general.backgroundBlur ?? 12}px</span>
               </div>
-              <input
-                type="range"
+              <LucaSlider
+                aria-label="Background blur"
+                aria-valuetext={`${settings.general.backgroundBlur ?? 12} pixels`}
                 min="0"
                 max="40"
                 value={settings.general.backgroundBlur ?? 12}
@@ -196,7 +204,7 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                     }),
                   );
                 }}
-                className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"
+                className="mt-3"
                 style={{
                   accentColor: theme.hex,
                   backgroundColor: settingsSurfaceTokens.borderSubtle,

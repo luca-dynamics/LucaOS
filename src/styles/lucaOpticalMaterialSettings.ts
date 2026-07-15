@@ -27,6 +27,12 @@ export interface LucaOpticalMaterialSettings {
   metal: LucaChromaticMetalTuning;
 }
 
+/** Persisted and preview inputs may supply either material group field by field. */
+export interface LucaOpticalMaterialSettingsInput {
+  glass?: Partial<LucaLiquidGlassTuning>;
+  metal?: Partial<LucaChromaticMetalTuning>;
+}
+
 export const DEFAULT_LUCA_OPTICAL_MATERIAL: LucaOpticalMaterialSettings = {
   glass: {
     light: 0.72,
@@ -59,7 +65,7 @@ const clamp = (value: unknown, fallback: number, min: number, max: number) =>
   Math.min(max, Math.max(min, finite(value, fallback)));
 
 export function normalizeLucaOpticalMaterialSettings(
-  value?: Partial<LucaOpticalMaterialSettings> | null,
+  value?: LucaOpticalMaterialSettingsInput | null,
 ): LucaOpticalMaterialSettings {
   const glass = value?.glass ?? {};
   const metal = value?.metal ?? {};
@@ -95,7 +101,7 @@ export function normalizeLucaOpticalMaterialSettings(
 }
 
 export function getLucaOpticalMaterialCssVariables(
-  value?: Partial<LucaOpticalMaterialSettings> | null,
+  value?: LucaOpticalMaterialSettingsInput | null,
 ): Record<string, string> {
   const tuning = normalizeLucaOpticalMaterialSettings(value);
   return {

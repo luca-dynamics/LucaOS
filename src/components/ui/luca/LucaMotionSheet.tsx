@@ -8,6 +8,7 @@ import {
   type LucaSheetEdge,
 } from "../../../styles/lucaFluidMotion";
 import { mergeClassNames } from "./mergeClassNames";
+import { lucaLayerStyle } from "./lucaOverlayFoundation";
 
 export type LucaMotionSheetProps = HTMLMotionProps<"div"> & {
   edge?: LucaSheetEdge;
@@ -26,7 +27,7 @@ export const LucaMotionSheet = React.forwardRef<HTMLDivElement, LucaMotionSheetP
         exit={sheetMotion.exit}
         transition={sheetMotion.transition}
         className={mergeClassNames(className)}
-        style={{ ...lucaMaterialSheetStyle, ...style }}
+        style={{ ...lucaMaterialSheetStyle, ...style, ...lucaLayerStyle("panel") }}
         {...props}
       />
     );

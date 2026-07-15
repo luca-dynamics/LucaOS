@@ -1,11 +1,20 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Icon } from "../ui/Icon";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Anchor, X } from "lucide-react";
+import {
+  LucaIcon,
+  LucaIconButton,
+  LucaPanelActions,
+  LucaPanelContent,
+  LucaPanelHeader,
+  LucaPanelTitle,
+  LucaTooltip,
+  lucaLayerStyle,
+} from "../ui/luca";
 import { getThemeColors } from "../../config/themeColors";
 import { lucaMaterialFloatingPanelStyle } from "../../styles/lucaMaterialSystem";
 import {
   LUCA_DRAG_INERTIA,
-  resolveLucaPressMotion,
   resolveLucaSurfaceMotion,
   resolveLucaViewportDragConstraints,
 } from "../../styles/lucaFluidMotion";
@@ -35,8 +44,8 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
   onReattach,
 }) => {
   const reducedMotion = useReducedMotion() ?? false;
+  const titleId = useId();
   const surfaceMotion = resolveLucaSurfaceMotion(reducedMotion);
-  const pressMotion = resolveLucaPressMotion(reducedMotion);
   const panelRef = useRef<HTMLDivElement>(null);
   const [dragConstraints, setDragConstraints] = useState(() =>
     resolveLucaViewportDragConstraints({
@@ -102,18 +111,21 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
           scale: surfaceMotion.exit.scale,
         }}
         transition={surfaceMotion.transition}
-        className={`fixed z-[100] flex flex-col overflow-hidden border shadow-2xl ${
+        role="region"
+        aria-labelledby={titleId}
+        className={`fixed flex flex-col overflow-hidden border shadow-2xl ${
           theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"
         }`}
         style={{
           ...lucaMaterialFloatingPanelStyle,
+          ...lucaLayerStyle("panel"),
           resize: "both",
           minWidth: "300px",
           minHeight: "400px",
         }}
       >
         {/* Header / Drag Handle */}
-        <div
+        <LucaPanelHeader
           className="flex items-center justify-between p-3 border-b cursor-move select-none"
           style={{ borderColor: `${theme.hex}22` }}
         >
@@ -122,47 +134,44 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
               className="w-2 h-2 rounded-full animate-pulse"
               style={{ backgroundColor: theme.hex }}
             />
-            <span
+            <LucaPanelTitle
+              id={titleId}
               className={`text-[10px] font-bold tracking-widest uppercase ${theme.primary}`}
             >
               {title} [DETACHED]
-            </span>
+            </LucaPanelTitle>
           </div>
 
-          <div className="flex items-center gap-2">
-            <motion.button
+          <LucaPanelActions>
+            <LucaTooltip label="Re-attach to main layout">
+            <LucaIconButton
               onClick={onReattach}
-              whileTap={pressMotion.whileTap}
-              transition={pressMotion.transition}
-              className="p-1 hover:bg-[var(--luca-surface-hover)] rounded transition-colors group"
-              title="Re-attach to Main Layout"
+              aria-label="Re-attach to main layout"
+              variant="ghost"
             >
-              <Icon
-                name="Anchor"
-                size={14}
+              <LucaIcon
+                icon={Anchor}
                 className="text-[color:var(--app-text-muted)] group-hover:text-[color:var(--app-text-main)]"
-                variant="BoldDuotone"
               />
-            </motion.button>
-            <motion.button
+            </LucaIconButton>
+            </LucaTooltip>
+            <LucaTooltip label="Close panel">
+            <LucaIconButton
               onClick={onClose}
-              whileTap={pressMotion.whileTap}
-              transition={pressMotion.transition}
-              className="p-1 hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] rounded transition-colors group"
-              title="Close Panel"
+              aria-label="Close panel"
+              variant="danger"
             >
-              <Icon
-                name="Close"
-                size={14}
+              <LucaIcon
+                icon={X}
                 className="text-[color:var(--app-text-muted)] group-hover:text-[var(--luca-danger,#f87171)]"
-                variant="BoldDuotone"
               />
-            </motion.button>
-          </div>
-        </div>
+            </LucaIconButton>
+            </LucaTooltip>
+          </LucaPanelActions>
+        </LucaPanelHeader>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-hidden relative">{children}</div>
+        <LucaPanelContent className="relative overflow-hidden">{children}</LucaPanelContent>
 
         {/* Resize Corner Indicator */}
         <div

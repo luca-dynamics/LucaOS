@@ -367,19 +367,17 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
               <AnimatePresence>
                 {plusOpen && (
                   <>
-                  <div
-                    className="fixed inset-0 z-[60]"
-                    onClick={() => closePlusMenu(true)}
-                    aria-hidden="true"
-                  />
                   <LucaMotionPopover
                     ref={plusMenuRef}
+                    open={plusOpen}
+                    triggerRef={plusButtonRef}
+                    onRequestClose={() => closePlusMenu(true)}
                     role="menu"
                     aria-label="Add to conversation"
                     originX={0.08}
                     originY={1}
                     onKeyDown={handlePlusMenuKeyDown}
-                    className="absolute bottom-full left-0 z-[70] mb-1.5 w-[216px]"
+                    className="absolute bottom-full left-0 mb-1.5 w-[216px]"
                     style={{
                       ...lucaMaterialPopoverStyle,
                       borderRadius: 12,
