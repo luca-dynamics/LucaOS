@@ -11,6 +11,11 @@ import {
   ROUTING_MODE_SHORT_LABELS,
   ROUTING_MODE_DESCRIPTIONS,
 } from "../../types/intentRouting";
+import {
+  lucaMaterialControlActiveStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialPopoverStyle,
+} from "../../styles/lucaMaterialSystem";
 
 interface IntentRoutingModeSelectorProps {
   theme?: { hex?: string; primary?: string };
@@ -60,12 +65,8 @@ const IntentRoutingModeSelector: React.FC<IntentRoutingModeSelectorProps> = ({ t
           aria-expanded={open}
           title={ROUTING_MODE_DESCRIPTIONS[mode]}
           onClick={() => setOpen((v) => !v)}
-          className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
-          style={{
-            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
-            backgroundColor: "var(--luca-surface-glass, transparent)",
-            color: "var(--luca-text-primary, var(--app-text-main))",
-          }}
+          className="luca-material-pressable inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
+          style={lucaMaterialControlStyle}
         >
           {ROUTING_MODE_SHORT_LABELS[mode]}
           <Icon
@@ -80,13 +81,8 @@ const IntentRoutingModeSelector: React.FC<IntentRoutingModeSelectorProps> = ({ t
             aria-label="Routing mode"
             className="absolute bottom-full left-0 z-[70] mb-1.5 w-[224px]"
             style={{
-              background:
-                "var(--luca-background-elevated, var(--app-bg-main, #14181d))",
-              border:
-                "1px solid var(--luca-border-subtle, rgba(255,255,255,0.08))",
+              ...lucaMaterialPopoverStyle,
               borderRadius: 12,
-              boxShadow:
-                "0 18px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)",
               padding: 4,
             }}
           >
@@ -148,12 +144,17 @@ const IntentRoutingModeSelector: React.FC<IntentRoutingModeSelectorProps> = ({ t
             type="button"
             onClick={() => handleChange(m)}
             title={ROUTING_MODE_DESCRIPTIONS[m]}
-            className={`rounded-lg border px-2 py-1 text-[9px] font-black uppercase tracking-widest transition-colors ${
+            className="luca-material-pressable rounded-lg border px-2 py-1 text-[9px] font-black uppercase tracking-widest transition-colors hover:text-[var(--luca-text-primary)]"
+            style={
               mode === m
-                ? "border-white/20 bg-white/10 text-[var(--app-text-main)]"
-                : "border-white/5 bg-white/[0.02] text-[var(--app-text-muted)] hover:bg-white/5 hover:text-[var(--app-text-main)]"
-            }`}
-            style={mode === m && theme?.hex ? { borderColor: `${theme.hex}40`, color: theme.hex } : undefined}
+                ? {
+                    ...lucaMaterialControlActiveStyle,
+                    ...(theme?.hex
+                      ? { borderColor: `${theme.hex}40`, color: theme.hex }
+                      : {}),
+                  }
+                : lucaMaterialControlStyle
+            }
           >
             {ROUTING_MODE_SHORT_LABELS[m]}
           </button>

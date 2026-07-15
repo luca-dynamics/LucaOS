@@ -2,6 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 import { getGlassStyle } from "../utils/glassStyles";
+import {
+  lucaMaterialControlActiveStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialMetricStyle,
+  lucaMaterialSolidCardStyle,
+  lucaMaterialWorkspaceStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface Props {
   onClose: () => void;
@@ -172,22 +180,24 @@ const WirelessManager: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/90 glass-blur animate-in fade-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/70 animate-in fade-in zoom-in-95 duration-300">
       <div
-        className="relative w-[90%] max-w-2xl h-[600px] rounded-sm flex flex-col overflow-hidden"
+        className="relative flex h-[600px] w-[90%] max-w-2xl flex-col overflow-hidden rounded-xl border"
         style={{
-          ...getGlassStyle({ themeColor }),
-          background: "rgba(0, 0, 0, 0.4)",
-          backdropFilter: "blur(20px)",
+          ...lucaMaterialDialogStyle,
           boxShadow: `0 0 40px ${themeColor}1a, inset 0 1px 0 rgba(255, 255, 255, 0.05)`,
         }}
+        data-luca-material-role="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Network manager"
       >
         {/* Header */}
         <div
           className="h-14 flex items-center justify-between px-6"
           style={{
+            ...lucaMaterialSolidCardStyle,
             borderBottom: `1px solid ${themeColor}33`,
-            background: "rgba(0, 0, 0, 0.2)",
           }}
         >
           <div className="flex items-center gap-3">
@@ -220,7 +230,8 @@ const WirelessManager: React.FC<Props> = ({
         </div>
         <button
           onClick={onClose}
-          className="text-slate-500 hover:text-white transition-colors"
+          className="luca-material-pressable rounded-lg border p-1.5 transition-colors hover:text-[var(--luca-text-primary)]"
+          style={lucaMaterialControlStyle}
         >
           <Icon name="CloseCircle" size={24} />
         </button>
@@ -228,8 +239,8 @@ const WirelessManager: React.FC<Props> = ({
 
       {/* Tabs */}
       <div
-        className="flex bg-black"
-        style={{ borderBottom: `1px solid ${themeColor}1a` }}
+        className="flex"
+        style={{ ...lucaMaterialMetricStyle, borderBottom: `1px solid ${themeColor}1a` }}
       >
         <button
           onClick={() => handleTabChange("WIFI")}
@@ -237,11 +248,12 @@ const WirelessManager: React.FC<Props> = ({
           style={{
             ...(activeTab === "WIFI"
               ? {
+                  ...lucaMaterialControlActiveStyle,
                   background: `${themeColor}1a`,
                   color: themeColor,
                   borderBottom: `2px solid ${themeColor}`,
                 }
-              : { color: "#64748b" }),
+              : lucaMaterialControlStyle),
           }}
         >
           <Icon name="Wifi" size={14} /> WIFI (REAL)
@@ -252,11 +264,12 @@ const WirelessManager: React.FC<Props> = ({
           style={{
             ...(activeTab === "BLUETOOTH"
               ? {
+                  ...lucaMaterialControlActiveStyle,
                   background: `${themeColor}1a`,
                   color: themeColor,
                   borderBottom: `2px solid ${themeColor}`,
                 }
-              : { color: "#64748b" }),
+              : lucaMaterialControlStyle),
           }}
         >
           <Icon name="Bluetooth" size={14} /> BLUETOOTH (WEB)
@@ -267,11 +280,12 @@ const WirelessManager: React.FC<Props> = ({
           style={{
             ...(activeTab === "HOTSPOT"
               ? {
+                  ...lucaMaterialControlActiveStyle,
                   background: `${themeColor}1a`,
                   color: themeColor,
                   borderBottom: `2px solid ${themeColor}`,
                 }
-              : { color: "#64748b" }),
+              : lucaMaterialControlStyle),
           }}
         >
           <Icon name="Share" size={14} /> HOTSPOT
@@ -279,7 +293,7 @@ const WirelessManager: React.FC<Props> = ({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 bg-[#080808] p-6 relative overflow-hidden">
+      <div className="relative flex-1 overflow-hidden p-6" style={lucaMaterialWorkspaceStyle}>
         {/* Scanning Grid Background */}
         <div
           className="absolute inset-0 pointer-events-none opacity-5"

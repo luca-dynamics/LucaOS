@@ -78,6 +78,7 @@ export const SettingsCard: React.FC<BaseProps> = ({
   className = "",
 }) => (
   <div
+    data-luca-material-role="card"
     className={`rounded-xl border p-4 ${className}`}
     style={settingsCardStyle}
   >
@@ -230,7 +231,7 @@ export const SettingsToggle: React.FC<{
     aria-label={ariaLabel}
     aria-pressed={checked}
     onClick={onChange}
-    className="relative h-7 w-12 rounded-full transition-all"
+    className="luca-material-pressable relative h-7 w-12 rounded-full"
     style={{
       backgroundColor: checked
         ? (accentColor ?? settingsSurfaceTokens.accentPrimary)
@@ -259,6 +260,7 @@ export const SettingsAdvancedDisclosure: React.FC<
   defaultOpen = false,
 }) => (
   <details
+    data-luca-material-role="card"
     className={`group rounded-2xl border ${className}`}
     style={settingsCardStyle}
     open={defaultOpen}

@@ -1,6 +1,5 @@
 import {
   DEFAULT_LUCA_SKIN_ID,
-  normalizeLucaSkinId,
   type LucaSkinHostKind,
   type LucaSkinId,
 } from "../config/lucaSkins";
@@ -12,11 +11,9 @@ import {
 export type LucaBootSkinBoundarySurface =
   | "boot-window"
   | "boot-loading"
-  | "mode-select"
-  | "onboarding";
+  | "mode-select";
 
 export interface LucaBootSkinBoundaryOptions {
-  selectedSkinId?: unknown;
   hostKind?: LucaSkinHostKind;
   surface?: LucaBootSkinBoundarySurface;
   reducedMotion?: boolean;
@@ -36,13 +33,7 @@ export interface LucaBootSkinBoundaryState {
 const DEFAULT_BOOT_SKIN_HOST_KIND: LucaSkinHostKind = "desktop-web";
 const DEFAULT_BOOT_SKIN_SURFACE: LucaBootSkinBoundarySurface = "boot-window";
 
-function resolveBootReducedMotion(skinId: LucaSkinId, reducedMotion?: boolean): boolean {
-  return skinId === "flow" ? true : Boolean(reducedMotion);
-}
-
 function getBootSafetyNotes(options: {
-  selectedSkinId?: unknown;
-  skinId: LucaSkinId;
   hostKind: LucaSkinHostKind;
   requestedHostKind?: LucaSkinHostKind;
   surface: LucaBootSkinBoundarySurface;
@@ -50,14 +41,6 @@ function getBootSafetyNotes(options: {
   reducedTransparency: boolean;
 }): string[] {
   const notes: string[] = [];
-
-  if (
-    options.skinId === DEFAULT_LUCA_SKIN_ID &&
-    options.selectedSkinId !== undefined &&
-    options.selectedSkinId !== DEFAULT_LUCA_SKIN_ID
-  ) {
-    notes.push("Invalid or unsupported skin selection fell back to Carbon.");
-  }
 
   if (options.hostKind === DEFAULT_BOOT_SKIN_HOST_KIND && options.requestedHostKind === undefined) {
     notes.push("Boot skin boundary defaulted to desktop-web as the safest general web host.");
@@ -67,9 +50,9 @@ function getBootSafetyNotes(options: {
     `Surface intent '${options.surface}' is preserved for future local boundary specificity only.`,
   );
 
-  if (options.skinId === "flow") {
-    notes.push("Flow remains static during boot and onboarding; reduced motion is forced for now.");
-  } else if (options.reducedMotion) {
+  notes.push("Boot is locked to Carbon; user skin ownership begins at onboarding.");
+
+  if (options.reducedMotion) {
     notes.push("Reduced motion was requested by the caller.");
   }
 
@@ -81,7 +64,7 @@ function getBootSafetyNotes(options: {
 }
 
 /**
- * Resolves selected LucaOS skin material variables for future startup and setup boundaries.
+ * Resolves LucaOS's fixed neutral startup material.
  *
  * This helper is pure and inert: it returns a local material variable map and
  * safety notes only. It does not apply variables to UI, root nodes, providers,
@@ -90,10 +73,10 @@ function getBootSafetyNotes(options: {
 export function resolveLucaBootSkinBoundary(
   options: LucaBootSkinBoundaryOptions = {},
 ): LucaBootSkinBoundaryState {
-  const skinId = normalizeLucaSkinId(options.selectedSkinId);
+  const skinId = DEFAULT_LUCA_SKIN_ID;
   const hostKind = options.hostKind ?? DEFAULT_BOOT_SKIN_HOST_KIND;
   const surface = options.surface ?? DEFAULT_BOOT_SKIN_SURFACE;
-  const reducedMotion = resolveBootReducedMotion(skinId, options.reducedMotion);
+  const reducedMotion = Boolean(options.reducedMotion);
   const reducedTransparency = Boolean(options.reducedTransparency);
 
   return {
@@ -109,8 +92,6 @@ export function resolveLucaBootSkinBoundary(
       reducedTransparency,
     }),
     safetyNotes: getBootSafetyNotes({
-      selectedSkinId: options.selectedSkinId,
-      skinId,
       hostKind,
       requestedHostKind: options.hostKind,
       surface,

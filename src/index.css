@@ -89,60 +89,93 @@ a,
 
 /* Base Glass Utility */
 .glass-panel {
-  backdrop-filter: blur(var(--app-bg-blur, 40px));
-  -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
-  background: rgba(18, 18, 18, var(--app-bg-opacity, 0.3)); /* Coupled to background transparency - Grey Base */
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(var(--luca-material-blur, var(--app-bg-blur, 40px))) saturate(var(--luca-material-saturation, 1));
+  -webkit-backdrop-filter: blur(var(--luca-material-blur, var(--app-bg-blur, 40px))) saturate(var(--luca-material-saturation, 1));
+  background:
+    radial-gradient(90% 58% at 20% -8%, color-mix(in srgb, var(--luca-material-glass-highlight, rgb(255 255 255 / 0.09)) 64%, transparent), transparent 62%),
+    linear-gradient(132deg, color-mix(in srgb, var(--luca-accent-primary, #8a8f98) 5%, transparent), transparent 46% 72%, var(--luca-material-glass-sheen, rgb(255 255 255 / 0.035))),
+    var(--luca-surface-glass, var(--app-bg-tint, rgb(18 18 18 / var(--app-bg-opacity, 0.3))));
+  border: 1px solid var(--luca-border-subtle, var(--app-border-main, rgb(255 255 255 / 0.1)));
+  color: var(--luca-text-primary, var(--app-text-main, rgb(255 255 255 / 0.9)));
+  box-shadow: var(--luca-shadow-soft, none);
   position: relative;
   overflow: hidden;
 }
 
 /* Composable Blur Utility - Use this with any background */
 .glass-blur {
-  backdrop-filter: blur(var(--app-bg-blur, 40px));
-  -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
+  backdrop-filter: blur(var(--luca-material-blur, var(--app-bg-blur, 40px))) saturate(var(--luca-material-saturation, 1));
+  -webkit-backdrop-filter: blur(var(--luca-material-blur, var(--app-bg-blur, 40px))) saturate(var(--luca-material-saturation, 1));
 }
 
-/* Light Mode Glass Utility - Ultra-Translucent "Liquid" Aesthetic */
+/*
+ * Compatibility optics for legacy rounded glass surfaces. `glass-blur` is
+ * also used by full-screen scrims, so the texture is restricted to shaped
+ * foreground chrome instead of being painted across every backdrop.
+ */
+.glass-blur:is(
+  .rounded-none,
+  .rounded,
+  .rounded-md,
+  .rounded-lg,
+  .rounded-xl,
+  .rounded-2xl,
+  .rounded-3xl,
+  .rounded-full
+):not([class*="--luca-danger"]):not([class*="--luca-warning"]):not([class*="--luca-success"]):not([class*="--luca-info"]):not([class*="bg-rq-red"]):not([class*="bg-rq-green"]):not([class*="bg-rq-amber"]) {
+  background-color: var(--luca-surface-glass, var(--app-bg-tint, rgb(18 18 18 / 0.3)));
+  background-image:
+    radial-gradient(90% 58% at 20% -8%, color-mix(in srgb, var(--luca-material-glass-highlight, rgb(255 255 255 / 0.09)) 64%, transparent), transparent 62%),
+    linear-gradient(132deg, color-mix(in srgb, var(--luca-accent-primary, #8a8f98) 5%, transparent), transparent 46% 72%, var(--luca-material-glass-sheen, rgb(255 255 255 / 0.035)));
+  box-shadow:
+    inset 0 1px 0 var(--luca-material-glass-highlight, rgb(255 255 255 / 0.09)),
+    inset 0 -1px 1px var(--luca-material-glass-shadow, rgb(0 0 0 / 0.14));
+}
+
+/* Compatibility aliases now inherit the active skin instead of choosing a
+ * hardcoded light or dark substrate locally. */
 .glass-panel-light {
-  backdrop-filter: blur(var(--app-bg-blur, 40px));
-  -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
-  background: rgba(255, 255, 255, var(--app-bg-opacity, 0.3)); /* Coupled to background transparency */
-  border: 1px solid var(--app-border-main, rgba(0, 0, 0, 0.14));
+  backdrop-filter: blur(var(--luca-material-blur, var(--app-bg-blur, 40px))) saturate(var(--luca-material-saturation, 1));
+  -webkit-backdrop-filter: blur(var(--luca-material-blur, var(--app-bg-blur, 40px))) saturate(var(--luca-material-saturation, 1));
+  background:
+    radial-gradient(90% 58% at 20% -8%, color-mix(in srgb, var(--luca-material-glass-highlight, rgb(255 255 255 / 0.09)) 64%, transparent), transparent 62%),
+    linear-gradient(132deg, color-mix(in srgb, var(--luca-accent-primary, #8a8f98) 5%, transparent), transparent 46% 72%, var(--luca-material-glass-sheen, rgb(255 255 255 / 0.035))),
+    var(--luca-surface-glass, var(--app-bg-tint, rgb(255 255 255 / var(--app-bg-opacity, 0.3))));
+  border: 1px solid var(--luca-border-subtle, var(--app-border-main, rgb(0 0 0 / 0.14)));
   position: relative;
   overflow: hidden;
-  color: var(--app-text-main, #111827);
-  box-shadow:
-    0 8px 32px 0 rgba(0, 0, 0, 0.05),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.8); /* Refracted top highlight */
+  color: var(--luca-text-primary, var(--app-text-main, #111827));
+  box-shadow: var(--luca-shadow-soft, 0 8px 32px rgb(0 0 0 / 0.05));
 }
 
 .glass-card-light {
-  backdrop-filter: blur(var(--app-bg-blur, 40px));
-  -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
-  background: rgba(255, 255, 255, var(--app-bg-opacity, 0.3));
-  border: 1px solid var(--app-border-main, rgba(0, 0, 0, 0.12));
-  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.03);
+  backdrop-filter: blur(var(--luca-material-blur, var(--app-bg-blur, 40px))) saturate(var(--luca-material-saturation, 1));
+  -webkit-backdrop-filter: blur(var(--luca-material-blur, var(--app-bg-blur, 40px))) saturate(var(--luca-material-saturation, 1));
+  background:
+    radial-gradient(90% 58% at 20% -8%, color-mix(in srgb, var(--luca-material-glass-highlight, rgb(255 255 255 / 0.09)) 64%, transparent), transparent 62%),
+    var(--luca-surface-glass, var(--app-bg-tint, rgb(255 255 255 / var(--app-bg-opacity, 0.3))));
+  border: 1px solid var(--luca-border-subtle, var(--app-border-main, rgb(0 0 0 / 0.12)));
+  color: var(--luca-text-primary, var(--app-text-main, #111827));
+  box-shadow: var(--luca-material-card-shadow, none);
 }
 
 /* Stable variants for internal UI components that must remain legible regardless of global background settings */
 .glass-card-stable {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  background: rgba(10, 10, 10, 0.8) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(min(var(--luca-material-blur, 20px), 20px));
+  -webkit-backdrop-filter: blur(min(var(--luca-material-blur, 20px), 20px));
+  background: var(--luca-surface-solid, var(--app-bg-main, #111417)) !important;
+  border: 1px solid var(--luca-border-subtle, var(--app-border-main, rgb(255 255 255 / 0.1)));
+  color: var(--luca-text-primary, var(--app-text-main, rgb(255 255 255 / 0.95)));
+  box-shadow: var(--luca-shadow-soft, 0 8px 32px rgb(0 0 0 / 0.4));
 }
 
 .glass-card-stable-light {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.85) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  color: #111827;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(min(var(--luca-material-blur, 20px), 20px));
+  -webkit-backdrop-filter: blur(min(var(--luca-material-blur, 20px), 20px));
+  background: var(--luca-surface-solid, var(--app-bg-main, #f4f5f7)) !important;
+  border: 1px solid var(--luca-border-subtle, var(--app-border-main, rgb(0 0 0 / 0.1)));
+  color: var(--luca-text-primary, var(--app-text-main, #111827));
+  box-shadow: var(--luca-shadow-soft, 0 8px 32px rgb(0 0 0 / 0.1));
 }
 
 /* Organic Noise / Fractal Grain Layer */
@@ -330,13 +363,17 @@ a,
 }
 
 .glass-card-premium {
-  background-color: rgba(10, 10, 10, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(82% 54% at 18% -6%, color-mix(in srgb, var(--luca-material-glass-highlight, rgb(255 255 255 / 0.14)) 86%, transparent), transparent 60%),
+    linear-gradient(132deg, color-mix(in srgb, var(--luca-accent-primary, #8a8f98) 8%, transparent), transparent 44% 70%, var(--luca-material-glass-sheen, rgb(255 255 255 / 0.055))),
+    var(--luca-surface-glass, var(--app-bg-tint, rgb(10 10 10 / 0.6)));
+  border: 1px solid var(--luca-border-subtle, var(--app-border-main, rgb(255 255 255 / 0.1)));
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(var(--app-bg-blur, 40px));
-  -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
+  color: var(--luca-text-primary, var(--app-text-main));
+  box-shadow: var(--luca-shadow-soft, 0 25px 50px -12px rgb(0 0 0 / 0.25));
+  backdrop-filter: blur(var(--luca-material-blur, var(--app-bg-blur, 40px))) saturate(var(--luca-material-saturation, 1));
+  -webkit-backdrop-filter: blur(var(--luca-material-blur, var(--app-bg-blur, 40px))) saturate(var(--luca-material-saturation, 1));
   position: relative;
 }
 
@@ -354,12 +391,15 @@ a,
 
 /* Premium Pill Utility */
 .glass-pill {
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(82% 54% at 18% -6%, color-mix(in srgb, var(--luca-material-glass-highlight, rgb(255 255 255 / 0.14)) 86%, transparent), transparent 60%),
+    var(--luca-material-control-surface, var(--luca-surface-glass, var(--app-bg-tint, rgb(255 255 255 / 0.03))));
+  border: 1px solid var(--luca-border-subtle, var(--app-border-main, rgb(255 255 255 / 0.08)));
   border-radius: 9999px;
-  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(var(--app-bg-blur, 40px));
-  -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
+  color: var(--luca-text-secondary, var(--app-text-muted));
+  box-shadow: inset 0 1px 0 var(--luca-material-glass-highlight, rgb(255 255 255 / 0.08));
+  backdrop-filter: blur(var(--luca-material-blur, var(--app-bg-blur, 40px))) saturate(var(--luca-material-saturation, 1));
+  -webkit-backdrop-filter: blur(var(--luca-material-blur, var(--app-bg-blur, 40px))) saturate(var(--luca-material-saturation, 1));
 }
 
 /* Status Glow Effects */
@@ -646,56 +686,142 @@ html.luca-wco .luca-wco-pad-right {
   transition-duration: 0.01ms !important;
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .glass-panel,
+  .glass-panel-light,
+  .glass-card-light,
+  .glass-card-premium,
+  .glass-pill,
+  .glass-blur {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .glass-panel,
+  .glass-panel-light,
+  .glass-card-light,
+  .glass-card-premium,
+  .glass-pill {
+    background: var(--luca-surface-solid, var(--app-bg-main, #17191d));
+  }
+
+  .glass-blur:is(
+    .rounded-none,
+    .rounded,
+    .rounded-md,
+    .rounded-lg,
+    .rounded-xl,
+    .rounded-2xl,
+    .rounded-3xl,
+    .rounded-full
+  ) {
+    background-image: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .glass-panel,
+  .glass-panel-light,
+  .glass-card-light,
+  .glass-card-stable,
+  .glass-card-stable-light,
+  .glass-card-premium,
+  .glass-pill {
+    border-color: var(--luca-border-strong, currentColor);
+  }
+}
+
 /* Luca desktop shell token migration pseudo-states.
  * Base panel/control/tab values live in src/styles/lucaShellStyles.ts so App.tsx
  * has a single token source of truth for shell surfaces and fallbacks.
  */
-.luca-shell-control:hover,
 .luca-shell-control:focus-visible {
   background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
   border-color: var(--luca-border-strong, var(--app-border-main)) !important;
   color: var(--luca-text-primary, var(--app-text-main)) !important;
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .luca-shell-control:hover {
+    background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
+    border-color: var(--luca-border-strong, var(--app-border-main)) !important;
+    color: var(--luca-text-primary, var(--app-text-main)) !important;
+  }
+}
+
 /* Frequent controls stay instant: only the physical press receives motion. */
-.luca-shell-control {
+.luca-shell-control,
+.luca-material-pressable {
   transition-property: transform, background-color, border-color, color;
   transition-duration: 140ms;
   transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.luca-shell-control:active {
+.luca-shell-control:active,
+.luca-material-pressable:active {
   transform: scale(0.97);
 }
 
-.luca-reduce-motion .luca-shell-control {
+.luca-reduce-motion .luca-shell-control,
+.luca-reduce-motion .luca-material-pressable {
   transition-duration: 0.01ms;
 }
 
-.luca-reduce-motion .luca-shell-control:active {
+.luca-reduce-motion .luca-shell-control:active,
+.luca-reduce-motion .luca-material-pressable:active {
   transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .luca-shell-control {
+  .luca-shell-control,
+  .luca-material-pressable {
     transition-duration: 0.01ms;
   }
 
-  .luca-shell-control:active {
+  .luca-shell-control:active,
+  .luca-material-pressable:active {
     transform: none;
   }
 }
 
-.luca-shell-tab:hover,
 .luca-shell-tab:focus-visible {
   background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
   color: var(--luca-text-primary, var(--app-text-main)) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .luca-shell-tab:hover {
+    background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
+    color: var(--luca-text-primary, var(--app-text-main)) !important;
+  }
 }
 
 .luca-shell-tab-active {
   background: var(--luca-surface-hover, var(--app-bg-tint));
   border-color: var(--luca-border-strong, var(--app-border-main));
   color: var(--luca-text-primary, var(--app-text-main));
+}
+
+/* Hologram controls are centered with translate; preserve that geometry while
+ * adding the same physical press response as other Luca controls. */
+.luca-anchored-control {
+  transition-property: transform, opacity, background-color, border-color, color;
+  transition-duration: 140ms;
+  transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.luca-anchored-control:active {
+  transform: translate(-50%, -50%) scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .luca-anchored-control {
+    transition-duration: 0.01ms;
+  }
+
+  .luca-anchored-control:active {
+    transform: translate(-50%, -50%);
+  }
 }
 
 .luca-shell-active-indicator {

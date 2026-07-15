@@ -128,6 +128,10 @@ import { LucaPremiumOnboardingPreview } from "./components/Onboarding/LucaPremiu
 import { mapLucaOnboardingFlowToDesktopCompletion } from "./components/Onboarding/lucaOnboardingCompletionBridge";
 import { useLucaLocalEndpointStatus } from "./hooks/useLucaLocalEndpointStatus";
 import { LiquidBackground } from "./components/visual/LiquidBackground.tsx";
+import {
+  getLucaOpticalMaterialCssVariables,
+  normalizeLucaOpticalMaterialSettings,
+} from "./styles/lucaOpticalMaterialSettings";
 import { normalizeLucaAtmosphere } from "./config/lucaAtmospheres";
 import { EdgePresence } from "./components/presence";
 import { THEME_PALETTE } from "./config/themeColors";
@@ -541,6 +545,9 @@ function AppContent() {
   const lucaLinkBodyDevices = useLucaLinkDevices();
   const [backgroundOpacity, setBackgroundOpacity] = useState<number>(0.3);
   const [backgroundBlur, setBackgroundBlur] = useState<number>(40);
+  const [opticalMaterial, setOpticalMaterial] = useState(() =>
+    normalizeLucaOpticalMaterialSettings(settingsService.getSettings().general.opticalMaterial),
+  );
   const [atmosphere, setAtmosphere] = useState(() =>
     normalizeLucaAtmosphere(settingsService.getSettings().general.atmosphere),
   );
@@ -616,6 +623,16 @@ function AppContent() {
     return () => window.removeEventListener("luca:material-preview", onPreview);
   }, []);
 
+  useEffect(() => {
+    const onPreview = (event: Event) => {
+      setOpticalMaterial(
+        normalizeLucaOpticalMaterialSettings((event as CustomEvent).detail),
+      );
+    };
+    window.addEventListener("luca:optical-material-preview", onPreview);
+    return () => window.removeEventListener("luca:optical-material-preview", onPreview);
+  }, []);
+
   // Keep the CSS variables the LiquidBackground actually reads in sync with the
   // live material state. The Appearance/onboarding sliders update this state via
   // the preview event, but LiquidBackground takes no opacity/blur props — it
@@ -683,6 +700,10 @@ function AppContent() {
       setBackgroundOpacity(opacity);
       setBackgroundBlur(blur);
       setAtmosphere(normalizeLucaAtmosphere(settings?.general?.atmosphere));
+      const nextOpticalMaterial = normalizeLucaOpticalMaterialSettings(
+        settings?.general?.opticalMaterial,
+      );
+      setOpticalMaterial(nextOpticalMaterial);
 
       // Unified Typography Engine
       const fontScale = settings?.general?.fontScale ?? 1.0;
@@ -720,6 +741,7 @@ function AppContent() {
         {
           ...cssVariableState.variables,
           ...skinMaterialVariables,
+          ...getLucaOpticalMaterialCssVariables(nextOpticalMaterial),
           "--app-primary": skinMaterialVariables["--luca-accent-primary"],
           "--app-core-hex": skinMaterialVariables["--luca-accent-primary"],
           "--app-text-main": skinMaterialVariables["--luca-text-primary"],
@@ -2959,6 +2981,7 @@ function AppContent() {
           ...(isMobile
             ? mobileSkinBoundary.materialVariables
             : dashboardSkinBoundary.materialVariables),
+          ...getLucaOpticalMaterialCssVariables(opticalMaterial),
           ...(window.electron
             ? {
                 width: "117.65vw",

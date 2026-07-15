@@ -15,6 +15,7 @@ describe("LucaOnboardingShell", () => {
     );
     expect(markup).toContain('data-luca-onboarding-shell="onboarding-welcome"');
     expect(markup).toContain('data-luca-onboarding-skin="flow"');
+    expect(markup).toContain('data-luca-material-role="root"');
     expect(markup).toContain("Welcome to LucaOS");
   });
 

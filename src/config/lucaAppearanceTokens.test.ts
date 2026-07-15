@@ -64,7 +64,7 @@ describe("resolveLucaAppearanceTokens", () => {
     });
 
     expect(tokens.appearanceMode).toBe("light");
-    expect(tokens.backgroundBase).toMatch(/#f6f7f9|#fff/i);
+    expect(tokens.backgroundBase).toMatch(/#edf1f4|#fff/i);
     expect(tokens.textPrimary).toBe("#161a20");
     expect(tokens.borderSubtle).toContain("rgba");
     expect(tokens.accent).toBe("neutral");

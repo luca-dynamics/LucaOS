@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { lucaMaterialPopoverStyle } from "../../styles/lucaMaterialSystem";
 
 export interface UiNode {
   text: string;
@@ -95,18 +96,15 @@ const UiTreeOverlay: React.FC<UiTreeOverlayProps> = ({
             {hoveredNode === node && (
               <div className="absolute top-0 left-full ml-2 z-[200] pointer-events-none">
                 <div
-                  className="bg-black/90 border border-rq-blue/40 p-2 rounded shadow-2xl glass-blur min-w-[200px]"
-                  style={{
-                    boxShadow:
-                      "0 10px 25px rgba(0,0,0,0.5), 0 0 15px rgba(6,182,212,0.1)",
-                  }}
+                  className="min-w-[200px] rounded-xl border p-2"
+                  style={lucaMaterialPopoverStyle}
                 >
                   <div className="text-[10px] font-mono text-rq-blue border-b border-rq-blue/20 pb-1 mb-1 font-bold uppercase tracking-wider">
                     Element Inspector
                   </div>
                   {node.resourceId && (
                     <div className="mb-1">
-                      <div className="text-[8px] text-slate-500 font-mono">
+                      <div className="font-mono text-[8px] text-[var(--luca-text-tertiary)]">
                         ID
                       </div>
                       <div className="text-[10px] text-[var(--luca-info,#4f8cff)] font-mono break-all">
@@ -116,10 +114,10 @@ const UiTreeOverlay: React.FC<UiTreeOverlayProps> = ({
                   )}
                   {node.text && (
                     <div className="mb-1">
-                      <div className="text-[8px] text-slate-500 font-mono">
+                      <div className="font-mono text-[8px] text-[var(--luca-text-tertiary)]">
                         TEXT
                       </div>
-                      <div className="text-[10px] text-white font-medium italic">
+                      <div className="text-[10px] font-medium italic text-[var(--luca-text-primary)]">
                         &quot;{node.text}&quot;
                       </div>
                     </div>

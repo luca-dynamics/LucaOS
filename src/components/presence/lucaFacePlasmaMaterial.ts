@@ -7,6 +7,11 @@ import {
   attentionPulse,
 } from "../../styles/lucaPresenceMotion";
 import { hexToRgb, rgbToUnit } from "./presenceColor";
+import {
+  DEFAULT_LUCA_OPTICAL_MATERIAL,
+  normalizeLucaOpticalMaterialSettings,
+  type LucaChromaticMetalTuning,
+} from "../../styles/lucaOpticalMaterialSettings";
 
 /**
  * Luca's face material: the same plasma light as the presence orb, laid over
@@ -35,6 +40,7 @@ export interface LucaFacePlasma {
    * displacement anchored here.
    */
   setMouthAnchor(center: [number, number, number], radius: number): void;
+  setMaterialTuning(tuning: Partial<LucaChromaticMetalTuning>): void;
   /** Advance smoothing and uniforms. Call once per frame. */
   tick(nowMs: number, dtMs: number): void;
   dispose(): void;
@@ -73,6 +79,9 @@ varying vec3 vPosition;
 uniform vec3 mouthCenter;
 uniform float mouthRadius;
 uniform float mouth;
+uniform vec4 metalSurface;
+uniform vec4 metalMotion;
+uniform vec3 metalGeometry;
 
 void main() {
   vNormal = normalize(normalMatrix * normal);
@@ -166,6 +175,24 @@ void main() {
   col += lightC * currents * fresnel * 0.6;
   col += lightC * topLight * facing * 0.16 * bright;
 
+  // Chromatic metal is integrated into the face mesh. It is never a plate
+  // or circle placed over Luca: the mesh position and normals own the bands.
+  float metalAngle = radians(metalGeometry.z);
+  vec2 metalP = mat2(cos(metalAngle), -sin(metalAngle), sin(metalAngle), cos(metalAngle)) * vPosition.xy;
+  metalP.x *= metalGeometry.y;
+  float metalCoordinate = metalP.x * metalSurface.x
+    + sin(metalP.y * 2.1 + t * metalMotion.w * 6.28318) * metalGeometry.x
+    + metalMotion.x + sin(t * metalMotion.w * 6.28318 + metalMotion.y * 6.28318) * 0.12;
+  float split = metalSurface.z * 0.08;
+  vec3 chrome = vec3(
+    0.5 + 0.5 * sin((metalCoordinate + split) * 6.28318),
+    0.5 + 0.5 * sin(metalCoordinate * 6.28318),
+    0.5 + 0.5 * sin((metalCoordinate - split) * 6.28318)
+  );
+  chrome = mix(chrome, smoothstep(vec3(0.34), vec3(0.66), chrome), 1.0 - metalSurface.y);
+  chrome *= mix(0.62, 1.18, facing * metalMotion.z);
+  col = mix(col, chrome * mix(base, vec3(1.0), 0.72), 0.34 + fresnel * 0.28);
+
   float mouthMask = 0.0;
   if (mouthRadius > 0.0) {
     float mouthD = distance(vPosition, mouthCenter);
@@ -203,6 +230,9 @@ export function createLucaFacePlasmaMaterial(): LucaFacePlasma {
       mouthCenter: { value: new THREE.Vector3(0, 0, 0) },
       mouthRadius: { value: 0 },
       mouth: { value: 0 },
+      metalSurface: { value: new THREE.Vector4(4.5, 0.18, 0.34, 1) },
+      metalMotion: { value: new THREE.Vector4(0, 0.18, 0.74, 0.24) },
+      metalGeometry: { value: new THREE.Vector3(1, 1.18, -18) },
     },
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
@@ -221,6 +251,7 @@ export function createLucaFacePlasmaMaterial(): LucaFacePlasma {
   };
   const params: FaceParams = { ...FACE_STATE_TARGETS.idle, energy: 0, mouth: 0 };
   let startMs: number | null = null;
+  let metalTuning = DEFAULT_LUCA_OPTICAL_MATERIAL.metal;
 
   return {
     material,
@@ -238,6 +269,11 @@ export function createLucaFacePlasmaMaterial(): LucaFacePlasma {
         center[2],
       );
       material.uniforms.mouthRadius.value = radius;
+    },
+    setMaterialTuning(nextTuning) {
+      metalTuning = normalizeLucaOpticalMaterialSettings({
+        metal: { ...metalTuning, ...nextTuning },
+      }).metal;
     },
     tick(nowMs: number, dtMs: number) {
       if (startMs === null) startMs = nowMs;
@@ -292,6 +328,23 @@ export function createLucaFacePlasmaMaterial(): LucaFacePlasma {
       u.breath.value =
         params.breathAmp * Math.sin((nowMs / LUCA_CADENCE.breath) * Math.PI * 2);
       u.mouth.value = params.mouth;
+      (u.metalSurface.value as THREE.Vector4).set(
+        metalTuning.repeats * metalTuning.scale,
+        metalTuning.roughness,
+        metalTuning.rgbSplit,
+        metalTuning.scale,
+      );
+      (u.metalMotion.value as THREE.Vector4).set(
+        metalTuning.offset,
+        metalTuning.phase,
+        metalTuning.depth,
+        metalTuning.evolution,
+      );
+      (u.metalGeometry.value as THREE.Vector3).set(
+        metalTuning.scale,
+        metalTuning.stretch,
+        metalTuning.angle,
+      );
     },
     dispose() {
       material.dispose();

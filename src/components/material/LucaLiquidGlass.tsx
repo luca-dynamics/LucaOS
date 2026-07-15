@@ -12,7 +12,8 @@ export interface LucaLiquidGlassLayerProps {
 /**
  * Optical-only layer for Luca's chromatic substrates. It never owns layout,
  * interaction, status colour, or content; those remain on the host surface.
- * This makes the same material safe to compose over an orb, face, or control.
+ * This makes the same material safe to compose within an orb or control. Luca's
+ * face/plasma identity remains direct and never receives a circular lens.
  */
 export const LucaLiquidGlassLayer: React.FC<LucaLiquidGlassLayerProps> = ({
   shape = "inherit",

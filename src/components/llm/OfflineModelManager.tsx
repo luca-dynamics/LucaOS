@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Icon } from "../../components/ui/Icon";
+import { lucaMaterialDialogStyle } from "../../styles/lucaMaterialSystem";
 import { findLucaUnifiedModel } from "../../services/llm/lucaUnifiedModelRegistry";
 import { mobileOfflineBrain } from "../../services/mobile/MobileOfflineBrain";
 import { llmService } from "../../services/llmService";
@@ -202,10 +203,15 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 glass-blur p-4 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 animate-in fade-in zoom-in-95 duration-200">
       <div
-        className="w-full max-w-2xl bg-black/40 glass-blur border border-white/10 rounded-2xl p-6 relative overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border p-6 shadow-2xl"
+        data-luca-material-role="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Offline model manager"
         style={{
+          ...lucaMaterialDialogStyle,
           boxShadow: `0 0 50px -10px ${theme.hex}30`,
           borderColor: `${theme.hex}40`,
         }}

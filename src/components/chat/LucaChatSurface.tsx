@@ -3,6 +3,10 @@ import ChatWidgetHistory from "../ChatWidgetHistory";
 import ChatWidgetInput from "../ChatWidgetInput";
 import { Icon } from "../ui/Icon";
 import SuggestionChips, { type Suggestion } from "../SuggestionChips";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialFloatingPanelStyle,
+} from "../../styles/lucaMaterialSystem";
 
 export type LucaChatMessage = {
   id?: string;
@@ -77,10 +81,6 @@ export interface LucaChatSurfaceProps {
 
 const defaultTheme = { hex: "#3b82f6", isLight: false, themeName: "default" };
 
-function toPrompt(suggestion: LucaChatSuggestion) {
-  return "prompt" in suggestion ? suggestion.prompt : suggestion.value;
-}
-
 function toSuggestion(suggestion: LucaChatSuggestion): Suggestion {
   if ("prompt" in suggestion) return suggestion;
   return {
@@ -98,9 +98,6 @@ export function LucaChatSurface({
   primaryColor = "#3b82f6",
   persona = "ASSISTANT",
   themeName = "default",
-  brainModel,
-  embeddingModel,
-  placeholder,
   pending = false,
   errorLabel,
   suggestions = [],
@@ -111,7 +108,6 @@ export function LucaChatSurface({
   isVoiceActive,
   isSpeaking,
   amplitude = 0,
-  canSend,
   showClose = false,
   isScanning = false,
   hasApprovalRequest = false,
@@ -140,9 +136,6 @@ export function LucaChatSurface({
       ? primaryColor.slice(0, 7)
       : primaryColor;
   const isCompact = messages.length === 0;
-  const sendEnabled =
-    canSend ?? (!!inputValue.trim() || !!attachment || pending);
-
   const submit = (event?: FormEvent) => {
     event?.preventDefault();
     if (pending) {
@@ -157,9 +150,11 @@ export function LucaChatSurface({
   return (
     <div
       data-luca-chat-surface="original-mini-chat-extraction"
-      className="flex h-full min-h-0 flex-col bg-transparent rounded-xl border shadow-xl relative transition-all duration-300"
+      data-luca-material-role="floating-panel"
+      className="flex h-full min-h-0 flex-col rounded-xl border relative"
       style={
         {
+          ...lucaMaterialFloatingPanelStyle,
           borderColor: `${safeColor}26`,
           width,
           maxWidth: "100%",
@@ -169,7 +164,6 @@ export function LucaChatSurface({
         } as React.CSSProperties
       }
     >
-      <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--luca-background-elevated,#0a0a0a)_95%,transparent)] glass-blur -z-10" />
       {backgroundOverlay}
 
       {isCompact && !showSuggestions && (
@@ -243,8 +237,14 @@ export function LucaChatSurface({
       {onClose && (
         <button
           onClick={onClose}
-          className={`absolute top-4 right-4 z-[200] p-1.5 rounded-full bg-[var(--luca-surface-glass,rgba(0,0,0,0.4))] border border-[color-mix(in_srgb,var(--luca-text-primary,#ffffff)_10%,transparent)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] ${showClose ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"}`}
-          style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
+          data-luca-material-role="control"
+          className={`luca-shell-control absolute top-4 right-4 z-[200] p-1.5 rounded-full border ${showClose ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"}`}
+          style={
+            {
+              ...lucaMaterialControlStyle,
+              WebkitAppRegion: "no-drag",
+            } as React.CSSProperties
+          }
           title="Close Luca"
         >
           <Icon name="Close" size={14} className="text-[var(--luca-text-tertiary,rgba(255,255,255,0.4))]" />

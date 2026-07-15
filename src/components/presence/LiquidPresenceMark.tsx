@@ -6,6 +6,9 @@ import {
   createLiquidPresenceRenderer,
   type LiquidPresenceRenderer,
 } from "./liquidPresenceRenderer";
+import LucaChromaticMetal from "../material/LucaChromaticMetal";
+import settingsService from "../../services/settingsService";
+import { normalizeLucaOpticalMaterialSettings } from "../../styles/lucaOpticalMaterialSettings";
 
 /**
  * Luca's full presence body: the liquid orb, with the calm 2D mark as the
@@ -33,6 +36,9 @@ const LiquidPresenceMark: React.FC<LiquidPresenceMarkProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<LiquidPresenceRenderer | null>(null);
   const [webglFailed, setWebglFailed] = useState(false);
+  const [metalTuning, setMetalTuning] = useState(() =>
+    normalizeLucaOpticalMaterialSettings(settingsService.getSettings().general.opticalMaterial).metal,
+  );
 
   const reducedMotion = useMemo(
     () =>
@@ -64,6 +70,16 @@ const LiquidPresenceMark: React.FC<LiquidPresenceMarkProps> = ({
     rendererRef.current?.setInput({ state, amplitude, identityColor });
   }, [state, amplitude, identityColor]);
 
+  useEffect(() => {
+    const onSettingsChanged = () => {
+      setMetalTuning(
+        normalizeLucaOpticalMaterialSettings(settingsService.getSettings().general.opticalMaterial).metal,
+      );
+    };
+    settingsService.on("settings-changed", onSettingsChanged);
+    return () => { settingsService.off("settings-changed", onSettingsChanged); };
+  }, []);
+
   if (useFallback) {
     return (
       <PresenceMark
@@ -92,6 +108,7 @@ const LiquidPresenceMark: React.FC<LiquidPresenceMarkProps> = ({
         } as React.CSSProperties
       }
     >
+      <LucaChromaticMetal shape="orb" tuning={metalTuning} className="opacity-75 mix-blend-screen" />
       <canvas
         ref={canvasRef}
         style={{ width: size, height: size }}

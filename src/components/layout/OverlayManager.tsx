@@ -22,6 +22,7 @@ import { realtimeVoiceUiBridge } from "../../services/voice/realtimeVoiceUiBridg
 import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
 import {
   LUCA_MATERIAL_BORDER,
+  lucaMaterialHudStyle,
   lucaMaterialOverlayStyle,
 } from "../../styles/lucaMaterialSystem";
 
@@ -438,10 +439,11 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
 
       {activeAutonomousAction && (
         <div
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] px-4 py-2 rounded-full border flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500 glass-blur"
+          data-luca-material-role="hud"
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] px-4 py-2 rounded-full border flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500"
           style={{
+            ...lucaMaterialHudStyle,
             borderColor: `${theme.hex}66`,
-            background: `${theme.hex}1a`,
             boxShadow: `0 0 20px ${theme.hex}33`,
           }}
         >
@@ -474,7 +476,8 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
 
       {isRebooting && (
         <div
-          className={`absolute inset-0 z-[2000] flex flex-col items-center justify-center font-mono animate-in fade-in duration-200 pointer-events-auto transition-all duration-700 glass-blur[20px]`}
+          data-luca-material-role="overlay"
+          className="absolute inset-0 z-[2000] flex flex-col items-center justify-center font-mono animate-in fade-in duration-200 pointer-events-auto"
           style={{ ...lucaMaterialOverlayStyle }}
         >
           <div

@@ -4,6 +4,10 @@ import { soundService } from "../services/soundService";
 import { apiUrl } from "../config/api";
 import FaceScan from "./Onboarding/FaceScan";
 import { setHexAlpha } from "../config/themeColors";
+import {
+  lucaMaterialControlActiveStyle,
+  lucaMaterialControlStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface Props {
   onClose: () => void;
@@ -180,12 +184,11 @@ const AdminEnrollmentModal: React.FC<Props> = ({
         >
           <button
             onClick={() => setActiveTab("face")}
-            className={`flex-1 py-2 text-xs font-bold transition-colors ${
-              activeTab === "face"
-                ? "bg-white/10"
-                : "text-gray-500 hover:text-gray-300"
-            }`}
+            className="flex-1 border-b py-2 text-xs font-bold transition-colors hover:text-[var(--luca-text-primary)]"
             style={{
+              ...(activeTab === "face"
+                ? lucaMaterialControlActiveStyle
+                : lucaMaterialControlStyle),
               color: activeTab === "face" ? theme.hex : undefined,
               borderBottom:
                 activeTab === "face" ? `2px solid ${theme.hex}` : `1px solid ${setHexAlpha(theme.hex, 0.15)}`,
@@ -195,12 +198,11 @@ const AdminEnrollmentModal: React.FC<Props> = ({
           </button>
           <button
             onClick={() => setActiveTab("voice")}
-            className={`flex-1 py-2 text-xs font-bold transition-colors ${
-              activeTab === "voice"
-                ? "bg-white/10"
-                : "text-gray-500 hover:text-gray-300"
-            }`}
+            className="flex-1 border-b py-2 text-xs font-bold transition-colors hover:text-[var(--luca-text-primary)]"
             style={{
+              ...(activeTab === "voice"
+                ? lucaMaterialControlActiveStyle
+                : lucaMaterialControlStyle),
               color: activeTab === "voice" ? theme.hex : undefined,
               borderBottom:
                 activeTab === "voice" ? `2px solid ${theme.hex}` : `1px solid ${setHexAlpha(theme.hex, 0.15)}`,
@@ -222,8 +224,9 @@ const AdminEnrollmentModal: React.FC<Props> = ({
         {step === "intro" && (
           <div className="text-center space-y-4">
               <div 
-                className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto border glass-blur shadow-xl"
+                className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border"
                 style={{ 
+                  ...lucaMaterialControlActiveStyle,
                   borderColor: theme ? setHexAlpha(theme.hex, 0.4) : "rgba(255,255,255,0.2)",
                   boxShadow: theme ? `0 0 20px ${setHexAlpha(theme.hex, 0.1)}` : "none"
                 }}
@@ -235,12 +238,12 @@ const AdminEnrollmentModal: React.FC<Props> = ({
               )}
             </div>
             <div>
-              <h3 className="text-white text-md font-bold mb-1">
+              <h3 className="text-md mb-1 font-bold text-[var(--luca-text-primary)]">
                 {activeTab === "face"
                   ? "Identify Yourself"
                   : "Voice Authentication"}
               </h3>
-              <p className="text-gray-400 text-xs px-4">
+              <p className="px-4 text-xs text-[var(--luca-text-secondary)]">
                 {activeTab === "face"
                   ? "Register your biometric profile to enable high-security commands."
                   : "Record a voice sample to enable speaker recognition."}
@@ -257,9 +260,9 @@ const AdminEnrollmentModal: React.FC<Props> = ({
                       startRecording();
                     }
                   }}
-                  className="w-full font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all glass-blur text-xs border"
+                  className="luca-material-pressable flex w-full items-center justify-center gap-2 rounded-lg border py-2 text-xs font-bold transition-colors"
                   style={{
-                    backgroundColor: theme ? setHexAlpha(theme.hex, 0.2) : "rgba(255,255,255,0.1)",
+                    ...lucaMaterialControlActiveStyle,
                     borderColor: theme ? setHexAlpha(theme.hex, 0.4) : "rgba(255,255,255,0.2)",
                     color: theme ? theme.hex : "white",
                     boxShadow: theme ? `0 0 15px -5px ${setHexAlpha(theme.hex, 0.3)}` : "none",
@@ -282,10 +285,10 @@ const AdminEnrollmentModal: React.FC<Props> = ({
                       startRecording();
                     }
                   }}
-                  className="w-full font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all border glass-blur text-xs"
+                  className="luca-material-pressable flex w-full items-center justify-center gap-2 rounded-lg border py-2 text-xs font-bold transition-colors"
                   style={{ 
+                    ...lucaMaterialControlStyle,
                     borderColor: theme ? setHexAlpha(theme.hex, 0.4) : "rgba(255,255,255,0.2)",
-                    backgroundColor: theme ? setHexAlpha(theme.hex, 0.05) : "transparent",
                     color: theme ? theme.hex : "white/60"
                   }}
                 >
@@ -298,7 +301,7 @@ const AdminEnrollmentModal: React.FC<Props> = ({
 
         {step === "camera" && (
           <div 
-            className="relative bg-black/40 rounded-xl overflow-hidden flex-1 w-full flex items-center justify-center border glass-blur"
+            className="relative flex w-full flex-1 items-center justify-center overflow-hidden rounded-xl border bg-black/40"
             style={{ borderColor: setHexAlpha(theme.hex, 0.15) }}
           >
             {activeTab === "face" ? (
@@ -360,7 +363,8 @@ const AdminEnrollmentModal: React.FC<Props> = ({
                     <div className="flex gap-3 w-full max-w-xs">
                       <button
                         onClick={startRecording}
-                        className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all"
+                        className="luca-material-pressable flex-1 rounded-xl border py-3 text-xs font-bold uppercase tracking-widest transition-colors"
+                        style={lucaMaterialControlStyle}
                       >
                         Retake
                       </button>

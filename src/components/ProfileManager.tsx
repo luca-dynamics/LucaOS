@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { Icon } from "./ui/Icon";
 import { UserProfile } from "../types";
+import {
+  lucaMaterialControlActiveStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface Props {
   onClose: () => void;
@@ -48,8 +53,8 @@ const ProfileManager: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 glass-blur animate-in fade-in duration-300">
-      <div className="w-full max-w-lg bg-[#050505] border border-rq-blue/40 shadow-[0_0_50px_rgba(59,130,246,0.15)] rounded-lg p-6 flex flex-col gap-6">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 animate-in fade-in duration-300">
+      <div className="flex w-full max-w-lg flex-col gap-6 rounded-lg border p-6" data-luca-material-role="dialog" role="dialog" aria-modal="true" aria-label="User profile configuration" style={lucaMaterialDialogStyle}>
         <div className="flex justify-between items-center border-b border-rq-blue/20 pb-4">
           <div className="flex items-center gap-3 text-rq-blue">
             <Icon name="Settings" size={24} className="animate-spin-slow" />
@@ -71,13 +76,15 @@ const ProfileManager: React.FC<Props> = ({
             </button>
             <button
               onClick={() => applyPreset("DEFAULT")}
-              className="px-2 py-1 text-[10px] border border-slate-700 text-slate-400 hover:bg-slate-800 rounded"
+              className="luca-material-pressable rounded border px-2 py-1 text-[10px] hover:text-[var(--luca-text-primary)]"
+              style={lucaMaterialControlStyle}
             >
               RESET
             </button>
             <button
               onClick={onClose}
-              className="text-slate-500 hover:text-white"
+              className="luca-material-pressable rounded border p-1.5 hover:text-[var(--luca-text-primary)]"
+              style={lucaMaterialControlStyle}
             >
               <Icon name="X" size={24} />
             </button>
@@ -94,7 +101,8 @@ const ProfileManager: React.FC<Props> = ({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-slate-900/50 border border-slate-800 rounded p-3 text-sm font-mono text-white focus:border-rq-blue focus:outline-none"
+              className="w-full rounded border p-3 font-mono text-sm focus:border-[var(--luca-accent-primary)] focus:outline-none"
+              style={lucaMaterialControlStyle}
               placeholder="Enter your name..."
             />
           </div>
@@ -109,11 +117,8 @@ const ProfileManager: React.FC<Props> = ({
                 <button
                   key={v}
                   onClick={() => setVoice(v)}
-                  className={`py-2 text-[10px] font-bold border rounded transition-all ${
-                    voice === v
-                      ? "bg-rq-blue text-black border-rq-blue"
-                      : "bg-black border-slate-800 text-slate-500 hover:border-slate-600"
-                  }`}
+                  className="luca-material-pressable rounded border py-2 text-[10px] font-bold transition-colors hover:text-[var(--luca-text-primary)]"
+                  style={voice === v ? lucaMaterialControlActiveStyle : lucaMaterialControlStyle}
                 >
                   {v.toUpperCase()}
                 </button>
@@ -129,7 +134,8 @@ const ProfileManager: React.FC<Props> = ({
             <textarea
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
-              className="w-full h-32 bg-slate-900/50 border border-slate-800 rounded p-3 text-xs font-mono text-[var(--luca-success,#4fbf7a)] focus:border-rq-blue focus:outline-none resize-none"
+              className="h-32 w-full resize-none rounded border p-3 font-mono text-xs text-[var(--luca-text-primary)] focus:border-[var(--luca-accent-primary)] focus:outline-none"
+              style={lucaMaterialControlStyle}
               placeholder="Define custom behaviors (e.g., 'Be sarcastic', 'Speak in riddles', 'Focus on React code')..."
             />
           </div>

@@ -9,6 +9,7 @@ export type LucaSkinId =
   | "mist";
 
 export type LucaSkinModeAffinity = "light" | "dark" | "adaptive" | "warm";
+export type LucaSkinMaterialTone = "light" | "dark";
 
 export type LucaSkinHostKind =
   | "desktop-app"
@@ -47,6 +48,8 @@ export interface LucaSkinDefinition {
   description: string;
   recommendedDefault?: boolean;
   modeAffinity: LucaSkinModeAffinity;
+  /** Optical polarity for rims, highlights, and shadows; independent of mode behavior. */
+  materialTone: LucaSkinMaterialTone;
   backgroundProfile: {
     base: string;
     elevated: string;
@@ -139,19 +142,20 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "A bright, quiet default environment with pearl-white surfaces, gentle glass, and highly readable graphite text.",
     modeAffinity: "light",
+    materialTone: "light",
     backgroundProfile: {
-      base: "#f7f6f2",
-      elevated: "#ffffff",
-      ambient: "rgba(225, 232, 240, 0.72)",
-      hero: "linear-gradient(135deg, #fbfaf7 0%, #eef3f7 52%, #f8f2ea 100%)",
+      base: "#edf1f4",
+      elevated: "#fbfcfd",
+      ambient: "rgba(160, 176, 190, 0.44)",
+      hero: "linear-gradient(135deg, #f9fbfc 0%, #e2eaf0 52%, #f2ece5 100%)",
       pattern: "ambient",
     },
     materialProfile: {
-      glassOpacity: 0.74,
-      glassBlurPx: 12,
-      borderStrength: 0.38,
-      shadowSoft: "0 18px 50px rgba(52, 64, 84, 0.12)",
-      shadowFloat: "0 28px 70px rgba(52, 64, 84, 0.16)",
+      glassOpacity: 0.82,
+      glassBlurPx: 14,
+      borderStrength: 0.62,
+      shadowSoft: "0 14px 38px rgba(45, 58, 74, 0.17)",
+      shadowFloat: "0 24px 64px rgba(45, 58, 74, 0.22)",
       profile: "glass",
     },
     accentProfile: {
@@ -196,6 +200,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
       "A focused charcoal environment with graphite materials, restrained accents, and comfortable dark-mode readability.",
     recommendedDefault: true,
     modeAffinity: "dark",
+    materialTone: "dark",
     backgroundProfile: {
       base: "#111417",
       elevated: "#1b2025",
@@ -253,19 +258,20 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "A gently adaptive liquid environment with soft gradients, layered glass, and motion designed to stay behind the work.",
     modeAffinity: "adaptive",
+    materialTone: "light",
     backgroundProfile: {
-      base: "#eef5f7",
-      elevated: "rgba(255, 255, 255, 0.76)",
-      ambient: "rgba(143, 183, 194, 0.42)",
-      hero: "linear-gradient(135deg, #eaf4f6 0%, #dfe8fb 46%, #f4ece2 100%)",
+      base: "#e5eef2",
+      elevated: "#f8fbfc",
+      ambient: "rgba(100, 147, 165, 0.36)",
+      hero: "linear-gradient(135deg, #edf6f7 0%, #d7e4f5 46%, #f0e7dc 100%)",
       pattern: "liquid",
     },
     materialProfile: {
-      glassOpacity: 0.62,
+      glassOpacity: 0.78,
       glassBlurPx: 22,
-      borderStrength: 0.34,
-      shadowSoft: "0 20px 60px rgba(65, 91, 112, 0.16)",
-      shadowFloat: "0 34px 90px rgba(65, 91, 112, 0.22)",
+      borderStrength: 0.56,
+      shadowSoft: "0 16px 46px rgba(52, 78, 98, 0.19)",
+      shadowFloat: "0 28px 74px rgba(52, 78, 98, 0.25)",
       profile: "liquid-glass",
     },
     accentProfile: {
@@ -327,19 +333,20 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "A warm editorial environment with cream paper surfaces, matte separation, and high-contrast text for long thinking sessions.",
     modeAffinity: "warm",
+    materialTone: "light",
     backgroundProfile: {
-      base: "#f4eadc",
-      elevated: "#fff8ed",
-      ambient: "rgba(202, 160, 111, 0.18)",
-      hero: "linear-gradient(135deg, #fff7ea 0%, #f1e2cf 58%, #ead8bf 100%)",
+      base: "#eee2d1",
+      elevated: "#fff8ec",
+      ambient: "rgba(170, 118, 65, 0.24)",
+      hero: "linear-gradient(135deg, #fff9ef 0%, #ead8c1 58%, #dfc8a9 100%)",
       pattern: "solid",
     },
     materialProfile: {
       glassOpacity: 0.95,
       glassBlurPx: 0,
-      borderStrength: 0.42,
-      shadowSoft: "0 14px 34px rgba(102, 74, 43, 0.12)",
-      shadowFloat: "0 24px 60px rgba(102, 74, 43, 0.16)",
+      borderStrength: 0.58,
+      shadowSoft: "0 12px 32px rgba(92, 63, 34, 0.17)",
+      shadowFloat: "0 22px 56px rgba(92, 63, 34, 0.22)",
       profile: "paper",
     },
     accentProfile: {
@@ -383,6 +390,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "A neutral grey dark environment — no color cast, steady contrast, easy on the eyes for long sessions.",
     modeAffinity: "dark",
+    materialTone: "dark",
     backgroundProfile: {
       base: "#1a1c1f",
       elevated: "#232629",
@@ -440,6 +448,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "True black with OLED-grade contrast — structure carried by hairlines and one cool accent, nothing else.",
     modeAffinity: "dark",
+    materialTone: "dark",
     backgroundProfile: {
       base: "#0a0a0b",
       elevated: "#141416",
@@ -497,6 +506,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "A warm charcoal environment with a soft amber undertone — dark mode that feels like evening, not machinery.",
     modeAffinity: "dark",
+    materialTone: "dark",
     backgroundProfile: {
       base: "#191512",
       elevated: "#241e19",
@@ -554,19 +564,20 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     description:
       "Clean neutral light — quiet grey-white surfaces with no warmth cast, the working daylight environment.",
     modeAffinity: "light",
+    materialTone: "light",
     backgroundProfile: {
-      base: "#eef0f2",
-      elevated: "#ffffff",
-      ambient: "rgba(210, 214, 220, 0.7)",
-      hero: "linear-gradient(135deg, #f2f3f5 0%, #e9ebee 52%, #f4f5f7 100%)",
+      base: "#e8ecef",
+      elevated: "#f8fafb",
+      ambient: "rgba(145, 154, 166, 0.36)",
+      hero: "linear-gradient(135deg, #f4f6f7 0%, #dfe4e8 52%, #eef1f3 100%)",
       pattern: "solid",
     },
     materialProfile: {
-      glassOpacity: 0.76,
-      glassBlurPx: 12,
-      borderStrength: 0.4,
-      shadowSoft: "0 18px 50px rgba(40, 48, 60, 0.1)",
-      shadowFloat: "0 28px 70px rgba(40, 48, 60, 0.14)",
+      glassOpacity: 0.84,
+      glassBlurPx: 14,
+      borderStrength: 0.6,
+      shadowSoft: "0 14px 38px rgba(37, 46, 58, 0.16)",
+      shadowFloat: "0 24px 64px rgba(37, 46, 58, 0.21)",
       profile: "glass",
     },
     accentProfile: {

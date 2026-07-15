@@ -46,8 +46,74 @@ orb, a face, and a small set of high-value controls without losing its skin.
 - Shared material roles now carry texture without extra component markup:
   panels, cards, rails, and dialogs use the `quiet` optical texture; controls,
   floating panels, popovers, and HUDs use the clearer `standard` texture.
-- Dense metrics, tabs, workspace backgrounds, overlays, semantic status colour,
-  and the face remain untextured so hierarchy and legibility stay calm.
+- Dense metrics, tabs, workspace backgrounds, overlays, and semantic status
+  colour remain optically quiet. The face carries its chrome bands inside the
+  mesh shader and never receives a separate texture plate.
 - Pressable shell and Voice controls use a 140ms `scale(0.97)` response with a
   strong ease-out curve. Hover glint is limited to fine pointers and all
   movement collapses under reduced motion.
+- Glass highlights, rims, shadows, and sheens are skin-owned tokens. Light
+  skins use accent/graphite edge definition so white surfaces retain depth;
+  dark skins retain bright specular highlights and neutral black edge shade.
+- Optical polarity is explicit (`materialTone`) rather than inferred from mode
+  affinity, so adaptive Flow receives light-surface optics without losing its
+  adaptive behavior.
+- Detached panels own one backdrop capture; nested composers, headers, and
+  cards use textured solid roles so blur is never stacked through the same
+  hierarchy.
+- The Electron native splash is deliberately fixed to Luca's dark Carbon
+  identity. It does not read the saved user skin; skin ownership begins when
+  onboarding mounts. VisualCore,
+  Mini Chat, the phone manager, VoiceHUD, VisionHUD, transient overlays, and
+  failure states now join the same role system. Direct security, profile,
+  skills, model, LucaLink, network, remote-control, and agent dialogs use that
+  role hierarchy as well instead of fixed dark shells.
+- Legacy shaped `glass-blur` foregrounds receive the skin substrate and
+  optical texture through a compatibility bridge. Full-screen scrims, real
+  media canvases, and semantic status surfaces are deliberately excluded.
+
+## Whole-interface coverage contract
+
+`src/styles/lucaInterfaceMaterialCoverage.ts` is the product-wide guardrail for
+material adoption. It covers the native boot splash, browser post-boot states,
+all onboarding screens, desktop and mobile shells, Settings, VoiceHUD, Mini
+Chat, the presence widgets, overlays, shared dialogs, and loading/error/empty
+states. Each area names its owning files, semantic material roles, optical tier,
+skin boundary, and reduced-transparency behavior.
+
+Coverage does not mean equal visual weight. Large structural regions use quiet
+texture, small premium controls may use the standard optical tier, mobile keeps
+its capped stable material, and semantic status states retain their dedicated
+colors. Full matched-background WebGL remains reserved for valid premium
+surfaces; it is never multiplied across panels, cards, or buttons.
+
+## Completed promotion slices
+
+1. **Boot identity boundary:** native boot is fixed to Carbon and never reads
+   the saved skin. Skin ownership begins at onboarding.
+2. **Light material polarity:** Pearl, Flow, Canvas, and Mist have explicit
+   root/elevated/surface separation, graphite/accent rims, grounded shadows,
+   and semantic text contrast instead of compounded low-opacity copy.
+3. **Optical settings contract:** Light, Refraction, Depth, Dispersion, Frost,
+   and Edge falloff are normalized and persisted alongside the metal controls.
+4. **Matched-background refraction:** the Appearance material lab displays the
+   exact canvas supplied to the lens, so bending and chromatic edges are real,
+   not a blur pretending to be refraction.
+5. **Renderer governance:** WebGL surfaces measure through `ResizeObserver`,
+   cap DPR, render once immediately, pause while hidden/offscreen or under
+   reduced motion, log shader failures, recover context, and dispose resources.
+6. **Reusable chromatic metal:** a texture-ramp WebGL shader supports orb,
+   rounded-rectangle, and capsule masks with sharp chrome bands and RGB split.
+7. **Premium composition:** the presence orb layers metal under glass; the face
+   integrates metal bands inside its own mesh shader with no circular overlay;
+   repeated controls retain the lighter CSS optical tier.
+8. **Motion finish and tuning lab:** one flagship Voice control receives the
+   slow spectral border flow, frozen under reduced motion. Settings keeps the
+   common Refraction/Frost controls visible and the full lab in a disclosure.
+
+SVG turbulence/displacement is not used on product backdrops. Browser support
+and backdrop sampling are not reliable enough for Luca's host matrix, and a
+turbulence-generated displacement field would not prove that the sampled image
+matches the pixels behind a control. The matched WebGL path is the governed
+full-refraction tier.
+presence optics; it is never multiplied across panels, cards, or buttons.

@@ -58,6 +58,38 @@ describe("lucaSkinMaterialBridge", () => {
     expect(variables["--luca-shadow-glow"]).toBe("rgba(155, 101, 61, 0.10)");
   });
 
+  it("bridges contrast-aware glass texture tokens", () => {
+    const light = getLucaSkinMaterialVariables({ skinId: "pearl" });
+    const adaptiveLight = getLucaSkinMaterialVariables({ skinId: "flow" });
+    const dark = getLucaSkinMaterialVariables({ skinId: "carbon" });
+
+    expect(light["--luca-material-glass-highlight"]).toContain("#4f7f96");
+    expect(light["--luca-material-glass-rim"]).toContain("#4f5e68");
+    expect(adaptiveLight["--luca-material-glass-highlight"]).toContain("#5f8fa3");
+    expect(adaptiveLight["--luca-material-glass-rim"]).toContain("#4e6270");
+    expect(dark["--luca-material-glass-highlight"]).toBe("rgb(255 255 255 / 0.14)");
+  });
+
+  it.each(["pearl", "flow", "canvas", "mist"])(
+    "gives the %s light skin explicit tonal surfaces and edge depth",
+    (skinId) => {
+      const variables = getLucaSkinMaterialVariables({ skinId });
+
+      expect(variables["--luca-material-card-surface"]).toContain("color-mix");
+      expect(variables["--luca-material-control-surface"]).toContain("color-mix");
+      expect(variables["--luca-material-card-shadow"]).toContain("inset 0 1px");
+      expect(Number(variables["--luca-material-border-strength"])).toBeGreaterThanOrEqual(0.56);
+    },
+  );
+
+  it("preserves the established dark-skin surface formulas", () => {
+    const variables = getLucaSkinMaterialVariables({ skinId: "carbon" });
+
+    expect(variables["--luca-material-card-surface"]).toContain("var(--luca-surface-glass)");
+    expect(variables["--luca-material-card-shadow"]).toBe("none");
+    expect(variables["--luca-material-control-shadow"]).toBe("none");
+  });
+
   it("keeps material blur at 0px when reduced transparency is requested", () => {
     const variables = getLucaSkinMaterialVariables({
       skinId: "flow",

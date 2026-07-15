@@ -10,7 +10,11 @@ import {
   LUCA_SHELL_SHADOW_GLOW,
   LUCA_SHELL_SHADOW_SOFT,
 } from "../styles/lucaShellStyles";
-import { lucaMaterialPanelStyle } from "../styles/lucaMaterialSystem";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialPopoverStyle,
+  lucaMaterialSolidCardStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface ChatWidgetInputProps {
   input: string;
@@ -138,6 +142,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
   // subordinate to the text input and the send action. Active/safety states
   // keep their own accent/danger styling below and are unaffected by this.
   const quietControlStyle = {
+    ...lucaMaterialControlStyle,
     borderColor: "var(--luca-border-subtle, var(--app-border-main))",
     color: "var(--luca-text-secondary, var(--app-text-muted))",
   } as const;
@@ -197,14 +202,15 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
   // The composer reads as one elevated surface (full border + soft shadow),
   // not just a top-border strip — it's the primary control in the view.
   const inputSurfaceStyle = {
-    ...lucaMaterialPanelStyle,
+    ...lucaMaterialSolidCardStyle,
     border: `1px solid ${LUCA_SHELL_BORDER_SUBTLE}`,
     boxShadow: LUCA_SHELL_SHADOW_SOFT,
   };
 
   return (
     <div
-      className="relative z-20 transition-colors duration-500 rounded-2xl glass-blur"
+      className="relative z-20 rounded-2xl transition-colors duration-500"
+      data-luca-material-role="composer"
       style={inputSurfaceStyle}
     >
       {/* Attachment Preview (Above Input) */}
@@ -346,7 +352,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                 aria-expanded={plusOpen}
                 title="Add - files, screen, vision"
                 onClick={() => setPlusOpen((v) => !v)}
-                className="p-1.5 transition-all rounded-md border hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] active:scale-95 relative"
+                className="luca-material-pressable relative rounded-md border p-1.5 transition-colors hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
                 style={quietControlStyle}
               >
                 <Icon name="AddCircle" size={15} className="sm:w-[13px] sm:h-[13px]" />
@@ -375,13 +381,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                     onKeyDown={handlePlusMenuKeyDown}
                     className="absolute bottom-full left-0 z-[70] mb-1.5 w-[216px]"
                     style={{
-                      background:
-                        "var(--luca-background-elevated, var(--app-bg-main, #14181d))",
-                      border:
-                        "1px solid var(--luca-border-subtle, rgba(255,255,255,0.08))",
+                      ...lucaMaterialPopoverStyle,
                       borderRadius: 12,
-                      boxShadow:
-                        "0 18px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)",
                       padding: 4,
                     }}
                   >
@@ -515,8 +516,9 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                           }),
                         )
                       }
-                      className="flex items-center gap-1.5 text-[11px] px-2 rounded-md border h-[24px] sm:h-[27px] transition-all hover:opacity-80 active:scale-95"
+                      className="luca-material-pressable flex h-[24px] items-center gap-1.5 rounded-md border px-2 text-[11px] transition-opacity hover:opacity-80 sm:h-[27px]"
                       style={{
+                        ...quietControlStyle,
                         borderColor: isAnyConnected
                           ? `${safeColor}40`
                           : "var(--luca-border-subtle, var(--app-border-main))",
@@ -560,9 +562,9 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                       pointer-events-none group-hover/mcp:pointer-events-auto
                       translate-y-1 group-hover/mcp:translate-y-0
                       transition-all duration-200
-                      bg-[var(--luca-surface-solid,var(--app-bg-tint))] border-[var(--luca-border-subtle,var(--app-border-main))] text-[var(--luca-text-secondary,var(--app-text-muted))]
+                      text-[var(--luca-text-secondary,var(--app-text-muted))]
                     `}
-                      style={{ boxShadow: LUCA_SHELL_SHADOW_SOFT }}
+                      style={lucaMaterialPopoverStyle}
                     >
                       <div className="flex items-center justify-between px-3 pb-2 border-b border-[var(--luca-border-subtle,var(--app-border-main))] mb-1">
                         <p
@@ -672,6 +674,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                  relative
                `}
               style={{
+                ...(!isVoiceActive ? quietControlStyle : {}),
                 borderColor: isVoiceActive
                   ? isSpeaking
                     ? `${safeColor}b3`
@@ -762,8 +765,9 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                         borderColor: "transparent",
                         color: "var(--luca-accent-ink, #0c0e12)",
                       }
-                    : {
+                  : {
                         WebkitAppRegion: "no-drag",
+                        ...lucaMaterialControlStyle,
                         borderColor:
                           "var(--luca-border-subtle, var(--app-border-main))",
                         color:

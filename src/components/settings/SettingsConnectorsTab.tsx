@@ -9,7 +9,10 @@ import {
   SettingsStatList,
   settingsControlInlineStyle,
 } from "./SettingsLayout";
-import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import {
+  settingsCardStyle,
+  settingsSurfaceTokens,
+} from "./settingsLayoutStyles";
 import { FIRST_PARTY_CONNECTORS } from "../../config/connectorCatalog";
 import { startConnectorAuth } from "../../services/connectorAuth";
 
@@ -215,7 +218,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                       <div
                         className={`text-sm border px-3 py-2 rounded-xl leading-snug glass-blur`}
                         style={{
-                          backgroundColor: settingsSurfaceTokens.glass,
+                          background: settingsCardStyle.background,
                           borderColor: settingsSurfaceTokens.borderSubtle,
                           color: settingsSurfaceTokens.textPrimary,
                         }}
@@ -248,7 +251,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                     <div
                       className="text-sm px-3 py-2 rounded-xl border leading-snug"
                       style={{
-                        backgroundColor: settingsSurfaceTokens.glass,
+                        background: settingsCardStyle.background,
                         borderColor: settingsSurfaceTokens.borderSubtle,
                         color: settingsSurfaceTokens.textPrimary,
                       }}
@@ -348,7 +351,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
           <div
             className={`relative border p-8 rounded-3xl max-w-[320px] text-center shadow-2xl animate-in zoom-in duration-300`}
             style={{
-              backgroundColor: settingsSurfaceTokens.glass,
+              background: settingsCardStyle.background,
               borderColor: settingsSurfaceTokens.borderSubtle,
             }}
           >

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import * as tf from "@tensorflow/tfjs";
 import * as speechCommands from "@tensorflow-models/speech-commands";
 import { Icon } from "./ui/Icon";
+import { lucaMaterialHudStyle } from "../styles/lucaMaterialSystem";
 
 interface WakeWordListenerProps {
   onWake: () => void;
@@ -354,7 +355,12 @@ export const WakeWordListener: React.FC<WakeWordListenerProps> = ({
   if (status === "TRAINING" && !isModelTrained) {
     return (
       <div className="fixed bottom-4 right-4 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="bg-black/80 glass-blur border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] px-3 py-2 rounded-lg shadow-xl flex items-center gap-3">
+        <div
+          className="flex items-center gap-3 rounded-lg border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] px-3 py-2"
+          data-luca-material-role="hud"
+          role="status"
+          style={lucaMaterialHudStyle}
+        >
           <Icon name="Loader" className="text-[var(--luca-info,#4f8cff)] animate-spin" size={14} />
           <span className="text-[10px] font-medium text-[var(--luca-info,#4f8cff)] italic">
             Optimizing Sense...

@@ -14,6 +14,11 @@ import type { Device, LucaLinkError } from "../services/lucaLink/types";
 import { ConnectionState } from "../services/lucaLink/types";
 import { API_BASE_URL, SERVER_HTTP_PORT, WS_PORT, RELAY_SERVER_URL, getAuthHeaders, waitForAuth } from "../config/api";
 import { settingsService } from "../services/settingsService";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialSolidCardStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface LucaLinkModalProps {
   onClose: () => void;
@@ -272,17 +277,16 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4">
       <div
         className="relative flex max-h-[86vh] w-full max-w-[480px] flex-col overflow-hidden rounded-2xl border"
-        style={{
-          background: "var(--luca-background-elevated, var(--app-bg-main, #14181d))",
-          borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.08))",
-          boxShadow:
-            "0 30px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)",
-        }}
+        data-luca-material-role="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Link a device"
+        style={lucaMaterialDialogStyle}
       >
         {/* Header — calm row, state as a quiet word */}
         <div
           className="flex h-[52px] flex-none items-center gap-2.5 border-b px-5"
-          style={{ borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.08))" }}
+          style={lucaMaterialSolidCardStyle}
         >
           <Icon
             name="Smartphone"
@@ -303,7 +307,8 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="ml-auto rounded-lg p-1.5 text-[var(--app-text-muted)] transition-colors hover:bg-[var(--luca-surface-hover,rgba(255,255,255,0.06))] hover:text-[var(--app-text-main)]"
+            className="luca-material-pressable ml-auto rounded-lg border p-1.5 transition-colors hover:text-[var(--luca-text-primary)]"
+            style={lucaMaterialControlStyle}
           >
             <Icon name="Close" size={18} />
           </button>
@@ -422,7 +427,7 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
               ) : initError ? (
                 <div className="flex h-44 w-44 flex-col items-center justify-center gap-2 px-3 text-center text-[#69737f]">
                   <span className="text-[11px] leading-relaxed">
-                    Couldn't prepare pairing: {initError}
+                    Couldn&apos;t prepare pairing: {initError}
                   </span>
                   <button
                     type="button"

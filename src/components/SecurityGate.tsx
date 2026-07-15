@@ -4,6 +4,11 @@ import { Icon } from "./ui/Icon";
 import { soundService } from "../services/soundService";
 import AdminEnrollmentModal from "./AdminEnrollmentModal";
 import { lucaService, PersonaType } from "../services/lucaService";
+import {
+  lucaMaterialCardStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialSolidCardStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface Props {
   toolName: string;
@@ -165,12 +170,12 @@ const SecurityGate: React.FC<Props> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className={`fixed z-[999] ${isSafetyValve ? "top-6 right-6" : "inset-0 flex items-center justify-center bg-black/40 glass-blur[20px]"}`}
+      className={`fixed z-[999] ${isSafetyValve ? "top-6 right-6" : "inset-0 flex items-center justify-center bg-black/60"}`}
     >
       {/* Dynamic Background HUD Patterns - Hidden or scoped for Safety Valve */}
       {!isSafetyValve && (
         <div className="absolute inset-0 z-0 opacity-20 pointer-events-none overflow-hidden">
-          <div className={`absolute inset-0 bg-[#0a0c10] opacity-30`} />
+          <div className="absolute inset-0 bg-black/30" />
 
           {isSafetyValve ? (
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,0,0,0.1)_0%,transparent_70%)]" />
@@ -214,8 +219,13 @@ const SecurityGate: React.FC<Props> = ({
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
         className={`relative w-full ${
           isSafetyValve ? "max-w-md" : "max-w-2xl"
-        } bg-black/60 border rounded-3xl overflow-hidden shadow-[0_0_80px_-20px_rgba(0,0,0,0.8)] glass-blur`}
+        } overflow-hidden rounded-3xl border`}
+        data-luca-material-role={isSafetyValve ? "hud" : "dialog"}
+        role="alertdialog"
+        aria-modal={!isSafetyValve}
+        aria-label="Security approval request"
         style={{
+          ...lucaMaterialDialogStyle,
           borderColor: isSafetyValve
             ? "rgba(239, 68, 68, 0.4)"
             : "rgba(var(--app-primary-rgb), 0.2)",
@@ -233,8 +243,9 @@ const SecurityGate: React.FC<Props> = ({
 
         {/* HUD Top Bar */}
         <div
-          className="p-4 border-b flex items-center justify-between bg-white/[0.02]"
+          className="flex items-center justify-between border-b p-4"
           style={{
+            ...lucaMaterialSolidCardStyle,
             borderBottomColor: isSafetyValve
               ? "rgba(239, 68, 68, 0.2)"
               : "rgba(var(--app-primary-rgb), 0.1)",
@@ -384,7 +395,8 @@ const SecurityGate: React.FC<Props> = ({
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-black/40 rounded-3xl border border-white/10 p-6 flex flex-col items-center justify-center min-h-[300px]"
+                className="flex min-h-[300px] flex-col items-center justify-center rounded-3xl border p-6"
+                style={lucaMaterialCardStyle}
               >
                 <div className="w-full max-w-md">
                   <AdminEnrollmentModal

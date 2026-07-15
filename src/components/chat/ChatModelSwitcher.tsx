@@ -9,6 +9,11 @@ import {
   OPENAI_GPT_5_6_MODELS,
   XAI_GROK_MODELS,
 } from "../../config/brain.config";
+import {
+  lucaMaterialControlActiveStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialPopoverStyle,
+} from "../../styles/lucaMaterialSystem";
 
 interface ChatModelSwitcherProps {
   themeName?: string;
@@ -43,13 +48,11 @@ const ADVANCED_MODELS = [
 const ALL_CLOUD_MODELS = [...CLOUD_MODELS, ...ADVANCED_MODELS];
 
 
-const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ themeName = "default", primaryColor = "#10b981" }) => {
+const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ primaryColor = "#10b981" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentModel, setCurrentModel] = useState<string>("gemini-1.5-flash");
   const [localModels, setLocalModels] = useState<LocalModel[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const isLight = themeName.toLowerCase() === "lucagent" || themeName.toLowerCase() === "agentic-slate" || themeName.toLowerCase() === "light";
 
   // Sanitize color
   const safeColor = primaryColor.startsWith("#") && primaryColor.length > 7 ? primaryColor.slice(0, 7) : primaryColor;
@@ -141,11 +144,8 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ themeName = "defa
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 h-[24px] sm:h-[27px] rounded-md border transition-all active:scale-95 hover:bg-[var(--luca-surface-hover)] group"
-        style={{
-          borderColor: "var(--luca-border-subtle, var(--app-border-main))",
-          backgroundColor: "var(--luca-surface-glass, transparent)",
-        }}
+        className="luca-material-pressable group flex h-[24px] items-center gap-1.5 rounded-md border px-2 py-1 transition-colors hover:bg-[var(--luca-surface-hover)] sm:h-[27px] sm:px-2.5 sm:py-1.5"
+        style={lucaMaterialControlStyle}
         title="Change Intelligence Model"
       >
         <span
@@ -169,29 +169,25 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ themeName = "defa
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div 
-          className={`absolute bottom-full left-0 mb-2 w-64 rounded-xl border shadow-2xl overflow-hidden z-[100] animate-in slide-in-from-bottom-2 fade-in duration-200 ${
-            isLight ? "bg-white border-gray-200" : "bg-[#1e1e24] border-white/10"
-          }`}
+        <div
+          className="absolute bottom-full left-0 z-[100] mb-2 w-64 overflow-hidden rounded-xl border shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200"
+          style={lucaMaterialPopoverStyle}
         >
 
           <div className="p-1 max-h-[350px] overflow-y-auto">
             {/* Cloud Models */}
-            <div className={`mt-1 px-2 py-1.5 text-[9px] font-bold tracking-wider uppercase ${isLight ? "text-gray-400" : "text-gray-500"}`}>
+            <div className="mt-1 px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[var(--luca-text-tertiary)]">
                Cloud Intelligence
             </div>
             {CLOUD_MODELS.map((model) => (
               <button
                 key={model.id}
                 onClick={() => handleSelectModel(model.id)}
-                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg transition-colors ${
-                  currentModel === model.id
-                    ? (isLight ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-white/10 text-white")
-                    : (isLight ? "hover:bg-gray-100 text-gray-700" : "hover:bg-white/5 text-gray-300")
-                }`}
+                className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-[var(--luca-text-secondary)] transition-colors hover:bg-[var(--luca-surface-hover)] hover:text-[var(--luca-text-primary)]"
+                style={currentModel === model.id ? lucaMaterialControlActiveStyle : undefined}
               >
                 <div className="flex items-center gap-2">
-                  <Icon name="Cloud" className={`w-3 h-3 ${isLight ? "text-gray-500" : "opacity-50"}`} />
+                  <Icon name="Cloud" className="h-3 w-3 text-[var(--luca-text-tertiary)]" />
                   <span className="text-xs font-medium">{model.name}</span>
                 </div>
                 {currentModel === model.id && <Icon name="Check" className="w-3.5 h-3.5" style={{ color: safeColor }} />}
@@ -201,21 +197,18 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ themeName = "defa
             {/* Local Models List */}
             {localModels.length > 0 && (
               <>
-                <div className={`mt-2 px-2 py-1.5 text-[9px] font-bold tracking-wider uppercase border-t ${isLight ? "border-gray-100 text-gray-400" : "border-white/5 text-gray-500"}`}>
+                <div className="mt-2 border-t border-[var(--luca-border-subtle)] px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[var(--luca-text-tertiary)]">
                    Local Models (Offline)
                 </div>
                 {localModels.map((model) => (
                   <button
                     key={model.id}
                     onClick={() => handleSelectModel(model.id)}
-                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg transition-colors ${
-                       currentModel === model.id
-                        ? (isLight ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-white/10 text-white")
-                        : (isLight ? "hover:bg-gray-100 text-gray-700" : "hover:bg-white/5 text-gray-300")
-                    }`}
+                    className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-[var(--luca-text-secondary)] transition-colors hover:bg-[var(--luca-surface-hover)] hover:text-[var(--luca-text-primary)]"
+                    style={currentModel === model.id ? lucaMaterialControlActiveStyle : undefined}
                   >
                     <div className="flex items-center gap-2">
-                      <Icon name="Lock" className={`w-3 h-3 ${isLight ? "text-[var(--luca-success,#4fbf7a)]" : "text-[var(--luca-success,#4fbf7a)]"}`} />
+                      <Icon name="Lock" className="h-3 w-3 text-[var(--luca-success,#4fbf7a)]" />
                       <span className="text-xs font-medium">{model.name}</span>
                     </div>
                     {currentModel === model.id && <Icon name="Check" className="w-3.5 h-3.5" style={{ color: safeColor }} />}
@@ -225,21 +218,18 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ themeName = "defa
             )}
 
             {/* Advanced Models */}
-            <div className={`mt-2 px-2 py-1.5 text-[9px] font-bold tracking-wider uppercase border-t ${isLight ? "border-gray-100 text-gray-400" : "border-white/5 text-gray-500"}`}>
+            <div className="mt-2 border-t border-[var(--luca-border-subtle)] px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[var(--luca-text-tertiary)]">
                Advanced
             </div>
             {ADVANCED_MODELS.map((model) => (
               <button
                 key={model.id}
                 onClick={() => handleSelectModel(model.id)}
-                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg transition-colors ${
-                  currentModel === model.id
-                    ? (isLight ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-white/10 text-white")
-                    : (isLight ? "hover:bg-gray-100 text-gray-700" : "hover:bg-white/5 text-gray-300")
-                }`}
+                className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-[var(--luca-text-secondary)] transition-colors hover:bg-[var(--luca-surface-hover)] hover:text-[var(--luca-text-primary)]"
+                style={currentModel === model.id ? lucaMaterialControlActiveStyle : undefined}
               >
                 <div className="flex items-center gap-2">
-                  <Icon name="Server" className={`w-3 h-3 ${isLight ? "text-gray-500" : "opacity-50"}`} />
+                  <Icon name="Server" className="h-3 w-3 text-[var(--luca-text-tertiary)]" />
                   <span className="text-xs font-medium">{model.name}</span>
                 </div>
                 {currentModel === model.id && <Icon name="Check" className="w-3.5 h-3.5" style={{ color: safeColor }} />}

@@ -11,6 +11,7 @@ import {
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 import AtmosphereStudio from "./AtmosphereStudio";
+import OpticalMaterialControls from "./OpticalMaterialControls";
 
 /**
  * Appearance — a first-class Settings destination (see
@@ -202,6 +203,18 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                 }}
               />
             </SettingsCard>
+          </div>
+          <div className="mt-4">
+            <OpticalMaterialControls
+              value={settings.general.opticalMaterial}
+              accentColor={theme.hex}
+              onChange={(opticalMaterial) => {
+                onUpdate("general", "opticalMaterial", opticalMaterial);
+                window.dispatchEvent(
+                  new CustomEvent("luca:optical-material-preview", { detail: opticalMaterial }),
+                );
+              }}
+            />
           </div>
         </SettingsSection>
 

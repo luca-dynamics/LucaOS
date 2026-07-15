@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Icon } from "./ui/Icon";
 import { soundService } from "../services/soundService";
+import { lucaMaterialDialogStyle } from "../styles/lucaMaterialSystem";
 
 interface Props {
   onGrant: () => void;
@@ -26,12 +27,23 @@ const AdminGrantModal: React.FC<Props> = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/95 glass-blur animate-in fade-in duration-300 font-mono">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/75 animate-in fade-in duration-300 font-mono">
       {/* Background Effects */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.15)_0%,transparent_70%)]"></div>
       <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(45deg,rgba(0,0,0,0)_49.9%,rgba(220,38,38,0.5)_50%,rgba(0,0,0,0)_50.1%)] bg-[size:10px_10px]"></div>
 
-      <div className="relative w-full max-w-2xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[#050000] shadow-[0_0_100px_rgba(220,38,38,0.4)] rounded-sm overflow-hidden flex flex-col">
+      <div
+        className="relative flex w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
+        data-luca-material-role="dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-label="Administrator authorization request"
+        style={{
+          ...lucaMaterialDialogStyle,
+          borderColor: "color-mix(in srgb, var(--luca-danger,#f87171) 32%, transparent)",
+          boxShadow: "0 0 100px color-mix(in srgb, var(--luca-danger,#f87171) 20%, transparent)",
+        }}
+      >
         {/* Header */}
         <div className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-black p-6 flex items-center justify-between">
           <div className="flex items-center gap-4">

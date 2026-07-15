@@ -230,9 +230,9 @@ const buildProductTokens = ({
   const accentPrimary = customAccentColor && accent === "custom"
     ? customAccentColor
     : accentSet.primary;
-  const glassAlpha = reducedTransparency ? 0.92 : alpha(mode === "light" ? 0.2 : 0.18, backgroundOpacity, 0.42);
-  const elevatedAlpha = alpha(mode === "light" ? 0.54 : 0.34, backgroundOpacity, 0.28);
-  const hoverAlpha = alpha(mode === "light" ? 0.44 : 0.28, backgroundOpacity, 0.22);
+  const glassAlpha = reducedTransparency ? 0.96 : alpha(mode === "light" ? 0.66 : 0.18, backgroundOpacity, mode === "light" ? 0.22 : 0.42);
+  const elevatedAlpha = alpha(mode === "light" ? 0.76 : 0.34, backgroundOpacity, mode === "light" ? 0.18 : 0.28);
+  const hoverAlpha = alpha(mode === "light" ? 0.84 : 0.28, backgroundOpacity, mode === "light" ? 0.12 : 0.22);
   const glowMultiplier = compatibilityMode === "accent-heavy" ? 1.6 : 1;
 
   const lightCommon = {
@@ -279,28 +279,28 @@ const buildProductTokens = ({
 
   const themeBase = {
     "luca-silver": {
-      backgroundBase: "#f6f7f9",
+      backgroundBase: "#edf1f4",
       backgroundLiquid:
-        "radial-gradient(circle at 50% -10%, rgba(191, 197, 207, 0.34), transparent 58%), linear-gradient(180deg, #ffffff 0%, #eef1f5 100%)",
+        "radial-gradient(circle at 50% -10%, rgba(151, 169, 183, 0.42), transparent 58%), linear-gradient(180deg, #f9fbfc 0%, #e5eaee 100%)",
       surfaceSolid: "#ffffff",
       textPrimary: "#161a20",
-      borderSubtle: "rgba(55, 65, 81, 0.14)",
+      borderSubtle: "rgba(49, 62, 74, 0.20)",
     },
     "luca-frost": {
-      backgroundBase: "#f7fbfd",
+      backgroundBase: "#e7f0f4",
       backgroundLiquid:
-        "radial-gradient(circle at 50% -8%, rgba(189, 214, 224, 0.32), transparent 60%), linear-gradient(180deg, #ffffff 0%, #eef6fa 100%)",
+        "radial-gradient(circle at 50% -8%, rgba(132, 180, 199, 0.40), transparent 60%), linear-gradient(180deg, #f9fcfd 0%, #e2eef3 100%)",
       surfaceSolid: "#fbfdff",
       textPrimary: "#14202a",
-      borderSubtle: "rgba(45, 74, 91, 0.14)",
+      borderSubtle: "rgba(45, 74, 91, 0.21)",
     },
     "luca-cream": {
-      backgroundBase: "#f4efe2",
+      backgroundBase: "#eee2d1",
       backgroundLiquid:
-        "radial-gradient(circle at 50% -8%, rgba(218, 202, 166, 0.28), transparent 58%), linear-gradient(180deg, #fffaf0 0%, #ece3cf 100%)",
+        "radial-gradient(circle at 50% -8%, rgba(197, 163, 105, 0.32), transparent 58%), linear-gradient(180deg, #fff9ee 0%, #eadcc5 100%)",
       surfaceSolid: "#fff8ea",
       textPrimary: "#2d2a22",
-      borderSubtle: "rgba(87, 80, 61, 0.16)",
+      borderSubtle: "rgba(87, 75, 55, 0.22)",
     },
   }[productTheme];
 
@@ -313,15 +313,15 @@ const buildProductTokens = ({
     backgroundLiquid: themeBase.backgroundLiquid,
     surfaceGlass: `rgba(255, 255, 255, ${glassAlpha})`,
     surfaceSolid: themeBase.surfaceSolid,
-    surfaceHover: `rgba(255, 255, 255, ${hoverAlpha})`,
+    surfaceHover: `rgba(224, 231, 237, ${hoverAlpha})`,
     borderSubtle: highContrast ? "rgba(22, 26, 32, 0.32)" : themeBase.borderSubtle,
-    borderStrong: highContrast ? "rgba(22, 26, 32, 0.48)" : "rgba(22, 26, 32, 0.24)",
+    borderStrong: highContrast ? "rgba(22, 26, 32, 0.52)" : "rgba(22, 26, 32, 0.32)",
     textPrimary: themeBase.textPrimary,
     textSecondary: "rgba(42, 48, 58, 0.74)",
-    textTertiary: "rgba(67, 75, 87, 0.54)",
+    textTertiary: "rgba(52, 61, 72, 0.64)",
     accentPrimary,
     accentSoft: accentSet.soft,
-    shadowSoft: `0 22px 70px rgba(78, 86, 98, ${0.1 + backgroundOpacity * 0.16})`,
+    shadowSoft: `0 2px 5px rgba(45, 56, 66, ${0.12 + backgroundOpacity * 0.08}), 0 24px 70px rgba(56, 68, 78, ${0.12 + backgroundOpacity * 0.16})`,
     shadowGlow: `0 0 ${Math.round(14 + backgroundBlur * 0.35)}px color-mix(in srgb, ${accentSet.glow} ${Math.round(24 * glowMultiplier)}%, transparent)`,
   };
 };

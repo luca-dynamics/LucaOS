@@ -4,18 +4,34 @@
     <meta charset="utf-8" />
     <style>
         :root {
-            --accent: #7ca8ff;
-            --ink: rgba(255, 255, 255, 0.92);
-            --muted: rgba(255, 255, 255, 0.5);
-            --faint: rgba(255, 255, 255, 0.34);
+            --luca-background-base: #111417;
+            --luca-background-elevated: #1b2025;
+            --luca-surface-glass: #1b2025;
+            --luca-surface-solid: #1b2025;
+            --luca-surface-hover: rgba(45, 52, 60, 0.66);
+            --luca-text-primary: #f2f5f7;
+            --luca-text-secondary: #bac5cc;
+            --luca-text-tertiary: #89949c;
+            --luca-accent-primary: #9fb3c2;
+            --luca-accent-soft: #728898;
+            --luca-material-opacity: 0.82;
+            --luca-material-blur: 10px;
+            --luca-material-glass-highlight: rgb(255 255 255 / 0.14);
+            --luca-material-glass-rim: rgb(255 255 255 / 0.24);
+            --luca-material-glass-shadow: rgb(0 0 0 / 0.18);
+            --luca-material-glass-sheen: rgb(255 255 255 / 0.07);
+            --luca-material-border-strength: 0.46;
+            --luca-material-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
+            --luca-shadow-soft: 0 18px 48px rgba(0, 0, 0, 0.34);
+            --luca-shadow-glow: rgba(159, 179, 194, 0.14);
         }
         * { box-sizing: border-box; }
         body {
             margin: 0;
             height: 100vh;
             overflow: hidden;
-            background: #111417; /* Carbon theme base */
-            color: var(--ink);
+            background: var(--luca-background-base);
+            color: var(--luca-text-primary);
             font-family: -apple-system, "Segoe UI", Inter, system-ui, sans-serif;
             display: flex;
             align-items: center;
@@ -38,19 +54,24 @@
             border: 0;
             border-radius: 6px;
             background: transparent;
-            color: rgba(255, 255, 255, 0.72);
+            color: var(--luca-text-secondary);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             padding: 0;
             cursor: pointer;
-            transition: color 160ms ease;
+            transition: color 140ms cubic-bezier(0.16, 1, 0.3, 1), transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .window-control:hover {
-            color: rgba(255, 255, 255, 0.92);
+        @media (hover: hover) and (pointer: fine) {
+            .window-control:hover {
+                color: var(--luca-text-primary);
+            }
+            .window-control.close:hover {
+                color: #f87171;
+            }
         }
-        .window-control.close:hover {
-            color: #f87171;
+        .window-control:active {
+            transform: scale(0.97);
         }
         .stage {
             position: relative;
@@ -65,16 +86,6 @@
             padding: 0 28px 26px;
             text-align: center;
         }
-        .stage::after {
-            content: "";
-            position: absolute;
-            inset: auto 12% 12px;
-            height: 44%;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(17, 20, 23, 0.72), rgba(17, 20, 23, 0) 70%);
-            z-index: 0;
-            pointer-events: none;
-        }
         /* The Luca face sits fully visible behind the boot copy. */
         .face {
             position: absolute;
@@ -85,7 +96,7 @@
             height: auto;
             opacity: 0.9;
             transform: translate(-50%, -50%);
-            filter: drop-shadow(0 0 34px rgba(124, 168, 255, 0.28));
+            filter: drop-shadow(0 0 34px var(--luca-shadow-glow));
             animation: none;
             pointer-events: none;
         }
@@ -95,32 +106,31 @@
         .track {
             position: relative;
             z-index: 1;
-            text-shadow: 0 2px 18px rgba(0, 0, 0, 0.72);
+            text-shadow: 0 2px 18px var(--luca-material-glass-shadow);
         }
         .wordmark {
             font-family: "Segoe UI Variable Display", "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
             font-size: 25px;
             font-weight: 650;
             letter-spacing: -0.025em;
-            color: var(--ink);
+            color: var(--luca-text-primary);
         }
-        .wordmark span { color: var(--faint); }
-        .headline { font-size: 13px; color: var(--muted); min-height: 16px; }
-        .detail { font-size: 11px; color: var(--faint); min-height: 14px; }
+        .headline { font-size: 13px; color: var(--luca-text-secondary); min-height: 16px; }
+        .detail { font-size: 11px; color: var(--luca-text-tertiary); min-height: 14px; }
         .detail.alert { color: #f2b23e; }
         .track {
             margin-top: 6px;
             width: min(100%, 360px);
             height: 2px;
-            background: rgba(255, 255, 255, 0.1);
+            background: color-mix(in srgb, var(--luca-text-tertiary) 20%, transparent);
             border-radius: 999px;
             overflow: hidden;
         }
         .bar {
             height: 100%;
             width: 0%;
-            background: var(--accent);
-            box-shadow: 0 0 10px var(--accent);
+            background: var(--luca-accent-primary);
+            box-shadow: 0 0 10px var(--luca-shadow-glow);
             transition: width 0.6s ease;
         }
         @media (prefers-reduced-motion: reduce) {
@@ -128,6 +138,15 @@
                 animation: none;
                 opacity: 0.9;
                 transform: translate(-50%, -50%);
+            }
+            .bar,
+            .window-control {
+                transition-duration: 0.01ms;
+            }
+        }
+        @media (prefers-contrast: more) {
+            .window-control {
+                color: var(--luca-text-primary);
             }
         }
     </style>

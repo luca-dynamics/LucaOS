@@ -1,6 +1,12 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Icon } from "./ui/Icon";
+import {
+  lucaMaterialCardStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialMetricStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface VoiceCommandConfirmationProps {
   originalTranscript: string;
@@ -22,9 +28,19 @@ export const VoiceCommandConfirmation: React.FC<
   onCancel,
 }) => {
   return (
-    <div className="fixed inset-0 z-[400] bg-black/80 glass-blur flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/70 p-4">
       <div
-        className="bg-[#0f172a] border rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95 duration-200 border-[rgba(var(--app-primary-rgb),0.3)] shadow-[0_0_50px_rgba(var(--app-primary-rgb),0.15)]"
+        className="w-full max-w-md rounded-2xl border p-6 shadow-2xl animate-in zoom-in-95 duration-200"
+        data-luca-material-role="dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-label={isRisky ? "Confirm risky voice command" : "Confirm voice command"}
+        style={{
+          ...lucaMaterialDialogStyle,
+          borderColor: isRisky
+            ? "color-mix(in srgb, var(--luca-danger,#f87171) 32%, transparent)"
+            : "var(--luca-border-strong, var(--app-border-main))",
+        }}
       >
         <div className="flex items-center gap-3 mb-4">
           {isRisky ? (
@@ -32,27 +48,31 @@ export const VoiceCommandConfirmation: React.FC<
           ) : (
             <Icon name="Microphone" size={24} style={{ color: "var(--app-primary)" }} />
           )}
-          <h2 className="text-xl font-bold text-white">
+          <h2 className="text-xl font-bold text-[var(--luca-text-primary)]">
             {isRisky ? "Confirm Risky Command" : "Confirm Command"}
           </h2>
         </div>
 
         <div className="space-y-4 mb-6">
           <div>
-            <label className="text-xs font-mono text-slate-400 uppercase tracking-widest mb-1 block">
+            <label className="mb-1 block font-mono text-xs uppercase tracking-widest text-[var(--luca-text-tertiary)]">
               What You Said
             </label>
-            <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-white text-sm">
+            <div className="rounded-lg border p-3 text-sm" style={lucaMaterialCardStyle}>
               &quot;{originalTranscript}&quot;
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-mono text-slate-400 uppercase tracking-widest mb-1 block">
+            <label className="mb-1 block font-mono text-xs uppercase tracking-widest text-[var(--luca-text-tertiary)]">
               LUCA Interpreted
             </label>
             <div
-              className="rounded-lg p-3 text-sm font-bold border bg-[rgba(var(--app-primary-rgb),0.1)] border-[rgba(var(--app-primary-rgb),0.3)] text-[var(--app-primary)]"
+              className="rounded-lg border p-3 text-sm font-bold text-[var(--luca-accent-primary)]"
+              style={{
+                ...lucaMaterialCardStyle,
+                borderColor: "color-mix(in srgb, var(--luca-accent-primary) 32%, transparent)",
+              }}
             >
               &quot;{interpretedCommand}&quot;
             </div>
@@ -60,11 +80,11 @@ export const VoiceCommandConfirmation: React.FC<
 
           {confidence !== undefined && (
             <div>
-              <label className="text-xs font-mono text-slate-400 uppercase tracking-widest mb-1 block">
+              <label className="mb-1 block font-mono text-xs uppercase tracking-widest text-[var(--luca-text-tertiary)]">
                 Recognition Confidence
               </label>
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-2 flex-1 overflow-hidden rounded-full" style={lucaMaterialMetricStyle}>
                   <div
                     className={`h-full ${
                       confidence > 0.8
@@ -76,7 +96,7 @@ export const VoiceCommandConfirmation: React.FC<
                     style={{ width: `${confidence * 100}%` }}
                   />
                 </div>
-                <span className="text-xs text-slate-400 font-mono">
+                <span className="font-mono text-xs text-[var(--luca-text-secondary)]">
                   {(confidence * 100).toFixed(0)}%
                 </span>
               </div>
@@ -97,14 +117,15 @@ export const VoiceCommandConfirmation: React.FC<
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="luca-material-pressable flex flex-1 items-center justify-center gap-2 rounded-lg border py-3 font-bold transition-colors hover:text-[var(--luca-text-primary)]"
+            style={lucaMaterialControlStyle}
           >
             <Icon name="CloseCircle" size={18} />
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 py-3 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 ${isRisky ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-white" : "bg-[var(--app-primary)] text-black"} shadow-[0_0_20px_rgba(var(--app-primary-rgb),0.2)]`}
+            className={`luca-material-pressable flex flex-1 items-center justify-center gap-2 rounded-lg border py-3 font-bold transition-colors ${isRisky ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)]" : "border-transparent bg-[var(--luca-accent-primary)] text-[var(--luca-accent-ink,#0c0e12)]"}`}
           >
             <Icon name="CheckCircle" size={18} />
             Confirm

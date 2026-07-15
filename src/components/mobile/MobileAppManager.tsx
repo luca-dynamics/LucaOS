@@ -1,5 +1,11 @@
 import React from "react";
 import { Icon } from "../ui/Icon";
+import {
+  lucaMaterialCardStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialMetricStyle,
+  lucaMaterialSolidCardStyle,
+} from "../../styles/lucaMaterialSystem";
 
 interface MobileAppManagerProps {
   runningPackages: string[];
@@ -24,7 +30,10 @@ const MobileAppManager: React.FC<MobileAppManagerProps> = ({
     <div className="h-full flex gap-6">
       {/* Left: Controls */}
       <div className="w-1/3 flex flex-col gap-4">
-        <div className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] p-4">
+        <div
+          className="rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] p-4"
+          style={lucaMaterialCardStyle}
+        >
           <h3 className="text-xs font-bold text-[var(--luca-danger,#f87171)] tracking-widest mb-3 flex items-center gap-2">
             <Icon name="Eye" size={12} variant="BoldDuotone" /> DATA EXFILTRATION
           </h3>
@@ -44,13 +53,17 @@ const MobileAppManager: React.FC<MobileAppManagerProps> = ({
           </div>
         </div>
 
-        <div className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] p-4 flex-1 flex flex-col">
+        <div
+          className="flex flex-1 flex-col rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] p-4"
+          style={lucaMaterialCardStyle}
+        >
           <h3 className="text-xs font-bold text-[var(--luca-danger,#f87171)] tracking-widest mb-3 flex items-center gap-2">
             <Icon name="Activity" size={12} variant="BoldDuotone" /> PROCESS KILLER
           </h3>
           <button
             onClick={onRefreshPackages}
-            className="mb-2 w-full py-1 bg-slate-900 border border-slate-700 text-slate-400 text-[10px] hover:text-white hover:border-white"
+            className="luca-material-pressable mb-2 w-full rounded-lg border py-1 text-[10px] hover:text-[var(--luca-text-primary)]"
+            style={lucaMaterialControlStyle}
           >
             REFRESH LIST
           </button>
@@ -58,9 +71,10 @@ const MobileAppManager: React.FC<MobileAppManagerProps> = ({
             {runningPackages.map((pkg, i) => (
               <div
                 key={i}
-                className="flex justify-between items-center bg-black p-1 border border-slate-900 group hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
+                className="group flex items-center justify-between rounded-lg border p-1 hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
+                style={lucaMaterialMetricStyle}
               >
-                <span className="text-[9px] font-mono text-slate-500 truncate w-32">
+                <span className="w-32 truncate font-mono text-[9px] text-[var(--luca-text-tertiary)]">
                   {pkg}
                 </span>
                 <button
@@ -76,8 +90,8 @@ const MobileAppManager: React.FC<MobileAppManagerProps> = ({
       </div>
 
       {/* Right: Terminal / Data View */}
-      <div className="flex-1 bg-black border border-slate-800 flex flex-col font-mono">
-        <div className="bg-slate-900 p-2 text-[10px] text-slate-500 flex justify-between">
+      <div className="flex flex-1 flex-col overflow-hidden rounded-xl border font-mono" style={lucaMaterialSolidCardStyle}>
+        <div className="flex justify-between p-2 text-[10px] text-[var(--luca-text-tertiary)]" style={lucaMaterialMetricStyle}>
           <span>ROOT@REMOTE_SHELL: ~ $</span>
           <span>{isAdbConnected ? "STATUS: ROOTED" : "STATUS: OFF"}</span>
         </div>
@@ -98,16 +112,16 @@ const MobileAppManager: React.FC<MobileAppManagerProps> = ({
           ))}
           {dumpedData.length > 0 && (
             <div className="mt-4 pt-4 border-t border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]">
-              <div className="text-white mb-2">--- BEGIN DATA DUMP ---</div>
+              <div className="mb-2 text-[var(--luca-text-primary)]">--- BEGIN DATA DUMP ---</div>
               {dumpedData.map((record, i) => (
                 <div
                   key={i}
-                  className="mb-1 opacity-80 hover:opacity-100 hover:bg-white/5 p-1"
+                  className="mb-1 rounded p-1 opacity-80 hover:bg-[var(--luca-surface-hover)] hover:opacity-100"
                 >
                   {JSON.stringify(record)}
                 </div>
               ))}
-              <div className="text-white mt-2">--- END DATA DUMP ---</div>
+              <div className="mt-2 text-[var(--luca-text-primary)]">--- END DATA DUMP ---</div>
             </div>
           )}
         </div>

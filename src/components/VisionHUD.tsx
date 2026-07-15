@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { HandLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
+import { lucaMaterialHudStyle } from "../styles/lucaMaterialSystem";
 
 // --- 1. ONE EURO FILTER (Adaptive Smoothing) ---
 class LowPassFilter {
@@ -448,8 +449,12 @@ export default function VisionHUD({
       <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />
       
       {/* Tactical HUD Overlays */}
-      <div className="absolute top-8 right-8 flex flex-col items-end gap-1 font-mono">
-        <div className="text-[10px] text-slate-500 tracking-[0.2em]">VISION_CORE</div>
+      <div
+        className="absolute right-8 top-8 flex flex-col items-end gap-1 rounded-xl border px-3 py-2 font-mono"
+        data-luca-material-role="hud"
+        style={lucaMaterialHudStyle}
+      >
+        <div className="text-[10px] tracking-[0.2em] text-[var(--luca-text-tertiary)]">VISION_CORE</div>
         <div 
           className="text-xs font-bold tracking-widest flex items-center gap-2"
           style={{ color: themeColor }}

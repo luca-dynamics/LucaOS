@@ -49,6 +49,12 @@ import SignalVisualizer from "./visual/SignalVisualizer";
 import TacticalStream from "./visual/TacticalStream";
 import { LiquidBackground } from "./visual/LiquidBackground";
 import { SubsystemPulse } from "./visual/SubsystemPulse";
+import {
+  lucaMaterialControlActiveStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialPanelStyle,
+  lucaMaterialSolidCardStyle,
+} from "../styles/lucaMaterialSystem";
 
 export type VisualCoreMode =
   | "IDLE"
@@ -536,15 +542,13 @@ const VisualCore: React.FC<VisualCoreProps> = ({
   return (
     <div
       className={`fixed inset-0 z-[150] flex flex-col animate-in fade-in duration-700 border shadow-2xl rounded-xl overflow-hidden transition-all duration-500`}
+      data-luca-material-role="visual-core"
       style={{
-        backgroundColor: isLight
-          ? `rgba(255, 255, 255, ${syncState.opacity})`
-          : `rgba(0, 0, 0, ${syncState.opacity})`,
-        borderColor: isLight
-          ? "rgba(0, 0, 0, 0.1)"
-          : "rgba(255, 255, 255, 0.15)",
-        boxShadow: `0 0 80px -20px ${themeColor}30, inset 0 0 40px ${themeColor}10`,
+        ...lucaMaterialPanelStyle,
+        borderColor: "var(--luca-border-strong, var(--app-border-main))",
+        boxShadow: "var(--luca-shadow-soft)",
         backdropFilter: `blur(${syncState.blur}px)`,
+        WebkitBackdropFilter: `blur(${syncState.blur}px)`,
       }}
     >
       {/* Cinematic HUD Background Grain/Noise */}
@@ -572,14 +576,11 @@ const VisualCore: React.FC<VisualCoreProps> = ({
 
       {/* Visual Core Header / Status Bar - DRAGGABLE AREA */}
       <div
-        className={`h-12 border-b flex items-center justify-between px-6 glass-blur cursor-move transition-colors duration-500`}
+        className="flex h-12 cursor-move items-center justify-between border-b px-6 transition-colors duration-500"
         style={
           {
+            ...lucaMaterialSolidCardStyle,
             WebkitAppRegion: "drag",
-            backgroundColor: isLight
-              ? "rgba(0,0,0,0.03)"
-              : "rgba(255,255,255,0.05)",
-            borderColor: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.1)",
           } as React.CSSProperties
         }
       >
@@ -594,12 +595,12 @@ const VisualCore: React.FC<VisualCoreProps> = ({
                   mode !== "IDLE"
                     ? themeColor
                     : isLight
-                      ? "#94a3b8"
-                      : "#64748b",
+                      ? "var(--luca-text-tertiary)"
+                      : "var(--luca-text-tertiary)",
               }}
             />
             <span
-              className={`text-[10px] font-mono font-bold tracking-[0.4em] uppercase ${isLight ? "text-slate-900" : "text-white/90"}`}
+              className="font-mono text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--luca-text-primary)]"
             >
               {mode === "BROWSER"
                 ? "LUCA_BROWSER_GOVERNED"
@@ -627,16 +628,17 @@ const VisualCore: React.FC<VisualCoreProps> = ({
                 }
                 requestModeTransition("BROWSER", "local_ui");
               }}
-              className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold transition-all`}
+              className="luca-material-pressable rounded-full border px-3 py-1 text-[10px] font-bold uppercase transition-colors"
               style={
                 mode === "BROWSER"
                   ? {
+                      ...lucaMaterialControlActiveStyle,
                       backgroundColor: `${themeColor}33`,
                       color: themeColor,
                       borderColor: `${themeColor}80`,
                     }
                   : {
-                      color: "#64748b",
+                      ...lucaMaterialControlStyle,
                     }
               }
             >
@@ -644,16 +646,17 @@ const VisualCore: React.FC<VisualCoreProps> = ({
             </button>
             <button
               onClick={() => requestModeTransition("DATA", "local_ui")}
-              className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold transition-all`}
+              className="luca-material-pressable rounded-full border px-3 py-1 text-[10px] font-bold uppercase transition-colors"
               style={
                 mode === "DATA"
                   ? {
+                      ...lucaMaterialControlActiveStyle,
                       backgroundColor: `${themeColor}33`,
                       color: themeColor,
                       borderColor: `${themeColor}80`,
                     }
                   : {
-                      color: "#64748b",
+                      ...lucaMaterialControlStyle,
                     }
               }
             >
@@ -661,16 +664,17 @@ const VisualCore: React.FC<VisualCoreProps> = ({
             </button>
             <button
               onClick={() => requestModeTransition("CINEMA", "local_ui")}
-              className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold transition-all`}
+              className="luca-material-pressable rounded-full border px-3 py-1 text-[10px] font-bold uppercase transition-colors"
               style={
                 mode === "CINEMA"
                   ? {
+                      ...lucaMaterialControlActiveStyle,
                       backgroundColor: `${themeColor}33`,
                       color: themeColor,
                       borderColor: `${themeColor}80`,
                     }
                   : {
-                      color: "#64748b",
+                      ...lucaMaterialControlStyle,
                     }
               }
             >
@@ -678,26 +682,11 @@ const VisualCore: React.FC<VisualCoreProps> = ({
             </button>
 
             {/* CAST BUTTON */}
-            <div className="w-px h-6 bg-white/10 mx-2" />
+            <div className="mx-2 h-6 w-px bg-[var(--luca-border-subtle)]" />
             <button
               onClick={() => setShowCastPicker(true)}
-              className="p-1.5 rounded-full text-slate-400 transition-colors"
-              style={
-                {
-                  ":hover": {
-                    color: themeColor,
-                    backgroundColor: `${themeColor}33`,
-                  },
-                } as any
-              }
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = themeColor;
-                e.currentTarget.style.backgroundColor = `${themeColor}33`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "#94a3b8";
-                e.currentTarget.style.backgroundColor = "transparent";
-              }}
+              className="luca-material-pressable rounded-full border p-1.5 transition-colors hover:text-[var(--luca-text-primary)]"
+              style={lucaMaterialControlStyle}
               title="Cast to IoT Device"
             >
               <Icon name="Cast" size={16} />
@@ -707,8 +696,11 @@ const VisualCore: React.FC<VisualCoreProps> = ({
 
         <button
           onClick={onClose}
-          className="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
-          style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
+          className="luca-material-pressable rounded-full border p-1.5 transition-colors hover:text-[var(--luca-text-primary)]"
+          style={{
+            ...lucaMaterialControlStyle,
+            WebkitAppRegion: "no-drag",
+          } as React.CSSProperties}
         >
           <Icon name="X" size={18} />
         </button>
@@ -727,7 +719,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
           <div className="text-center z-10 space-y-6">
             <div className="relative inline-block">
               <h1
-                className={`text-8xl font-thin tracking-[0.25em] font-mono transition-colors duration-500 ${isLight ? "text-slate-900" : "text-white"}`}
+                className="font-mono text-8xl font-thin tracking-[0.25em] text-[var(--luca-text-primary)] transition-colors duration-500"
                 style={{ textShadow: `0 0 30px ${themeColor}40` }}
               >
                 {currentTime.toLocaleTimeString([], {
@@ -738,10 +730,10 @@ const VisualCore: React.FC<VisualCoreProps> = ({
               </h1>
               <div className="absolute -top-4 -right-12">
                 <div className="flex flex-col items-end gap-1">
-                  <span className={`text-[9px] font-mono tracking-widest opacity-40 uppercase ${isLight ? "text-slate-900" : "text-white"}`}>
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-[var(--luca-text-tertiary)]">
                     NODE_ID: {sessionId.substring(0, 8)}
                   </span>
-                  <span className={`text-[9px] font-mono tracking-widest opacity-40 uppercase ${isLight ? "text-slate-900" : "text-white"}`}>
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-[var(--luca-text-tertiary)]">
                     UTC {currentTime.getUTCHours()}:{currentTime.getUTCMinutes().toString().padStart(2, "0")}
                   </span>
                 </div>
@@ -792,7 +784,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
               remoteCommand={remoteCommand}
             />
           ) : (
-            <div className="text-slate-500 font-mono text-sm tracking-widest">
+            <div className="font-mono text-sm tracking-widest text-[var(--luca-text-tertiary)]">
               WAITING FOR VISUAL DATA...
             </div>
           )}

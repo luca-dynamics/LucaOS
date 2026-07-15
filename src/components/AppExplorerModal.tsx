@@ -6,6 +6,11 @@ import {
   executeLocalTool,
 } from "../tools/handlers/LocalTools";
 import { OfflineModelManager } from "./llm/OfflineModelManager";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialSolidCardStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface AppExplorerModalProps {
   isOpen: boolean;
@@ -91,11 +96,16 @@ const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
 
       {/* Modal Content */}
       <div
-        className="relative w-full max-w-3xl h-[80vh] bg-[#080808] border border-white/10 rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        className="relative flex h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border shadow-2xl animate-in zoom-in-95 duration-200"
+        data-luca-material-role="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="App Explorer"
+        style={lucaMaterialDialogStyle}
       >
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between border-b px-5 py-4" style={lucaMaterialSolidCardStyle}>
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center bg-[rgba(var(--app-primary-rgb),0.1)]"
@@ -111,7 +121,8 @@ const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/[0.06] rounded-lg transition-colors border border-transparent hover:border-white/10"
+            className="luca-material-pressable rounded-lg border p-2 transition-colors hover:text-[var(--luca-text-primary)]"
+            style={lucaMaterialControlStyle}
           >
             <Icon name="X" className="text-slate-400 hover:text-white" size={18} />
           </button>
@@ -126,7 +137,8 @@ const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
               placeholder="Search apps…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/[0.04] border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition-all"
+              className="w-full rounded-lg border py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-[var(--luca-border-strong)] focus:outline-none"
+              style={lucaMaterialControlStyle}
               autoFocus
             />
           </div>
@@ -185,7 +197,7 @@ const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between">
+        <div className="flex items-center justify-between border-t px-5 py-3" style={lucaMaterialSolidCardStyle}>
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" />
             <span className="text-[11px] text-slate-500">Cross-platform engine</span>

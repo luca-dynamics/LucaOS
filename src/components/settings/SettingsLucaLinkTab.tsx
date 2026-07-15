@@ -108,7 +108,11 @@ import {
   SettingsStatusCard,
   settingsControlInlineStyle,
 } from "./SettingsLayout";
-import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import {
+  settingsCardStyle,
+  settingsControlStyle,
+  settingsSurfaceTokens,
+} from "./settingsLayoutStyles";
 import { SettingsLucaLinkSensorBridge } from "./SettingsLucaLinkSensorBridge";
 import { SettingsLucaLinkTransportPermissions } from "./SettingsLucaLinkTransportPermissions";
 import { SettingsLucaLinkAdapterFileInstallPermissions } from "./SettingsLucaLinkAdapterFileInstallPermissions";
@@ -286,7 +290,7 @@ const GuestAccessSection: React.FC<{
     <div
       className={`rounded-xl p-4 text-center space-y-3 mt-4 border transition-all shadow-sm`}
       style={{
-        backgroundColor: settingsSurfaceTokens.glass,
+        background: settingsCardStyle.background,
         borderColor: settingsSurfaceTokens.borderSubtle,
       }}
     >
@@ -376,7 +380,7 @@ const GuestAccessSection: React.FC<{
           <div
             className={`border rounded-xl p-6 transition-all shadow-2xl max-w-sm w-full flex flex-col gap-4`}
             style={{
-              backgroundColor: settingsSurfaceTokens.glass,
+              background: settingsCardStyle.background,
               borderColor: settingsSurfaceTokens.borderSubtle,
             }}
           >
@@ -507,7 +511,7 @@ const GuestAccessSection: React.FC<{
                   <div
                     className={`text-sm p-2 rounded border`}
                     style={{
-                      backgroundColor: settingsSurfaceTokens.glass,
+                      background: settingsCardStyle.background,
                       borderColor: settingsSurfaceTokens.borderSubtle,
                       color: settingsSurfaceTokens.textPrimary,
                     }}
@@ -779,7 +783,7 @@ const RiskBadge: React.FC<{ risk?: LucaLinkApprovalRisk }> = ({ risk }) => (
     style={{
       borderColor: settingsSurfaceTokens.borderSubtle,
       color: settingsSurfaceTokens.textPrimary,
-      backgroundColor: settingsSurfaceTokens.glass,
+      background: settingsCardStyle.background,
     }}
   >
     Risk: {risk ?? "not rated"}
@@ -792,7 +796,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => (
     style={{
       borderColor: settingsSurfaceTokens.borderSubtle,
       color: settingsSurfaceTokens.textSecondary,
-      backgroundColor: settingsSurfaceTokens.elevated,
+      background: settingsControlStyle.background,
     }}
   >
     Status: {status}
@@ -2021,7 +2025,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                         <pre
                           className="mt-2 overflow-auto rounded-md p-2 text-xs"
                           style={{
-                            backgroundColor: settingsSurfaceTokens.glass,
+                            background: settingsCardStyle.background,
                           }}
                         >
                           {draft.codePreview}
@@ -2031,7 +2035,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                         <pre
                           className="mt-2 overflow-auto rounded-md p-2 text-xs"
                           style={{
-                            backgroundColor: settingsSurfaceTokens.glass,
+                            background: settingsCardStyle.background,
                           }}
                         >
                           {JSON.stringify(draft.configPreview, null, 2)}
@@ -2186,7 +2190,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               className="mt-3 rounded-lg border p-3 text-xs"
               style={{
                 borderColor: settingsSurfaceTokens.borderSubtle,
-                backgroundColor: settingsSurfaceTokens.glass,
+                background: settingsCardStyle.background,
               }}
             >
               <p className="font-semibold">Disclosure mode summary</p>
@@ -2312,7 +2316,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       className="mt-3 rounded-lg border p-3"
                       style={{
                         borderColor: settingsSurfaceTokens.borderSubtle,
-                        backgroundColor: settingsSurfaceTokens.glass,
+                        background: settingsCardStyle.background,
                       }}
                     >
                       <p className="text-xs font-semibold">
@@ -2356,7 +2360,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       className="mt-3 rounded-lg border p-3 text-xs"
                       style={{
                         borderColor: settingsSurfaceTokens.borderSubtle,
-                        backgroundColor: settingsSurfaceTokens.glass,
+                        background: settingsCardStyle.background,
                       }}
                     >
                       {device.warnings.length > 0 && (
@@ -2529,7 +2533,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     className="rounded-xl border p-3"
                     style={{
                       borderColor: settingsSurfaceTokens.borderSubtle,
-                      backgroundColor: settingsSurfaceTokens.glass,
+                      background: settingsCardStyle.background,
                     }}
                   >
                     <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
@@ -2905,7 +2909,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       className="rounded-xl border p-3"
                       style={{
                         borderColor: settingsSurfaceTokens.borderSubtle,
-                        backgroundColor: settingsSurfaceTokens.glass,
+                        background: settingsCardStyle.background,
                       }}
                     >
                       <p className="text-sm font-semibold">Continuation</p>
@@ -2954,7 +2958,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       className="max-h-64 overflow-auto rounded-xl border p-3 text-xs"
                       style={{
                         borderColor: settingsSurfaceTokens.borderSubtle,
-                        backgroundColor: settingsSurfaceTokens.elevated,
+                        background: settingsControlStyle.background,
                         color: settingsSurfaceTokens.textPrimary,
                       }}
                     >
@@ -3038,7 +3042,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     className="rounded-lg border p-3"
                     style={{
                       borderColor: settingsSurfaceTokens.borderSubtle,
-                      backgroundColor: settingsSurfaceTokens.glass,
+                      background: settingsCardStyle.background,
                     }}
                   >
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -3339,7 +3343,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                             className="max-h-52 overflow-auto rounded-xl border p-3 text-xs"
                             style={{
                               borderColor: settingsSurfaceTokens.borderSubtle,
-                              backgroundColor: settingsSurfaceTokens.elevated,
+                              background: settingsControlStyle.background,
                               color: settingsSurfaceTokens.textPrimary,
                             }}
                           >
@@ -3720,7 +3724,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             <div
               className={`p-4 border ${isMobile ? "border-x-0 border-y rounded-none bg-[var(--luca-surface-glass)]" : "rounded-xl"}`}
               style={{
-                backgroundColor: settingsSurfaceTokens.glass,
+                background: settingsCardStyle.background,
                 borderColor: settingsSurfaceTokens.borderSubtle,
               }}
             >
@@ -3989,7 +3993,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   <div
                     className="rounded-xl p-4 border"
                     style={{
-                      backgroundColor: settingsSurfaceTokens.glass,
+                      background: settingsCardStyle.background,
                       borderColor: settingsSurfaceTokens.borderSubtle,
                     }}
                   >
@@ -4078,7 +4082,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 <div
                   className={`p-4 rounded-xl border transition-all text-[var(--app-text-main)] opacity-90 shadow-sm mt-6`}
                   style={{
-                    backgroundColor: settingsSurfaceTokens.glass,
+                    background: settingsCardStyle.background,
                     borderColor: settingsSurfaceTokens.borderSubtle,
                   }}
                 >

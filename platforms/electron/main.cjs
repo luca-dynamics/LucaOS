@@ -248,7 +248,7 @@ function createBootWindow() {
         height: 400,
         frame: false,
         transparent: false,
-        backgroundColor: '#000000',
+        backgroundColor: '#111417',
         show: false, // Don't show until content is ready
         center: true,
         resizable: true,
@@ -259,7 +259,7 @@ function createBootWindow() {
     });
 
     bootWindow.loadFile(path.join(__dirname, 'boot.html'));
-    
+
     // Smooth reveal to avoid blank flash
     bootWindow.once('ready-to-show', () => {
         bootWindow.show();
@@ -573,7 +573,7 @@ function createWindow() {
         x: savedBounds.x,
         y: savedBounds.y,
         show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
-        backgroundColor: '#111417', // Carbon theme base (matches boot.html splash) — never flashes a see-through/empty frame
+        backgroundColor: '#111417',
         transparent: false,
         frame: process.platform === 'win32' ? false : true,
         autoHideMenuBar: true,
@@ -2100,6 +2100,8 @@ ipcMain.handle('vault-has', async (event, { site }) => {
 global.minimizeToTray = false;
 
 ipcMain.on('update-system-settings', (event, settings) => {
+    if (!settings || typeof settings !== 'object') return;
+
     // Start on Boot
     app.setLoginItemSettings({
         openAtLogin: settings.startOnBoot,

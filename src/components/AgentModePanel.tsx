@@ -9,6 +9,11 @@ import React, { useState, useEffect } from "react";
 import { Icon } from "./ui/Icon";
 import type { AgentTask, AgentEvent } from "../services/agent/types";
 import { agentService } from "../services/agent/AgentService";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialSolidCardStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface Props {
   task?: AgentTask | null;
@@ -63,12 +68,17 @@ const AgentModePanel: React.FC<Props> = ({
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 glass-blur" />
+      <div className="absolute inset-0 bg-black/60" />
 
       {/* Panel Container - Glassmorphic */}
       <div
-        className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl bg-black/40 glass-blur border"
+        className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-3xl border"
+        data-luca-material-role="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Agent mode"
         style={{
+          ...lucaMaterialDialogStyle,
           borderColor: `${themeHex}40`,
           boxShadow: `0 0 40px ${themeHex}40, inset 0 0 60px ${themeHex}10`,
         }}
@@ -97,8 +107,8 @@ const AgentModePanel: React.FC<Props> = ({
         <div className="relative z-10">
           {/* Header */}
           <div
-            className="flex items-center justify-between p-6 border-b"
-            style={{ borderColor: `${themeHex}30` }}
+            className="flex items-center justify-between border-b p-6"
+            style={{ ...lucaMaterialSolidCardStyle, borderColor: `${themeHex}30` }}
           >
             <div className="flex items-center gap-3">
               <div
@@ -129,10 +139,8 @@ const AgentModePanel: React.FC<Props> = ({
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl hover:bg-white/10 transition-all"
-              style={{
-                color: theme?.primary || themeHex,
-              }}
+              className="luca-material-pressable rounded-xl border p-2 transition-colors hover:text-[var(--luca-text-primary)]"
+              style={{ ...lucaMaterialControlStyle, color: theme?.primary || themeHex }}
             >
               <Icon name="CloseCircle" size={20} />
             </button>

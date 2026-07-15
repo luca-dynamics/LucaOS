@@ -9,6 +9,11 @@ import { THEME_PALETTE, MISSION_COLORS } from "../../config/themeColors";
 import { useTheme } from "../../hooks/useTheme";
 import { getLucaSkinMaterialVariables } from "../../styles/lucaSkinMaterialBridge";
 import { resolveVoiceHudSkinPalette } from "./voiceHudSkinModel";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialHudStyle,
+  lucaMaterialRootStyle,
+} from "../../styles/lucaMaterialSystem";
 
 const TypewriterText = ({ text }: { text: string }) => {
   const [displayedText, setDisplayedText] = useState("");
@@ -240,18 +245,14 @@ export function VoiceHudSurface({
     <div
       aria-label="Luca VoiceHUD original surface"
       data-voice-hud-surface="original"
+      data-luca-material-role="root"
       className="fixed inset-0 z-[200] flex flex-col items-center justify-center animate-in fade-in duration-500"
       style={{
+        ...lucaMaterialRootStyle,
         ...voiceSkinStyle,
         background: transparentBackground
           ? "transparent"
           : "var(--luca-background-liquid)",
-        backdropFilter: transparentBackground
-          ? "none"
-          : "blur(var(--luca-material-blur, 40px))",
-        WebkitBackdropFilter: transparentBackground
-          ? "none"
-          : "blur(var(--luca-material-blur, 40px))",
       }}
     >
       <div
@@ -329,11 +330,10 @@ export function VoiceHudSurface({
       {visualData && (
         <div className="absolute top-[15%] w-full flex justify-center z-40 animate-in fade-in zoom-in-95 duration-500 pointer-events-none">
           <div
-            className="w-[90%] md:w-[600px] h-48 md:h-64 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden rounded-xl border border-white/10"
+            data-luca-material-role="hud"
+            className="w-[90%] md:w-[600px] h-48 md:h-64 overflow-hidden rounded-xl border"
             style={{
-              backgroundColor: "var(--app-bg-tint)",
-              backdropFilter: `blur(var(--app-bg-blur, 12px))`,
-              WebkitBackdropFilter: `blur(var(--app-bg-blur, 12px))`,
+              ...lucaMaterialHudStyle,
             }}
           >
             <TacticalStream
@@ -401,8 +401,9 @@ export function VoiceHudSurface({
                 }
                 rows={3}
                 placeholder={typedFallbackPlaceholder}
-                className="w-full resize-none rounded-xl border bg-black/20 px-4 py-3 text-sm text-white outline-none"
-                style={{ borderColor: "var(--app-border-main)" }}
+                data-luca-material-role="control"
+                className="w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none"
+                style={lucaMaterialControlStyle}
               />
             </div>
           )}
@@ -412,8 +413,9 @@ export function VoiceHudSurface({
                 <button
                   type="button"
                   onClick={onBack}
-                  className="rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.18em]"
-                  style={{ borderColor: `${themeColor}88` }}
+                  data-luca-material-role="control"
+                  className="luca-shell-control rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.18em]"
+                  style={{ ...lucaMaterialControlStyle, borderColor: `${themeColor}88` }}
                 >
                   Back
                 </button>
@@ -422,8 +424,9 @@ export function VoiceHudSurface({
                 <button
                   type="button"
                   onClick={onRequestMic}
-                  className="rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.18em]"
-                  style={{ borderColor: `${themeColor}88` }}
+                  data-luca-material-role="control"
+                  className="luca-shell-control rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.18em]"
+                  style={{ ...lucaMaterialControlStyle, borderColor: `${themeColor}88` }}
                 >
                   Enable microphone
                 </button>
@@ -432,8 +435,9 @@ export function VoiceHudSurface({
                 <button
                   type="button"
                   onClick={onContinue}
-                  className="rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.18em]"
-                  style={{ borderColor: `${themeColor}88` }}
+                  data-luca-material-role="control"
+                  className="luca-shell-control rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.18em]"
+                  style={{ ...lucaMaterialControlStyle, borderColor: `${themeColor}88` }}
                 >
                   Continue
                 </button>

@@ -11,6 +11,10 @@ export const LUCA_SKIN_CSS_VARIABLE_NAMES = [
   "--luca-skin-bg-hero",
   "--luca-skin-glass-opacity",
   "--luca-skin-glass-blur",
+  "--luca-skin-glass-highlight",
+  "--luca-skin-glass-rim",
+  "--luca-skin-glass-shadow",
+  "--luca-skin-glass-sheen",
   "--luca-skin-border-strength",
   "--luca-skin-shadow-soft",
   "--luca-skin-shadow-float",
@@ -92,6 +96,20 @@ export function getLucaSkinCssVariables(
     ? STATIC_MOTION_VALUES
     : skin.motionProfile;
 
+  const lightSurface = skin.materialTone === "light";
+  const glassHighlight = lightSurface
+    ? `color-mix(in srgb, white 78%, ${skin.accentProfile.primary})`
+    : "rgb(255 255 255 / 0.14)";
+  const glassRim = lightSurface
+    ? `color-mix(in srgb, ${skin.typographyProfile.secondary} 42%, transparent)`
+    : "rgb(255 255 255 / 0.24)";
+  const glassShadow = lightSurface
+    ? `color-mix(in srgb, ${skin.typographyProfile.primary} 26%, transparent)`
+    : "rgb(0 0 0 / 0.18)";
+  const glassSheen = lightSurface
+    ? `color-mix(in srgb, ${skin.accentProfile.secondary} 20%, transparent)`
+    : "rgb(255 255 255 / 0.07)";
+
   return {
     "--luca-skin-bg-base": skin.backgroundProfile.base,
     "--luca-skin-bg-elevated": skin.backgroundProfile.elevated,
@@ -99,6 +117,10 @@ export function getLucaSkinCssVariables(
     "--luca-skin-bg-hero": skin.backgroundProfile.hero,
     "--luca-skin-glass-opacity": toCssNumber(glassOpacity),
     "--luca-skin-glass-blur": toCssPx(glassBlurPx),
+    "--luca-skin-glass-highlight": glassHighlight,
+    "--luca-skin-glass-rim": glassRim,
+    "--luca-skin-glass-shadow": glassShadow,
+    "--luca-skin-glass-sheen": glassSheen,
     "--luca-skin-border-strength": toCssNumber(skin.materialProfile.borderStrength),
     "--luca-skin-shadow-soft": skin.materialProfile.shadowSoft,
     "--luca-skin-shadow-float": skin.materialProfile.shadowFloat,

@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Icon } from "../ui/Icon";
 import { ErrorSeverity } from "../../services/lucaLink/types";
 import type { LucaLinkError } from "../../services/lucaLink/types";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialHudStyle,
+} from "../../styles/lucaMaterialSystem";
 
 interface ErrorToastProps {
   error: LucaLinkError;
@@ -53,6 +57,9 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
           bgColor: "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
           borderColor: "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]",
           textColor: "text-[var(--luca-danger,#f87171)]",
+          statusColor: "var(--luca-danger,#f87171)",
+          borderValue:
+            "color-mix(in srgb, var(--luca-danger,#f87171) 32%, transparent)",
           glowColor: "rgba(239, 68, 68, 0.2)",
         };
       case ErrorSeverity.ERROR:
@@ -61,6 +68,9 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
           bgColor: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
           borderColor: "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]",
           textColor: "text-[var(--luca-warning,#f2b23e)]",
+          statusColor: "var(--luca-warning,#f2b23e)",
+          borderValue:
+            "color-mix(in srgb, var(--luca-warning,#f2b23e) 32%, transparent)",
           glowColor: "rgba(249, 115, 22, 0.2)",
         };
       case ErrorSeverity.WARNING:
@@ -69,6 +79,9 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
           bgColor: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
           borderColor: "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]",
           textColor: "text-[var(--luca-warning,#f2b23e)]",
+          statusColor: "var(--luca-warning,#f2b23e)",
+          borderValue:
+            "color-mix(in srgb, var(--luca-warning,#f2b23e) 32%, transparent)",
           glowColor: "rgba(234, 179, 8, 0.2)",
         };
       case ErrorSeverity.INFO:
@@ -79,6 +92,9 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
             ? `${themeBorder}80`
             : `${themeBorder}/50`,
           textColor: themePrimary,
+          statusColor: "var(--luca-info,#4f8cff)",
+          borderValue:
+            "color-mix(in srgb, var(--luca-info,#4f8cff) 32%, transparent)",
           glowColor: themeBorder.includes("#")
             ? `${themeBorder}33`
             : "rgba(6, 182, 212, 0.2)",
@@ -92,6 +108,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
   return (
     <div
       className={`
+        luca-error-toast
         fixed top-4 right-4 z-[9999]
         w-[calc(100vw-2rem)] sm:w-96
         transition-all duration-300 ease-out
@@ -106,14 +123,15 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
       }}
     >
       <div
+        data-luca-material-role="hud"
         className={`
-          bg-black/95 glass-blur
           border ${config.borderColor}
           rounded-lg
           p-3 sm:p-4
           relative
           overflow-hidden
         `}
+        style={{ ...lucaMaterialHudStyle, borderColor: config.borderValue }}
       >
         {/* Progress bar for auto-close */}
         {autoClose && error.severity !== ErrorSeverity.CRITICAL && (
@@ -144,7 +162,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
               >
                 {error.message.split(".")[0]}
               </span>
-              <span className="text-[9px] sm:text-[10px] font-mono text-gray-500">
+              <span className="text-[9px] sm:text-[10px] font-mono text-[var(--luca-text-tertiary)]">
                 [{error.code}]
               </span>
             </div>
@@ -153,26 +171,22 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
           {/* Close button */}
           <button
             onClick={handleDismiss}
-            className={`
-              flex-shrink-0 p-1
-              ${config.textColor} hover:text-white
-              transition-all
-              hover:bg-white/5 rounded
-              active:scale-95
-            `}
+            data-luca-material-role="control"
+            className={`luca-shell-control flex-shrink-0 border p-1 rounded ${config.textColor}`}
+            style={{ ...lucaMaterialControlStyle, color: config.statusColor }}
           >
             <Icon name="CloseCircle" size={14} className="sm:w-4 sm:h-4" />
           </button>
         </div>
 
         {/* Message */}
-        <p className="text-xs sm:text-sm text-gray-300 mb-3 pl-7 sm:pl-8">
+        <p className="text-xs sm:text-sm text-[var(--luca-text-primary)] mb-3 pl-7 sm:pl-8">
           {error.message}
         </p>
 
         {/* Suggested Action */}
         {error.suggestedAction && (
-          <p className="text-[10px] sm:text-xs text-gray-500 italic mb-3 pl-7 sm:pl-8">
+          <p className="text-[10px] sm:text-xs text-[var(--luca-text-tertiary)] italic mb-3 pl-7 sm:pl-8">
             💡 {error.suggestedAction}
           </p>
         )}
@@ -187,14 +201,12 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
                   handleDismiss();
                 }}
                 className={`
+                  luca-material-pressable
                   flex items-center gap-1.5
                   px-2.5 sm:px-3 py-1 sm:py-1.5
                   text-[10px] sm:text-xs font-mono font-medium
                   ${config.bgColor} ${config.borderColor} ${config.textColor}
                   border rounded
-                  hover:brightness-110
-                  active:scale-95
-                  transition-all
                   uppercase tracking-wider
                 `}
               >
@@ -204,16 +216,14 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
             )}
             <button
               onClick={handleDismiss}
-              className="
+              data-luca-material-role="control"
+              className="luca-shell-control
                 px-2.5 sm:px-3 py-1 sm:py-1.5
                 text-[10px] sm:text-xs font-mono font-medium
-                bg-gray-500/10 border border-gray-500/30 text-gray-400
-                rounded
-                hover:bg-gray-500/20
-                active:scale-95
-                transition-all
+                border rounded
                 uppercase tracking-wider
               "
+              style={lucaMaterialControlStyle}
             >
               DISMISS
             </button>
@@ -223,10 +233,10 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
         {/* Technical Details (collapsible on mobile) */}
         {error.technicalDetails && (
           <details className="mt-3 pl-7 sm:pl-8">
-            <summary className="text-[9px] sm:text-[10px] text-gray-600 cursor-pointer hover:text-gray-500 font-mono uppercase">
+            <summary className="text-[9px] sm:text-[10px] text-[var(--luca-text-tertiary)] cursor-pointer font-mono uppercase">
               Technical Details
             </summary>
-            <pre className="mt-1 text-[9px] sm:text-[10px] text-gray-600 font-mono overflow-x-auto">
+            <pre className="mt-1 text-[9px] sm:text-[10px] text-[var(--luca-text-tertiary)] font-mono overflow-x-auto">
               {error.technicalDetails}
             </pre>
           </details>
@@ -240,6 +250,12 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
           }
           to {
             width: 0%;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .luca-error-toast {
+            transition-duration: 0.01ms !important;
+            transform: none !important;
           }
         }
       `}</style>

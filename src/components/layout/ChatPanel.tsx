@@ -731,10 +731,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
             >
               <span
-                className={greeting.suffix ? "opacity-40 font-light mr-3" : "font-semibold"}
+                className={greeting.suffix ? "font-light mr-3" : "font-semibold"}
                 style={
                   greeting.suffix
-                    ? undefined
+                    ? { color: "var(--luca-text-secondary, var(--app-text-muted))" }
                     : { color: theme.hex || "var(--luca-accent-primary)" }
                 }
               >
@@ -752,8 +752,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               )}
             </h1>
             <p
-              className="text-sm opacity-50 text-center"
-              style={{ color: "var(--luca-text-secondary, var(--app-text-muted))" }}
+              className="text-sm text-center"
+              style={{ color: "var(--luca-text-tertiary, var(--app-text-muted))" }}
             >
               Ask Luca anything
             </p>
@@ -764,7 +764,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 const lucaMessages = messages.filter((m) => m.sender === Sender.LUCA && !m.isHidden);
                 if (lucaMessages.length === 0) {
                   return (
-                    <div className="flex flex-col items-center gap-1.5 opacity-50 italic py-8">
+                    <div
+                      className="flex flex-col items-center gap-1.5 italic py-8"
+                      style={{ color: "var(--luca-text-tertiary, var(--app-text-muted))" }}
+                    >
                       <AnimatePresence mode="wait">
                         <motion.span
                           key={initStep}
