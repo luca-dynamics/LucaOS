@@ -13,7 +13,7 @@ export type LucaPopoverProps = Omit<LucaSurfaceProps, "materialStyle"> & {
 /** Popover surface — solid-leaning elevated material. */
 export const LucaPopover = React.forwardRef<HTMLElement, LucaPopoverProps>(
   ({ open = true, onRequestClose, triggerRef, style, ...props }, forwardedRef) => {
-    const internalRef = useRef<HTMLElement>(null);
+    const internalRef = useRef<HTMLElement | null>(null);
     useLucaDismissableLayer({ open, containerRef: internalRef, triggerRef, onRequestClose });
     return (
       <LucaSurface

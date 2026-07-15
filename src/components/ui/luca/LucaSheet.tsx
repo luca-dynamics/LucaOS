@@ -17,7 +17,7 @@ export type LucaSheetProps = Omit<LucaSurfaceProps, "materialStyle"> & {
 /** Bottom/side sheet surface. */
 export const LucaSheet = React.forwardRef<HTMLElement, LucaSheetProps>(
   ({ modal = false, open = true, onRequestClose, initialFocusRef, returnFocusRef, className, style, tabIndex, role, ...props }, forwardedRef) => {
-    const internalRef = useRef<HTMLElement>(null);
+    const internalRef = useRef<HTMLElement | null>(null);
     useLucaModalLayer({
       open: modal && open,
       containerRef: internalRef,
