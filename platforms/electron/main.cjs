@@ -540,8 +540,14 @@ function launchInterface(isSilent = false) {
         // trigger that means "the destination UI has actually painted"; the
         // timeout below is the safety net if that signal never arrives.
         ipcMain.once('renderer-ready', () => show('renderer-ready'));
-        // Hard fallback so the window can never get stuck hidden if boot ever stalls.
-        fallbackTimer = setTimeout(() => show('timeout'), 20000);
+        // Hard fallback so the window can never get stuck hidden if boot ever
+        // stalls. It must be long enough to NEVER fire during a normal boot,
+        // or it reveals a still-booting (blank) window and closes the splash
+        // early. Dev cold-compiles the whole app through Vite before React even
+        // mounts (tens of seconds), so dev gets a much longer net than a
+        // packaged build where React paints in a second or two.
+        const revealTimeoutMs = app.isPackaged ? 20000 : 90000;
+        fallbackTimer = setTimeout(() => show('timeout'), revealTimeoutMs);
     } else {
         if (bootWindow) bootWindow.close();
     }
