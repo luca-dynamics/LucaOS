@@ -19,6 +19,10 @@ import {
   type LucaSkinId,
 } from "../config/lucaSkins";
 import type { LucaAtmosphere } from "../config/lucaAtmospheres";
+import {
+  DEFAULT_LUCA_OPTICAL_MATERIAL,
+  type LucaOpticalMaterialSettings,
+} from "../styles/lucaOpticalMaterialSettings";
 
 export interface NotificationSettings {
   enabled: boolean;
@@ -57,6 +61,7 @@ export interface LucaSettings {
     theme: UIThemeId;
     selectedSkinId?: LucaSkinId;
     atmosphere?: LucaAtmosphere;
+    opticalMaterial?: LucaOpticalMaterialSettings;
     syncThemeWithPersona: boolean;
     toneStyle: ToneStyleId;
     customTone?: ToneDimensions;
@@ -286,6 +291,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     persona: "ASSISTANT",
     theme: "PROFESSIONAL",
     selectedSkinId: DEFAULT_LUCA_SKIN_ID,
+    opticalMaterial: DEFAULT_LUCA_OPTICAL_MATERIAL,
     preferredMode: "text",
     // Persona no longer drives appearance; the skin system owns visuals.
     syncThemeWithPersona: false,
