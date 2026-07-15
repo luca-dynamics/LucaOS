@@ -6,6 +6,12 @@ import ThoughtGraph, { ThoughtNode } from './ThoughtGraph';
 import ExecutionPipeline from './ExecutionPipeline';
 import SubAgentDrone, { DroneTask } from './SubAgentDrone';
 import BDIJustificationPanel from './BDIJustificationPanel';
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialMetricStyle,
+  lucaMaterialSolidCardStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface ThoughtProcessPanelProps {
   nodes: ThoughtNode[];
@@ -23,21 +29,23 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
   const [viewMode, setViewMode] = useState<'graph' | 'pipeline' | 'drones' | 'agencies'>('graph');
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 glass-blur animate-in fade-in duration-300 font-mono">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 animate-in fade-in duration-300 font-mono">
       <div 
         className="relative w-[96%] h-[92%] border rounded-2xl flex flex-col overflow-hidden shadow-2xl"
         style={{ 
-          backgroundColor: 'var(--app-bg-main, #050505)',
-          borderColor: 'var(--app-border-main, rgba(255,255,255,0.1))'
+          ...lucaMaterialDialogStyle,
         }}
+        data-luca-material-role="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Cognitive engine"
       >
 
         {/* Header */}
         <div 
           className="h-16 border-b flex items-center justify-between px-8"
           style={{ 
-            borderColor: 'var(--app-border-main)',
-            backgroundColor: 'var(--app-bg-tint)'
+            ...lucaMaterialSolidCardStyle,
           }}
         >
           <div className="flex items-center gap-5">
@@ -55,7 +63,7 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
           </div>
 
           {/* View mode switcher */}
-          <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
+          <div className="flex rounded-xl border p-1" style={lucaMaterialMetricStyle}>
             {[
               { id: 'graph', label: 'NEURAL GRAPH', icon: 'Network' },
               { id: 'pipeline', label: 'EXECUTION', icon: 'Activity' },
@@ -83,8 +91,8 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
 
           <button 
             onClick={onClose} 
-            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:bg-white/5 active:scale-95"
-            style={{ color: 'var(--app-text-muted)' }}
+            className="luca-material-pressable flex h-10 w-10 items-center justify-center rounded-xl border transition-colors hover:text-[var(--luca-text-primary)]"
+            style={lucaMaterialControlStyle}
           >
             <Icon name="X" size={20} />
           </button>

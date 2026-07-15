@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 import { Icon } from "./ui/Icon";
+import {
+  lucaMaterialCardStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface Props {
   onClose: () => void;
@@ -14,10 +19,14 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
   const [url, setUrl] = useState("");
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-200 p-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 animate-in fade-in duration-200 p-4">
       <div
-        className={`w-full max-w-lg bg-black/40 glass-blur border ${themeBorder}/30 rounded-lg p-4 sm:p-6 relative overflow-hidden`}
-        style={{ boxShadow: `0 0 80px -20px ${themeHex}40` }}
+        className={`relative w-full max-w-lg overflow-hidden rounded-lg border p-4 sm:p-6 ${themeBorder}/30`}
+        data-luca-material-role="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Ingest knowledge source"
+        style={{ ...lucaMaterialDialogStyle, boxShadow: `0 0 80px -20px ${themeHex}40` }}
       >
         {/* Liquid background effect 1 (Center) */}
         <div
@@ -90,10 +99,11 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://github.com/username/repo"
-                className={`w-full bg-black border border-slate-800 rounded p-3 pl-10 text-sm font-mono ${themePrimary} focus:outline-none placeholder:text-slate-700`}
+                className={`w-full rounded border p-3 pl-10 font-mono text-sm focus:outline-none ${themePrimary}`}
                 style={
                   {
-                    borderColor: "rgb(30 41 59)",
+                    ...lucaMaterialControlStyle,
+                    borderColor: "var(--luca-border-subtle, var(--app-border-main))",
                     "--tw-ring-color": themeHex,
                   } as any
                 }
@@ -101,7 +111,8 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
                   e.currentTarget.style.borderColor = themeHex;
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "rgb(30 41 59)";
+                  e.currentTarget.style.borderColor =
+                    "var(--luca-border-subtle, var(--app-border-main))";
                 }}
                 autoFocus
               />
@@ -109,8 +120,8 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
           </div>
 
           <div
-            className={`p-4 border ${themeBorder}/30 rounded text-[10px] font-mono text-slate-400`}
-            style={{ backgroundColor: `${themeHex}0A` }}
+            className={`rounded border p-4 font-mono text-[10px] text-[var(--luca-text-secondary)] ${themeBorder}/30`}
+            style={lucaMaterialCardStyle}
           >
             <div
               className={`flex items-center gap-2 ${themePrimary} mb-2 font-bold`}

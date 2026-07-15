@@ -286,6 +286,7 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
         }`}
         data-luca-material-role="dialog"
         role="dialog"
+        aria-modal="true"
         aria-label={`${device.name} mobile manager`}
         style={lucaMaterialDialogStyle}
       >

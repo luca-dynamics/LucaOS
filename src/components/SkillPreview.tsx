@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { Icon } from "./ui/Icon";
 import { CustomSkill } from "../types";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialSolidCardStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface Props {
   skill: CustomSkill;
@@ -42,20 +47,25 @@ const SkillPreview: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 glass-blur p-0 sm:p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-0 sm:p-4 animate-in fade-in duration-300">
       <div
-        className="bg-black/95 glass-blur rounded-none sm:rounded-xl w-full sm:max-w-4xl h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto flex flex-col"
+        className="flex h-full w-full flex-col overflow-y-auto rounded-none border sm:h-auto sm:max-h-[90vh] sm:max-w-4xl sm:rounded-xl"
+        data-luca-material-role="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${skill.name} skill preview`}
         style={{
+          ...lucaMaterialDialogStyle,
           border: `1px solid ${themeColors.border}`,
           boxShadow: `0 0 50px ${themeColors.glow}`,
         }}
       >
         {/* Header */}
         <div
-          className="sticky top-0 z-30 glass-blur border-b p-4 sm:p-6 flex items-center justify-between flex-shrink-0"
+          className="sticky top-0 z-30 flex flex-shrink-0 items-center justify-between border-b p-4 sm:p-6"
           style={{
+            ...lucaMaterialSolidCardStyle,
             borderColor: themeColors.border,
-            background: `linear-gradient(to right, rgba(0,0,0,0.9), ${themeColors.bgTint})`,
           }}
         >
           <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
@@ -74,22 +84,23 @@ const SkillPreview: React.FC<Props> = ({
               />
             </div>
             <div className="overflow-hidden">
-              <h2 className="text-lg sm:text-xl font-bold text-white truncate">
+              <h2 className="truncate text-lg font-bold text-[var(--luca-text-primary)] sm:text-xl">
                 {skill.name}
               </h2>
-              <p className="text-[10px] sm:text-sm text-slate-400 truncate">
+              <p className="truncate text-[10px] text-[var(--luca-text-secondary)] sm:text-sm">
                 {skill.description}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="relative z-50 p-2 hover:bg-white/10 rounded-lg transition-all flex-shrink-0 ml-2 cursor-pointer active:scale-95"
+            className="luca-material-pressable relative z-50 ml-2 flex-shrink-0 cursor-pointer rounded-lg border p-2 transition-colors hover:text-[var(--luca-text-primary)]"
+            style={lucaMaterialControlStyle}
           >
             <Icon
               name="X"
               size={20}
-              className="sm:size-6 text-slate-400 hover:text-white"
+              className="text-[var(--luca-text-secondary)] sm:size-6"
             />
           </button>
         </div>
@@ -99,8 +110,8 @@ const SkillPreview: React.FC<Props> = ({
           {/* Metadata */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div
-              className="bg-black/60 rounded-lg p-3 sm:p-4 border"
-              style={{ borderColor: themeColors.border }}
+              className="rounded-lg border p-3 sm:p-4"
+              style={{ ...lucaMaterialSolidCardStyle, borderColor: themeColors.border }}
             >
               <div className="text-[10px] sm:text-xs text-slate-500 mb-1 uppercase tracking-wider">
                 LANGUAGE
@@ -113,8 +124,8 @@ const SkillPreview: React.FC<Props> = ({
               </div>
             </div>
             <div
-              className="bg-black/60 rounded-lg p-3 sm:p-4 border"
-              style={{ borderColor: themeColors.border }}
+              className="rounded-lg border p-3 sm:p-4"
+              style={{ ...lucaMaterialSolidCardStyle, borderColor: themeColors.border }}
             >
               <div className="text-[10px] sm:text-xs text-slate-500 mb-1 uppercase tracking-wider">
                 INPUTS
@@ -138,8 +149,8 @@ const SkillPreview: React.FC<Props> = ({
               CODE
             </div>
             <div
-              className="bg-[#1e1e1e] rounded-xl p-3 sm:p-4 overflow-x-auto border"
-              style={{ borderColor: themeColors.border }}
+              className="overflow-x-auto rounded-xl border p-3 sm:p-4"
+              style={{ ...lucaMaterialSolidCardStyle, borderColor: themeColors.border }}
             >
               <pre className="text-xs sm:text-sm font-mono whitespace-pre-wrap sm:whitespace-pre">
                 <code className="text-slate-300">{skill.script}</code>
@@ -177,8 +188,9 @@ const SkillPreview: React.FC<Props> = ({
                           [input]: e.target.value,
                         })
                       }
-                      className="w-full bg-slate-900 rounded-lg px-3 py-2 text-white text-sm focus:outline-none"
+                      className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none"
                       style={{
+                        ...lucaMaterialControlStyle,
                         border: `1px solid ${themeColors.border}`,
                       }}
                       placeholder={`Enter ${input}...`}
@@ -231,8 +243,8 @@ const SkillPreview: React.FC<Props> = ({
                   ✓ EXECUTION SUCCESSFUL
                 </div>
                 <div
-                  className="bg-[#1e1e1e] rounded-lg p-4 border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]"
-                  style={{ maxHeight: "200px", overflowY: "auto" }}
+                  className="rounded-lg border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] p-4"
+                  style={{ ...lucaMaterialSolidCardStyle, maxHeight: "200px", overflowY: "auto" }}
                 >
                   <pre className="text-sm font-mono text-[var(--luca-success,#4fbf7a)]">
                     {executionResult}
@@ -247,7 +259,7 @@ const SkillPreview: React.FC<Props> = ({
                 <div className="text-xs font-bold text-[var(--luca-danger,#f87171)] mb-2">
                   ✗ EXECUTION FAILED
                 </div>
-                <div className="bg-[#1e1e1e] rounded-lg p-4 border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]">
+                <div className="rounded-lg border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] p-4" style={lucaMaterialSolidCardStyle}>
                   <pre className="text-sm font-mono text-[var(--luca-danger,#f87171)]">
                     {executionError}
                   </pre>

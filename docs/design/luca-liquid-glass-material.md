@@ -63,7 +63,9 @@ orb, a face, and a small set of high-value controls without losing its skin.
 - The Electron native splash reads a non-sensitive persisted appearance
   snapshot, so the chosen skin is present before React mounts. VisualCore,
   Mini Chat, the phone manager, VoiceHUD, VisionHUD, transient overlays, and
-  failure states now join the same role system.
+  failure states now join the same role system. Direct security, profile,
+  skills, model, LucaLink, network, remote-control, and agent dialogs use that
+  role hierarchy as well instead of fixed dark shells.
 - Legacy shaped `glass-blur` foregrounds receive the skin substrate and
   optical texture through a compatibility bridge. Full-screen scrims, real
   media canvases, and semantic status surfaces are deliberately excluded.

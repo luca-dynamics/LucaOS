@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialSolidCardStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface Props {
   accessCode: string;
@@ -183,13 +188,22 @@ const RemoteAccessModal: React.FC<Props> = ({
         };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 glass-blur animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 animate-in fade-in duration-300">
       <div
-        className={`relative w-[90%] max-w-md bg-[#050505] border ${
+        className={`relative flex w-[90%] max-w-md flex-col overflow-hidden rounded-lg border p-0 transition-all duration-500 ${
           mode === "EXPLOIT" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]" : "border-slate-800"
-        } ${
-          theme.glow
-        } p-0 overflow-hidden rounded-lg flex flex-col transition-all duration-500`}
+        } ${theme.glow}`}
+        data-luca-material-role="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Remote access"
+        style={{
+          ...lucaMaterialDialogStyle,
+          borderColor:
+            mode === "EXPLOIT"
+              ? "color-mix(in srgb, var(--luca-danger,#f87171) 32%, transparent)"
+              : "var(--luca-border-strong, var(--app-border-main))",
+        }}
       >
         {/* Animated Scanner Top */}
         <div
@@ -200,7 +214,7 @@ const RemoteAccessModal: React.FC<Props> = ({
         ></div>
 
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-slate-800 bg-slate-900/30">
+        <div className="flex items-center justify-between border-b p-6" style={lucaMaterialSolidCardStyle}>
           <div className="flex items-center gap-3">
             <div
               className={`p-2 rounded border ${
@@ -218,7 +232,7 @@ const RemoteAccessModal: React.FC<Props> = ({
             <div>
               <h2
                 className={`font-display text-lg font-bold tracking-widest ${
-                  mode === "STANDARD" ? "text-white" : "text-[var(--luca-danger,#f87171)]"
+                  mode === "STANDARD" ? "text-[var(--luca-text-primary)]" : "text-[var(--luca-danger,#f87171)]"
                 }`}
               >
                 {mode === "STANDARD" ? "REMOTE UPLINK" : "PAYLOAD DELIVERY"}
@@ -237,7 +251,8 @@ const RemoteAccessModal: React.FC<Props> = ({
           </div>
           <button
             onClick={onClose}
-            className="text-slate-500 hover:text-white transition-colors"
+            className="luca-material-pressable rounded-lg border p-1.5 transition-colors hover:text-[var(--luca-text-primary)]"
+            style={lucaMaterialControlStyle}
           >
             <Icon name="X" size={20} />
           </button>

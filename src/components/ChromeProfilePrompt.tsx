@@ -7,6 +7,11 @@
 import React, { useState } from "react";
 import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
+import {
+  lucaMaterialCardStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface ChromeProfilePromptProps {
   isOpen: boolean;
@@ -70,8 +75,8 @@ const ChromeProfilePrompt: React.FC<ChromeProfilePromptProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 glass-blur">
-      <div className="bg-gray-900/95 border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <div className="mx-4 w-full max-w-md rounded-2xl border p-6 shadow-2xl" data-luca-material-role="dialog" role="dialog" aria-modal="true" aria-label="Chrome profile import" style={lucaMaterialDialogStyle}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -81,13 +86,14 @@ const ChromeProfilePrompt: React.FC<ChromeProfilePromptProps> = ({
             >
               <Icon name="Chrome" className="w-5 h-5" style={{ color: theme.hex }} />
             </div>
-            <h3 className="text-lg font-bold text-white">
+            <h3 className="text-lg font-bold text-[var(--luca-text-primary)]">
               Use Your Browser Sessions?
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-white/10 transition-colors"
+            className="luca-material-pressable rounded border p-1 transition-colors hover:text-[var(--luca-text-primary)]"
+            style={lucaMaterialControlStyle}
           >
             <Icon name="X" className="w-5 h-5 text-gray-500" />
           </button>
@@ -95,12 +101,12 @@ const ChromeProfilePrompt: React.FC<ChromeProfilePromptProps> = ({
 
         {/* Content */}
         <div className="mb-6">
-          <p className="text-sm text-gray-400 mb-4">
+          <p className="mb-4 text-sm text-[var(--luca-text-secondary)]">
             Luca can use your Chrome browser&apos;s logged-in sessions,
             bookmarks, and saved passwords for a seamless browsing experience.
           </p>
 
-          <div className="bg-white/5 p-3 rounded-lg border border-white/10 mb-4">
+          <div className="mb-4 rounded-lg border p-3" style={lucaMaterialCardStyle}>
             <p className="text-xs text-gray-500">
               <strong className="text-gray-300">What gets imported:</strong>
             </p>
@@ -125,7 +131,8 @@ const ChromeProfilePrompt: React.FC<ChromeProfilePromptProps> = ({
         <div className="flex gap-3">
           <button
             onClick={handleSkip}
-            className="flex-1 py-2.5 px-4 rounded-lg border border-white/10 text-gray-400 text-sm font-medium hover:bg-white/5 transition-colors"
+            className="luca-material-pressable flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors hover:text-[var(--luca-text-primary)]"
+            style={lucaMaterialControlStyle}
           >
             Use Clean Browser
           </button>

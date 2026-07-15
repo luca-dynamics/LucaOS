@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { SmartDevice } from "../types";
 import { Icon } from "./ui/Icon";
+import {
+  lucaMaterialCardStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialSolidCardStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface Props {
   device: SmartDevice | null;
@@ -62,11 +68,11 @@ const SmartTVRemote: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/70 animate-in fade-in zoom-in-95 duration-300">
       {/* Remote Body */}
-      <div className="relative w-80 bg-[#050505] border border-slate-800 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden">
+      <div className="relative flex w-80 flex-col overflow-hidden rounded-3xl border" data-luca-material-role="dialog" role="dialog" aria-modal="true" aria-label={`${device.name} remote control`} style={lucaMaterialDialogStyle}>
         {/* IR Blaster Visual */}
-        <div className="h-4 w-full bg-slate-900 flex justify-center items-center">
+        <div className="flex h-4 w-full items-center justify-center" style={lucaMaterialSolidCardStyle}>
           <div
             className={`w-2 h-2 rounded-full transition-all duration-200`}
             style={
@@ -83,7 +89,7 @@ const SmartTVRemote: React.FC<Props> = ({
         </div>
 
         {/* Screen / Status */}
-        <div className="h-32 bg-slate-900 border-b border-slate-800 p-5 flex flex-col justify-between relative overflow-hidden">
+        <div className="relative flex h-32 flex-col justify-between overflow-hidden border-b p-5" style={lucaMaterialSolidCardStyle}>
           {/* Scanline */}
           <div className="absolute inset-0 pointer-events-none opacity-10 bg-[linear-gradient(rgba(0,255,0,0.1)_1px,transparent_1px)] bg-[size:100%_4px]"></div>
 
@@ -93,7 +99,8 @@ const SmartTVRemote: React.FC<Props> = ({
             </div>
             <button
               onClick={onClose}
-              className="text-slate-600 hover:text-white"
+              className="luca-material-pressable rounded-lg border p-1.5 hover:text-[var(--luca-text-primary)]"
+              style={lucaMaterialControlStyle}
             >
               <Icon name="Play" size={18} />
             </button>
@@ -125,7 +132,7 @@ const SmartTVRemote: React.FC<Props> = ({
 
         {/* PAIRING OVERLAY */}
         {pairingMode ? (
-          <div className="p-6 flex flex-col items-center gap-4 h-[450px] justify-center bg-black/90 absolute bottom-0 w-full z-20 glass-blur">
+          <div className="absolute bottom-0 z-20 flex h-[450px] w-full flex-col items-center justify-center gap-4 p-6" style={lucaMaterialSolidCardStyle}>
             <div className="text-[var(--luca-warning,#f2b23e)] text-xs font-bold tracking-widest flex items-center gap-2">
               <Icon name="Grid3x3" size={16} /> ENTER PAIRING PIN
             </div>
@@ -138,10 +145,11 @@ const SmartTVRemote: React.FC<Props> = ({
               maxLength={8}
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))}
-              className="bg-slate-900 border border-slate-700 text-white text-center text-2xl font-mono tracking-[0.5em] w-40 py-2 rounded outline-none transition-colors"
+              className="w-40 rounded border py-2 text-center font-mono text-2xl tracking-[0.5em] outline-none transition-colors"
               style={
                 {
-                  borderColor: pressed === "pin" ? theme?.hex : "#334155",
+                  ...lucaMaterialControlStyle,
+                  borderColor: pressed === "pin" ? theme?.hex : "var(--luca-border-subtle)",
                 } as any
               }
               onFocus={(e) =>
@@ -155,7 +163,8 @@ const SmartTVRemote: React.FC<Props> = ({
                 <button
                   key={n}
                   onClick={() => setPin((p) => (p.length < 8 ? p + n : p))}
-                  className="bg-slate-800 hover:bg-slate-700 text-white py-3 rounded font-mono text-sm"
+                  className="luca-material-pressable rounded border py-3 font-mono text-sm hover:text-[var(--luca-text-primary)]"
+                  style={lucaMaterialControlStyle}
                 >
                   {n}
                 </button>
@@ -168,7 +177,8 @@ const SmartTVRemote: React.FC<Props> = ({
               </button>
               <button
                 onClick={() => setPin((p) => (p.length < 8 ? p + 0 : p))}
-                className="bg-slate-800 hover:bg-slate-700 text-white py-3 rounded font-mono text-sm"
+                className="luca-material-pressable rounded border py-3 font-mono text-sm hover:text-[var(--luca-text-primary)]"
+                style={lucaMaterialControlStyle}
               >
                 0
               </button>
@@ -183,7 +193,7 @@ const SmartTVRemote: React.FC<Props> = ({
           </div>
         ) : (
           /* STANDARD CONTROLS */
-          <div className="p-6 flex flex-col gap-6 bg-[#050505]">
+          <div className="flex flex-col gap-6 p-6" style={lucaMaterialSolidCardStyle}>
             {/* Power & Sources */}
             <div className="flex justify-between px-6">
               <button
@@ -205,7 +215,7 @@ const SmartTVRemote: React.FC<Props> = ({
             </div>
 
             {/* Navigation Area */}
-            <div className="relative flex flex-col items-center gap-2 bg-slate-900/30 p-4 rounded-2xl border border-slate-800/50">
+            <div className="relative flex flex-col items-center gap-2 rounded-2xl border p-4" style={lucaMaterialCardStyle}>
               {/* Nav Header Buttons */}
               <div className="flex justify-between w-full px-2 mb-2">
                 <button

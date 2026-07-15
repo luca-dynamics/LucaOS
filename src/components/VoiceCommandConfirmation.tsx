@@ -33,6 +33,7 @@ export const VoiceCommandConfirmation: React.FC<
         className="w-full max-w-md rounded-2xl border p-6 shadow-2xl animate-in zoom-in-95 duration-200"
         data-luca-material-role="dialog"
         role="alertdialog"
+        aria-modal="true"
         aria-label={isRisky ? "Confirm risky voice command" : "Confirm voice command"}
         style={{
           ...lucaMaterialDialogStyle,

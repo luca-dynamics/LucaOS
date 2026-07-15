@@ -1,6 +1,11 @@
 // HumanInputModal - Modal for agent to request user input (credentials, etc.)
 import React, { useState, useEffect } from 'react';
 import { Icon } from "./ui/Icon";
+import {
+  lucaMaterialControlStyle,
+  lucaMaterialDialogStyle,
+  lucaMaterialSolidCardStyle,
+} from "../styles/lucaMaterialSystem";
 
 interface Props {
   isOpen: boolean;
@@ -64,8 +69,15 @@ const HumanInputModal: React.FC<Props> = ({
                              prompt.toLowerCase().includes('login');
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md mx-4 bg-[#0a0a0a] border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] rounded-lg shadow-[0_0_50px_rgba(6,182,212,0.2)] overflow-hidden">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 animate-in fade-in duration-200">
+      <div
+        className="relative mx-4 w-full max-w-md overflow-hidden rounded-lg border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]"
+        data-luca-material-role="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Agent input request"
+        style={lucaMaterialDialogStyle}
+      >
         {/* Header */}
         <div className="h-14 border-b border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
@@ -78,7 +90,8 @@ const HumanInputModal: React.FC<Props> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-[var(--luca-danger,#f87171)] transition-colors"
+            className="luca-material-pressable rounded-lg border p-1.5 hover:text-[var(--luca-danger,#f87171)] transition-colors"
+            style={lucaMaterialControlStyle}
             title="Close"
           >
             <Icon name="X" size={16} />
@@ -88,7 +101,7 @@ const HumanInputModal: React.FC<Props> = ({
         {/* Content */}
         <div className="p-6 space-y-4">
           {/* Prompt */}
-          <div className="text-sm text-slate-300 font-mono leading-relaxed">
+          <div className="font-mono text-sm leading-relaxed text-[var(--luca-text-secondary)]">
             {prompt}
           </div>
 
@@ -104,7 +117,8 @@ const HumanInputModal: React.FC<Props> = ({
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full px-3 py-2 bg-black/40 border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] rounded text-white text-sm font-mono outline-none focus:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--luca-info,#4f8cff)_40%,transparent)]"
+                  className="w-full rounded border px-3 py-2 font-mono text-sm outline-none focus:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--luca-info,#4f8cff)_40%,transparent)]"
+                  style={lucaMaterialControlStyle}
                   placeholder="user@example.com"
                   autoFocus
                 />
@@ -119,7 +133,8 @@ const HumanInputModal: React.FC<Props> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    className="w-full px-3 py-2 bg-black/40 border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] rounded text-white text-sm font-mono outline-none focus:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--luca-info,#4f8cff)_40%,transparent)] pr-10"
+                    className="w-full rounded border py-2 pl-3 pr-10 font-mono text-sm outline-none focus:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--luca-info,#4f8cff)_40%,transparent)]"
+                    style={lucaMaterialControlStyle}
                     placeholder="••••••••"
                   />
                   <button
@@ -138,7 +153,8 @@ const HumanInputModal: React.FC<Props> = ({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="w-full px-3 py-2 bg-black/40 border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] rounded text-white text-sm font-mono outline-none focus:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--luca-info,#4f8cff)_40%,transparent)] resize-none"
+                className="w-full resize-none rounded border px-3 py-2 font-mono text-sm outline-none focus:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--luca-info,#4f8cff)_40%,transparent)]"
+                style={lucaMaterialControlStyle}
                 rows={4}
                 placeholder="Type your response..."
                 autoFocus
@@ -153,10 +169,11 @@ const HumanInputModal: React.FC<Props> = ({
         </div>
 
         {/* Footer */}
-        <div className="h-12 border-t border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[#080808] px-4 flex items-center justify-end gap-2">
+        <div className="flex h-12 items-center justify-end gap-2 border-t border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] px-4" style={lucaMaterialSolidCardStyle}>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 text-xs text-slate-400 hover:text-white transition-colors font-mono"
+            className="luca-material-pressable rounded border px-4 py-1.5 font-mono text-xs transition-colors hover:text-[var(--luca-text-primary)]"
+            style={lucaMaterialControlStyle}
           >
             CANCEL
           </button>
