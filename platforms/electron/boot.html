@@ -4,44 +4,29 @@
     <meta charset="utf-8" />
     <style>
         :root {
-            --luca-background-base: #111417;
-            --luca-background-elevated: #1b2025;
-            --luca-surface-glass: #1b2025;
-            --luca-surface-solid: #1b2025;
-            --luca-surface-hover: rgba(45, 52, 60, 0.66);
-            --luca-text-primary: #f2f5f7;
-            --luca-text-secondary: #bac5cc;
-            --luca-text-tertiary: #89949c;
-            --luca-accent-primary: #9fb3c2;
-            --luca-accent-soft: #728898;
-            --luca-material-opacity: 0.82;
-            --luca-material-blur: 10px;
-            --luca-material-glass-highlight: rgb(255 255 255 / 0.14);
-            --luca-material-glass-rim: rgb(255 255 255 / 0.24);
-            --luca-material-glass-shadow: rgb(0 0 0 / 0.18);
-            --luca-material-glass-sheen: rgb(255 255 255 / 0.07);
-            --luca-material-border-strength: 0.46;
-            --luca-material-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
-            --luca-shadow-soft: 0 18px 48px rgba(0, 0, 0, 0.34);
-            --luca-shadow-glow: rgba(159, 179, 194, 0.14);
+            --ink: #2b303a;
+            --ink-2: #5b636f;
+            --ink-3: #8b929d;
+            --accent: #7fa9d8;
+            --track: rgba(43, 48, 58, 0.09);
         }
         * { box-sizing: border-box; }
         body {
             margin: 0;
             height: 100vh;
             overflow: hidden;
-            background: var(--luca-background-base);
-            color: var(--luca-text-primary);
-            font-family: -apple-system, "Segoe UI", Inter, system-ui, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            color: var(--ink);
+            font-family: "Segoe UI Variable Display", -apple-system, "Segoe UI", Inter, system-ui, sans-serif;
             -webkit-app-region: drag;
+            /* Light frosted environment with a soft glow behind the face. */
+            background:
+                radial-gradient(70% 90% at 68% 46%, #ffffff 0%, rgba(255,255,255,0) 55%),
+                radial-gradient(120% 130% at 78% 40%, #f4f8fb 0%, #eef2f6 46%, #e4eaf0 100%);
         }
         .window-controls {
             position: fixed;
-            top: 2px;
-            right: 2px;
+            top: 6px;
+            right: 8px;
             z-index: 10;
             display: flex;
             align-items: center;
@@ -49,109 +34,153 @@
             -webkit-app-region: no-drag;
         }
         .window-control {
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 26px;
             border: 0;
-            border-radius: 6px;
+            border-radius: 7px;
             background: transparent;
-            color: var(--luca-text-secondary);
+            color: var(--ink-2);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             padding: 0;
             cursor: pointer;
-            transition: color 140ms cubic-bezier(0.16, 1, 0.3, 1), transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
+            transition: color 140ms ease, background 140ms ease;
         }
         @media (hover: hover) and (pointer: fine) {
-            .window-control:hover {
-                color: var(--luca-text-primary);
-            }
-            .window-control.close:hover {
-                color: #f87171;
-            }
+            .window-control:hover { color: var(--ink); background: rgba(43,48,58,0.06); }
+            .window-control.close:hover { color: #d5504a; background: rgba(213,80,74,0.1); }
         }
-        .window-control:active {
-            transform: scale(0.97);
+        /* Small top-left product tag, mirroring the mockup window chrome. */
+        .titletag {
+            position: fixed;
+            top: 12px;
+            left: 16px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12.5px;
+            color: var(--ink-2);
         }
+        .titletag .mini {
+            width: 15px; height: 15px;
+            animation: spin 1.4s linear infinite;
+        }
+
         .stage {
             position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 10px;
             width: 100%;
-            max-width: 560px;
-            min-height: min(92vh, 420px);
-            padding: 0 28px 26px;
-            text-align: center;
+            height: 100%;
         }
-        /* The Luca face sits fully visible behind the boot copy. */
+        /* The Luca hologram face, large and center-right. */
         .face {
             position: absolute;
-            top: 54%;
-            left: 50%;
-            z-index: 0;
-            width: min(76vw, 340px);
-            height: auto;
-            opacity: 0.9;
-            transform: translate(-50%, -50%);
-            filter: drop-shadow(0 0 34px var(--luca-shadow-glow));
-            animation: none;
+            right: 6%;
+            top: 50%;
+            transform: translateY(-50%);
+            height: min(86vh, 640px);
+            width: auto;
+            max-width: 52vw;
+            object-fit: contain;
+            filter: drop-shadow(0 24px 70px rgba(120, 160, 205, 0.28));
             pointer-events: none;
+            user-select: none;
         }
-        .wordmark,
-        .headline,
-        .detail,
-        .track {
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 2px 18px var(--luca-material-glass-shadow);
+        /* Center-left brand block: dotted spinner + wordmark + subtitle. */
+        .brand {
+            position: absolute;
+            left: 8%;
+            top: 46%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .spinner {
+            width: 34px; height: 34px;
+            flex: none;
+            animation: spin 1.5s linear infinite;
+        }
+        .spinner circle {
+            stroke: var(--ink-3);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 0.1 7.6;
+            fill: none;
         }
         .wordmark {
-            font-family: "Segoe UI Variable Display", "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            font-size: 25px;
-            font-weight: 650;
+            font-size: 46px;
+            font-weight: 600;
             letter-spacing: -0.025em;
-            color: var(--luca-text-primary);
+            color: var(--ink);
+            line-height: 1;
         }
-        .headline { font-size: 13px; color: var(--luca-text-secondary); min-height: 16px; }
-        .detail { font-size: 11px; color: var(--luca-text-tertiary); min-height: 14px; }
-        .detail.alert { color: #f2b23e; }
+        .subtitle {
+            font-size: 15px;
+            color: var(--ink-2);
+            margin-top: 8px;
+            letter-spacing: 0.01em;
+        }
+        /* Lower-left progress cluster. */
+        .awaken {
+            position: absolute;
+            left: 8%;
+            bottom: 15%;
+            width: min(38vw, 340px);
+        }
+        .headline {
+            font-size: 13px;
+            color: var(--ink-3);
+            margin-bottom: 10px;
+            letter-spacing: 0.01em;
+        }
         .track {
-            margin-top: 6px;
-            width: min(100%, 360px);
-            height: 2px;
-            background: color-mix(in srgb, var(--luca-text-tertiary) 20%, transparent);
+            height: 3px;
+            width: 100%;
+            background: var(--track);
             border-radius: 999px;
             overflow: hidden;
         }
         .bar {
             height: 100%;
             width: 0%;
-            background: var(--luca-accent-primary);
-            box-shadow: 0 0 10px var(--luca-shadow-glow);
+            border-radius: 999px;
+            background: linear-gradient(90deg, #a6c6e8 0%, #cfe0f2 100%);
+            box-shadow: 0 0 10px rgba(127, 169, 216, 0.5);
             transition: width 0.6s ease;
         }
-        @media (prefers-reduced-motion: reduce) {
-            .face {
-                animation: none;
-                opacity: 0.9;
-                transform: translate(-50%, -50%);
-            }
-            .bar,
-            .window-control {
-                transition-duration: 0.01ms;
-            }
+        .detail {
+            font-size: 11px;
+            color: var(--ink-3);
+            margin-top: 8px;
+            min-height: 14px;
         }
-        @media (prefers-contrast: more) {
-            .window-control {
-                color: var(--luca-text-primary);
-            }
+        .detail.alert { color: #c9803a; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (prefers-reduced-motion: reduce) {
+            .spinner, .titletag .mini { animation: none; }
+            .bar { transition-duration: 0.01ms; }
+        }
+        /* Narrow window (mobile companion): stack centered vertically. */
+        @media (max-width: 640px) {
+            .face { position: static; display: block; margin: 8vh auto 0; height: 42vh; max-width: 74vw; transform: none; }
+            .brand { position: static; transform: none; justify-content: center; margin-top: 4vh; }
+            .wordmark { font-size: 34px; }
+            .awaken { position: absolute; left: 50%; transform: translateX(-50%); bottom: 9%; width: 74vw; text-align: center; }
+            .headline { text-align: center; }
         }
     </style>
 </head>
 <body>
+    <div class="titletag">
+        <svg class="mini" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="16" />
+        </svg>
+        LucaOS
+    </div>
     <div class="window-controls" aria-label="Window controls">
         <button class="window-control" type="button" aria-label="Minimize window" title="Minimize" data-window-action="minimize">
             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -169,12 +198,23 @@
             </svg>
         </button>
     </div>
+
     <div class="stage">
         <img class="face" src="luca-hologram.png" alt="Luca" />
-        <div class="wordmark">LucaOS</div>
-        <div class="headline" id="status">Waking Luca</div>
-        <div class="detail" id="detail"></div>
-        <div class="track"><div class="bar" id="progress"></div></div>
+        <div class="brand">
+            <svg class="spinner" viewBox="0 0 40 40" aria-hidden="true">
+                <circle cx="20" cy="20" r="16" />
+            </svg>
+            <div class="brand-text">
+                <div class="wordmark">LucaOS</div>
+                <div class="subtitle">Host-native personal AI OS</div>
+            </div>
+        </div>
+        <div class="awaken">
+            <div class="headline" id="status">Awakening Luca…</div>
+            <div class="track"><div class="bar" id="progress"></div></div>
+            <div class="detail" id="detail"></div>
+        </div>
     </div>
 
     <script>
@@ -188,24 +228,22 @@
             });
         });
 
-        // Same IPC contract as before, expressed calmly. Raw boot-log lines
-        // are developer telemetry (they still reach the console and Medic);
-        // the being speaks in its own words here. Technical detail surfaces
-        // only when something actually goes wrong.
+        // Raw boot-log lines are developer telemetry; here Luca speaks calmly.
+        // The big headline stays "Awakening Luca…"; the small detail line
+        // reflects the current phase, and surfaces the real reason on error.
         const speak = (message) => {
             const m = message.toLowerCase();
-            if (/(app ready|interface ready|launch)/.test(m)) return "Here.";
-            if (/(vite|frontend|interface|window)/.test(m)) return "Opening my eyes";
+            if (/(app ready|interface ready|launch)/.test(m)) return "Ready";
+            if (/(vite|frontend|interface|window)/.test(m)) return "Opening the interface";
             if (/(cortex|graph db|memory)/.test(m)) return "Connecting memory";
-            if (/(igniting|logic core|node|server|port)/.test(m)) return "Starting my core";
+            if (/(igniting|logic core|node|server|port)/.test(m)) return "Starting the core";
             if (/(wait|ready\.)/.test(m)) return "Almost there";
             if (/(python|model|ollama|brain)/.test(m)) return "Warming up intelligence";
-            return "Waking Luca";
+            return "Awakening Luca…";
         };
         ipcRenderer.on('boot-log', (event, { message, type, progress }) => {
             if (message) {
                 if (type === 'error') {
-                    // Honesty over calm when it breaks: show the real reason.
                     detailText.textContent = message;
                     detailText.classList.add('alert');
                 } else {
@@ -218,6 +256,8 @@
             }
         });
 
+        // boot-status carries the phase label; keep "Awakening Luca…" as the
+        // resting headline and only replace it with meaningful phase text.
         ipcRenderer.on('boot-status', (event, status) => {
             if (status) statusText.textContent = status;
         });

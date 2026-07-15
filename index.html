@@ -134,21 +134,16 @@
       #root-loader {
         position: fixed;
         inset: 0;
+        /* Light frosted environment with a soft glow behind the face,
+           matching the native boot splash (boot.html). Pieces are positioned
+           absolutely below; the failed state re-centers them. */
         background:
-          radial-gradient(
-            circle at 50% 32%,
-            rgba(255, 255, 255, 0.075),
-            transparent 30%
-          ),
-          linear-gradient(180deg, #0a0a0d 0%, #040405 52%, #0b0b0e 100%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: clamp(7px, 2.4dvh, 18px);
+          radial-gradient(70% 90% at 68% 46%, #ffffff 0%, rgba(255,255,255,0) 55%),
+          radial-gradient(120% 130% at 78% 40%, #f4f8fb 0%, #eef2f6 46%, #e4eaf0 100%);
+        display: block;
         z-index: 9999;
-        font-family: "Inter", system-ui, sans-serif;
-        color: #f8fafc;
+        font-family: "Segoe UI Variable Display", Inter, "Segoe UI", system-ui, sans-serif;
+        color: #2b303a;
         transition: opacity 0.5s ease-out;
         overflow: hidden;
         -webkit-app-region: drag;
@@ -167,68 +162,73 @@
         display: flex;
       }
       .root-window-control {
-        width: 28px;
-        height: 28px;
+        width: 30px;
+        height: 26px;
         border: 0;
-        border-radius: 0;
+        border-radius: 7px;
         background: transparent;
-        color: rgba(255, 255, 255, 0.7);
+        color: #5b636f;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         padding: 0;
         cursor: pointer;
-        transition: color 160ms ease;
+        transition: color 160ms ease, background 160ms ease;
       }
       .root-window-control:hover {
-        color: rgba(255, 255, 255, 0.94);
+        color: #2b303a;
+        background: rgba(43, 48, 58, 0.06);
       }
       .root-window-control.close:hover {
-        color: #f87171;
+        color: #d5504a;
+        background: rgba(213, 80, 74, 0.1);
       }
-      #root-loader::after {
-        content: "";
-        position: absolute;
-        left: 50%;
-        top: 30%;
-        width: min(92vw, 520px);
-        height: min(92vw, 520px);
-        transform: translate(-50%, -50%);
-        border-radius: 999px;
-        background: rgba(207, 250, 254, 0.045);
-        filter: blur(54px);
-      }
+      /* Face: large, center-right. */
       .loader-presence {
-        position: relative;
-        z-index: 1;
-        width: min(86vw, 62dvh, 500px);
-        max-height: min(54dvh, 500px);
+        position: absolute;
+        right: 6%;
+        top: 50%;
+        transform: translateY(-50%);
+        width: auto;
+        height: min(86vh, 640px);
+        max-width: 52vw;
         display: grid;
         place-items: center;
-        margin-bottom: clamp(-34px, -4dvh, -10px);
-      }
-      .loader-presence::after {
-        content: "";
-        position: absolute;
-        left: 50%;
-        bottom: 14%;
-        width: 72%;
-        height: 74px;
-        transform: translateX(-50%);
-        border-radius: 100%;
-        background: rgba(207, 250, 254, 0.065);
-        filter: blur(28px);
+        z-index: 1;
       }
       .loader-hologram-face {
         position: relative;
         z-index: 1;
-        width: 100%;
-        height: auto;
-        max-height: min(54dvh, 500px);
+        width: auto;
+        height: 100%;
+        max-width: 100%;
         object-fit: contain;
-        opacity: 0.9;
-        filter: brightness(1.05) contrast(1.08) saturate(0.88)
-          drop-shadow(0 0 52px rgba(203, 244, 255, 0.18));
+        opacity: 0.96;
+        filter: drop-shadow(0 24px 70px rgba(120, 160, 205, 0.28));
+      }
+      /* Brand: spinner + wordmark + subtitle, center-left. */
+      .loader-brand {
+        position: absolute;
+        left: 8%;
+        top: 46%;
+        transform: translateY(-50%);
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .loader-spinner {
+        width: 34px;
+        height: 34px;
+        flex: none;
+        animation: loader-spin 1.5s linear infinite;
+      }
+      .loader-spinner circle {
+        stroke: #8b929d;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-dasharray: 0.1 7.6;
+        fill: none;
       }
       .loader-text {
         position: relative;
@@ -245,61 +245,109 @@
           BlinkMacSystemFont,
           system-ui,
           sans-serif;
-        font-size: clamp(32px, min(12vw, 10dvh), 74px);
-        letter-spacing: -0.045em;
-        font-weight: 650;
-        line-height: 0.92;
+        font-size: clamp(30px, min(6vw, 6dvh), 48px);
+        letter-spacing: -0.025em;
+        font-weight: 600;
+        line-height: 1;
+        color: #2b303a;
       }
       .loader-text::after {
-        content: "Host-native AI operating system";
-        font-size: clamp(12px, 3.2vw, 16px);
-        letter-spacing: 0;
+        content: "Host-native personal AI OS";
+        display: block;
+        font-size: 15px;
+        letter-spacing: 0.01em;
         font-weight: 500;
-        color: rgba(255, 255, 255, 0.66);
+        color: #5b636f;
+        margin-top: 8px;
+      }
+      /* Awaken cluster: status label + progress bar + phase, lower-left. */
+      .loader-awaken {
+        position: absolute;
+        left: 8%;
+        bottom: 15%;
+        width: min(38vw, 340px);
+        z-index: 2;
       }
       .loader-status {
-        position: relative;
-        z-index: 1;
-        color: rgba(255, 255, 255, 0.82);
-        font-size: 14px;
-        letter-spacing: 0;
+        color: #8b929d;
+        font-size: 13px;
+        letter-spacing: 0.01em;
+        margin-bottom: 10px;
       }
       .loader-phase {
-        position: relative;
-        z-index: 1;
         min-height: 14px;
-        color: rgba(255, 255, 255, 0.48);
-        font-family: "JetBrains Mono", monospace;
-        font-size: 10px;
-        letter-spacing: 0.02em;
-        text-align: center;
+        color: #8b929d;
+        font-size: 11px;
+        letter-spacing: 0.01em;
+        margin-top: 8px;
       }
       .loader-failure-details {
-        position: relative;
-        z-index: 1;
+        position: absolute;
+        left: 8%;
+        bottom: 6%;
+        z-index: 2;
         display: none;
         width: min(82vw, 560px);
-        color: rgba(255, 255, 255, 0.62);
+        color: #7a828c;
         font-family: "JetBrains Mono", monospace;
         font-size: 11px;
         line-height: 1.6;
         text-align: left;
         white-space: pre-wrap;
       }
+      .loader-progress {
+        position: relative;
+        width: 100%;
+        height: 3px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(43, 48, 58, 0.09);
+      }
+      .loader-progress::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #a6c6e8 0%, #cfe0f2 100%);
+        box-shadow: 0 0 10px rgba(127, 169, 216, 0.5);
+        transform-origin: left;
+        transform: scaleX(var(--loader-progress, 0.2));
+        transition: transform 520ms ease;
+      }
+      @keyframes loader-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      /* Failed state: re-center everything, hide face/spinner/bar. */
+      #root-loader[data-state="failed"] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+      }
       #root-loader[data-state="failed"] .loader-presence,
-      #root-loader[data-state="failed"] .loader-progress {
+      #root-loader[data-state="failed"] .loader-progress,
+      #root-loader[data-state="failed"] .loader-spinner {
         display: none;
+      }
+      #root-loader[data-state="failed"] .loader-brand,
+      #root-loader[data-state="failed"] .loader-awaken {
+        position: static;
+        transform: none;
+        width: auto;
+        text-align: center;
       }
       #root-loader[data-state="failed"] .loader-text {
         font-size: clamp(24px, 7vw, 38px);
-        letter-spacing: -0.04em;
-        line-height: 1.1;
         text-align: center;
       }
       #root-loader[data-state="failed"] .loader-text::after {
         content: none;
       }
       #root-loader[data-state="failed"] .loader-status {
+        color: #5b636f;
         max-width: min(82vw, 560px);
         text-align: center;
       }
@@ -307,45 +355,38 @@
         display: none;
       }
       #root-loader[data-state="failed"] .loader-failure-details {
+        position: static;
         display: block;
       }
-      .loader-progress {
-        position: relative;
-        z-index: 1;
-        width: min(74vw, 460px);
-        height: 1px;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.12);
-      }
-      .loader-progress::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0.55),
-          rgba(236, 254, 255, 0.86),
-          rgba(255, 255, 255, 0.36)
-        );
-        box-shadow: 0 0 22px rgba(205, 245, 255, 0.32);
-        transform-origin: left;
-        transform: scaleX(var(--loader-progress, 0.2));
-        transition: transform 520ms ease;
-      }
-      @media (max-height: 460px) {
-        #root-loader {
-          justify-content: flex-start;
-          padding-top: clamp(10px, 4dvh, 20px);
+      @media (prefers-reduced-motion: reduce) {
+        .loader-spinner {
+          animation: none;
         }
+      }
+      @media (max-width: 640px) {
         .loader-presence {
-          width: min(78vw, 50dvh, 420px);
-          max-height: 48dvh;
+          position: static;
+          height: 40vh;
+          max-width: 74vw;
+          margin: 8vh auto 0;
+          transform: none;
         }
-        .loader-hologram-face {
-          max-height: 48dvh;
+        .loader-brand {
+          position: static;
+          transform: none;
+          justify-content: center;
+          margin-top: 3vh;
         }
-        .loader-text::after {
-          display: none;
+        .loader-text {
+          font-size: 32px;
+          text-align: center;
+        }
+        .loader-awaken {
+          left: 50%;
+          transform: translateX(-50%);
+          bottom: 8%;
+          width: 74vw;
+          text-align: center;
         }
       }
     </style>
@@ -373,11 +414,18 @@
       <div class="loader-presence" aria-hidden="true">
         <img class="loader-hologram-face" src="/hologram.png" alt="" />
       </div>
-      <div class="loader-text">LucaOS</div>
-      <div class="loader-status">Starting LucaOS</div>
-      <div class="loader-phase">Preparing the app</div>
+      <div class="loader-brand">
+        <svg class="loader-spinner" viewBox="0 0 40 40" aria-hidden="true">
+          <circle cx="20" cy="20" r="16" />
+        </svg>
+        <div class="loader-text">LucaOS</div>
+      </div>
+      <div class="loader-awaken">
+        <div class="loader-status">Awakening Luca…</div>
+        <div class="loader-progress" aria-hidden="true"></div>
+        <div class="loader-phase">Preparing the app</div>
+      </div>
       <div class="loader-failure-details" aria-live="polite"></div>
-      <div class="loader-progress" aria-hidden="true"></div>
     </div>
     <div id="root"></div>
     <script>
