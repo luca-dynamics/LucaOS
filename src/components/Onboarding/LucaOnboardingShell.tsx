@@ -5,6 +5,7 @@ import {
   type LucaOnboardingSkinBoundarySurface,
 } from "../../styles/lucaOnboardingSkinBoundary";
 import type { LucaSkinHostKind } from "../../config/lucaSkins";
+import { lucaMaterialRootStyle } from "../../styles/lucaMaterialSystem";
 
 /**
  * LucaOnboardingShell — the local skin/presence wrapper for the premium
@@ -74,12 +75,11 @@ export const LucaOnboardingShell: React.FC<LucaOnboardingShellProps> = ({
 
   // Scope the resolved material + presence variables to this subtree only.
   const rootStyle: React.CSSProperties = {
+    ...lucaMaterialRootStyle,
     ...(boundary.materialVariables as React.CSSProperties),
     ...(boundary.presenceVariables as React.CSSProperties),
     position: "relative",
     overflow: "hidden",
-    background: "var(--luca-background-base)",
-    color: "var(--luca-text-primary)",
     ...style,
   };
 
@@ -87,6 +87,7 @@ export const LucaOnboardingShell: React.FC<LucaOnboardingShellProps> = ({
     <div
       data-luca-onboarding-shell={boundary.surface}
       data-luca-onboarding-skin={boundary.skinId}
+      data-luca-material-role="root"
       className={className}
       style={rootStyle}
     >

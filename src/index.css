@@ -732,46 +732,65 @@ html.luca-wco .luca-wco-pad-right {
  * Base panel/control/tab values live in src/styles/lucaShellStyles.ts so App.tsx
  * has a single token source of truth for shell surfaces and fallbacks.
  */
-.luca-shell-control:hover,
 .luca-shell-control:focus-visible {
   background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
   border-color: var(--luca-border-strong, var(--app-border-main)) !important;
   color: var(--luca-text-primary, var(--app-text-main)) !important;
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .luca-shell-control:hover {
+    background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
+    border-color: var(--luca-border-strong, var(--app-border-main)) !important;
+    color: var(--luca-text-primary, var(--app-text-main)) !important;
+  }
+}
+
 /* Frequent controls stay instant: only the physical press receives motion. */
-.luca-shell-control {
+.luca-shell-control,
+.luca-material-pressable {
   transition-property: transform, background-color, border-color, color;
   transition-duration: 140ms;
   transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.luca-shell-control:active {
+.luca-shell-control:active,
+.luca-material-pressable:active {
   transform: scale(0.97);
 }
 
-.luca-reduce-motion .luca-shell-control {
+.luca-reduce-motion .luca-shell-control,
+.luca-reduce-motion .luca-material-pressable {
   transition-duration: 0.01ms;
 }
 
-.luca-reduce-motion .luca-shell-control:active {
+.luca-reduce-motion .luca-shell-control:active,
+.luca-reduce-motion .luca-material-pressable:active {
   transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .luca-shell-control {
+  .luca-shell-control,
+  .luca-material-pressable {
     transition-duration: 0.01ms;
   }
 
-  .luca-shell-control:active {
+  .luca-shell-control:active,
+  .luca-material-pressable:active {
     transform: none;
   }
 }
 
-.luca-shell-tab:hover,
 .luca-shell-tab:focus-visible {
   background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
   color: var(--luca-text-primary, var(--app-text-main)) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .luca-shell-tab:hover {
+    background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
+    color: var(--luca-text-primary, var(--app-text-main)) !important;
+  }
 }
 
 .luca-shell-tab-active {

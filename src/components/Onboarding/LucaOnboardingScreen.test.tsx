@@ -34,6 +34,9 @@ describe("LucaOnboardingScreen", () => {
     }
     // Carbon is the recommended environment option.
     expect(markup).toContain('data-luca-onboarding-chip="recommended"');
+    expect(markup).toContain('data-luca-material-role="card"');
+    expect(markup).toContain('data-luca-material-role="control-active"');
+    expect(markup).toContain('class="luca-shell-control"');
   });
 
   it("marks the selected option (falling back to the map default) as checked", () => {
@@ -74,6 +77,19 @@ describe("LucaOnboardingScreen", () => {
     const finish = renderToStaticMarkup(<LucaOnboardingScreen screenId="finish" />);
     expect(finish).toContain('data-luca-presence-warm="true"');
     expect(welcome).not.toContain("data-luca-presence-warm");
+  });
+
+  it("keeps the primary action semantic while materializing secondary controls", () => {
+    const markup = renderToStaticMarkup(
+      <LucaOnboardingScreen screenId="environment" />,
+    );
+
+    expect(markup).toMatch(
+      /data-luca-onboarding-cta="primary" class="luca-material-pressable"/,
+    );
+    expect(markup).toMatch(
+      /data-luca-onboarding-cta="secondary" data-luca-material-role="control" class="luca-shell-control"/,
+    );
   });
 
   it("invokes CTA and option callbacks without performing side effects", () => {

@@ -24,6 +24,11 @@ import {
   useOnboardingConnectors,
   type ConnectorCatalogEntry,
 } from "./onboardingConnectors";
+import {
+  lucaMaterialCardStyle,
+  lucaMaterialControlActiveStyle,
+  lucaMaterialControlStyle,
+} from "../../styles/lucaMaterialSystem";
 
 /**
  * LucaOnboardingScreen — one pure, data-driven renderer for every premium
@@ -163,23 +168,22 @@ function OptionCard({
       role="radio"
       aria-checked={checked}
       data-luca-onboarding-option={option.id}
+      data-luca-material-role={checked ? "control-active" : "card"}
+      className="luca-shell-control"
       onClick={onSelect ? () => onSelect(option.id) : undefined}
       onMouseEnter={onPreview ? () => onPreview(option.id) : undefined}
       onMouseLeave={onPreview ? () => onPreview(null) : undefined}
       style={{
+        ...(checked ? lucaMaterialControlActiveStyle : lucaMaterialCardStyle),
         display: "block",
         width: "100%",
         textAlign: "left",
         cursor: onSelect ? "pointer" : "default",
         padding: "14px 16px",
         borderRadius: 14,
-        border: `1px solid ${
-          checked ? accent : "var(--luca-surface-hover)"
-        }`,
-        background: checked
-          ? "var(--luca-surface-hover)"
-          : "var(--luca-surface-glass)",
-        color: textPrimary,
+        borderWidth: 1,
+        borderStyle: "solid",
+        ...(checked ? { borderColor: accent } : {}),
         boxShadow: checked ? "var(--luca-shadow-soft)" : "none",
       }}
     >
@@ -278,11 +282,14 @@ function SkinOptionTile({
       role="radio"
       aria-checked={checked}
       data-luca-onboarding-option={option.id}
+      data-luca-material-role={checked ? "control-active" : "card"}
+      className="luca-shell-control"
       data-luca-onboarding-skin-option={option.id}
       onClick={onSelect ? () => onSelect(option.id) : undefined}
       onMouseEnter={onPreview ? () => onPreview(option.id) : undefined}
       onMouseLeave={onPreview ? () => onPreview(null) : undefined}
       style={{
+        ...(checked ? lucaMaterialControlActiveStyle : lucaMaterialCardStyle),
         display: "flex",
         minHeight: 138,
         flexDirection: "column",
@@ -291,11 +298,9 @@ function SkinOptionTile({
         cursor: onSelect ? "pointer" : "default",
         padding: 12,
         borderRadius: 16,
-        border: `1px solid ${checked ? accent : "var(--luca-surface-hover)"}`,
-        background: checked
-          ? "var(--luca-surface-hover)"
-          : "var(--luca-surface-glass)",
-        color: textPrimary,
+        borderWidth: 1,
+        borderStyle: "solid",
+        ...(checked ? { borderColor: accent } : {}),
         boxShadow: checked ? "var(--luca-shadow-soft)" : "none",
       }}
     >
@@ -361,10 +366,13 @@ function SurfaceMockupTile({
       role="radio"
       aria-checked={checked}
       data-luca-onboarding-option={option.id}
+      data-luca-material-role={checked ? "control-active" : "card"}
+      className="luca-shell-control"
       onClick={onSelect ? () => onSelect(option.id) : undefined}
       onMouseEnter={onPreview ? () => onPreview(option.id) : undefined}
       onMouseLeave={onPreview ? () => onPreview(null) : undefined}
       style={{
+        ...(checked ? lucaMaterialControlActiveStyle : lucaMaterialCardStyle),
         display: "flex",
         flexDirection: "column",
         gap: 8,
@@ -372,9 +380,9 @@ function SurfaceMockupTile({
         cursor: onSelect ? "pointer" : "default",
         padding: 10,
         borderRadius: 14,
-        border: `1px solid ${checked ? accent : "var(--luca-surface-hover)"}`,
-        background: checked ? "var(--luca-surface-hover)" : "var(--luca-surface-glass)",
-        color: textPrimary,
+        borderWidth: 1,
+        borderStyle: "solid",
+        ...(checked ? { borderColor: accent } : {}),
         boxShadow: checked ? "var(--luca-shadow-soft)" : "none",
       }}
     >
@@ -452,8 +460,11 @@ function ConnectorTile({
       data-luca-onboarding-connector={connector.id}
       data-luca-connector-mode={connectMode ? "connect" : "select"}
       data-luca-connector-selected={selected ? "true" : "false"}
+      data-luca-material-role={highlight ? "control-active" : "card"}
+      className="luca-shell-control"
       onClick={handleClick}
       style={{
+        ...(highlight ? lucaMaterialControlActiveStyle : lucaMaterialCardStyle),
         position: "relative",
         display: "flex",
         alignItems: "center",
@@ -463,12 +474,10 @@ function ConnectorTile({
         cursor: "pointer",
         padding: "14px 16px",
         borderRadius: 14,
-        border: `1px solid ${highlight ? accent : "var(--luca-surface-hover)"}`,
-        background: highlight
-          ? "var(--luca-surface-hover)"
-          : "var(--luca-surface-glass)",
+        borderWidth: 1,
+        borderStyle: "solid",
+        ...(highlight ? { borderColor: accent } : {}),
         boxShadow: highlight ? "var(--luca-shadow-soft)" : "none",
-        color: textPrimary,
       }}
     >
       <span
@@ -590,13 +599,17 @@ function OnboardingConnectorPanel({
     setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
   const selectedIds = Object.keys(selected).filter((id) => selected[id]);
   const selectedCount = selectedIds.length;
+  const onSelectionChangeRef = React.useRef(onSelectionChange);
+
+  React.useEffect(() => {
+    onSelectionChangeRef.current = onSelectionChange;
+  }, [onSelectionChange]);
 
   // Report the selection up (intent only) so the flow can persist it. Keyed on
   // the stable joined id string so we don't fire on unrelated re-renders.
   const selectionKey = selectedIds.join(",");
   React.useEffect(() => {
-    onSelectionChange?.(selectionKey ? selectionKey.split(",") : []);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    onSelectionChangeRef.current?.(selectionKey ? selectionKey.split(",") : []);
   }, [selectionKey]);
 
   // First-party connectors (same source as Settings) + any live MCP-registry
@@ -635,10 +648,13 @@ function OnboardingConnectorPanel({
         <button
           type="button"
           data-luca-onboarding-connectors-toggle
+          data-luca-material-role="control"
+          className="luca-shell-control"
           aria-expanded={expanded}
           aria-controls="luca-onboarding-connector-grid"
           onClick={() => setExpanded((v) => !v)}
           style={{
+            ...lucaMaterialControlStyle,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -647,9 +663,8 @@ function OnboardingConnectorPanel({
             margin: "12px 0 0",
             padding: "10px 14px",
             borderRadius: 12,
-            border: "1px solid var(--luca-surface-hover)",
-            background: "var(--luca-surface-glass)",
-            color: textSecondary,
+            borderWidth: 1,
+            borderStyle: "solid",
             fontSize: 13,
             fontWeight: 600,
             cursor: "pointer",
@@ -838,13 +853,14 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
             onChange={(event) => onNameChange(event.target.value)}
             autoComplete="off"
             placeholder="Your name"
+            data-luca-material-role="control"
             style={{
+              ...lucaMaterialControlStyle,
               width: "100%",
               padding: "11px 14px",
               borderRadius: 12,
-              border: "1px solid var(--luca-surface-hover)",
-              background: "var(--luca-surface-glass)",
-              color: textPrimary,
+              borderWidth: 1,
+              borderStyle: "solid",
               fontSize: 15,
             }}
           />
@@ -1044,6 +1060,7 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
         <button
           type="button"
           data-luca-onboarding-cta="primary"
+          className="luca-material-pressable"
           onClick={onPrimary}
           style={{
             cursor: onPrimary ? "pointer" : "default",
@@ -1063,16 +1080,18 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
           <button
             type="button"
             data-luca-onboarding-cta="secondary"
+            data-luca-material-role="control"
+            className="luca-shell-control"
             onClick={onSecondary}
             style={{
+              ...lucaMaterialControlStyle,
               cursor: onSecondary ? "pointer" : "default",
               padding: "11px 18px",
               borderRadius: 12,
-              border: "1px solid var(--luca-surface-hover)",
+              borderWidth: 1,
+              borderStyle: "solid",
               fontSize: 15,
               fontWeight: 500,
-              color: textSecondary,
-              background: "transparent",
             }}
           >
             {copy.secondaryCta}
