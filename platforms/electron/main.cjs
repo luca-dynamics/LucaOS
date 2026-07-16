@@ -531,11 +531,23 @@ function launchInterface(isSilent = false) {
         // (READY/ONBOARDING), signaled via window.luca.notifyReady -> 'renderer-ready'.
         // The native boot splash stays up through the entire React boot, so the
         // redundant in-app boot screen is never seen and the window never flashes empty.
+        //
+        // IMPORTANT: do NOT also reveal on 'ready-to-show' or 'did-finish-load' —
+        // both fire within a second or two of loading the URL, long before React
+        // has finished its own INIT/BIOS/KERNEL boot. Revealing on them exposed
+        // the in-app boot shell as a SECOND scanning-boot screen (with blank
+        // transition frames) before onboarding. 'renderer-ready' is the only
+        // trigger that means "the destination UI has actually painted"; the
+        // timeout below is the safety net if that signal never arrives.
         ipcMain.once('renderer-ready', () => show('renderer-ready'));
-        mainWindow.once('ready-to-show', () => show('ready-to-show'));
-        mainWindow.webContents.once('did-finish-load', () => show('did-finish-load'));
-        // Hard fallback so the window can never get stuck hidden if boot ever stalls.
-        fallbackTimer = setTimeout(() => show('timeout'), 12000);
+        // Hard fallback so the window can never get stuck hidden if boot ever
+        // stalls. It must be long enough to NEVER fire during a normal boot,
+        // or it reveals a still-booting (blank) window and closes the splash
+        // early. Dev cold-compiles the whole app through Vite before React even
+        // mounts (tens of seconds), so dev gets a much longer net than a
+        // packaged build where React paints in a second or two.
+        const revealTimeoutMs = app.isPackaged ? 20000 : 90000;
+        fallbackTimer = setTimeout(() => show('timeout'), revealTimeoutMs);
     } else {
         if (bootWindow) bootWindow.close();
     }
@@ -1296,6 +1308,28 @@ ipcMain.handle('get-local-ip', async () => {
     ipcMain.on('window-close', (event) => {
         const win = BrowserWindow.fromWebContents(event.sender);
         if (win) win.close();
+    });
+
+    // First-run onboarding: size the window to the default centered layout,
+    // ignoring any restored/maximized bounds from a prior session. READY
+    // (returning) sessions never call this, so their saved size is preserved.
+    ipcMain.on('window-center-default', (event) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        if (!win || win.isDestroyed()) return;
+        try {
+            const wa = screen.getDisplayMatching(win.getBounds()).workArea;
+            const mw = Math.min(1152, wa.width - 40);
+            const mh = Math.min(760, wa.height - 40);
+            if (win.isMaximized()) win.unmaximize();
+            win.setBounds({
+                width: mw,
+                height: mh,
+                x: wa.x + Math.floor((wa.width - mw) / 2),
+                y: wa.y + Math.floor((wa.height - mh) / 2),
+            });
+        } catch (e) {
+            console.warn('[MAIN] window-center-default failed:', e.message);
+        }
     });
 
     console.log("[MAIN] IPC Handlers Registered.");

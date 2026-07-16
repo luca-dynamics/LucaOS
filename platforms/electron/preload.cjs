@@ -24,6 +24,10 @@ expose('luca', {
     // Renderer tells the host it has painted its first frame, so main can reveal
     // the transparent window without flashing an empty desktop-bleed frame.
     notifyReady: () => ipcRenderer.send('renderer-ready'),
+    // Ask the host to size the window to the default centered layout — used for
+    // the first-run onboarding so it always opens comfortably centered,
+    // independent of any saved/maximized bounds from a prior session.
+    centerDefault: () => ipcRenderer.send('window-center-default'),
     onActiveWindowChange: (callback) => ipcRenderer.on('active-window-change', (event, data) => callback(data)),
     readClipboard: () => ipcRenderer.invoke('clipboard-read'),
     writeClipboard: (text) => ipcRenderer.invoke('clipboard-write', text),
