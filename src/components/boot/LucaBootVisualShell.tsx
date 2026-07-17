@@ -70,10 +70,11 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
       className="relative h-full min-h-screen w-full overflow-hidden font-sans"
       style={{
         ...bootSkinBoundary.materialVariables,
-        // Fixed light "Awakening Luca" environment, matching the native splash
-        // (boot.html) and the frontend loader so every boot surface is one look.
+        // Ice-blue glacier environment matched to the hologram's palette,
+        // identical to the native splash (boot.html) and the frontend loader
+        // so every boot surface is one look.
         background:
-          "radial-gradient(70% 90% at 68% 46%, #ffffff 0%, rgba(255,255,255,0) 55%), radial-gradient(120% 130% at 78% 40%, #f4f8fb 0%, #eef2f6 46%, #e4eaf0 100%)",
+          "radial-gradient(55% 70% at 72% 42%, rgba(238, 249, 251, 0.92) 0%, rgba(238, 249, 251, 0) 60%), radial-gradient(80% 100% at 18% 28%, rgba(243, 250, 252, 0.7) 0%, rgba(243, 250, 252, 0) 55%), linear-gradient(160deg, #e2edf2 0%, #d8e4ec 48%, #c9d9e3 100%)",
         color: "#2b303a",
       }}
       data-boot-shell="luca-hologram-face"

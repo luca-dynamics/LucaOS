@@ -134,12 +134,14 @@
       #root-loader {
         position: fixed;
         inset: 0;
-        /* Light frosted environment with a soft glow behind the face,
-           matching the native boot splash (boot.html). Pieces are positioned
-           absolutely below; the failed state re-centers them. */
+        /* Ice-blue glacier environment matched to the hologram's palette,
+           same as the native boot splash (boot.html): luminous glow behind
+           the face, soft light upper-left, cool base deepening at the edges.
+           Pieces are positioned absolutely below; failed state re-centers. */
         background:
-          radial-gradient(70% 90% at 68% 46%, #ffffff 0%, rgba(255,255,255,0) 55%),
-          radial-gradient(120% 130% at 78% 40%, #f4f8fb 0%, #eef2f6 46%, #e4eaf0 100%);
+          radial-gradient(55% 70% at 72% 42%, rgba(238, 249, 251, 0.92) 0%, rgba(238, 249, 251, 0) 60%),
+          radial-gradient(80% 100% at 18% 28%, rgba(243, 250, 252, 0.7) 0%, rgba(243, 250, 252, 0) 55%),
+          linear-gradient(160deg, #e2edf2 0%, #d8e4ec 48%, #c9d9e3 100%);
         display: block;
         z-index: 9999;
         font-family: "Segoe UI Variable Display", Inter, "Segoe UI", system-ui, sans-serif;
