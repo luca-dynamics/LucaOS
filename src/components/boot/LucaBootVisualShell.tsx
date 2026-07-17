@@ -12,13 +12,6 @@ import {
   lucaBootProgressBySequence,
   type BiosStatus,
 } from "./lucaBootVisualShellModel";
-import { EdgePresence } from "../presence";
-import type { PresenceIntent } from "../presence";
-import {
-  lucaShellPrimaryTextStyle,
-  lucaShellSecondaryTextStyle,
-  lucaShellTertiaryTextStyle,
-} from "../../styles/lucaShellStyles";
 import { resolveLucaBootSkinBoundary } from "../../styles/lucaBootSkinBoundary";
 
 type BootTheme = {
@@ -32,16 +25,6 @@ const LUCA_BRAND_DISPLAY_STYLE: React.CSSProperties = {
     '"Segoe UI Variable Display", Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
   fontWeight: 650,
   letterSpacing: "-0.045em",
-};
-
-// Boot reads as Luca incarnating into this host: reasoning about the machine,
-// then acting, then settling — ready to meet you.
-const BOOT_INTENT: Partial<Record<BootSequence, PresenceIntent>> = {
-  INIT: "thinking",
-  BIOS: "thinking",
-  KERNEL: "working",
-  ONBOARDING: "listening",
-  READY: "idle",
 };
 
 interface LucaBootVisualShellProps {
@@ -58,7 +41,6 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
   browserSafeInterface = false,
 }) => {
   const bootCopy = getLucaBootSequenceCopy(bootSequence);
-  const identityCopy = getLucaBootDiagnosticCopy("biosIdentity");
   const readinessItems = browserSafeInterface
     ? buildBrowserSafeLucaBootReadinessItems()
     : buildLucaBootReadinessItems(bootSequence, biosStatus);
@@ -74,9 +56,6 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
   const statusDetail = browserSafeInterface
     ? LUCA_BROWSER_SAFE_BOOT_STATUS.detail
     : getLucaBootDiagnosticCopy("loadingLucaOs").standardLabel;
-  const bootIntent: PresenceIntent = browserSafeInterface
-    ? "idle"
-    : BOOT_INTENT[bootSequence] ?? "thinking";
   const bootSkinBoundary = useMemo(
     () =>
       resolveLucaBootSkinBoundary({
@@ -88,102 +67,118 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
 
   return (
     <div
-      className="relative flex h-full min-h-screen w-full items-center justify-center overflow-hidden px-5 py-7 font-sans sm:px-8 sm:py-10"
+      className="relative h-full min-h-screen w-full overflow-hidden font-sans"
       style={{
         ...bootSkinBoundary.materialVariables,
-        background: "var(--luca-background-base, #101215)",
-        color: "var(--luca-text-primary, #f4f6f8)",
+        // Ice-blue glacier environment matched to the hologram's palette,
+        // identical to the native splash (boot.html) and the frontend loader
+        // so every boot surface is one look.
+        background:
+          "radial-gradient(55% 70% at 72% 42%, rgba(238, 249, 251, 0.92) 0%, rgba(238, 249, 251, 0) 60%), radial-gradient(80% 100% at 18% 28%, rgba(243, 250, 252, 0.7) 0%, rgba(243, 250, 252, 0) 55%), linear-gradient(160deg, #e2edf2 0%, #d8e4ec 48%, #c9d9e3 100%)",
+        color: "#2b303a",
       }}
       data-boot-shell="luca-hologram-face"
     >
-      {/* Presence edge glow removed for a cleaner frameless look. */}
+      {/* The Luca hologram face, large and center-right. */}
       <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--luca-surface-hover, var(--app-bg-tint)) 42%, transparent), transparent 30%), var(--luca-background-liquid, linear-gradient(180deg, var(--luca-background-elevated, var(--app-bg-tint)) 0%, var(--luca-background-base, var(--app-bg-main)) 100%))",
-        }}
-      />
-      <div className="pointer-events-none absolute left-1/2 top-[31%] h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[color-mix(in_srgb,var(--luca-accent-soft,#4f8cff)_12%,transparent)] blur-3xl sm:h-[32rem] sm:w-[32rem]" />
+        className="pointer-events-none absolute right-[6%] top-1/2 flex -translate-y-1/2 justify-center"
+        data-boot-visual="landing-hologram-face"
+        aria-hidden="true"
+      >
+        <img
+          src={launchIdentity.assetSrc}
+          alt=""
+          aria-hidden="true"
+          className="h-[min(86vh,640px)] w-auto max-w-[52vw] animate-[luca-hologram-breathe_6.4s_ease-in-out_infinite] object-contain"
+          style={{
+            // High-key blend: lightened + desaturated into the pale
+            // environment; the neck/shoulders dissolve through a bottom
+            // gradient mask (matches boot.html + the frontend loader).
+            opacity: 0.82,
+            filter:
+              "brightness(1.32) saturate(0.62) contrast(0.94) drop-shadow(0 24px 70px rgba(120, 160, 205, 0.22))",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%)",
+            maskImage:
+              "linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%)",
+          }}
+        />
+      </div>
 
+      {/* Brand: dotted spinner + wordmark + subtitle, center-left. */}
       <section
         aria-label="LucaOS startup"
-        className="relative z-10 flex w-full max-w-4xl flex-col items-center text-center"
+        className="absolute left-[8%] top-[46%] z-10 flex -translate-y-1/2 flex-col items-center"
       >
-        <div
-          className="relative flex w-full justify-center"
-          data-boot-visual="landing-hologram-face"
-          aria-hidden="true"
-        >
-          <div className="absolute left-1/2 top-[57%] h-24 w-[72%] max-w-[34rem] -translate-x-1/2 rounded-[100%] bg-[color-mix(in_srgb,var(--luca-accent-soft,#4f8cff)_12%,transparent)]/[0.07] blur-2xl" />
-          <img
-            src={launchIdentity.assetSrc}
-            alt=""
+        {/* Spinner + wordmark on one line; subtitle centered below. */}
+        <div className="flex items-center gap-4">
+          <svg
+            className="h-[34px] w-[34px] animate-spin [animation-duration:1.5s]"
+            viewBox="0 0 40 40"
             aria-hidden="true"
-            className="relative h-auto w-[min(78vw,24rem)] max-w-none animate-[luca-hologram-breathe_6.4s_ease-in-out_infinite] object-contain sm:w-[min(46vw,27rem)]"
-            style={{
-              opacity: launchIdentity.markOpacity,
-              filter: "drop-shadow(var(--luca-shadow-glow))",
-            }}
-          />
-        </div>
-
-        <div className="relative -mt-8 flex flex-col items-center gap-2 sm:-mt-10">
+            fill="#8b929d"
+          >
+            <circle cx="20" cy="5" r="2.6" opacity="1" />
+            <circle cx="30.6" cy="9.4" r="2.4" opacity="0.85" />
+            <circle cx="35" cy="20" r="2.2" opacity="0.72" />
+            <circle cx="30.6" cy="30.6" r="2" opacity="0.58" />
+            <circle cx="20" cy="35" r="1.9" opacity="0.44" />
+            <circle cx="9.4" cy="30.6" r="1.8" opacity="0.32" />
+            <circle cx="5" cy="20" r="1.7" opacity="0.22" />
+            <circle cx="9.4" cy="9.4" r="1.6" opacity="0.15" />
+          </svg>
           <h1
-            className="text-5xl sm:text-7xl"
-            style={{
-              ...lucaShellPrimaryTextStyle,
-              ...LUCA_BRAND_DISPLAY_STYLE,
-            }}
+            className="text-[46px] leading-none"
+            style={{ ...LUCA_BRAND_DISPLAY_STYLE, fontWeight: 600, color: "#2b303a" }}
           >
             LucaOS
           </h1>
-          <p
-            className="text-sm font-medium sm:text-base"
-            style={lucaShellSecondaryTextStyle}
-          >
-            {launchIdentity.subtitle}
-          </p>
-          <p className="mt-3 text-sm sm:text-base" style={lucaShellSecondaryTextStyle}>
-            {statusHeadline}
-          </p>
-          <p className="text-xs sm:text-sm" style={lucaShellTertiaryTextStyle}>{statusDetail}</p>
         </div>
+        <p className="mt-2 text-center text-[15px]" style={{ color: "#5b636f" }}>
+          Host-native personal AI OS
+        </p>
+      </section>
 
-        <div className="mt-6 h-px w-full max-w-xl overflow-hidden"
-          style={{ background: "var(--luca-border-subtle, var(--app-border-main))" }}>
+      {/* Awaken cluster: status label + progress bar + phase, lower-left. */}
+      <div className="absolute bottom-[15%] left-[8%] z-10 w-[min(38vw,340px)]">
+        <p className="mb-2.5 text-[13px]" style={{ color: "#8b929d" }}>
+          {statusHeadline}
+        </p>
+        <div
+          className="h-[3px] w-full overflow-hidden rounded-full"
+          style={{ background: "rgba(43, 48, 58, 0.09)" }}
+        >
           <div
-            className="h-full transition-all duration-700 ease-out"
+            className="h-full rounded-full transition-all duration-700 ease-out"
             style={{
               width: `${progress}%`,
-              background:
-                "linear-gradient(90deg, color-mix(in srgb, var(--luca-text-primary, var(--app-text-main)) 48%, transparent), var(--luca-accent-soft), color-mix(in srgb, var(--luca-text-primary, var(--app-text-main)) 30%, transparent))",
-              boxShadow: "var(--luca-shadow-glow)",
+              background: "linear-gradient(90deg, #a6c6e8 0%, #cfe0f2 100%)",
+              boxShadow: "0 0 10px rgba(127, 169, 216, 0.5)",
             }}
           />
         </div>
+        <p className="mt-2 text-[11px]" style={{ color: "#8b929d" }}>
+          {statusDetail}
+        </p>
+      </div>
 
-        <div className="mt-6 grid w-full max-w-xl grid-cols-1 gap-2 text-left sm:grid-cols-2">
-          {readinessItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-baseline justify-between gap-5 border-b py-2.5"
-              style={{ borderColor: "var(--luca-border-subtle, var(--app-border-main))" }}
+      {/* Honest boot detail — the readiness lines (and browser-safe wording),
+          tucked subtly bottom-right so the layout stays clean. */}
+      <div className="absolute bottom-[8%] right-[6%] z-10 hidden max-w-xs flex-col gap-1.5 text-right sm:flex">
+        {readinessItems.map((item) => (
+          <div key={item.id} className="flex items-baseline justify-between gap-4">
+            <span className="text-[11px]" style={{ color: "#8b929d" }}>
+              {item.detail}
+            </span>
+            <span
+              className="shrink-0 text-[9px] font-medium uppercase tracking-[0.16em]"
+              style={{ color: "#a3a9b2" }}
             >
-              <span className="text-sm" style={lucaShellSecondaryTextStyle}>{item.detail}</span>
-              <span className="shrink-0 text-[0.68rem] font-medium uppercase tracking-[0.18em]" style={lucaShellSecondaryTextStyle}>
-                {item.statusLabel}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-6 max-w-xl text-xs leading-5" style={lucaShellTertiaryTextStyle}>
-          {browserSafeInterface
-            ? "Desktop and local-runtime capabilities stay guarded after the browser app shell loads."
-            : `${identityCopy.tacticalLabel} · ${bootCopy.diagnosticMeaning}`}
-        </div>
-      </section>
+              {item.statusLabel}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
