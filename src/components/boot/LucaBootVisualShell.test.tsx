@@ -27,7 +27,7 @@ describe("LucaBootVisualShell", () => {
     expect(html).toContain("data-boot-visual=\"landing-hologram-face\"");
     expect(html).toContain("/hologram.png");
     expect(html).toContain("LucaOS");
-    expect(html).toContain("Host-native AI operating system");
+    expect(html).toContain("Host-native personal AI OS");
     expect(html).toContain("Entering browser host");
     expect(html).toContain("Web surface ready");
     expect(html).toContain("Actions remain permissioned");
