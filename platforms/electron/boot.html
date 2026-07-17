@@ -83,7 +83,14 @@
             width: auto;
             max-width: 52vw;
             object-fit: contain;
-            filter: drop-shadow(0 24px 70px rgba(120, 160, 205, 0.28));
+            /* High-key blend: lightened + desaturated into the pale
+               environment, with the neck/shoulders dissolving out through a
+               bottom gradient mask (per the reference frame). */
+            opacity: 0.82;
+            filter: brightness(1.32) saturate(0.62) contrast(0.94)
+                drop-shadow(0 24px 70px rgba(120, 160, 205, 0.22));
+            -webkit-mask-image: linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%);
+            mask-image: linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%);
             pointer-events: none;
             user-select: none;
         }
@@ -93,21 +100,25 @@
             left: 8%;
             top: 46%;
             transform: translateY(-50%);
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* Spinner + wordmark share one row (spinner centered on the LucaOS
+           line); the subtitle sits centered on the line below. */
+        .brand-line {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 16px;
         }
         .spinner {
             width: 34px; height: 34px;
             flex: none;
             animation: spin 1.5s linear infinite;
         }
-        .spinner circle {
-            stroke: var(--ink-3);
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-dasharray: 0.1 7.6;
-            fill: none;
+        .spinner circle,
+        .titletag .mini circle {
+            fill: var(--ink-3);
         }
         .wordmark {
             font-size: 46px;
@@ -120,6 +131,7 @@
             font-size: 15px;
             color: var(--ink-2);
             margin-top: 8px;
+            text-align: center;
             letter-spacing: 0.01em;
         }
         /* Lower-left progress cluster. */
@@ -164,12 +176,15 @@
             .spinner, .titletag .mini { animation: none; }
             .bar { transition-duration: 0.01ms; }
         }
-        /* Narrow window (mobile companion): stack centered vertically. */
+        /* Small window (the native 600x400 splash): one centered column —
+           face, then spinner + LucaOS with the subtitle beneath, then the
+           progress cluster. Everything shares the same center axis. */
         @media (max-width: 640px) {
-            .face { position: static; display: block; margin: 8vh auto 0; height: 42vh; max-width: 74vw; transform: none; }
-            .brand { position: static; transform: none; justify-content: center; margin-top: 4vh; }
+            .face { position: static; display: block; margin: 5vh auto 0; height: 38vh; max-width: 70vw; transform: none; }
+            .brand { position: static; transform: none; display: flex; width: fit-content; margin: 3.5vh auto 0; }
             .wordmark { font-size: 34px; }
-            .awaken { position: absolute; left: 50%; transform: translateX(-50%); bottom: 9%; width: 74vw; text-align: center; }
+            .spinner { width: 26px; height: 26px; }
+            .awaken { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8%; width: 74vw; text-align: center; }
             .headline { text-align: center; }
         }
     </style>
@@ -177,7 +192,14 @@
 <body>
     <div class="titletag">
         <svg class="mini" viewBox="0 0 40 40" aria-hidden="true">
-            <circle cx="20" cy="20" r="16" />
+            <circle cx="20" cy="5" r="2.6" opacity="1" />
+            <circle cx="30.6" cy="9.4" r="2.4" opacity="0.85" />
+            <circle cx="35" cy="20" r="2.2" opacity="0.72" />
+            <circle cx="30.6" cy="30.6" r="2" opacity="0.58" />
+            <circle cx="20" cy="35" r="1.9" opacity="0.44" />
+            <circle cx="9.4" cy="30.6" r="1.8" opacity="0.32" />
+            <circle cx="5" cy="20" r="1.7" opacity="0.22" />
+            <circle cx="9.4" cy="9.4" r="1.6" opacity="0.15" />
         </svg>
         LucaOS
     </div>
@@ -202,13 +224,20 @@
     <div class="stage">
         <img class="face" src="luca-hologram.png" alt="Luca" />
         <div class="brand">
-            <svg class="spinner" viewBox="0 0 40 40" aria-hidden="true">
-                <circle cx="20" cy="20" r="16" />
-            </svg>
-            <div class="brand-text">
+            <div class="brand-line">
+                <svg class="spinner" viewBox="0 0 40 40" aria-hidden="true">
+                    <circle cx="20" cy="5" r="2.6" opacity="1" />
+                    <circle cx="30.6" cy="9.4" r="2.4" opacity="0.85" />
+                    <circle cx="35" cy="20" r="2.2" opacity="0.72" />
+                    <circle cx="30.6" cy="30.6" r="2" opacity="0.58" />
+                    <circle cx="20" cy="35" r="1.9" opacity="0.44" />
+                    <circle cx="9.4" cy="30.6" r="1.8" opacity="0.32" />
+                    <circle cx="5" cy="20" r="1.7" opacity="0.22" />
+                    <circle cx="9.4" cy="9.4" r="1.6" opacity="0.15" />
+                </svg>
                 <div class="wordmark">LucaOS</div>
-                <div class="subtitle">Host-native personal AI OS</div>
             </div>
+            <div class="subtitle">Host-native personal AI OS</div>
         </div>
         <div class="awaken">
             <div class="headline" id="status">Awakening Luca…</div>

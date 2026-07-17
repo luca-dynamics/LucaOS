@@ -203,8 +203,13 @@
         height: 100%;
         max-width: 100%;
         object-fit: contain;
-        opacity: 0.96;
-        filter: drop-shadow(0 24px 70px rgba(120, 160, 205, 0.28));
+        /* High-key blend: lightened + desaturated into the pale environment,
+           with the neck/shoulders dissolving through a bottom gradient mask. */
+        opacity: 0.82;
+        filter: brightness(1.32) saturate(0.62) contrast(0.94)
+          drop-shadow(0 24px 70px rgba(120, 160, 205, 0.22));
+        -webkit-mask-image: linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%);
+        mask-image: linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%);
       }
       /* Brand: spinner + wordmark + subtitle, center-left. */
       .loader-brand {
@@ -213,9 +218,16 @@
         top: 46%;
         transform: translateY(-50%);
         z-index: 2;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      /* Spinner + wordmark share one row (spinner centered on the LucaOS
+         line); the subtitle sits centered on the line below. */
+      .loader-brand-line {
         display: flex;
         align-items: center;
-        gap: 20px;
+        gap: 16px;
       }
       .loader-spinner {
         width: 34px;
@@ -224,19 +236,11 @@
         animation: loader-spin 1.5s linear infinite;
       }
       .loader-spinner circle {
-        stroke: #8b929d;
-        stroke-width: 3;
-        stroke-linecap: round;
-        stroke-dasharray: 0.1 7.6;
-        fill: none;
+        fill: #8b929d;
       }
       .loader-text {
         position: relative;
         z-index: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
         font-family:
           "Segoe UI Variable Display",
           Inter,
@@ -251,14 +255,13 @@
         line-height: 1;
         color: #2b303a;
       }
-      .loader-text::after {
-        content: "Host-native personal AI OS";
-        display: block;
+      .loader-subtitle {
+        margin-top: 8px;
+        text-align: center;
         font-size: 15px;
         letter-spacing: 0.01em;
         font-weight: 500;
         color: #5b636f;
-        margin-top: 8px;
       }
       /* Awaken cluster: status label + progress bar + phase, lower-left. */
       .loader-awaken {
@@ -343,8 +346,8 @@
         font-size: clamp(24px, 7vw, 38px);
         text-align: center;
       }
-      #root-loader[data-state="failed"] .loader-text::after {
-        content: none;
+      #root-loader[data-state="failed"] .loader-subtitle {
+        display: none;
       }
       #root-loader[data-state="failed"] .loader-status {
         color: #5b636f;
@@ -374,8 +377,9 @@
         .loader-brand {
           position: static;
           transform: none;
-          justify-content: center;
-          margin-top: 3vh;
+          display: flex;
+          width: fit-content;
+          margin: 3.5vh auto 0;
         }
         .loader-text {
           font-size: 32px;
@@ -415,10 +419,20 @@
         <img class="loader-hologram-face" src="/hologram.png" alt="" />
       </div>
       <div class="loader-brand">
-        <svg class="loader-spinner" viewBox="0 0 40 40" aria-hidden="true">
-          <circle cx="20" cy="20" r="16" />
-        </svg>
-        <div class="loader-text">LucaOS</div>
+        <div class="loader-brand-line">
+          <svg class="loader-spinner" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="5" r="2.6" opacity="1" />
+            <circle cx="30.6" cy="9.4" r="2.4" opacity="0.85" />
+            <circle cx="35" cy="20" r="2.2" opacity="0.72" />
+            <circle cx="30.6" cy="30.6" r="2" opacity="0.58" />
+            <circle cx="20" cy="35" r="1.9" opacity="0.44" />
+            <circle cx="9.4" cy="30.6" r="1.8" opacity="0.32" />
+            <circle cx="5" cy="20" r="1.7" opacity="0.22" />
+            <circle cx="9.4" cy="9.4" r="1.6" opacity="0.15" />
+          </svg>
+          <div class="loader-text">LucaOS</div>
+        </div>
+        <div class="loader-subtitle">Host-native personal AI OS</div>
       </div>
       <div class="loader-awaken">
         <div class="loader-status">Awakening Luca…</div>

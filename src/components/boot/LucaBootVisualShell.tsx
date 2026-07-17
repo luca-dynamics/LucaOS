@@ -90,8 +90,16 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           aria-hidden="true"
           className="h-[min(86vh,640px)] w-auto max-w-[52vw] animate-[luca-hologram-breathe_6.4s_ease-in-out_infinite] object-contain"
           style={{
-            opacity: launchIdentity.markOpacity,
-            filter: "drop-shadow(0 24px 70px rgba(120, 160, 205, 0.28))",
+            // High-key blend: lightened + desaturated into the pale
+            // environment; the neck/shoulders dissolve through a bottom
+            // gradient mask (matches boot.html + the frontend loader).
+            opacity: 0.82,
+            filter:
+              "brightness(1.32) saturate(0.62) contrast(0.94) drop-shadow(0 24px 70px rgba(120, 160, 205, 0.22))",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%)",
+            maskImage:
+              "linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%)",
           }}
         />
       </div>
@@ -99,35 +107,35 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
       {/* Brand: dotted spinner + wordmark + subtitle, center-left. */}
       <section
         aria-label="LucaOS startup"
-        className="absolute left-[8%] top-[46%] z-10 flex -translate-y-1/2 items-center gap-5"
+        className="absolute left-[8%] top-[46%] z-10 flex -translate-y-1/2 flex-col items-center"
       >
-        <svg
-          className="h-[34px] w-[34px] animate-spin [animation-duration:1.5s]"
-          viewBox="0 0 40 40"
-          aria-hidden="true"
-        >
-          <circle
-            cx="20"
-            cy="20"
-            r="16"
-            fill="none"
-            stroke="#8b929d"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeDasharray="0.1 7.6"
-          />
-        </svg>
-        <div>
+        {/* Spinner + wordmark on one line; subtitle centered below. */}
+        <div className="flex items-center gap-4">
+          <svg
+            className="h-[34px] w-[34px] animate-spin [animation-duration:1.5s]"
+            viewBox="0 0 40 40"
+            aria-hidden="true"
+            fill="#8b929d"
+          >
+            <circle cx="20" cy="5" r="2.6" opacity="1" />
+            <circle cx="30.6" cy="9.4" r="2.4" opacity="0.85" />
+            <circle cx="35" cy="20" r="2.2" opacity="0.72" />
+            <circle cx="30.6" cy="30.6" r="2" opacity="0.58" />
+            <circle cx="20" cy="35" r="1.9" opacity="0.44" />
+            <circle cx="9.4" cy="30.6" r="1.8" opacity="0.32" />
+            <circle cx="5" cy="20" r="1.7" opacity="0.22" />
+            <circle cx="9.4" cy="9.4" r="1.6" opacity="0.15" />
+          </svg>
           <h1
             className="text-[46px] leading-none"
             style={{ ...LUCA_BRAND_DISPLAY_STYLE, fontWeight: 600, color: "#2b303a" }}
           >
             LucaOS
           </h1>
-          <p className="mt-2 text-[15px]" style={{ color: "#5b636f" }}>
-            Host-native personal AI OS
-          </p>
         </div>
+        <p className="mt-2 text-center text-[15px]" style={{ color: "#5b636f" }}>
+          Host-native personal AI OS
+        </p>
       </section>
 
       {/* Awaken cluster: status label + progress bar + phase, lower-left. */}
