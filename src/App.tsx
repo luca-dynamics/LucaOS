@@ -394,8 +394,13 @@ function AppContent() {
       // Wait for the destination UI (onboarding/dashboard) to actually paint in
       // the still-hidden window before revealing it — so the boot splash hands
       // off straight to onboarding with no black holding-screen flash in between.
+      // Onboarding gets a longer settle: its dark backdrop paints instantly but
+      // its content ANIMATES in, so an early reveal lands on an empty near-black
+      // frame. Holding the light splash ~500ms longer means the reveal arrives
+      // with the onboarding cards already fading in.
+      const settleMs = bootSequence === "ONBOARDING" ? 550 : 80;
       requestAnimationFrame(() =>
-        requestAnimationFrame(() => setTimeout(reveal, 80)),
+        requestAnimationFrame(() => setTimeout(reveal, settleMs)),
       );
     }
   }, [bootSequence]);

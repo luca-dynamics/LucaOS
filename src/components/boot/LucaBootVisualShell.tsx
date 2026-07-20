@@ -80,6 +80,10 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
       data-boot-shell="luca-hologram-face"
     >
       {/* The Luca hologram face, large and center-right. */}
+      {/* High-key blend: lightened + desaturated into the pale environment,
+          a gentle silhouette glow, and a mask pair (bottom fade ∩ soft
+          ellipse) so shoulders and hair edges soften into the background
+          (matches boot.html + the frontend loader). */}
       <div
         className="pointer-events-none absolute right-[6%] top-1/2 flex -translate-y-1/2 justify-center"
         data-boot-visual="landing-hologram-face"
@@ -89,18 +93,17 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           src={launchIdentity.assetSrc}
           alt=""
           aria-hidden="true"
-          className="h-[min(86vh,640px)] w-auto max-w-[52vw] animate-[luca-hologram-breathe_6.4s_ease-in-out_infinite] object-contain"
+          className="relative h-[min(86vh,640px)] w-auto max-w-[52vw] animate-[luca-hologram-breathe_6.4s_ease-in-out_infinite] object-contain"
           style={{
-            // High-key blend: lightened + desaturated into the pale
-            // environment; the neck/shoulders dissolve through a bottom
-            // gradient mask (matches boot.html + the frontend loader).
-            opacity: 0.82,
+            opacity: 0.85,
             filter:
-              "brightness(1.32) saturate(0.62) contrast(0.94) drop-shadow(0 24px 70px rgba(120, 160, 205, 0.22))",
+              "brightness(1.32) saturate(0.62) contrast(0.94) drop-shadow(0 0 18px rgba(216, 243, 248, 0.55))",
             WebkitMaskImage:
-              "linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%)",
+              "linear-gradient(to bottom, black 54%, rgba(0, 0, 0, 0.55) 75%, transparent 94%), radial-gradient(ellipse 70% 66% at 50% 42%, black 50%, rgba(0, 0, 0, 0.55) 76%, transparent 96%)",
+            WebkitMaskComposite: "source-in",
             maskImage:
-              "linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%)",
+              "linear-gradient(to bottom, black 54%, rgba(0, 0, 0, 0.55) 75%, transparent 94%), radial-gradient(ellipse 70% 66% at 50% 42%, black 50%, rgba(0, 0, 0, 0.55) 76%, transparent 96%)",
+            maskComposite: "intersect",
           }}
         />
       </div>

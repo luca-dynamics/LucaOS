@@ -198,6 +198,9 @@
         place-items: center;
         z-index: 1;
       }
+      /* High-key blend: lightened + desaturated into the pale environment,
+         a gentle silhouette glow, and a mask pair (bottom fade ∩ soft
+         ellipse) so shoulders and hair edges soften into the background. */
       .loader-hologram-face {
         position: relative;
         z-index: 1;
@@ -205,13 +208,17 @@
         height: 100%;
         max-width: 100%;
         object-fit: contain;
-        /* High-key blend: lightened + desaturated into the pale environment,
-           with the neck/shoulders dissolving through a bottom gradient mask. */
-        opacity: 0.82;
+        opacity: 0.85;
         filter: brightness(1.32) saturate(0.62) contrast(0.94)
-          drop-shadow(0 24px 70px rgba(120, 160, 205, 0.22));
-        -webkit-mask-image: linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%);
-        mask-image: linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%);
+          drop-shadow(0 0 18px rgba(216, 243, 248, 0.55));
+        -webkit-mask-image:
+          linear-gradient(to bottom, black 54%, rgba(0, 0, 0, 0.55) 75%, transparent 94%),
+          radial-gradient(ellipse 70% 66% at 50% 42%, black 50%, rgba(0, 0, 0, 0.55) 76%, transparent 96%);
+        -webkit-mask-composite: source-in;
+        mask-image:
+          linear-gradient(to bottom, black 54%, rgba(0, 0, 0, 0.55) 75%, transparent 94%),
+          radial-gradient(ellipse 70% 66% at 50% 42%, black 50%, rgba(0, 0, 0, 0.55) 76%, transparent 96%);
+        mask-composite: intersect;
       }
       /* Brand: spinner + wordmark + subtitle, center-left. */
       .loader-brand {
@@ -264,6 +271,130 @@
         letter-spacing: 0.01em;
         font-weight: 500;
         color: #5b636f;
+      }
+      /* "Starting LucaOS" readiness-checklist layout (the second boot). Left
+         panel with brand tag, heading, subtitle and the checklist card; the
+         hologram face sits on the right via .loader-presence. */
+      .loader-panel {
+        position: absolute;
+        left: 8%;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 2;
+        width: min(32vw, 300px);
+      }
+      /* The brand row is now the sole title: comet spinner + "Starting
+         LucaOS" at heading scale, so there's only one wordmark on screen. */
+      .loader-brandtag {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin-bottom: 12px;
+        font-family: "Segoe UI Variable Display", Inter, "Segoe UI", system-ui, sans-serif;
+        font-size: clamp(28px, 4vw, 40px);
+        font-weight: 600;
+        letter-spacing: -0.025em;
+        line-height: 1.05;
+        color: #2b303a;
+      }
+      .loader-brandtag .loader-spinner {
+        width: 30px;
+        height: 30px;
+        flex: none;
+      }
+      .loader-lead {
+        margin: 0 0 24px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        color: #6b7480;
+      }
+      .loader-card {
+        border-radius: 15px;
+        /* Glassmorphic panel: a frosted, faintly graduated translucent fill
+           over a strong blur+saturate of the ice-blue backdrop, a bright top
+           edge, and a soft inner highlight so it reads as lit glass. */
+        border: 1px solid rgba(255, 255, 255, 0.55);
+        background: linear-gradient(
+          150deg,
+          rgba(255, 255, 255, 0.42) 0%,
+          rgba(255, 255, 255, 0.24) 55%,
+          rgba(233, 242, 248, 0.28) 100%
+        );
+        box-shadow:
+          0 18px 50px rgba(120, 150, 190, 0.18),
+          inset 0 1px 0 rgba(255, 255, 255, 0.7),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+        -webkit-backdrop-filter: blur(20px) saturate(1.4);
+        backdrop-filter: blur(20px) saturate(1.4);
+        padding: 6px;
+      }
+      .loader-check {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 8px 11px;
+        border-radius: 10px;
+        transition: opacity 320ms ease, background 320ms ease;
+      }
+      .loader-check[data-state="pending"] {
+        opacity: 0.42;
+      }
+      .loader-check-icon {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 17px;
+        height: 17px;
+        color: #7a828c;
+      }
+      .loader-check-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .loader-check-title {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: #2b303a;
+      }
+      .loader-check-detail {
+        margin-top: 1px;
+        font-size: 11px;
+        color: #8b929d;
+      }
+      .loader-check-status {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10.5px;
+        color: #8b929d;
+      }
+      .loader-check-tick {
+        width: 15px;
+        height: 15px;
+        color: #5c9e78;
+      }
+      .loader-mini-spin {
+        width: 13px;
+        height: 13px;
+        animation: loader-spin 1.2s linear infinite;
+      }
+      .loader-mini-spin circle {
+        fill: #9aa3ad;
+      }
+      .loader-card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 5px;
+        padding: 6px 11px 5px;
+        font-size: 10.5px;
+        color: #8b929d;
+      }
+      .loader-card-foot svg {
+        width: 12px;
+        height: 12px;
       }
       /* Awaken cluster: status label + progress bar + phase, lower-left. */
       .loader-awaken {
@@ -337,16 +468,16 @@
       #root-loader[data-state="failed"] .loader-spinner {
         display: none;
       }
-      #root-loader[data-state="failed"] .loader-brand,
-      #root-loader[data-state="failed"] .loader-awaken {
+      #root-loader[data-state="failed"] .loader-panel {
         position: static;
         transform: none;
-        width: auto;
+        width: min(90vw, 560px);
+        margin: 12vh auto 0;
         text-align: center;
       }
-      #root-loader[data-state="failed"] .loader-text {
-        font-size: clamp(24px, 7vw, 38px);
-        text-align: center;
+      #root-loader[data-state="failed"] .loader-brandtag {
+        justify-content: center;
+        font-size: clamp(22px, 5vw, 32px);
       }
       #root-loader[data-state="failed"] .loader-subtitle {
         display: none;
@@ -372,6 +503,7 @@
         .loader-presence {
           position: static;
           height: 52vh;
+          width: fit-content; /* shrink-wrap so the glow copy stays on the silhouette */
           max-width: 84vw;
           margin: 2vh auto 0;
           transform: none;
@@ -420,8 +552,8 @@
       <div class="loader-presence" aria-hidden="true">
         <img class="loader-hologram-face" src="/hologram.png" alt="" />
       </div>
-      <div class="loader-brand">
-        <div class="loader-brand-line">
+      <div class="loader-panel">
+        <div class="loader-brandtag">
           <svg class="loader-spinner" viewBox="0 0 40 40" aria-hidden="true">
             <circle cx="20" cy="5" r="2.6" opacity="1" />
             <circle cx="30.6" cy="9.4" r="2.4" opacity="0.85" />
@@ -432,16 +564,14 @@
             <circle cx="5" cy="20" r="1.7" opacity="0.22" />
             <circle cx="9.4" cy="9.4" r="1.6" opacity="0.15" />
           </svg>
-          <div class="loader-text">LucaOS</div>
+          <span class="loader-text">Starting LucaOS</span>
         </div>
-        <div class="loader-subtitle">Host-native personal AI OS</div>
+        <p class="loader-lead loader-status">
+          Performing readiness checks.<br />This will only take a moment.
+        </p>
+        <div class="loader-card" id="loader-checklist"></div>
+        <div class="loader-failure-details" aria-live="polite"></div>
       </div>
-      <div class="loader-awaken">
-        <div class="loader-status">Awakening Luca…</div>
-        <div class="loader-progress" aria-hidden="true"></div>
-        <div class="loader-phase">Preparing the app</div>
-      </div>
-      <div class="loader-failure-details" aria-live="polite"></div>
     </div>
     <div id="root"></div>
     <script>
@@ -473,53 +603,164 @@
 
         const debugEnabled =
           new URLSearchParams(window.location.search).get("bootDebug") === "1";
-        const readinessStatuses = [
-          {
-            text: "Starting LucaOS",
-            detail: "Preparing the app",
-            progress: 0.2,
-          },
-          {
-            text: "Checking your preferences",
-            detail: "Loading saved setup",
-            progress: 0.38,
-          },
-          {
-            text: "Preparing memory boundaries",
-            detail: "Checking local memory",
-            progress: 0.56,
-          },
-          {
-            text: "Preparing safe tool access",
-            detail: "Preparing tools",
-            progress: 0.74,
-          },
-          {
-            text: "Opening LucaOS",
-            detail: "Loading your workspace",
-            progress: 0.92,
-          },
-          {
-            text: "Opening LucaOS",
-            detail: "Finishing app setup",
-            progress: 0.96,
-          },
-        ];
-        let readinessStatusIndex = 0;
+        // Readiness checklist — the four stages shown as the second boot.
+        // Each row advances pending -> resolving -> done as boot progress
+        // climbs. `at` is the progress fraction by which the row is complete.
+        // Shared line-icons so both first-run and returning sets look alike.
+        const ICON_PROFILE =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6" stroke-linecap="round"/></svg>';
+        const ICON_MEMORY =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4.5" width="16" height="15" rx="2.2"/><path d="M4 9.5h16M9 4.5v15" stroke-linecap="round"/></svg>';
+        const ICON_TOOLS =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3.5l7 2.6v5.2c0 4.3-2.9 7.4-7 8.7-4.1-1.3-7-4.4-7-8.7V6.1l7-2.6z" stroke-linejoin="round"/></svg>';
+        const ICON_VOICE =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 10v4M9 6.5v11M13 8.5v7M17 5.5v13M21 10v4"/></svg>';
+
+        // A returning user (setup already complete) sees a "welcome back"
+        // resume sequence; a fresh install sees the first-run setup checks.
+        // The flag is written by settingsService once onboarding finishes.
+        const isReturningUser =
+          typeof localStorage !== "undefined" &&
+          localStorage.getItem("LUCA_SETUP_COMPLETE") === "true";
+
+        const readinessCopy = isReturningUser
+          ? {
+              title: "Welcome back",
+              lead: "Restoring your workspace.<br />This will only take a moment.",
+              checks: [
+                {
+                  title: "Restoring your session",
+                  detail: "Reloading your workspace state",
+                  at: 0.32,
+                  icon: ICON_PROFILE,
+                },
+                {
+                  title: "Loading your memory",
+                  detail: "Reconnecting secure memory layers",
+                  at: 0.54,
+                  icon: ICON_MEMORY,
+                },
+                {
+                  title: "Reconnecting your tools",
+                  detail: "Verifying permissions and sandbox",
+                  at: 0.76,
+                  icon: ICON_TOOLS,
+                },
+                {
+                  title: "Bringing Luca online",
+                  detail: "Warming voice and presence",
+                  at: 0.94,
+                  icon: ICON_VOICE,
+                },
+              ],
+            }
+          : {
+              title: "Starting LucaOS",
+              lead: "Performing readiness checks.<br />This will only take a moment.",
+              checks: [
+                {
+                  title: "Checking your preferences",
+                  detail: "Resolving your profile and settings",
+                  at: 0.32,
+                  icon: ICON_PROFILE,
+                },
+                {
+                  title: "Restoring memory boundaries",
+                  detail: "Mapping secure memory layers",
+                  at: 0.54,
+                  icon: ICON_MEMORY,
+                },
+                {
+                  title: "Preparing safe tool access",
+                  detail: "Verifying permissions and sandbox",
+                  at: 0.76,
+                  icon: ICON_TOOLS,
+                },
+                {
+                  title: "Aligning voice and presence",
+                  detail: "Calibrating voice model and tone",
+                  at: 0.94,
+                  icon: ICON_VOICE,
+                },
+              ],
+            };
+
+        const readinessChecks = readinessCopy.checks;
+
+        // Apply the matching title + lead before first paint (this inline
+        // script runs before the browser paints, so there's no flash).
+        {
+          const brandTextEl = document.querySelector(
+            ".loader-brandtag .loader-text",
+          );
+          if (brandTextEl) brandTextEl.textContent = readinessCopy.title;
+          const leadEl = document.querySelector(".loader-lead");
+          if (leadEl) leadEl.innerHTML = readinessCopy.lead;
+        }
+
+        const CHECK_TICK =
+          '<svg class="loader-check-tick" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.3 4.3L19 7.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        const CHECK_SPIN =
+          '<svg class="loader-mini-spin" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="5" r="2.6" opacity="1"/><circle cx="30.6" cy="9.4" r="2.4" opacity="0.85"/><circle cx="35" cy="20" r="2.2" opacity="0.72"/><circle cx="30.6" cy="30.6" r="2" opacity="0.58"/><circle cx="20" cy="35" r="1.9" opacity="0.44"/><circle cx="9.4" cy="30.6" r="1.8" opacity="0.32"/><circle cx="5" cy="20" r="1.7" opacity="0.22"/><circle cx="9.4" cy="9.4" r="1.6" opacity="0.15"/></svg>';
+
+        let readinessProgress = 0.18;
         let readinessStatusTimer = 0;
 
-        window.__LUCA_SET_BOOT_STATUS__ = (text, progress, detail) => {
+        const renderChecklist = () => {
+          const host = document.getElementById("loader-checklist");
+          if (!host || host.childElementCount) return;
+          host.innerHTML =
+            readinessChecks
+              .map(
+                (c, i) =>
+                  `<div class="loader-check" data-check="${i}" data-state="pending">` +
+                  `<span class="loader-check-icon">${c.icon}</span>` +
+                  `<div class="loader-check-body">` +
+                  `<div class="loader-check-title">${c.title}</div>` +
+                  `<div class="loader-check-detail">${c.detail}</div>` +
+                  `</div><span class="loader-check-status"></span></div>`,
+              )
+              .join("") +
+            '<div class="loader-card-foot">System integrity verified ' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 10V8a5 5 0 0110 0v2" stroke-linecap="round"/><rect x="4.5" y="10" width="15" height="10" rx="2.4"/></svg></div>';
+        };
+
+        const paintChecklist = () => {
+          renderChecklist();
+          const host = document.getElementById("loader-checklist");
+          if (!host) return;
+          const activeIndex = readinessChecks.findIndex(
+            (c) => readinessProgress < c.at,
+          );
+          readinessChecks.forEach((_, i) => {
+            const row = host.querySelector(`[data-check="${i}"]`);
+            if (!row) return;
+            const status = row.querySelector(".loader-check-status");
+            if (activeIndex === -1 || i < activeIndex) {
+              row.dataset.state = "done";
+              status.innerHTML = CHECK_TICK;
+            } else if (i === activeIndex) {
+              row.dataset.state = "active";
+              status.innerHTML = CHECK_SPIN + "<span>Resolving…</span>";
+            } else {
+              row.dataset.state = "pending";
+              status.innerHTML = "";
+            }
+          });
+        };
+
+        // React's boot entry pings progress through this hook; real progress
+        // always wins because we only ever advance (take the max).
+        window.__LUCA_SET_BOOT_STATUS__ = (text, progress) => {
           const loader = document.getElementById("root-loader");
           if (!loader || loader.dataset.state === "failed") return;
-
-          const status = loader.querySelector(".loader-status");
-          const phase = loader.querySelector(".loader-phase");
-          if (status && text) status.textContent = text;
-          if (phase && detail) phase.textContent = detail;
           if (typeof progress === "number") {
-            const nextProgress = Math.max(0.08, Math.min(progress, 1));
-            loader.style.setProperty("--loader-progress", String(nextProgress));
+            readinessProgress = Math.max(
+              readinessProgress,
+              Math.min(progress, 1),
+            );
           }
+          paintChecklist();
         };
 
         window.__LUCA_CLEAR_BOOT_STATUS_LOOP__ = () => {
@@ -529,29 +770,19 @@
           }
         };
 
-        window.__LUCA_SET_BOOT_STATUS__(
-          readinessStatuses[0].text,
-          readinessStatuses[0].progress,
-          readinessStatuses[0].detail,
-        );
+        paintChecklist();
+        // Gentle auto-advance so the checks visibly resolve even before the
+        // real boot pings arrive; capped just under complete until the app
+        // actually opens.
         readinessStatusTimer = window.setInterval(() => {
           const loader = document.getElementById("root-loader");
           if (!loader || loader.dataset.state === "failed") {
             window.__LUCA_CLEAR_BOOT_STATUS_LOOP__();
             return;
           }
-
-          readinessStatusIndex = Math.min(
-            readinessStatusIndex + 1,
-            readinessStatuses.length - 1,
-          );
-          const nextStatus = readinessStatuses[readinessStatusIndex];
-          window.__LUCA_SET_BOOT_STATUS__(
-            nextStatus.text,
-            nextStatus.progress,
-            nextStatus.detail,
-          );
-        }, 1100);
+          readinessProgress = Math.min(readinessProgress + 0.12, 0.9);
+          paintChecklist();
+        }, 900);
 
         window.__LUCA_SHOW_BOOT_FAILURE__ = (message, error) => {
           const loader = document.getElementById("root-loader");
@@ -569,6 +800,8 @@
           const title = loader.querySelector(".loader-text");
           const status = loader.querySelector(".loader-status");
           const details = loader.querySelector(".loader-failure-details");
+          const checklist = loader.querySelector(".loader-card");
+          if (checklist) checklist.style.display = "none";
           if (title)
             title.textContent = message || "LucaOS web app failed to start";
           if (status) {

@@ -77,25 +77,38 @@
             height: 100%;
         }
         /* The Luca hologram face, large and center-right. */
+        /* Bloom duplication: a blurred luminous copy sits behind the crisp
+           face, and the crisp copy's mask fades out right at the hair
+           boundary — so every edge (hair included) dissolves into its own
+           glow instead of ending as a cut line. */
         .face {
             position: absolute;
             right: 6%;
             top: 50%;
             transform: translateY(-50%);
             height: min(86vh, 640px);
-            width: auto;
             max-width: 52vw;
-            object-fit: contain;
-            /* High-key blend: lightened + desaturated into the pale
-               environment, with the neck/shoulders dissolving out through a
-               bottom gradient mask (per the reference frame). */
-            opacity: 0.82;
-            filter: brightness(1.32) saturate(0.62) contrast(0.94)
-                drop-shadow(0 24px 70px rgba(120, 160, 205, 0.22));
-            -webkit-mask-image: linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%);
-            mask-image: linear-gradient(to bottom, black 55%, rgba(0, 0, 0, 0.55) 76%, transparent 95%);
             pointer-events: none;
             user-select: none;
+        }
+        .face-core {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+            opacity: 0.85;
+            filter: brightness(1.32) saturate(0.62) contrast(0.94)
+                drop-shadow(0 0 18px rgba(216, 243, 248, 0.55));
+            -webkit-mask-image:
+                linear-gradient(to bottom, black 54%, rgba(0, 0, 0, 0.55) 75%, transparent 94%),
+                radial-gradient(ellipse 70% 66% at 50% 42%, black 50%, rgba(0, 0, 0, 0.55) 76%, transparent 96%);
+            -webkit-mask-composite: source-in;
+            mask-image:
+                linear-gradient(to bottom, black 54%, rgba(0, 0, 0, 0.55) 75%, transparent 94%),
+                radial-gradient(ellipse 70% 66% at 50% 42%, black 50%, rgba(0, 0, 0, 0.55) 76%, transparent 96%);
+            mask-composite: intersect;
         }
         /* Center-left brand block: dotted spinner + wordmark + subtitle. */
         .brand {
@@ -183,7 +196,10 @@
            face, then spinner + LucaOS with the subtitle beneath, then the
            progress cluster. Everything shares the same center axis. */
         @media (max-width: 640px) {
-            .face { position: static; display: block; margin: 2vh auto 0; height: 52vh; max-width: 84vw; transform: none; }
+            /* width: fit-content keeps the container shrink-wrapped to the
+               face, so the glow copy (inset: 0) stays exactly on the
+               silhouette instead of stretching across the whole window. */
+            .face { position: static; display: flex; justify-content: center; width: fit-content; margin: 2vh auto 0; height: 52vh; max-width: 84vw; transform: none; }
             .brand { position: static; transform: none; display: flex; width: fit-content; margin: 2vh auto 0; }
             .wordmark { font-size: 34px; }
             .spinner { width: 26px; height: 26px; }
@@ -225,7 +241,9 @@
     </div>
 
     <div class="stage">
-        <img class="face" src="luca-hologram.png" alt="Luca" />
+        <div class="face" aria-hidden="true">
+            <img class="face-core" src="luca-hologram.png" alt="Luca" />
+        </div>
         <div class="brand">
             <div class="brand-line">
                 <svg class="spinner" viewBox="0 0 40 40" aria-hidden="true">

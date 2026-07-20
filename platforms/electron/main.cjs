@@ -248,7 +248,9 @@ function createBootWindow() {
         height: 400,
         frame: false,
         transparent: false,
-        backgroundColor: '#111417',
+        // Matches the light "Awakening Luca" environment so pre-paint frames
+        // never flash dark.
+        backgroundColor: '#e2edf2',
         show: false, // Don't show until content is ready
         center: true,
         resizable: true,
@@ -585,7 +587,9 @@ function createWindow() {
         x: savedBounds.x,
         y: savedBounds.y,
         show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
-        backgroundColor: '#111417',
+        // Light glacier base matching the boot surfaces, so any unpainted
+        // frame during the boot -> onboarding handoff shows light, not black.
+        backgroundColor: '#e2edf2',
         transparent: false,
         frame: process.platform === 'win32' ? false : true,
         autoHideMenuBar: true,
