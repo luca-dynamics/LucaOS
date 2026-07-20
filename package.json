@@ -1,6 +1,6 @@
 {
   "name": "luca-os-prime",
-  "description": "L.U.C.A (Large Universal Control Agent) — A cinematic-grade personal AI operating system for technical operators.",
+  "description": "LucaOS — a host-native personal AI operating layer: a calm, device-level intelligence across desktop, browser, mobile, and linked devices.",
   "private": false,
   "license": "MIT",
   "version": "1.0.0",

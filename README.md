@@ -14,17 +14,16 @@
   <img alt="Vite" src="https://img.shields.io/badge/Vite-6-646CFF?style=flat-square&logo=vite&logoColor=white" />
   <img alt="Electron" src="https://img.shields.io/badge/Electron-40-47848F?style=flat-square&logo=electron&logoColor=white" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" />
-  <a href="https://lucaos.online"><img alt="Website" src="https://img.shields.io/badge/Website-lucaos.online-111111?style=flat-square" /></a>
-  <a href="https://docs.lucaos.online"><img alt="Docs" src="https://img.shields.io/badge/Docs-online-111111?style=flat-square" /></a>
-  <a href="https://discord.gg/lucaos"><img alt="Discord" src="https://img.shields.io/badge/Discord-community-5865F2?style=flat-square&logo=discord&logoColor=white" /></a>
+  <a href="https://lucaos.space"><img alt="Website" src="https://img.shields.io/badge/Website-lucaos.space-111111?style=flat-square" /></a>
+  <a href="https://app.lucaos.space"><img alt="Web App" src="https://img.shields.io/badge/Web%20App-app.lucaos.space-111111?style=flat-square" /></a>
+  <a href="https://get.lucaos.space"><img alt="Download" src="https://img.shields.io/badge/Download-get.lucaos.space-111111?style=flat-square" /></a>
 </p>
 
 <p align="center">
-  <a href="https://lucaos.online">Website</a> ·
-  <a href="https://docs.lucaos.online">Docs</a> ·
-  <a href="https://docs.lucaos.online/showcase">Showcase</a> ·
-  <a href="https://docs.lucaos.online/faq">FAQ</a> ·
-  <a href="https://discord.gg/lucaos">Discord</a>
+  <a href="https://lucaos.space">Website</a> ·
+  <a href="https://app.lucaos.space">Web App</a> ·
+  <a href="https://get.lucaos.space">Download</a> ·
+  <a href="https://github.com/luca-dynamics/LucaOS">GitHub</a>
 </p>
 
 ---
@@ -35,11 +34,10 @@ It is designed to feel premium, quiet, and native: more like an intelligent syst
 
 ## 🌐 Try / Learn More
 
-- **Website:** [lucaos.online](https://lucaos.online)
-- **Docs:** [docs.lucaos.online](https://docs.lucaos.online)
-- **Showcase:** [docs.lucaos.online/showcase](https://docs.lucaos.online/showcase)
-- **FAQ:** [docs.lucaos.online/faq](https://docs.lucaos.online/faq)
-- **Discord:** [discord.gg/lucaos](https://discord.gg/lucaos)
+- **Website:** [lucaos.space](https://lucaos.space)
+- **Web App:** [app.lucaos.space](https://app.lucaos.space)
+- **Download / Waitlist:** [get.lucaos.space](https://get.lucaos.space)
+- **Source:** [github.com/luca-dynamics/LucaOS](https://github.com/luca-dynamics/LucaOS)
 
 Public links are provided for learning, documentation, and community context. Some product surfaces are foundations or directional work rather than finished public app experiences.
 
