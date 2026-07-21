@@ -57,7 +57,8 @@ For LucaOS, Ollama is therefore a pragmatic bootstrap runtime, not the architect
 | L1–L3 LocalAI catalog/health | **Done** | `lucaUnifiedModelRegistry`, `lucaEndpointHealth`, `lucaLocalEndpointService` |
 | L4 onboarding endpoint path | **Partial** | P5b UI + `useLucaLocalEndpointStatus` |
 | **L5 catalog unify** | **Done (projection)** | `lucaLocalCatalogBridge` merges unified + runtime facade + offline registry; ModelRegistry offline list + Model Manager brain metadata via bridge |
-| **L5+ Ollama status probes** | **Done (status path)** | `ollamaRuntimeProbe` + LocalLLMAdapter / ModelManagerService / BIOS boot; install/delete/chat may still use direct Ollama HTTP |
+| **L5+ Ollama status probes** | **Done (status path)** | `ollamaRuntimeProbe` + LocalLLMAdapter / ModelManagerService / BIOS boot |
+| **L5++ Ollama ops (delete/canary)** | **Done** | `ollamaRuntimeOps` + `OllamaRuntime.deleteModel`; ModelManager delete/canary via facade. Install still Electron IPC. Vision generate + legacy `llmService` Ollama still direct HTTP. |
 
 ### L5 entry points
 
@@ -65,9 +66,10 @@ For LucaOS, Ollama is therefore a pragmatic bootstrap runtime, not the architect
 - Offline browser registry (`ModelRegistryService.getModels`) prefers bridge-derived catalog with fallback to `OFFLINE_MODELS`
 - Model Manager brain cards prefer `resolveBrainCatalogMetadata` for name/description/RAM/license/source
 - Ollama status: `probeOllamaViaRuntimeFacade()` in `src/services/local-models/ollamaRuntimeProbe.ts`
+- Ollama delete/canary: `deleteOllamaModelViaRuntimeFacade` / `canaryChatViaRuntimeFacade` in `ollamaRuntimeOps.ts`
 
 ### Suggested next slices
 
-1. Finish call-site audit: migrate remaining direct Ollama HTTP (delete/chat/setup) only where product-safe; leave Electron IPC install path alone.
+1. Migrate legacy `llmService` Ollama provider and vision `/api/generate` only if those paths remain product-critical.
 2. Optional: drop dual-catalog hand maintenance once all product surfaces read bridge only.
 3. Cortex Phase 4 only if Cortex is a product priority.

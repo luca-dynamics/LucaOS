@@ -89,6 +89,32 @@ export class OllamaRuntime implements LocalRuntimeAdapter {
     if (!health.reachable) throw new Error(health.message);
   }
 
+  /**
+   * Delete a model tag via Ollama native API.
+   * Not part of LocalRuntimeAdapter — lifecycle admin only.
+   */
+  async deleteModel(modelName: string): Promise<void> {
+    const name = modelName.trim();
+    if (!name) throw new Error("Ollama delete requires a model name.");
+    if (!this.baseUrl) {
+      throw new Error("Ollama base URL is not configured for this runtime target.");
+    }
+
+    const response = await this.fetchImpl(`${this.baseUrl}/api/delete`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+      signal: timeoutSignal(30_000),
+    });
+
+    if (!response.ok) {
+      const detail = await safeReadText(response);
+      throw new Error(
+        `Ollama delete failed with HTTP ${response.status}${detail ? `: ${detail}` : ""}`,
+      );
+    }
+  }
+
   async chat(request: LocalChatRequest): Promise<LocalChatResponse> {
     const response = await this.fetchImpl(`${this.baseUrl}/v1/chat/completions`, {
       method: "POST",
