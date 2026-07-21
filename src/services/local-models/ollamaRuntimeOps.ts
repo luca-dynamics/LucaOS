@@ -1,17 +1,22 @@
 /**
  * Product-safe Ollama lifecycle/ops through the registered runtime facade.
- * Prefer these helpers over ad-hoc fetch to localhost:11434 for delete/canary.
+ * Prefer these helpers over ad-hoc fetch to localhost:11434.
  *
  * Install / pull remain Electron IPC (ModelManagerService.setupOllamaForModel).
- * Vision /api/generate and legacy llmService Ollama provider are separate slices.
  */
 
 import { localRuntimeRegistry } from "./RuntimeRegistry";
-import { OllamaRuntime } from "./runtimes/OllamaRuntime";
+import {
+  OllamaRuntime,
+  type OllamaGenerateRequest,
+} from "./runtimes/OllamaRuntime";
 import { clearOllamaRuntimeProbeCache } from "./ollamaRuntimeProbe";
-import type { LocalChatRequest } from "./LocalModelTypes";
+import type { LocalChatMessage, LocalChatRequest } from "./LocalModelTypes";
 
-function resolveOllamaRuntime(): OllamaRuntime {
+function resolveOllamaRuntime(baseUrl?: string): OllamaRuntime {
+  if (baseUrl?.trim()) {
+    return new OllamaRuntime({ baseUrl: baseUrl.trim() });
+  }
   const registered = localRuntimeRegistry.get("ollama");
   if (registered instanceof OllamaRuntime) return registered;
   // Fall back to a default adapter so ops work even if registry was replaced
@@ -60,6 +65,7 @@ export async function canaryChatViaRuntimeFacade(options: {
   prompt?: string;
   maxTokens?: number;
   temperature?: number;
+  baseUrl?: string;
 }): Promise<OllamaCanaryChatResult> {
   const start = Date.now();
   const model = options.model.trim();
@@ -73,7 +79,7 @@ export async function canaryChatViaRuntimeFacade(options: {
   }
 
   try {
-    const runtime = resolveOllamaRuntime();
+    const runtime = resolveOllamaRuntime(options.baseUrl);
     const request: LocalChatRequest = {
       model,
       messages: [
@@ -98,8 +104,9 @@ export async function canaryChatViaRuntimeFacade(options: {
     const message =
       error instanceof Error ? error.message : "Ollama canary chat failed";
     const latencyMs = Date.now() - start;
-    const notFound =
-      /404|not found/i.test(message) ? "Model not found in Ollama" : message;
+    const notFound = /404|not found/i.test(message)
+      ? "Model not found in Ollama"
+      : message;
     return {
       ok: false,
       text: notFound,
@@ -107,4 +114,65 @@ export async function canaryChatViaRuntimeFacade(options: {
       message,
     };
   }
+}
+
+export interface OllamaChatFacadeResult {
+  text: string;
+}
+
+/**
+ * Chat completions via registered Ollama runtime (OpenAI-compatible path).
+ * Used by legacy llmService OllamaProvider.
+ */
+export async function chatViaRuntimeFacade(options: {
+  model: string;
+  messages: Array<{ role: string; content: string }>;
+  temperature?: number;
+  maxTokens?: number;
+  baseUrl?: string;
+}): Promise<OllamaChatFacadeResult> {
+  const runtime = resolveOllamaRuntime(options.baseUrl);
+  const messages: LocalChatMessage[] = options.messages.map((msg) => ({
+    role: (msg.role === "assistant" || msg.role === "system" || msg.role === "tool"
+      ? msg.role
+      : "user") as LocalChatMessage["role"],
+    content: msg.content,
+  }));
+  const response = await runtime.chat({
+    model: options.model,
+    messages,
+    temperature: options.temperature,
+    maxTokens: options.maxTokens,
+    stream: false,
+  });
+  return { text: response.text ?? "" };
+}
+
+export interface OllamaGenerateFacadeResult {
+  text: string;
+  model: string;
+}
+
+/**
+ * Prompt-style generation (optional images) via native `/api/generate`.
+ * Used by visionManager and legacy llmService generate.
+ */
+export async function generateViaRuntimeFacade(
+  options: OllamaGenerateRequest & { baseUrl?: string },
+): Promise<OllamaGenerateFacadeResult> {
+  const { baseUrl, ...request } = options;
+  const runtime = resolveOllamaRuntime(baseUrl);
+  const response = await runtime.generate(request);
+  return { text: response.text, model: response.model };
+}
+
+/**
+ * Streaming prompt-style generation via native `/api/generate`.
+ */
+export async function* streamGenerateViaRuntimeFacade(
+  options: OllamaGenerateRequest & { baseUrl?: string },
+): AsyncGenerator<string> {
+  const { baseUrl, ...request } = options;
+  const runtime = resolveOllamaRuntime(baseUrl);
+  yield* runtime.streamGenerate(request);
 }

@@ -158,6 +158,62 @@ describe("OllamaRuntime", () => {
     );
   });
 
+  it("generates text via native /api/generate", async () => {
+    const fetchImpl = vi.fn(async () =>
+      jsonResponse(200, { response: "hello local", done: true }),
+    );
+    const runtime = new OllamaRuntime({
+      baseUrl: "http://127.0.0.1:11434",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    const result = await runtime.generate({
+      model: "moondream",
+      prompt: "describe",
+      images: ["abc123"],
+      format: "json",
+      temperature: 0.2,
+      maxTokens: 32,
+    });
+
+    expect(result.text).toBe("hello local");
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "http://127.0.0.1:11434/api/generate",
+      expect.objectContaining({ method: "POST" }),
+    );
+    const body = JSON.parse(String(fetchImpl.mock.calls[0][1]?.body));
+    expect(body).toMatchObject({
+      model: "moondream",
+      prompt: "describe",
+      images: ["abc123"],
+      format: "json",
+      stream: false,
+      options: { temperature: 0.2, num_predict: 32 },
+    });
+  });
+
+  it("streams generate NDJSON tokens", async () => {
+    const fetchImpl = vi.fn(async () =>
+      streamResponse(200, [
+        '{"response":"hel"}\n',
+        '{"response":"lo","done":true}\n',
+      ]),
+    );
+    const runtime = new OllamaRuntime({
+      baseUrl: "http://127.0.0.1:11434",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    const tokens: string[] = [];
+    for await (const token of runtime.streamGenerate({
+      model: "llama3.2:1b",
+      prompt: "hi",
+    })) {
+      tokens.push(token);
+    }
+    expect(tokens).toEqual(["hel", "lo"]);
+  });
+
   it("streams OpenAI-compatible chat chunks", async () => {
     const fetchImpl = vi.fn(async () =>
       streamResponse(200, [

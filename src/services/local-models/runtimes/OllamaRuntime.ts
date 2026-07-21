@@ -15,6 +15,23 @@ interface OllamaRuntimeOptions {
   requestTimeoutMs?: number;
 }
 
+/** Native `/api/generate` request (text and optional multimodal images). */
+export interface OllamaGenerateRequest {
+  model: string;
+  prompt: string;
+  images?: string[];
+  temperature?: number;
+  maxTokens?: number;
+  format?: string;
+  signal?: AbortSignal;
+}
+
+export interface OllamaGenerateResponse {
+  text: string;
+  model: string;
+  done?: boolean;
+}
+
 interface OpenAIChatChoice {
   message?: {
     content?: string | null;
@@ -90,6 +107,65 @@ export class OllamaRuntime implements LocalRuntimeAdapter {
   }
 
   /**
+   * Prompt-style generation via native `/api/generate` (supports multimodal images).
+   * Not part of LocalRuntimeAdapter — used by vision + legacy Ollama providers.
+   */
+  async generate(request: OllamaGenerateRequest): Promise<OllamaGenerateResponse> {
+    const body = await this.postGenerate(request, false);
+    return {
+      text: typeof body.response === "string" ? body.response : "",
+      model: request.model,
+      done: body.done === true,
+    };
+  }
+
+  /**
+   * Streaming prompt-style generation via native `/api/generate` NDJSON.
+   */
+  async *streamGenerate(
+    request: OllamaGenerateRequest,
+  ): AsyncGenerator<string> {
+    if (!this.baseUrl) {
+      throw new Error("Ollama base URL is not configured for this runtime target.");
+    }
+
+    const response = await this.fetchImpl(`${this.baseUrl}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildGenerateBody(request, true)),
+      signal: request.signal ?? timeoutSignal(this.requestTimeoutMs),
+    });
+
+    if (!response.ok) {
+      const detail = await safeReadText(response);
+      throw new Error(
+        `Ollama generate stream failed with HTTP ${response.status}${detail ? `: ${detail}` : ""}`,
+      );
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("Ollama generate stream returned no body.");
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        const token = parseGenerateStreamLine(line);
+        if (token) yield token;
+      }
+    }
+    if (buffer.trim()) {
+      const token = parseGenerateStreamLine(buffer);
+      if (token) yield token;
+    }
+  }
+
+  /**
    * Delete a model tag via Ollama native API.
    * Not part of LocalRuntimeAdapter — lifecycle admin only.
    */
@@ -113,6 +189,33 @@ export class OllamaRuntime implements LocalRuntimeAdapter {
         `Ollama delete failed with HTTP ${response.status}${detail ? `: ${detail}` : ""}`,
       );
     }
+  }
+
+  private async postGenerate(
+    request: OllamaGenerateRequest,
+    stream: boolean,
+  ): Promise<Record<string, unknown>> {
+    if (!this.baseUrl) {
+      throw new Error("Ollama base URL is not configured for this runtime target.");
+    }
+    const model = request.model.trim();
+    if (!model) throw new Error("Ollama generate requires a model name.");
+
+    const response = await this.fetchImpl(`${this.baseUrl}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildGenerateBody({ ...request, model }, stream)),
+      signal: request.signal ?? timeoutSignal(this.requestTimeoutMs),
+    });
+
+    if (!response.ok) {
+      const detail = await safeReadText(response);
+      throw new Error(
+        `Ollama generate failed with HTTP ${response.status}${detail ? `: ${detail}` : ""}`,
+      );
+    }
+
+    return (await response.json()) as Record<string, unknown>;
   }
 
   async chat(request: LocalChatRequest): Promise<LocalChatResponse> {
@@ -181,6 +284,37 @@ export class OllamaRuntime implements LocalRuntimeAdapter {
 
 function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.trim().replace(/\/+$/, "");
+}
+
+function buildGenerateBody(
+  request: OllamaGenerateRequest,
+  stream: boolean,
+): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    model: request.model,
+    prompt: request.prompt,
+    stream,
+  };
+  if (request.images?.length) body.images = request.images;
+  if (request.format) body.format = request.format;
+  const options: Record<string, unknown> = {};
+  if (request.temperature !== undefined) options.temperature = request.temperature;
+  if (request.maxTokens !== undefined) options.num_predict = request.maxTokens;
+  if (Object.keys(options).length > 0) body.options = options;
+  return body;
+}
+
+function parseGenerateStreamLine(line: string): string | undefined {
+  const trimmed = line.trim();
+  if (!trimmed) return undefined;
+  try {
+    const parsed = JSON.parse(trimmed) as { response?: unknown };
+    return typeof parsed.response === "string" && parsed.response.length > 0
+      ? parsed.response
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function timeoutSignal(ms: number): AbortSignal | undefined {
