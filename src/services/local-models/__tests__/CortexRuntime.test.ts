@@ -142,6 +142,52 @@ describe("CortexRuntime", () => {
     ).rejects.toThrow("Cortex chat failed with HTTP 500");
   });
 
+  it("rejects a second concurrent chat when maxConcurrentGenerations is 1", async () => {
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    let call = 0;
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith("/chat/completions")) {
+        call += 1;
+        if (call === 1) {
+          await firstGate;
+          return jsonResponse(200, {
+            choices: [{ message: { content: "first" } }],
+          });
+        }
+        return jsonResponse(200, {
+          choices: [{ message: { content: "second" } }],
+        });
+      }
+      return jsonResponse(200, { ok: true });
+    });
+    const runtime = new CortexRuntime({
+      baseUrl: "http://127.0.0.1:8000",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      maxConcurrentGenerations: 1,
+    });
+
+    const first = runtime.chat({
+      model: "gemma-2b",
+      messages: [{ role: "user", content: "a" }],
+    });
+    // Let first acquire generation slot
+    await Promise.resolve();
+    await expect(
+      runtime.chat({
+        model: "gemma-2b",
+        messages: [{ role: "user", content: "b" }],
+      }),
+    ).rejects.toThrow(/busy/i);
+    expect(runtime.getActiveGenerationCount()).toBe(1);
+
+    releaseFirst();
+    await expect(first).resolves.toMatchObject({ text: "first" });
+    expect(runtime.getActiveGenerationCount()).toBe(0);
+  });
+
   it("streams Cortex chat/completions chunks", async () => {
     const fetchImpl = vi.fn(async () =>
       streamResponse(200, [

@@ -746,13 +746,23 @@ async function getLocalRuntimeDiagnostics(
     installed = undefined;
   }
 
-  const cortexRouteSelected = routes.some((route) => route.runtime === "cortex");
-  const cortexAvailable = cortexRouteSelected
-    ? !routes.some(
-        (route) =>
-          route.runtime === "cortex" && route.readiness === "missing_runtime",
-      )
-    : "unknown";
+  // Prefer live Cortex facade probe (product path). Fall back to route matrix.
+  let cortexAvailable: boolean | "unknown" = "unknown";
+  try {
+    const { probeCortexViaRuntimeFacade } = await import(
+      "../local-models/cortexRuntimeProbe"
+    );
+    const probe = await probeCortexViaRuntimeFacade();
+    cortexAvailable = probe.available;
+  } catch {
+    const cortexRouteSelected = routes.some((route) => route.runtime === "cortex");
+    cortexAvailable = cortexRouteSelected
+      ? !routes.some(
+          (route) =>
+            route.runtime === "cortex" && route.readiness === "missing_runtime",
+        )
+      : "unknown";
+  }
 
   // Local model runtime facade snapshot (registered adapters + admission /
   // lease pressure). Degrades to undefined — the legacy probes above remain
