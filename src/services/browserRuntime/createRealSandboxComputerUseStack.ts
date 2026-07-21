@@ -11,9 +11,10 @@
 import { BrowserRuntimeRouterRealInvocationShell } from "../computerUse/BrowserRuntimeRouterRealInvocationShell";
 import { createComputerUsePipeline } from "../computerUse/createComputerUsePipeline";
 import { createComputerUseRuntime } from "../computerUse/createComputerUseRuntime";
-import type { ComputerUsePipeline } from "../computerUse/ComputerUsePipeline";
 import type {
   ComputerUseMissionTapeExternalSink,
+  ComputerUsePipelineInput,
+  ComputerUsePipelineResult,
   ComputerUseRuntime,
   ComputerUseRuntimeEventType,
 } from "../computerUse/types";
@@ -63,7 +64,11 @@ export interface RealSandboxComputerUseStack {
   router?: BrowserRuntimeRouter;
   sandboxAdapter?: SandboxPlaywrightBrowserRuntimeAdapter;
   invocationShell?: BrowserRuntimeRouterRealInvocationShell;
-  pipeline: ComputerUsePipeline;
+  /** Full pipeline class or runtime's structural { run, reset } surface. */
+  pipeline: {
+    run: (input: ComputerUsePipelineInput) => Promise<ComputerUsePipelineResult>;
+    reset?: () => unknown;
+  };
   runtime?: ComputerUseRuntime;
   missionTapeEnabled: boolean;
   missionTapeExternalSink?: ComputerUseMissionTapeExternalSink;

@@ -107,6 +107,7 @@ import {
   SettingsSection,
   SettingsStatList,
   settingsControlInlineStyle,
+  settingsSelectClassName,
 } from "./SettingsLayout";
 import {
   settingsCardStyle,
@@ -708,7 +709,6 @@ export function getLucaLinkSecurityModeLabel(
   mode: ReturnType<typeof lucaLinkManager.console.getSoftEnforcementMode>,
 ): string {
   if (mode === "high-risk-only") return "High-risk gates active";
-  if (mode === "full-outbound") return "Full outbound gates";
   if (mode === "observe-only") return "Observe-only";
   return "Disabled";
 }

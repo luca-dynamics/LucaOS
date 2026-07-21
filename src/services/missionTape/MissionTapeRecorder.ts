@@ -1,10 +1,28 @@
 import type { MissionTape } from "../missionEngine/types";
-import {
+import type {
+  MissionTapeGuardRecord,
   MissionTapeQuery,
   MissionTapeRecord,
   MissionTapeRecorderServiceContract,
+  MissionTapeRecoveryRecord,
+  MissionTapeStepRecord,
   MissionTapeStorageAdapter,
+  MissionTapeVerificationRecord,
 } from "./types";
+
+/** Append payloads allow optional timestamp (filled by the recorder). */
+type AppendStepInput = Omit<MissionTapeStepRecord, "timestamp"> & {
+  timestamp?: string;
+};
+type AppendGuardInput = Omit<MissionTapeGuardRecord, "timestamp"> & {
+  timestamp?: string;
+};
+type AppendVerificationInput = Omit<MissionTapeVerificationRecord, "timestamp"> & {
+  timestamp?: string;
+};
+type AppendRecoveryInput = Omit<MissionTapeRecoveryRecord, "timestamp"> & {
+  timestamp?: string;
+};
 
 const nowIso = () => new Date().toISOString();
 
@@ -51,25 +69,25 @@ export class MissionTapeRecorderService implements MissionTapeRecorderServiceCon
     return tape;
   }
 
-  async appendStep(missionId: string, step: Parameters<MissionTapeRecorderService["appendStep"]>[1]): Promise<void> {
+  async appendStep(missionId: string, step: AppendStepInput): Promise<void> {
     const tape = await this.requireTape(missionId);
     tape.steps.push({ ...step, timestamp: step.timestamp ?? nowIso() });
     await this.storage.save(tape);
   }
 
-  async appendGuardDecision(missionId: string, record: Parameters<MissionTapeRecorderService["appendGuardDecision"]>[1]): Promise<void> {
+  async appendGuardDecision(missionId: string, record: AppendGuardInput): Promise<void> {
     const tape = await this.requireTape(missionId);
     tape.guard.push({ ...record, timestamp: record.timestamp ?? nowIso() });
     await this.storage.save(tape);
   }
 
-  async appendVerification(missionId: string, record: Parameters<MissionTapeRecorderService["appendVerification"]>[1]): Promise<void> {
+  async appendVerification(missionId: string, record: AppendVerificationInput): Promise<void> {
     const tape = await this.requireTape(missionId);
     tape.verification.push({ ...record, timestamp: record.timestamp ?? nowIso() });
     await this.storage.save(tape);
   }
 
-  async appendRecovery(missionId: string, record: Parameters<MissionTapeRecorderService["appendRecovery"]>[1]): Promise<void> {
+  async appendRecovery(missionId: string, record: AppendRecoveryInput): Promise<void> {
     const tape = await this.requireTape(missionId);
     tape.recovery.push({ ...record, timestamp: record.timestamp ?? nowIso() });
     await this.storage.save(tape);
