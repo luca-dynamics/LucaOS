@@ -6,7 +6,7 @@ import {
   LucaVoiceOutputEvent,
 } from "./types";
 import { VoiceRuntimeEventBridge } from "./VoiceRuntimeEventBridge";
-import { VoiceRuntimeState } from "./VoiceRuntime";
+import type { VoiceRuntimeState } from "./types";
 
 const hudMetadata: LucaVoiceHudMetadata = {
   bridgeKind: "voice_hud_scaffold",

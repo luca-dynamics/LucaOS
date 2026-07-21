@@ -19,9 +19,15 @@ import type {
  * mapping and then calls PI's own governed builder.
  */
 
-// Only these statuses are reviewable in the governed pilot. Blocked / rejected
-// / already-written / expired proposals are never offered for a live write.
-const REVIEWABLE_STATUSES = new Set(["proposed", "approval_required"]);
+// Reviewable in the governed pilot: still open for a first write, including
+// proposals already approved elsewhere (chat strip / pending approvals) that
+// are waiting for the actual memory write. Blocked / rejected / written /
+// expired / revoked are never offered again.
+const REVIEWABLE_STATUSES = new Set([
+  "proposed",
+  "approval_required",
+  "approved_waiting_write",
+]);
 
 // Map the live proposal kind onto a Personal Intelligence memory kind. Anything
 // unrecognized falls back to the general "learning" bucket.

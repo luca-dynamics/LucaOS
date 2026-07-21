@@ -1,12 +1,23 @@
-# MissionEngine scaffold
+# Mission Engine types (contract only)
 
-This directory provides a minimal runtime contract scaffold aligned with `docs/runtime/MISSION_ENGINE_SPEC.md`:
+This package holds **shared mission lifecycle types** used by:
 
-- Lifecycle: create → plan → execute → verify → recover → record
-- Atomic step schema via `MissionStep`
-- Checkpoint/rollback interface via `MissionCheckpoint` + `createCheckpoint`
-- Verifier/recovery interfaces for deterministic checks and recovery lanes
-- Mission tape recording interface via `MissionTapeRecorder`
-- Guard hook interface for risk/approval gating
+- `src/services/lucaGuard` (Mission / MissionStep types)
+- `src/services/missionTape` (MissionTape / MissionTapeRecorder contracts)
 
-This scaffold is intentionally additive and not deeply wired into production runtime yet.
+## Removed
+
+`MissionEngine` class was hard-deleted after a reference audit: it was only
+constructed in its own unit test and never wired into production runtime.
+
+## Live execution paths
+
+| Path | Role |
+|------|------|
+| `MissionControlService` | Product missions (Electron/SQLite) |
+| `src/services/computerUse` + `createRealSandboxComputerUseStack` | Computer-use plan/execute/verify with optional MissionTape sink |
+| `MissionTapeRecorderService` | In-process append-only tape (used by computer-use when enabled) |
+
+A future PR can reintroduce a single execution engine that implements these types
+and drives computer-use / tools under LucaGuard — without duplicating the old
+unused scaffold class.

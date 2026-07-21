@@ -1,6 +1,6 @@
 import { LucaVoiceHudControl, LucaVoiceHudState } from "./types";
 import { VoiceHudRuntimeBridge } from "./VoiceHudRuntimeBridge";
-import { VoiceRuntimeState } from "./VoiceRuntime";
+import type { VoiceRuntimeState } from "./types";
 
 export type VoiceHudSubscriptionListener = (state: LucaVoiceHudState) => void;
 

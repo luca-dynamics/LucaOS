@@ -1,10 +1,15 @@
 import { VoiceSessionRoute } from "../voiceSessionRouter";
-import { VoiceProviderRouterSnapshot } from "./VoiceProviderRouter";
 import { VoiceRuntimeProviderPolicy, policyToRoutePreference } from "./VoiceRuntimeProviderPolicy";
 import { LucaVoiceProviderPreference, LucaVoiceProviderReadinessResult } from "./types";
 
 export type VoiceRouteShadowSeverity = "none" | "info" | "warning" | "error";
 export type VoiceRouteShadowRecommendation = "keep_existing" | "observe" | "candidate_for_runtime_router" | "needs_review";
+
+/** Optional advisory router snapshot (scaffold VoiceProviderRouter was removed). */
+export interface VoiceRouteShadowRouterSnapshot {
+  strategy?: string;
+  totalRoutes?: number;
+}
 
 export interface VoiceRouteShadowInput {
   existingRoute: Pick<VoiceSessionRoute, "kind" | "provisioning"> & Partial<VoiceSessionRoute> & {
@@ -15,7 +20,7 @@ export interface VoiceRouteShadowInput {
   };
   providerPolicy: VoiceRuntimeProviderPolicy;
   providerRouter?: {
-    snapshot?: VoiceProviderRouterSnapshot;
+    snapshot?: VoiceRouteShadowRouterSnapshot;
     suggestion?: { providerKind?: LucaVoiceProviderPreference; capability?: string; metadata?: Record<string, unknown> };
   } | null;
   readiness?: LucaVoiceProviderReadinessResult | null;

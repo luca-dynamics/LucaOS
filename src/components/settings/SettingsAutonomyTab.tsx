@@ -36,8 +36,19 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
     idleThresholdMinutes: 10,
   };
 
+  const computerUse = settings.computerUse || {
+    realSandboxEnabled: false,
+    driverKind: "auto" as const,
+    headless: true,
+    enableMissionTapeSink: false,
+  };
+
   const toggle = (key: keyof typeof autonomy) => {
     onUpdate("autonomy", key, !autonomy[key]);
+  };
+
+  const updateComputerUse = (key: string, value: unknown) => {
+    onUpdate("computerUse", key, value);
   };
 
   const setRange = (key: keyof typeof autonomy, value: number) => {
@@ -203,6 +214,71 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
         <SettingsRow
           label="Quiet hours"
           description="Quiet-hour behavior remains controlled by existing notification and mission policies."
+        />
+      </SettingsSection>
+
+      <SettingsSection
+        title="Computer-use sandbox"
+        description="Real browser automation stays off by default. Enable only when you understand sandbox boundaries and approvals."
+        icon="Browser"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <SettingsRow
+          label="Real sandbox browser"
+          description="When on, computer-use can drive Playwright or the Electron sandbox browser behind guards. Default is simulated only."
+          control={
+            <SettingsToggle
+              checked={!!computerUse.realSandboxEnabled}
+              onChange={() =>
+                updateComputerUse(
+                  "realSandboxEnabled",
+                  !computerUse.realSandboxEnabled,
+                )
+              }
+              accentColor={theme.hex}
+              ariaLabel="Real sandbox browser execution"
+            />
+          }
+        />
+        <SettingsRow
+          label="Driver"
+          description="Auto uses Electron sandbox IPC when available, otherwise Playwright. Click and type still require guard approval."
+          control={
+            <select
+              className="bg-transparent border border-white/10 rounded-lg px-2 py-1 text-sm"
+              style={settingsControlInlineStyle}
+              value={computerUse.driverKind ?? "auto"}
+              onChange={(e) =>
+                updateComputerUse(
+                  "driverKind",
+                  e.target.value as "auto" | "playwright" | "electron_sandbox",
+                )
+              }
+              aria-label="Computer-use driver kind"
+            >
+              <option value="auto">Auto</option>
+              <option value="playwright">Playwright</option>
+              <option value="electron_sandbox">Electron sandbox</option>
+            </select>
+          }
+        />
+        <SettingsRow
+          label="Mission tape recording"
+          description="Forward computer-use invocation events into the in-process MissionTape recorder (no disk export)."
+          control={
+            <SettingsToggle
+              checked={!!computerUse.enableMissionTapeSink}
+              onChange={() =>
+                updateComputerUse(
+                  "enableMissionTapeSink",
+                  !computerUse.enableMissionTapeSink,
+                )
+              }
+              accentColor={theme.hex}
+              ariaLabel="Computer-use mission tape recording"
+            />
+          }
         />
       </SettingsSection>
 

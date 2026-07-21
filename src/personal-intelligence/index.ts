@@ -45,14 +45,5 @@ export * from "./skillDryRun";
 
 export * from "./runtimeAuthority";
 
-export * from "./memoryGraph";
-
-export * from "./continuity";
-
-export * from "./memoryControls";
-
-export * from "./dashboard";
-
-export * from "./reviewWorkflow";
-
-export * from "./persistenceBoundary";
+// Removed (zero product UI callers; pure-model cluster + self-tests only):
+// memoryGraph, continuity, memoryControls, dashboard, reviewWorkflow, persistenceBoundary

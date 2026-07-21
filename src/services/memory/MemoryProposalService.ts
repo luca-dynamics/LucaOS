@@ -275,7 +275,22 @@ export class MemoryProposalService {
   }
 
   markWritten(proposalId: string, memoryId: string): MemoryProposalRecord | undefined {
-    return this.update(proposalId, { status: "written", memoryId, writtenAt: nowIso() });
+    const updated = this.update(proposalId, {
+      status: "written",
+      memoryId,
+      writtenAt: nowIso(),
+    });
+    if (updated) {
+      // Close the proposal loop: surface a durable inbox event and bus signal so
+      // chat / activity / pilot can refresh and show "remembered" feedback.
+      this.createInboxEvent(
+        updated,
+        "memory_write_succeeded",
+        `Remembered: ${updated.title}`,
+      );
+      this.emit("memory_write_succeeded", updated, { memoryId });
+    }
+    return updated;
   }
 
   expireOldProposals(at: string = nowIso()): MemoryProposalRecord[] {

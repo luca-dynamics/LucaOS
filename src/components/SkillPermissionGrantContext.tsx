@@ -1,12 +1,11 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
 import {
   applySkillPermissionDecision,
-  createSkillPermissionGrantState,
-  createPersonalIntelligenceSkillSandboxPlan,
-  personalIntelligenceSkillSandboxRegistryFixtures,
   type PersonalIntelligenceSkillPermissionDecision,
   type PersonalIntelligenceSkillPermissionGrantState,
 } from "../personal-intelligence";
+import { skillRegistryService } from "../services/skills/SkillRegistryService";
+import { buildSkillPermissionGrantStateFromLive } from "../services/personalIntelligence/skillPermissionGrantBridge";
 
 interface SkillPermissionGrantContextValue {
   state: PersonalIntelligenceSkillPermissionGrantState;
@@ -15,18 +14,16 @@ interface SkillPermissionGrantContextValue {
 
 const SkillPermissionGrantContext = createContext<SkillPermissionGrantContextValue | null>(null);
 
+/**
+ * Seed from the live skill registry so permission gates line up with the
+ * skills SkillRegistryPanel shows. Falls back to fixtures when empty.
+ */
 function createInitialState(): PersonalIntelligenceSkillPermissionGrantState {
-  const plans = personalIntelligenceSkillSandboxRegistryFixtures.map((entry) => createPersonalIntelligenceSkillSandboxPlan(entry));
-  const initial = createSkillPermissionGrantState(plans);
-  const reviewable = initial.gates.filter((gate) => gate.status === "pending");
-  const now = new Date();
-  return reviewable.slice(0, 3).reduce((state, gate, index) => {
-    const at = () => new Date(now.getTime() + index);
-    if (index === 0) return applySkillPermissionDecision(state, gate.gateId, "grant_for_review", { now: at });
-    if (index === 1) return applySkillPermissionDecision(state, gate.gateId, "deny", { now: at });
-    const granted = applySkillPermissionDecision(state, gate.gateId, "grant_for_review", { now: at });
-    return applySkillPermissionDecision(granted, gate.gateId, "expire", { now: at });
-  }, initial);
+  try {
+    return buildSkillPermissionGrantStateFromLive(skillRegistryService.listSkills());
+  } catch {
+    return buildSkillPermissionGrantStateFromLive([]);
+  }
 }
 
 export function SkillPermissionGrantProvider({ children }: { children: React.ReactNode }) {

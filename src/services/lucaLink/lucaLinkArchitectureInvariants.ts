@@ -33,8 +33,6 @@ export const LUCA_LINK_MODEL_ONLY_MODULES = Object.freeze([
   "lucaLinkBridgeReview.ts",
   "lucaLinkEmbodiedHostPolicy.ts",
   "lucaLinkAdapterDrafts.ts",
-  "lucaLinkRuntimeQaChecklist.ts",
-  "lucaLinkRuntimeSmokeHarness.ts",
 ] as const);
 
 export const LUCA_LINK_FORBIDDEN_MODEL_RUNTIME_PATTERNS = Object.freeze([

@@ -39,3 +39,38 @@
 - `evaluateGuardRules(context)`
 - `pickLane(context)`
 - `deniedUnknown()`
+
+## Sandbox Playwright adapter (real-capable, default off)
+
+`SandboxPlaywrightBrowserRuntimeAdapter` implements `BrowserRuntimeAdapter` for lane `sandbox_browser`.
+
+- **Default:** `enabled: false` — fails closed, no driver calls.
+- **Real work:** requires `enabled: true` **and** an injected `BrowserDriver` (mock, Playwright, or Electron sandbox IPC).
+- Does **not** import Playwright at module top-level (safe for renderer/web bundles).
+- Never sets `directHostAllowed`; never uses authenticated host Chrome profiles.
+- Factory: `createSandboxBrowserRuntimeRouter({ enabled, driver })` from `src/services/browserRuntime`.
+
+Computer-use pipeline integration remains separate (see `docs/computer-use-runtime-map.md`); this adapter is the first real browser body for the router.
+
+## Real drivers
+
+| Driver | Kind | Use |
+|--------|------|-----|
+| `PlaywrightBrowserDriver` | `playwright` | Node/Electron: CSS selectors, dynamic Playwright import |
+| `ElectronSandboxBrowserDriver` | `electron_sandbox` | IPC luca-browser plans (role/name, not CSS) |
+
+## Full stack factory
+
+```ts
+import { createRealSandboxComputerUseStack } from "./createRealSandboxComputerUseStack";
+
+// Default: scaffold only
+await createRealSandboxComputerUseStack();
+
+// Real Playwright
+const stack = await createRealSandboxComputerUseStack({
+  enabled: true,
+  driverKind: "playwright",
+  playwright: { headless: true },
+});
+```

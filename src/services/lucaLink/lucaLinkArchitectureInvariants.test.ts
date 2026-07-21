@@ -26,12 +26,6 @@ describe("lucaLinkArchitectureInvariants", () => {
     expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
       "revocationPropagation/lucaLinkRevocationPropagationEvaluator.ts",
     );
-    expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
-      "lucaLinkRuntimeQaChecklist.ts",
-    );
-    expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
-      "lucaLinkRuntimeSmokeHarness.ts",
-    );
     expect(LUCA_LINK_FORBIDDEN_MODEL_RUNTIME_PATTERNS).toContain("fetch(");
     expect(LUCA_LINK_FORBIDDEN_DEVICE_CENTER_ACTION_LABELS).toContain(
       "Install adapter",

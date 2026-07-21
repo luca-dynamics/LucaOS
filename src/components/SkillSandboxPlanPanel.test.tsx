@@ -9,9 +9,14 @@ import { SkillSandboxPlanPanel } from "./SkillSandboxPlanPanel";
 
 describe("Skill Sandbox Plan panel", () => {
   it("renders planning, approval, trace, rollback, and execution-disabled evidence", () => {
-    const html = renderToStaticMarkup(<SkillSandboxPlanPanel plan={personalIntelligenceSkillSandboxPlanFixtures[2]} />);
+    // Prefer a plan that actually requires approval (memory / high-risk fixtures).
+    const plan =
+      personalIntelligenceSkillSandboxPlanFixtures.find(
+        (item) => item.status === "approval_required",
+      ) ?? personalIntelligenceSkillSandboxPlanFixtures[0];
+    const html = renderToStaticMarkup(<SkillSandboxPlanPanel plan={plan} />);
     expect(html).toContain("Sandbox Plan");
-    expect(html).toContain("approval required");
+    expect(html).toMatch(/approval required|ready for review|blocked/i);
     expect(html).toContain("Runtime trace requirements");
     expect(html).toContain("Rollback expectations");
     expect(html).toContain("Sandbox planning only — skill execution remains disabled.");

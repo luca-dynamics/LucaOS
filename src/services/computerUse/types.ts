@@ -129,6 +129,10 @@ export type ComputerUseExecutionStatus =
 export interface ComputerUseExecutionRequest {
   executionMode?: ComputerUseExecutionMode;
   guardApprovalProvided?: boolean;
+  /** Optional mission context for real sandbox bridge mapping. */
+  missionId?: string;
+  stepId?: string;
+  traceId?: string;
 }
 
 export interface ComputerUseExecutionResult {
@@ -143,11 +147,18 @@ export interface ComputerUseExecutionResult {
     systemApisCalled: boolean;
     delegatesOnly: true;
     noDirectSystemCalls: true;
-    executorKind: "scaffold";
+    executorKind: "scaffold" | "real_sandbox";
     adapterCount?: number;
     defaultExecutionMode?: ComputerUseExecutionMode;
     executionMode?: ComputerUseExecutionMode;
     sandboxSimulated?: boolean;
+    realBrowserExecutionEnabled?: boolean;
+    browserRuntimeRouterCalled?: boolean;
+    playwrightCalled?: boolean;
+    browserApisCalled?: boolean;
+    shellStatus?: string;
+    routeLane?: string;
+    [key: string]: unknown;
   };
 }
 
@@ -275,6 +286,19 @@ export interface ComputerUseSandboxExecutionLog {
 export interface ComputerUseSandboxExecutorAdapterOptions {
   adapterId?: string;
   now?: () => string;
+  /**
+   * When true, attempt real sandbox browser invocation via `invocationShell`.
+   * Default false (scaffold simulation only).
+   */
+  realSandboxExecutionEnabled?: boolean;
+  /**
+   * Injected real-invocation shell (with optional BrowserRuntimeRouter DI).
+   * Required when `realSandboxExecutionEnabled` is true.
+   */
+  invocationShell?: import("./BrowserRuntimeRouterRealInvocationShell").BrowserRuntimeRouterRealInvocationShell;
+  /** Mission/step defaults for bridge request mapping when request lacks them. */
+  defaultMissionId?: string;
+  defaultStepId?: string;
 }
 
 
@@ -295,30 +319,6 @@ export type ComputerUseBrowserRuntimeLane =
   | "sandbox_browser"
   | "authenticated_direct_host"
   | "remote_linked_browser";
-
-export interface ComputerUseBrowserRouteRequest {
-  lane: ComputerUseBrowserRuntimeLane;
-  action: ComputerUsePlannedAction;
-  metadata: {
-    bridgeKind: "scaffold";
-    browserRuntimeImported: false;
-  };
-}
-
-export interface ComputerUseBrowserRouteResult {
-  status: "executed" | "failed";
-  action: ComputerUsePlannedAction;
-  metadata: {
-    reason?: string;
-    bridgeKind: "scaffold";
-    browserRuntimeImported: false;
-  };
-}
-
-export interface ComputerUseBrowserRuntimeFeatureFlags {
-  browserRuntimeEnabled?: boolean;
-  enableBrowserRuntimeBridge?: boolean;
-}
 
 export interface ComputerUseBrowserRuntimeAdapterMetadata {
   adapterKind: "scaffold";
@@ -355,30 +355,21 @@ export interface ComputerUseBrowserRuntimeAdapterResult {
   };
 }
 
-export interface ComputerUseBrowserRuntimeAdapterSnapshot {
-  featureFlags: Required<ComputerUseBrowserRuntimeFeatureFlags>;
-  executionCount: number;
-  lastRequest?: ComputerUseBrowserRuntimeAdapterRequest;
-  lastResult?: ComputerUseBrowserRuntimeAdapterResult;
-}
-
 export interface ComputerUseBrowserRuntimeAdapter {
   canHandle: (routeOrAction: ComputerUseBrowserRuntimeAdapterRequest) => boolean;
   execute: (routeOrAction: ComputerUseBrowserRuntimeAdapterRequest) => Promise<ComputerUseBrowserRuntimeAdapterResult>;
-  getSnapshot: () => ComputerUseBrowserRuntimeAdapterSnapshot;
+  getSnapshot: () => ComputerUseSandboxBrowserAdapterSnapshot;
   reset: () => void;
 }
 
-export interface ComputerUseBrowserRuntimeAdapterOptions {
-  featureFlags?: ComputerUseBrowserRuntimeFeatureFlags;
-  recording?: ComputerUseBrowserRuntimeAdapterRecordingOptions;
-}
-
-export interface CreateComputerUseBrowserRuntimeAdapterOptions extends ComputerUseBrowserRuntimeAdapterOptions {
+/** Shared factory options for sandbox browser adapter wiring (tape / event bridge). */
+export interface CreateComputerUseBrowserRuntimeAdapterOptions {
   recordingEnabled?: boolean;
   tapeSink?: ComputerUseMissionTapeSink;
   externalMissionTapeSink?: ComputerUseMissionTapeExternalSink;
   enableExternalMissionTapeSink?: boolean;
+  featureFlags?: ComputerUseSandboxBrowserAdapterFeatureFlags;
+  recording?: ComputerUseBrowserRuntimeAdapterRecordingOptions;
   eventBridge?: {
     recordBrowserAdapterStarted: (input: ComputerUseBrowserRuntimeAdapterEventInput) => ComputerUseRuntimeEventBridgeResult;
     recordBrowserAdapterResult: (
@@ -423,9 +414,17 @@ export interface ComputerUseBrowserRuntimeAdapterRecordingOptions {
 
 
 export interface ComputerUseSandboxBrowserAdapterFeatureFlags {
+  /** Canonical: enable sandbox browser adapter path. */
   sandboxBrowserAdapterEnabled?: boolean;
+  /**
+   * @deprecated Use `sandboxBrowserAdapterEnabled`.
+   */
   enableSandboxBrowserAdapter?: boolean;
+  /** Canonical: emit/validate BrowserRuntimeRouter bridge requests. */
   browserRuntimeRouterBridgeEnabled?: boolean;
+  /**
+   * @deprecated Use `browserRuntimeRouterBridgeEnabled`.
+   */
   enableBrowserRuntimeRouterBridge?: boolean;
 }
 
@@ -474,33 +473,6 @@ export interface ComputerUseSandboxBrowserAdapterOptions {
   recording?: ComputerUseBrowserRuntimeAdapterRecordingOptions;
 }
 
-export interface ComputerUseBrowserRuntimeBridgeOptions {
-  browserRuntimeImportPlanned?: true;
-  defaultBrowserLane?: ComputerUseBrowserRuntimeLane;
-  defaultBrowserContext?: boolean;
-}
-
-export interface ComputerUseSandboxBrowserProviderOptions {
-  providerId?: string;
-}
-
-export interface ComputerUseSandboxBrowserProviderResult {
-  status: "executed" | "failed";
-  action: ComputerUsePlannedAction;
-  metadata: {
-    reason?: string;
-    providerKind: "scaffold";
-    browserApisCalled: false;
-    sandboxSimulated: true;
-  };
-}
-
-
-
-export interface ComputerUseSandboxBrowserRouteRecord {
-  route: ComputerUseBrowserRouteRequest;
-  result: ComputerUseSandboxBrowserProviderResult;
-}
 export interface ComputerUseVerificationInput {
   result: ComputerUseExecutionResult;
   results: ComputerUseExecutionResult[];
@@ -852,6 +824,9 @@ export interface CreateComputerUseRuntimeOptions {
   pipelineOptions?: {
     registerDefaultSandboxAdapter?: boolean;
     riskLevel?: ComputerUseRiskLevel;
+    realSandboxExecutionEnabled?: boolean;
+    invocationShell?: import("./BrowserRuntimeRouterRealInvocationShell").BrowserRuntimeRouterRealInvocationShell;
+    sandboxAdapterOptions?: ComputerUseSandboxExecutorAdapterOptions;
   };
   missionEngineBridgeOptions?: ComputerUseMissionEngineBridgeOptions;
   missionTapeAdapter?: {
@@ -1212,23 +1187,66 @@ export interface ComputerUseBrowserRuntimeRouterGuardedInvocationResult {
 }
 
 
+/**
+ * Minimal router port for DI. Prefer injecting `BrowserRuntimeRouter` (or a test
+ * double) so computer-use never hard-imports Playwright at module load.
+ */
+export interface ComputerUseBrowserRuntimeRouterPort {
+  route(request: {
+    requestId: string;
+    missionId: string;
+    action: string;
+    target?: string;
+    payload?: Record<string, unknown>;
+    issuedAt: string;
+    riskLevel: string;
+    trustTier: string;
+    preferredLane?: string;
+    hasGuardApproval?: boolean;
+    linkedDeviceTrusted?: boolean;
+    linkedDeviceAvailable?: boolean;
+  }): Promise<{
+    accepted: boolean;
+    lane: string;
+    runtime: string;
+    reason?: string;
+    requiresApproval?: boolean;
+    execution?: {
+      playwrightCalled?: boolean;
+      browserApisCalled?: boolean;
+      realBrowserExecutionEnabled?: boolean;
+      systemApisCalled?: boolean;
+      directHostAllowed?: boolean;
+    };
+  }>;
+}
+
 export type ComputerUseBrowserRuntimeRealInvocationShellMetadata = {
   adapterKind: "browser_runtime_real_invocation_shell";
-  shellOnly: true;
-  realBrowserExecutionEnabled: false;
-  browserRuntimeRouterImported: false;
-  browserRuntimeRouterInstantiated: false;
-  browserRuntimeRouterCalled: false;
-  playwrightCalled: false;
-  browserApisCalled: false;
+  /** true when shell did not call a real router (scaffold / disabled path). */
+  shellOnly: boolean;
+  realBrowserExecutionEnabled: boolean;
+  browserRuntimeRouterImported: boolean;
+  browserRuntimeRouterInstantiated: boolean;
+  browserRuntimeRouterCalled: boolean;
+  playwrightCalled: boolean;
+  browserApisCalled: boolean;
   systemApisCalled: false;
   directHostAllowed: false;
   requiresExplicitOptIn: true;
+  routeAccepted?: boolean;
+  routeLane?: string;
+  routeRuntime?: string;
 };
 
 export interface ComputerUseBrowserRuntimeRealInvocationShellOptions {
   now?: () => string;
   guardedAdapter?: import("./BrowserRuntimeRouterGuardedAdapter").BrowserRuntimeRouterGuardedAdapter;
+  /**
+   * Injected BrowserRuntimeRouter (or mock). Required for real invocation when
+   * readiness is ready and realBrowserRuntimeRouterEnabled is true.
+   */
+  router?: ComputerUseBrowserRuntimeRouterPort;
   onEvent?: (event: {
     eventType: "browser_runtime_real_invocation_shell_invoked";
     timestamp: string;
@@ -1247,7 +1265,13 @@ export interface ComputerUseBrowserRuntimeRealInvocationInput
 }
 
 export interface ComputerUseBrowserRuntimeRealInvocationResult {
-  status: "blocked" | "dry_run_required" | "needs_confirmation" | "ready_but_real_invocation_disabled";
+  status:
+    | "blocked"
+    | "dry_run_required"
+    | "needs_confirmation"
+    | "ready_but_real_invocation_disabled"
+    | "invoked"
+    | "invoke_failed";
   guardedStatus: ComputerUseBrowserRuntimeRouterGuardedInvocationResult["status"];
   requestId?: string;
   missionId?: string;
@@ -1265,6 +1289,8 @@ export interface ComputerUseBrowserRuntimeRealInvocationSnapshot {
   dryRunRequiredCount: number;
   needsConfirmationCount: number;
   readyButRealInvocationDisabledCount: number;
+  invokedCount: number;
+  invokeFailedCount: number;
   lastInvocationAt?: string;
   lastResult?: ComputerUseBrowserRuntimeRealInvocationResult;
 }

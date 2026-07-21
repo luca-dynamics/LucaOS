@@ -21,6 +21,7 @@ describe("createLucaLinkModalReadinessItems", () => {
       "Pairing",
       "Host link",
       "Trust",
+      "Continuity",
       "Guest access",
     ]);
     expect(items[0]).toMatchObject({
@@ -28,7 +29,12 @@ describe("createLucaLinkModalReadinessItems", () => {
       detail: "No device has joined yet",
       tone: "waiting",
     });
-    expect(items[2].detail).toBe("New devices start with limited access");
+    expect(items.find((item) => item.id === "trust")?.detail).toBe(
+      "New devices start with limited access",
+    );
+    expect(items.find((item) => item.id === "continuity")?.value).toBe(
+      "No active continuity",
+    );
   });
 
   it("summarizes a ready linked host without exposing internal system terms", () => {
@@ -43,6 +49,8 @@ describe("createLucaLinkModalReadinessItems", () => {
       pendingGuestAuth: 0,
       deniedGuestInbound: 0,
       rateLimitedGuestInbound: 0,
+      validContinuations: 1,
+      pendingHandoffs: 0,
     });
 
     expect(items[0]).toMatchObject({
@@ -50,11 +58,17 @@ describe("createLucaLinkModalReadinessItems", () => {
       detail: "2 devices paired",
       tone: "ready",
     });
-    expect(items[1]).toMatchObject({
+    expect(items.find((item) => item.id === "hosts")).toMatchObject({
       value: "1 host",
       tone: "ready",
     });
-    expect(items[2].detail).toBe("Capability access still requires approval");
+    expect(items.find((item) => item.id === "trust")?.detail).toBe(
+      "Capability access still requires approval",
+    );
+    expect(items.find((item) => item.id === "continuity")).toMatchObject({
+      value: "1 continuation ready",
+      tone: "ready",
+    });
     expect(JSON.stringify(items)).not.toMatch(/registry|handshake/i);
   });
 
@@ -71,6 +85,7 @@ describe("createLucaLinkModalReadinessItems", () => {
       pendingGuestAuth: 1,
       deniedGuestInbound: 2,
       rateLimitedGuestInbound: 1,
+      pendingHandoffs: 2,
     });
 
     expect(items[0]).toMatchObject({
@@ -78,11 +93,15 @@ describe("createLucaLinkModalReadinessItems", () => {
       detail: "Local pairing service refused start (401)",
       tone: "attention",
     });
-    expect(items[2]).toMatchObject({
+    expect(items.find((item) => item.id === "trust")).toMatchObject({
       value: "1 blocked",
       tone: "attention",
     });
-    expect(items[3]).toMatchObject({
+    expect(items.find((item) => item.id === "continuity")).toMatchObject({
+      value: "2 handoffs pending",
+      tone: "waiting",
+    });
+    expect(items.find((item) => item.id === "guest")).toMatchObject({
       detail: "3 guest events blocked or slowed",
       tone: "attention",
     });

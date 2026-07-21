@@ -14,10 +14,14 @@ export interface LucaLinkModalReadinessSnapshot {
   pendingGuestAuth: number;
   deniedGuestInbound: number;
   rateLimitedGuestInbound: number;
+  /** Optional continuity signals (continuation tokens + handoffs). */
+  validContinuations?: number;
+  pendingHandoffs?: number;
+  continuityStatusLabel?: string;
 }
 
 export interface LucaLinkModalReadinessItem {
-  id: "pairing" | "hosts" | "trust" | "guest";
+  id: "pairing" | "hosts" | "trust" | "guest" | "continuity";
   label: string;
   value: string;
   detail: string;
@@ -72,6 +76,27 @@ export function createLucaLinkModalReadinessItems(
         ? "ready"
         : "waiting";
 
+  const validContinuations = snapshot.validContinuations ?? 0;
+  const pendingHandoffs = snapshot.pendingHandoffs ?? 0;
+  const continuityTone: LucaLinkModalReadinessTone =
+    pendingHandoffs > 0
+      ? "waiting"
+      : validContinuations > 0 || snapshot.onlineHosts > 0
+        ? "ready"
+        : "waiting";
+  const continuityValue =
+    pendingHandoffs > 0
+      ? formatCount(pendingHandoffs, "handoff pending", "handoffs pending")
+      : validContinuations > 0
+        ? formatCount(validContinuations, "continuation ready", "continuations ready")
+        : snapshot.continuityStatusLabel ?? "No active continuity";
+  const continuityDetail =
+    pendingHandoffs > 0
+      ? "Conversation handoffs wait for explicit accept — never auto-execute"
+      : validContinuations > 0
+        ? "Approved continuations are tokens only; they do not send or run"
+        : "Mesh + trust identity consolidates here when devices connect";
+
   return [
     {
       id: "pairing",
@@ -105,6 +130,13 @@ export function createLucaLinkModalReadinessItems(
           ? "Capability access still requires approval"
           : "New devices start with limited access",
       tone: trustTone,
+    },
+    {
+      id: "continuity",
+      label: "Continuity",
+      value: continuityValue,
+      detail: continuityDetail,
+      tone: continuityTone,
     },
     {
       id: "guest",

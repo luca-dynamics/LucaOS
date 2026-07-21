@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { BrowserRuntimeRouterRealInvocationShell } from "./BrowserRuntimeRouterRealInvocationShell";
 import { BrowserRuntimeRouterBridgeRequest } from "./BrowserRuntimeRouterBridge";
+import type { ComputerUseBrowserRuntimeRouterPort } from "./types";
 
 const bridgeRequest: BrowserRuntimeRouterBridgeRequest = {
   requestId: "req-real-shell-1",
@@ -28,7 +29,22 @@ const bridgeRequest: BrowserRuntimeRouterBridgeRequest = {
   },
 };
 
-const dryRunPass = { ok: true, metadata: { adapterKind: "browser_runtime_router_dry_run", dryRun: true, realBrowserExecutionEnabled: false, browserRuntimeRouterImported: false, browserRuntimeRouterInstantiated: false, browserRuntimeRouterCalled: false, playwrightCalled: false, browserApisCalled: false, systemApisCalled: false, directHostAllowed: false, requiresExplicitOptIn: true } };
+const dryRunPass = {
+  ok: true,
+  metadata: {
+    adapterKind: "browser_runtime_router_dry_run" as const,
+    dryRun: true as const,
+    realBrowserExecutionEnabled: false as const,
+    browserRuntimeRouterImported: false as const,
+    browserRuntimeRouterInstantiated: false as const,
+    browserRuntimeRouterCalled: false as const,
+    playwrightCalled: false as const,
+    browserApisCalled: false as const,
+    systemApisCalled: false as const,
+    directHostAllowed: false as const,
+    requiresExplicitOptIn: true as const,
+  },
+};
 
 const baseInput = {
   featureFlags: {
@@ -42,22 +58,52 @@ const baseInput = {
   guardDecision: { status: "allowed" as const, reason: "ok" },
 };
 
-describe("BrowserRuntimeRouterRealInvocationShell", () => {
-  it("maps guarded statuses and keeps real invocation disabled", () => {
-    const shell = new BrowserRuntimeRouterRealInvocationShell();
-    expect(shell.invoke({ ...baseInput, guardDecision: { status: "denied", reason: "no" } }).status).toBe("blocked");
-    expect(shell.invoke({ ...baseInput, dryRunResult: undefined }).status).toBe("dry_run_required");
-    expect(shell.invoke({ ...baseInput, guardDecision: { status: "needs_confirmation", reason: "approve" } }).status).toBe("needs_confirmation");
+function createMockRouter(
+  routeImpl?: ComputerUseBrowserRuntimeRouterPort["route"],
+): ComputerUseBrowserRuntimeRouterPort {
+  return {
+    route:
+      routeImpl ??
+      (async () => ({
+        accepted: true,
+        lane: "sandbox_browser",
+        runtime: "playwright",
+        reason: "mock-accepted",
+        execution: {
+          playwrightCalled: true,
+          browserApisCalled: true,
+          realBrowserExecutionEnabled: true,
+        },
+      })),
+  };
+}
 
-    const readyResult = shell.invoke(baseInput);
+describe("BrowserRuntimeRouterRealInvocationShell", () => {
+  it("maps guarded statuses and keeps real invocation disabled without router DI", async () => {
+    const shell = new BrowserRuntimeRouterRealInvocationShell();
+    expect(
+      (await shell.invoke({ ...baseInput, guardDecision: { status: "denied", reason: "no" } }))
+        .status,
+    ).toBe("blocked");
+    expect((await shell.invoke({ ...baseInput, dryRunResult: undefined })).status).toBe(
+      "dry_run_required",
+    );
+    expect(
+      (
+        await shell.invoke({
+          ...baseInput,
+          guardDecision: { status: "needs_confirmation", reason: "approve" },
+        })
+      ).status,
+    ).toBe("needs_confirmation");
+
+    const readyResult = await shell.invoke(baseInput);
     expect(readyResult.status).toBe("ready_but_real_invocation_disabled");
     expect(readyResult.guardedStatus).toBe("ready_but_not_invoked");
     expect(readyResult.metadata).toMatchObject({
       adapterKind: "browser_runtime_real_invocation_shell",
       shellOnly: true,
       realBrowserExecutionEnabled: false,
-      browserRuntimeRouterImported: false,
-      browserRuntimeRouterInstantiated: false,
       browserRuntimeRouterCalled: false,
       playwrightCalled: false,
       browserApisCalled: false,
@@ -67,19 +113,111 @@ describe("BrowserRuntimeRouterRealInvocationShell", () => {
     });
   });
 
-  it("snapshot counters update and reset clears counters", () => {
-    const shell = new BrowserRuntimeRouterRealInvocationShell({ now: () => "2026-01-01T00:00:00.000Z" });
-    shell.invoke({ ...baseInput, guardDecision: { status: "denied", reason: "no" } });
-    shell.invoke({ ...baseInput, dryRunResult: undefined });
-    shell.invoke({ ...baseInput, guardDecision: { status: "needs_confirmation", reason: "approve" } });
-    shell.invoke(baseInput);
+  it("invokes injected router when readiness is ready", async () => {
+    const route = vi.fn(async () => ({
+      accepted: true,
+      lane: "sandbox_browser",
+      runtime: "playwright",
+      reason: "routed-ok",
+      execution: {
+        playwrightCalled: true,
+        browserApisCalled: true,
+        realBrowserExecutionEnabled: true,
+      },
+    }));
+    const shell = new BrowserRuntimeRouterRealInvocationShell({
+      router: createMockRouter(route),
+    });
+
+    const result = await shell.invoke(baseInput);
+
+    expect(result.status).toBe("invoked");
+    expect(route).toHaveBeenCalledTimes(1);
+    expect(route).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: bridgeRequest.requestId,
+        missionId: bridgeRequest.missionId,
+        action: "click",
+        preferredLane: "sandbox_browser",
+      }),
+    );
+    expect(result.metadata).toMatchObject({
+      shellOnly: false,
+      realBrowserExecutionEnabled: true,
+      browserRuntimeRouterImported: true,
+      browserRuntimeRouterInstantiated: true,
+      browserRuntimeRouterCalled: true,
+      playwrightCalled: true,
+      browserApisCalled: true,
+      systemApisCalled: false,
+      directHostAllowed: false,
+      routeAccepted: true,
+      routeLane: "sandbox_browser",
+    });
+  });
+
+  it("returns invoke_failed when router rejects", async () => {
+    const shell = new BrowserRuntimeRouterRealInvocationShell({
+      router: createMockRouter(async () => ({
+        accepted: false,
+        lane: "sandbox_browser",
+        runtime: "playwright",
+        reason: "adapter denied",
+      })),
+    });
+
+    const result = await shell.invoke(baseInput);
+    expect(result.status).toBe("invoke_failed");
+    expect(result.reason).toMatch(/adapter denied/i);
+    expect(result.metadata.browserRuntimeRouterCalled).toBe(true);
+    expect(result.metadata.routeAccepted).toBe(false);
+  });
+
+  it("returns invoke_failed when router throws", async () => {
+    const shell = new BrowserRuntimeRouterRealInvocationShell({
+      router: createMockRouter(async () => {
+        throw new Error("boom");
+      }),
+    });
+
+    const result = await shell.invoke(baseInput);
+    expect(result.status).toBe("invoke_failed");
+    expect(result.reason).toMatch(/boom/);
+  });
+
+  it("never calls router when gates fail", async () => {
+    const route = vi.fn(async () => ({
+      accepted: true,
+      lane: "sandbox_browser",
+      runtime: "playwright",
+    }));
+    const shell = new BrowserRuntimeRouterRealInvocationShell({
+      router: createMockRouter(route),
+    });
+
+    await shell.invoke({ ...baseInput, guardDecision: { status: "denied", reason: "no" } });
+    expect(route).not.toHaveBeenCalled();
+  });
+
+  it("snapshot counters update and reset clears counters", async () => {
+    const shell = new BrowserRuntimeRouterRealInvocationShell({
+      now: () => "2026-01-01T00:00:00.000Z",
+      router: createMockRouter(),
+    });
+    await shell.invoke({ ...baseInput, guardDecision: { status: "denied", reason: "no" } });
+    await shell.invoke({ ...baseInput, dryRunResult: undefined });
+    await shell.invoke({
+      ...baseInput,
+      guardDecision: { status: "needs_confirmation", reason: "approve" },
+    });
+    await shell.invoke(baseInput);
 
     const snapshot = shell.getSnapshot();
     expect(snapshot.invocationCount).toBe(4);
     expect(snapshot.blockedCount).toBe(1);
     expect(snapshot.dryRunRequiredCount).toBe(1);
     expect(snapshot.needsConfirmationCount).toBe(1);
-    expect(snapshot.readyButRealInvocationDisabledCount).toBe(1);
+    expect(snapshot.invokedCount).toBe(1);
     expect(snapshot.lastInvocationAt).toBe("2026-01-01T00:00:00.000Z");
 
     shell.reset();
@@ -89,15 +227,17 @@ describe("BrowserRuntimeRouterRealInvocationShell", () => {
       dryRunRequiredCount: 0,
       needsConfirmationCount: 0,
       readyButRealInvocationDisabledCount: 0,
+      invokedCount: 0,
+      invokeFailedCount: 0,
     });
   });
 
-  it("event recording failure is non-fatal", () => {
+  it("event recording failure is non-fatal", async () => {
     const onEvent = vi.fn(() => {
       throw new Error("boom");
     });
     const shell = new BrowserRuntimeRouterRealInvocationShell({ onEvent });
-    const result = shell.invoke(baseInput);
+    const result = await shell.invoke(baseInput);
     expect(result.status).toBe("ready_but_real_invocation_disabled");
     expect(onEvent).toHaveBeenCalled();
   });

@@ -1,17 +1,15 @@
-# Mission Tape Recorder scaffold
+# Mission Tape Recorder
 
-Minimal additive mission tape recording service for LucaOS.
+In-process append-only mission tape used by computer-use when
+`LucaSettings.computerUse.enableMissionTapeSink` is on (via
+`createMissionTapeRecorderExternalSink`).
 
 ## What this provides
-- A typed `MissionTapeRecord` model with append-only tracks for:
-  - step records
-  - guard decisions
-  - verification records
-  - recovery records
-- `MissionTapeRecorderService` with lifecycle methods:
-  - `createTape`, `appendStep`, `appendGuardDecision`, `appendVerification`, `appendRecovery`, `finalizeTape`, `getTape`, `listTapes`
-- Dependency-injected storage adapter with default in-memory adapter.
-- Compatibility with Mission Engine `MissionTapeRecorder` via `recordMissionTape()`.
+- Typed `MissionTapeRecord` with steps / guard / verification / recovery tracks
+- `MissionTapeRecorderService`: createTape, append*, finalizeTape, getTape, listTapes
+- Default in-memory storage adapter
+- Types shared with `missionEngine/types` (MissionTape contracts)
 
-## Scope
-This is a scaffold only and is intentionally not deeply integrated into production runtime yet.
+## Related
+- Real wiring: `browserRuntime/createRealSandboxComputerUseStack` + settings flag
+- MissionEngine **class** removed; keep using MissionControl + computer-use for execution

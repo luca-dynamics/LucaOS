@@ -69,7 +69,14 @@ describe("ComputerUseMissionIntegrationAdapter", () => {
   });
 
   it("reset clears snapshot and resets dispatcher", async () => {
-    const dispatcher = { dispatch: vi.fn(), reset: vi.fn() };
+    const dispatcher = {
+      dispatch: vi.fn().mockResolvedValue({
+        ok: true,
+        step: { missionId: "m1", stepId: "s1", kind: "computer_use" },
+        reason: "ok",
+      }),
+      reset: vi.fn(),
+    };
     const adapter = new ComputerUseMissionIntegrationAdapter({ dispatcher });
 
     await adapter.dispatch({ step: { missionId: "m1", stepId: "s1", kind: "computer_use" }, featureFlags: { computerUseEnabled: true } });
