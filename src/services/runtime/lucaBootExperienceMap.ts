@@ -142,7 +142,7 @@ export const lucaBootExperiencePhases: LucaBootExperiencePhase[] = [
       "core check calls memoryService.getCortexStatus().available",
       "vision check enumerates videoinput devices but never blocks boot",
       "audio check verifies mediaDevices/getUserMedia availability",
-      "Ollama check probes http://127.0.0.1:11434/api/tags but never blocks boot",
+      "Ollama check uses runtime facade probe (not raw /api/tags) and never blocks boot",
     ],
     initializedServices: [
       "soundService BOOT cue",

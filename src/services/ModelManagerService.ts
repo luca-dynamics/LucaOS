@@ -7,6 +7,10 @@ import { CORTEX_URL } from "../config/api";
 import { settingsService } from "./settingsService";
 import { maintenancePolicy } from "./selfMaintenancePolicy";
 import { probeOllamaViaRuntimeFacade } from "./local-models/ollamaRuntimeProbe";
+import {
+  canaryChatViaRuntimeFacade,
+  deleteOllamaModelViaRuntimeFacade,
+} from "./local-models/ollamaRuntimeOps";
 
 export interface LocalModel {
   id: string;
@@ -921,16 +925,17 @@ class ModelManagerService {
     try {
       if (model.runtime === "ollama") {
         const tag = this.getOllamaTagForModel(id);
-        const resp = await fetch("http://127.0.0.1:11434/api/delete", {
-          method: "DELETE",
-          body: JSON.stringify({ name: tag }),
-        });
-        if (resp.ok) {
+        const deleted = await deleteOllamaModelViaRuntimeFacade(tag);
+        if (deleted.ok) {
           model.status = "not_downloaded";
           model.downloadProgress = 0;
           this.notifyListeners();
           return true;
         }
+        console.warn(
+          `[ModelManager] Ollama delete failed for ${id}:`,
+          deleted.message,
+        );
       } else {
         const url = await this.getUrl(`/models/${id}`);
         const resp = await fetch(url, { method: "DELETE" });
@@ -1103,33 +1108,17 @@ class ModelManagerService {
     if (!model) return false;
     try {
       if (model.runtime === "ollama") {
-        // Real-time inference probe for Ollama
-        const start = Date.now();
+        // Canary via runtime facade (OpenAI-compatible chat path).
         const tag = model.ollamaTag || id;
-        const resp = await fetch("http://127.0.0.1:11434/api/chat", {
-          method: "POST",
-          body: JSON.stringify({
-            model: tag,
-            messages: [{ role: "user", content: "Say 'Luca Test Passed'" }],
-            stream: false,
-          }),
-        });
-        const data = await resp.json();
-
-        // Handle specific Ollama error cases
-        let displayResponse =
-          data.message?.content || data.response || "No response";
-        if (resp.status === 404) displayResponse = "Model not found in Ollama";
-        else if (data.error) displayResponse = data.error;
-
+        const canary = await canaryChatViaRuntimeFacade({ model: tag });
         model.canary = {
-          passed: resp.ok && !data.error && displayResponse !== "No response",
-          response: displayResponse,
-          latency_ms: Date.now() - start,
+          passed: canary.ok,
+          response: canary.text,
+          latency_ms: canary.latencyMs,
           timestamp: Date.now(),
         };
         this.notifyListeners();
-        return resp.ok && !data.error;
+        return canary.ok;
       }
 
       const url = await this.getUrl(`/models/${id}/canary`);

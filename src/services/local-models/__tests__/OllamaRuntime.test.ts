@@ -141,6 +141,23 @@ describe("OllamaRuntime", () => {
     ).rejects.toThrow("Ollama chat failed with HTTP 400");
   });
 
+  it("deletes a model tag via native /api/delete", async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse(200, {}));
+    const runtime = new OllamaRuntime({
+      baseUrl: "http://127.0.0.1:11434",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    await runtime.deleteModel("phi3:mini");
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "http://127.0.0.1:11434/api/delete",
+      expect.objectContaining({
+        method: "DELETE",
+        body: JSON.stringify({ name: "phi3:mini" }),
+      }),
+    );
+  });
+
   it("streams OpenAI-compatible chat chunks", async () => {
     const fetchImpl = vi.fn(async () =>
       streamResponse(200, [
