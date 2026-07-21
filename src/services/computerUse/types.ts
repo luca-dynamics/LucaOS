@@ -765,6 +765,8 @@ export interface ComputerUseMissionRunnerResult {
     runnerKind: "scaffold";
     systemApisCalled: false;
   };
+  /** Present when missionTapeCompletion is configured on the runner. */
+  productCompletion?: import("../missionTape/completeProductMission").CompleteProductMissionResult;
 }
 
 export type ComputerUseMissionRuntimeHandler = (
@@ -818,6 +820,17 @@ export interface ComputerUseMissionRunnerOptions {
     runComputerUseStep: (step: ComputerUseMissionStepInput) => Promise<ComputerUseRuntimeEntrypointResult>;
     reset: () => unknown;
   };
+  /**
+   * When set, runSteps finalizes the mission tape through product verification
+   * (completeProductMission) after all steps finish.
+   */
+  missionTapeCompletion?: {
+    recorder: import("../missionTape/MissionTapeRecorder").MissionTapeRecorderService;
+    /** Default true when recorder is provided. */
+    completeAfterRun?: boolean;
+    verificationOverride?: boolean;
+    overrideReason?: string;
+  };
 }
 
 export interface CreateComputerUseRuntimeOptions {
@@ -828,6 +841,11 @@ export interface CreateComputerUseRuntimeOptions {
     invocationShell?: import("./BrowserRuntimeRouterRealInvocationShell").BrowserRuntimeRouterRealInvocationShell;
     sandboxAdapterOptions?: ComputerUseSandboxExecutorAdapterOptions;
   };
+  /**
+   * When set, mission runner finalizes mission tape via product verification
+   * after runSteps (real wiring for absorb completion criteria).
+   */
+  missionTapeCompletion?: ComputerUseMissionRunnerOptions["missionTapeCompletion"];
   missionEngineBridgeOptions?: ComputerUseMissionEngineBridgeOptions;
   missionTapeAdapter?: {
     recordStepResult: (result: ComputerUseMissionStepResult) => ComputerUseMissionTapeStepRecord;

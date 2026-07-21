@@ -1,9 +1,17 @@
 import { loggerService } from "../loggerService";
+import { MissionTapeRecorderService } from "../missionTape/MissionTapeRecorder";
+import {
+  completeProductMission,
+  type CompleteProductMissionResult,
+} from "../missionTape/completeProductMission";
 
 /**
  * MISSION CONTROL SERVICE (The Memory/State Proxy)
  * This service now acts as a proxy to the Electron Main process 
  * where the actual SQLite database (missionControl.cjs) resides.
+ *
+ * Completion is gated by absorb verification (mission tape + GSD gates)
+ * before archive is allowed.
  */
 
 // Service logic follows after unified global definition in src/global.d.ts
@@ -44,6 +52,8 @@ function isMissionSnapshot(value: unknown): value is MissionSnapshot {
 
 export class MissionControlService {
   private static instance: MissionControlService;
+  /** Shared in-process tape for gated completion (product path). */
+  private readonly missionTape = new MissionTapeRecorderService();
 
   private constructor() {
     loggerService.info("MISSION_CONTROL", "Mission Control Proxy initialized (Bridge: Electron Main).");
@@ -54,6 +64,11 @@ export class MissionControlService {
       MissionControlService.instance = new MissionControlService();
     }
     return MissionControlService.instance;
+  }
+
+  /** Expose tape for diagnostics / tests. */
+  getMissionTapeRecorder(): MissionTapeRecorderService {
+    return this.missionTape;
   }
 
   /**
@@ -118,10 +133,95 @@ export class MissionControlService {
   }
 
   /**
-   * Archive a mission once complete.
+   * Archive a mission once complete (raw Electron path).
+   * Prefer {@link completeMissionWithVerification} so completion is gated.
    */
   public async archiveMission(missionId: number): Promise<void> {
+    if (
+      typeof window === "undefined" ||
+      !window.luca?.missionControl?.archive
+    ) {
+      loggerService.warn(
+        "MISSION_CONTROL",
+        "archiveMission skipped: mission bridge unavailable",
+      );
+      return;
+    }
     return window.luca.missionControl.archive(missionId);
+  }
+
+  /**
+   * Product completion path: mirror goals to mission tape, run GSD verification
+   * gates, and only archive when completion is allowed.
+   */
+  public async completeMissionWithVerification(
+    missionId: number,
+    options: {
+      verificationOverride?: boolean;
+      overrideReason?: string;
+      success?: boolean;
+      /** Skip Electron archive (tests / tape-only). */
+      skipArchive?: boolean;
+    } = {},
+  ): Promise<CompleteProductMissionResult> {
+    const snapshot = await this.getActiveMission();
+    const goals =
+      snapshot?.mission.id === missionId ? snapshot.goals : undefined;
+    const title =
+      snapshot?.mission.id === missionId
+        ? snapshot.mission.title
+        : `mission-${missionId}`;
+
+    const result = await completeProductMission({
+      missionId: String(missionId),
+      intent: title,
+      goals: goals?.map((g) => ({
+        id: g.id,
+        description: g.description,
+        status: g.status,
+      })),
+      success: options.success !== false,
+      recorder: this.missionTape,
+      verificationOverride: options.verificationOverride,
+      overrideReason: options.overrideReason,
+      onCompletedArchive: options.skipArchive
+        ? undefined
+        : async (id) => {
+            const numericId = Number(id);
+            if (!Number.isFinite(numericId)) return;
+            if (
+              typeof window === "undefined" ||
+              !window.luca?.missionControl?.archive
+            ) {
+              loggerService.warn(
+                "MISSION_CONTROL",
+                `Verification passed for ${numericId} but archive bridge unavailable`,
+              );
+              return;
+            }
+            try {
+              await this.archiveMission(numericId);
+              loggerService.info(
+                "MISSION_CONTROL",
+                `Archived mission ${numericId} after verification`,
+              );
+            } catch (error) {
+              loggerService.error(
+                "MISSION_CONTROL",
+                `Archive after verification failed for ${numericId}`,
+                error,
+              );
+            }
+          },
+      onBlocked: async (_id, blocked) => {
+        loggerService.warn(
+          "MISSION_CONTROL",
+          `Mission ${missionId} completion blocked by verification: ${blocked.reason}`,
+        );
+      },
+    });
+
+    return result;
   }
 }
 
