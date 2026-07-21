@@ -1,16 +1,21 @@
 // Service for Computer Access via Cortex (Python Backend)
 // Handles Keyboard, Mouse (Advanced), and AppleScript
 
-import { CORTEX_URL } from "../config/api";
+import {
+  fetchCortexViaRuntimeFacade,
+  postCortexJsonViaRuntimeFacade,
+} from "./local-models/cortexRuntimeOps";
 
 export const computerService = {
   // 1. Keyboard Input (Typing)
   typeText: async (text: string, interval = 0.05) => {
     try {
-      const res = await fetch(`${CORTEX_URL}/keyboard/type`, {
+      // Cortex Phase 4c: facade base URL (not raw CORTEX_URL).
+      const res = await fetchCortexViaRuntimeFacade("/keyboard/type", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, interval }),
+        timeoutMs: 15_000,
       });
       return res.ok;
     } catch (e) {
@@ -22,10 +27,11 @@ export const computerService = {
   // 2. Keyboard Press (Hotkeys)
   pressKey: async (keys: string[]) => {
     try {
-      const res = await fetch(`${CORTEX_URL}/keyboard/press`, {
+      const res = await fetchCortexViaRuntimeFacade("/keyboard/press", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ keys }),
+        timeoutMs: 15_000,
       });
       return res.ok;
     } catch (e) {
@@ -37,12 +43,11 @@ export const computerService = {
   // 3. AppleScript (Mac Automation)
   runAppleScript: async (script: string) => {
     try {
-      const res = await fetch(`${CORTEX_URL}/system/applescript`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ script }),
-      });
-      const data = await res.json();
+      const data = await postCortexJsonViaRuntimeFacade<{
+        status?: string;
+        message?: string;
+        output?: string;
+      }>("/system/applescript", { script }, { timeoutMs: 30_000 });
       if (data.status === "error") throw new Error(data.message);
       return data.output || "Script Executed.";
     } catch (e: any) {

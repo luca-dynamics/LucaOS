@@ -9,7 +9,7 @@ import { ToolSchemas } from "../../schemas";
 import type { PersonaType } from "../../../config/personaConfig";
 import { hasToolAccess, getPersonaTools } from "../config/personaToolAccess";
 import { tracingService } from "../LucaTracing";
-import { CORTEX_URL } from "../../../config/api";
+import { postCortexJsonViaRuntimeFacade } from "../../local-models/cortexRuntimeOps";
 import { ToolRegistry } from "../../toolRegistry";
 
 export interface ToolResult {
@@ -197,21 +197,18 @@ export class AgentToolBridge {
     params: any,
   ): Promise<ToolResult> {
     try {
-      // Call backend endpoint (will be implemented in cortex.py)
-      const response = await fetch(`${CORTEX_URL}/api/agent/execute-tool`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          toolName,
-          params,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Tool execution failed: ${response.statusText}`);
-      }
-
-      const result = await response.json();
+      // Cortex Phase 4c: facade HTTP (not raw CORTEX_URL).
+      const result = await postCortexJsonViaRuntimeFacade<{
+        success?: boolean;
+        output?: unknown;
+        result?: unknown;
+        filesModified?: string[];
+        error?: string;
+      }>(
+        "/api/agent/execute-tool",
+        { toolName, params },
+        { timeoutMs: 120_000 },
+      );
 
       return {
         success: result.success !== false,

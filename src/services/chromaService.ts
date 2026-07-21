@@ -1,7 +1,5 @@
-import { CORTEX_URL } from "../config/api";
 import { settingsService } from "./settingsService";
-
-const CHROMA_BRIDGE_URL = CORTEX_URL; // Updated to Cortex Port
+import { getCortexBaseUrlFromFacade } from "./local-models/cortexRuntimeOps";
 
 interface ChromaResult {
   id: string /** Content of the memory/doc */;
@@ -29,32 +27,29 @@ class ChromaService {
   private bridgeUrl: string;
   private isAvailable: boolean = false;
 
-  constructor(url: string = CHROMA_BRIDGE_URL) {
-    this.bridgeUrl = url;
+  constructor(url?: string) {
+    // Cortex Phase 4c: default base from runtime facade (same host as chat/STT).
+    this.bridgeUrl = url ?? getCortexBaseUrlFromFacade();
     this.checkAvailability();
   }
 
   /**
-   * Check if Cortex bridge is available via /health
+   * Check if Cortex bridge is available via runtime facade health probe.
    */
   async checkAvailability(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.bridgeUrl}/health`, {
-        method: "GET",
-        signal: AbortSignal.timeout(3000),
-      });
-      this.isAvailable = response.ok;
+      // Cortex Phase 4c: shared probe (not ad-hoc /health fetch).
+      const { probeCortexViaRuntimeFacade } = await import(
+        "./local-models/cortexRuntimeProbe"
+      );
+      const probe = await probeCortexViaRuntimeFacade({ ttlMs: 5_000 });
+      this.isAvailable = probe.available;
       if (this.isAvailable) {
         console.log("[CORTEX] Memory Bridge is available");
       }
       return this.isAvailable;
-    } catch (e: any) {
+    } catch {
       this.isAvailable = false;
-      // Only warn if it's not a timeout
-      if (!e.name || e.name !== "TimeoutError") {
-        // console.warn('[CORTEX] Bridge not available:', e.message);
-        // Suppress warning to avoid console spam, as user knows
-      }
       return false;
     }
   }
