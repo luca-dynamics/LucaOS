@@ -65,6 +65,16 @@ Luca does not have *one* local-model registry — it has **two parallel hand-cur
 - **L4** — refine the P5b provisioning UI to offer the LocalAI/endpoint path alongside Ollama.
 - **L5** — incremental registry unification (migrate Ollama/WebLLM lists), then QA across desktop/remote.
 
+### L5 progress note
+
+`src/services/llm/lucaLocalCatalogBridge.ts` provides a merged **read** view over:
+
+1. `lucaUnifiedModelRegistry` (ollama / webllm / openai-compatible),
+2. `local-models/LocalModelCatalog` (runtime facade including cortex/mediapipe),
+3. `ModelRegistry.OFFLINE_MODELS` (browser install metadata).
+
+`ModelRegistryService.getModels()` now prefers `getOfflineModelsFromLocalCatalog()` with fallback to the static offline list. Model Manager brain cards use `resolveBrainCatalogMetadata()` for display metadata. Ollama **status** probes (`LocalLLMAdapter`, `ModelManagerService.getOllamaModels` / refresh, BIOS discovery) go through `probeOllamaViaRuntimeFacade()`. Operational download status remains in ModelRegistry; desktop install status remains in ModelManagerService. Full deletion of parallel source lists is still a later cleanup step after call-sites migrate.
+
 ## 7. Rules honored
 
 Documentation-only audit. `git diff --check` clean. Adds one doc under `docs/`. No source, runtime, UI, model, provider, provisioning, or onboarding behavior changes; existing services are referenced for assessment, not modified.

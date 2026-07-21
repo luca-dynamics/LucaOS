@@ -7,6 +7,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Icon } from "./ui/Icon";
 import { LucaButton, LucaDialog, LucaDialogOverlay, LucaInput, LucaSwitch } from "./ui/luca";
 import { findLucaUnifiedModel } from "../services/llm/lucaUnifiedModelRegistry";
+import { resolveBrainCatalogMetadata } from "../services/llm/lucaLocalCatalogBridge";
 import {
   modelManagerService,
   LocalModel,
@@ -498,6 +499,18 @@ const RenderGrid: React.FC<RenderGridProps> = ({
           <div className={`grid gap-2 ${compact ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
             {items.map((model) => {
               const unified = findLucaUnifiedModel(model.id);
+              // L5: prefer merged catalog metadata (unified + runtime facade).
+              const catalog = resolveBrainCatalogMetadata(model.id);
+              const displayName = catalog?.name ?? model.name;
+              const displayDescription = catalog?.description ?? model.description;
+              const minRam = catalog?.minRamBytes ?? unified?.minRamBytes ?? model.memoryRequirement;
+              const sourceLabel =
+                catalog?.sourceLabel ??
+                (model.runtime === "ollama"
+                  ? "Ollama"
+                  : unified?.source === "webllm"
+                    ? "WebGPU"
+                    : "Internal");
               return (
               <div key={model.id} className={`border rounded-lg overflow-hidden relative ${model.status === "ready" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]" : "shadow-sm"}`}
                    style={{ backgroundColor: "var(--app-bg-main)", borderColor: model.status === "ready" ? undefined : "var(--app-border-main)" }}>
@@ -519,7 +532,7 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                             className="text-xs font-bold flex items-center gap-1.5"
                             style={{ color: "var(--app-text-main)" }}
                           >
-                            {model.name}
+                            {displayName}
                             {model.runtime === "ollama" && (
                               <span title="Ollama Guided" className="opacity-50 flex items-center" style={{ color: "var(--app-text-main)" }}>
                                 <Icon name="Zap" size={10} variant="BoldDuotone" />
@@ -531,8 +544,8 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                             style={{ color: "var(--app-text-muted)" }}
                           >
                             {model.sizeFormatted}
-                            {(unified?.minRamBytes ?? model.memoryRequirement) ? ` • ${Math.round(((unified?.minRamBytes ?? model.memoryRequirement)!) / 1e9)} GB RAM` : ""}
-                            {" • "}{model.runtime === "ollama" ? "Ollama" : unified?.source === "webllm" ? "WebGPU" : "Internal"}
+                            {minRam ? ` • ${Math.round(minRam / 1e9)} GB RAM` : ""}
+                            {" • "}{sourceLabel}
                           </div>
                         </div>
                       </div>
@@ -549,20 +562,24 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                       className="text-[9px] line-clamp-2 leading-relaxed mb-1"
                       style={{ color: "var(--app-text-muted)" }}
                     >
-                      {model.description}
+                      {displayDescription}
                     </p>
 
                     <div className="flex flex-wrap items-center gap-1.5 mt-1">
                       <span className={`text-[7px] px-1.5 py-0.5 rounded border uppercase tracking-[0.12em] ${getCatalogBadgeClass(model.catalogStatus)}`}>
                         {model.catalogStatus || "verified"}
                       </span>
-                      {unified?.license && (
+                      {(catalog?.licenseName || unified?.license?.name) && (
                         <span
                           className="text-[7px] px-1.5 py-0.5 rounded border uppercase tracking-[0.08em]"
                           style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)", opacity: 0.7 }}
-                          title={`License: ${unified.license.name} — commercial use: ${unified.license.commercialUse}`}
+                          title={
+                            unified?.license
+                              ? `License: ${unified.license.name} — commercial use: ${unified.license.commercialUse}`
+                              : `License: ${catalog?.licenseName}`
+                          }
                         >
-                          {unified.license.name.split(" ")[0]}
+                          {(unified?.license?.name ?? catalog?.licenseName ?? "").split(" ")[0]}
                         </span>
                       )}
                       {unified?.sourceUrl && (

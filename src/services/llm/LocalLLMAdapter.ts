@@ -1,9 +1,9 @@
 import { LLMProvider, ChatMessage, LLMResponse } from "./LLMProvider";
-import { OLLAMA_SERVER_URL } from "../../config/api";
 import { settingsService } from "../settingsService";
 import { modelManager, LOCAL_BRAIN_MODEL_IDS } from "../ModelManagerService";
 import { lucaLocalModelRuntime } from "../local-models/LucaLocalModelRuntime";
 import type { LocalChatMessage, LocalToolDefinition } from "../local-models/LocalModelTypes";
+import { probeOllamaViaRuntimeFacade } from "../local-models/ollamaRuntimeProbe";
 
 // Define locally to avoid dependency issues if not exported
 interface ToolFunction {
@@ -40,38 +40,20 @@ export class LocalLLMAdapter implements LLMProvider {
   }
 
   /**
-   * Check if Ollama is running and cache the result for 60s.
-   * Returns the list of available Ollama model names.
+   * Check if Ollama is running via the local runtime facade (not a raw fetch).
+   * Results are cached by the shared probe (~60s).
    */
   private async checkOllama(): Promise<{
     available: boolean;
     models: string[];
   }> {
-    const cache = LocalLLMAdapter.ollamaStatus;
-    if (cache && Date.now() - cache.checkedAt < 60_000) {
-      return { available: cache.available, models: cache.models };
-    }
-    try {
-      const resp = await fetch(`${OLLAMA_SERVER_URL}/api/tags`, {
-        signal: AbortSignal.timeout(2_000),
-      });
-      if (!resp.ok) throw new Error("Not OK");
-      const data = await resp.json();
-      const models = (data.models || []).map((m: any) => m.name as string);
-      LocalLLMAdapter.ollamaStatus = {
-        available: true,
-        models,
-        checkedAt: Date.now(),
-      };
-      return { available: true, models };
-    } catch {
-      LocalLLMAdapter.ollamaStatus = {
-        available: false,
-        models: [],
-        checkedAt: Date.now(),
-      };
-      return { available: false, models: [] };
-    }
+    const probe = await probeOllamaViaRuntimeFacade();
+    LocalLLMAdapter.ollamaStatus = {
+      available: probe.available,
+      models: probe.models,
+      checkedAt: probe.checkedAt,
+    };
+    return { available: probe.available, models: probe.models };
   }
 
   /**

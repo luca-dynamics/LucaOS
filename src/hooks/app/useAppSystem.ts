@@ -18,6 +18,7 @@ import {
   withBootTimeout,
   type LucaBootPhaseRecord,
 } from "../../services/runtime/lucaBootRuntimeGuard";
+import { probeOllamaViaRuntimeFacade } from "../../services/local-models/ollamaRuntimeProbe";
 
 import { Message } from "../../types";
 import { eventBus } from "../../services/eventBus";
@@ -378,14 +379,12 @@ export const useAppSystem = ({
                 label: "Ollama local model discovery",
                 timeoutMs: LUCA_BOOT_TIMEOUTS.ollamaModelMs,
                 run: async () => {
-                  const resp = await fetch("http://127.0.0.1:11434/api/tags", {
-                    signal: AbortSignal.timeout(
-                      LUCA_BOOT_TIMEOUTS.ollamaModelMs,
-                    ),
+                  // Status via local runtime facade (not raw /api/tags).
+                  const probe = await probeOllamaViaRuntimeFacade({
+                    force: true,
                   });
-                  if (!resp.ok) return 0;
-                  const data = await resp.json();
-                  const count = data.models?.length || 0;
+                  if (!probe.available) return 0;
+                  const count = probe.models.length;
                   setBiosStatus((p: any) => ({
                     ...p,
                     ollama: `OK (${count} model${count !== 1 ? "s" : ""})`,
