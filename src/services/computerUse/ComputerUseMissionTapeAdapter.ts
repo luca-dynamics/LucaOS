@@ -1,4 +1,5 @@
 import {
+  ComputerUseMissionStepResult,
   ComputerUseMissionTapeRecoveryRecord,
   ComputerUseMissionTapeSnapshot,
   ComputerUseMissionTapeStepRecord,
@@ -10,6 +11,52 @@ export class ComputerUseMissionTapeAdapter {
   private readonly stepRecords: ComputerUseMissionTapeStepRecord[] = [];
   private readonly verificationRecords: ComputerUseMissionTapeVerificationRecord[] = [];
   private readonly recoveryRecords: ComputerUseMissionTapeRecoveryRecord[] = [];
+
+  /** Runtime contract: record a mission step result onto the tape. */
+  recordStepResult(result: ComputerUseMissionStepResult): ComputerUseMissionTapeStepRecord {
+    return this.toMissionTapeStepRecord({
+      missionId: result.missionId,
+      timestamp: new Date().toISOString(),
+      eventType: "action_plan",
+      payload: {
+        stepId: result.stepId,
+        status: result.status,
+        reason: result.reason,
+        pipelineResult: result.pipelineResult,
+      },
+    });
+  }
+
+  /** Runtime contract: record a verification payload. */
+  recordVerificationResult(
+    missionId: string,
+    payload: unknown,
+  ): ComputerUseMissionTapeVerificationRecord {
+    return this.toMissionTapeVerificationRecord({
+      missionId,
+      timestamp: new Date().toISOString(),
+      eventType: "verification_result",
+      payload,
+    });
+  }
+
+  /** Runtime contract: record a recovery plan payload. */
+  recordRecoveryPlan(
+    missionId: string,
+    payload: unknown,
+  ): ComputerUseMissionTapeRecoveryRecord {
+    return this.toMissionTapeRecoveryRecord({
+      missionId,
+      timestamp: new Date().toISOString(),
+      eventType: "recovery_plan",
+      payload,
+    });
+  }
+
+  /** Runtime contract alias for createMissionTapeSnapshot. */
+  getSnapshot(missionId: string): ComputerUseMissionTapeSnapshot {
+    return this.createMissionTapeSnapshot(missionId);
+  }
 
   toMissionTapeStepRecord(event: ComputerUseTapeEvent): ComputerUseMissionTapeStepRecord {
     if (event.eventType !== "action_plan") throw new Error("Expected action_plan event");
