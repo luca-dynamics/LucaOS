@@ -6,6 +6,7 @@
 import { CORTEX_URL } from "../config/api";
 import { settingsService } from "./settingsService";
 import { maintenancePolicy } from "./selfMaintenancePolicy";
+import { probeOllamaViaRuntimeFacade } from "./local-models/ollamaRuntimeProbe";
 
 export interface LocalModel {
   id: string;
@@ -653,10 +654,9 @@ class ModelManagerService {
 
       let ollamaNames: string[] = [];
       try {
-        const resp = await fetch("http://127.0.0.1:11434/api/tags");
-        if (resp.ok) {
-          const data = await resp.json();
-          ollamaNames = (data.models || []).map((m: any) => m.name);
+        const probe = await probeOllamaViaRuntimeFacade({ force: true });
+        if (probe.available) {
+          ollamaNames = probe.models;
         }
       } catch (err) {
         console.warn(
@@ -994,15 +994,23 @@ class ModelManagerService {
     }
   }
 
-  async getOllamaModels(): Promise<{ available: boolean; models: any[] }> {
+  /**
+   * Ollama status via local runtime facade (not a raw /api/tags fetch).
+   * Shape preserved for callers that map models by `.name`.
+   */
+  async getOllamaModels(options?: {
+    force?: boolean;
+  }): Promise<{ available: boolean; models: Array<{ name: string }> }> {
     try {
-      const resp = await fetch("http://127.0.0.1:11434/api/tags");
-      if (resp.ok) {
-        const data = await resp.json();
-        return { available: true, models: data.models || [] };
-      }
+      const probe = await probeOllamaViaRuntimeFacade({
+        force: options?.force,
+      });
+      return {
+        available: probe.available,
+        models: probe.models.map((name) => ({ name })),
+      };
     } catch (err) {
-      console.warn("[ModelManager] Failed to fetch raw Ollama models", err);
+      console.warn("[ModelManager] Failed to fetch Ollama models via facade", err);
     }
     return { available: false, models: [] };
   }
@@ -1019,7 +1027,8 @@ class ModelManagerService {
    * Ensuring Ollama is running (Active Reliability Layer)
    */
   async ensureOllamaRunning(): Promise<boolean> {
-    const status = await this.getOllamaModels();
+    // Force refresh so a recent negative probe cache cannot block auto-start.
+    const status = await this.getOllamaModels({ force: true });
     if (status.available) return true;
 
     // Not running - check if it's there
@@ -1034,7 +1043,7 @@ class ModelManagerService {
     // Poll until ready (max 15s)
     for (let i = 0; i < 15; i++) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      const check = await this.getOllamaModels();
+      const check = await this.getOllamaModels({ force: true });
       if (check.available) {
         console.log("[Reliability Layer] Ollama is now responsive.");
         return true;

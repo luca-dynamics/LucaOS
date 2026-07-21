@@ -10,9 +10,10 @@
  * two fields the audit flagged as missing for "industrial-strong" use:
  * per-model RAM requirement (for honest hardware-fit) and license/provenance.
  *
- * Pure and dormant: data + pure selectors only. It imports no React/UI, reads
- * no state, performs no I/O, and is wired nowhere yet (L2+ consume it). It does
- * not connect to or start any model; it only describes them.
+ * Pure data + selectors. L2/L3 endpoint health and L5 catalog bridge
+ * (`lucaLocalCatalogBridge`) consume this. It does not connect to or start any
+ * model; it only describes them. Operational status still lives in
+ * ModelManagerService / ModelRegistry.
  */
 
 export type LucaModelSource = "ollama" | "webllm" | "openai-compatible";

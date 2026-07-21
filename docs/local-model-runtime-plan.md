@@ -41,3 +41,33 @@ For LucaOS, Ollama is therefore a pragmatic bootstrap runtime, not the architect
 
 - Migrate ad hoc provider detection into the shared runtime registry.
 - Start with frontend local chat flows, then server-side routes such as trading debate.
+
+---
+
+## Status snapshot (resume point)
+
+| Phase / track | Status | Notes |
+| --- | --- | --- |
+| Phase 1 foundation | **Done** | Types, catalog, admission, leases under `src/services/local-models/` |
+| Phase 2 Ollama bootstrap | **Done** | `OllamaRuntime` + default registry |
+| Phase 3 diagnostics | **Done** | Facade snapshot in RuntimeDiagnosticsService + panel (PR #631) |
+| Phase 4 Cortex | **Partial** | Adapter registered; hardening (cancel / server load) open |
+| Phase 5 native runtime | **Not started** | Plan only |
+| Phase 6 call-site migration | **Partial** | `LocalLLMAdapter` uses `lucaLocalModelRuntime`; other sites may still be ad hoc |
+| L1–L3 LocalAI catalog/health | **Done** | `lucaUnifiedModelRegistry`, `lucaEndpointHealth`, `lucaLocalEndpointService` |
+| L4 onboarding endpoint path | **Partial** | P5b UI + `useLucaLocalEndpointStatus` |
+| **L5 catalog unify** | **Done (projection)** | `lucaLocalCatalogBridge` merges unified + runtime facade + offline registry; ModelRegistry offline list + Model Manager brain metadata via bridge |
+| **L5+ Ollama status probes** | **Done (status path)** | `ollamaRuntimeProbe` + LocalLLMAdapter / ModelManagerService / BIOS boot; install/delete/chat may still use direct Ollama HTTP |
+
+### L5 entry points
+
+- `src/services/llm/lucaLocalCatalogBridge.ts` — `listLocalCatalogView()`, `getLocalCatalogDivergenceReport()`, `getOfflineModelsFromLocalCatalog()`, `resolveBrainCatalogMetadata()`
+- Offline browser registry (`ModelRegistryService.getModels`) prefers bridge-derived catalog with fallback to `OFFLINE_MODELS`
+- Model Manager brain cards prefer `resolveBrainCatalogMetadata` for name/description/RAM/license/source
+- Ollama status: `probeOllamaViaRuntimeFacade()` in `src/services/local-models/ollamaRuntimeProbe.ts`
+
+### Suggested next slices
+
+1. Finish call-site audit: migrate remaining direct Ollama HTTP (delete/chat/setup) only where product-safe; leave Electron IPC install path alone.
+2. Optional: drop dual-catalog hand maintenance once all product surfaces read bridge only.
+3. Cortex Phase 4 only if Cortex is a product priority.

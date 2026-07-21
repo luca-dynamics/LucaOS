@@ -1,8 +1,12 @@
 /**
  * Model Registry - Catalog of Available Offline LLM Models
  *
- * Defines the available models, their configurations, and runtime requirements.
+ * Operational download/active status for browser offline models.
+ * Static catalog rows prefer the L5 local catalog bridge (unified webllm +
+ * offline install metadata) so product code does not hand-maintain a third list.
  */
+
+import { getOfflineModelsFromLocalCatalog } from "./lucaLocalCatalogBridge";
 
 export type ModelRuntime = "mediapipe" | "webllm" | "onnx";
 
@@ -105,8 +109,17 @@ class ModelRegistryService {
   /**
    * Get all available models with their status
    */
+  /** Catalog rows from L5 bridge (unified webllm + offline install metadata). */
+  private catalog(): OfflineModel[] {
+    try {
+      return getOfflineModelsFromLocalCatalog(OFFLINE_MODELS) as OfflineModel[];
+    } catch {
+      return OFFLINE_MODELS;
+    }
+  }
+
   getModels(): (OfflineModel & { status: ModelStatus })[] {
-    return OFFLINE_MODELS.map((model) => ({
+    return this.catalog().map((model) => ({
       ...model,
       status: this.getStatus(model.id),
     }));
@@ -116,7 +129,7 @@ class ModelRegistryService {
    * Get a specific model by ID
    */
   getModel(modelId: string): OfflineModel | undefined {
-    return OFFLINE_MODELS.find((m) => m.id === modelId);
+    return this.catalog().find((m) => m.id === modelId) ?? OFFLINE_MODELS.find((m) => m.id === modelId);
   }
 
   /**
