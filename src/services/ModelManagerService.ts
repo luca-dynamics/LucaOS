@@ -7,6 +7,7 @@ import { CORTEX_URL } from "../config/api";
 import { settingsService } from "./settingsService";
 import { maintenancePolicy } from "./selfMaintenancePolicy";
 import { probeOllamaViaRuntimeFacade } from "./local-models/ollamaRuntimeProbe";
+import { probeCortexViaRuntimeFacade } from "./local-models/cortexRuntimeProbe";
 import {
   canaryChatViaRuntimeFacade,
   deleteOllamaModelViaRuntimeFacade,
@@ -1016,6 +1017,34 @@ class ModelManagerService {
       };
     } catch (err) {
       console.warn("[ModelManager] Failed to fetch Ollama models via facade", err);
+    }
+    return { available: false, models: [] };
+  }
+
+  /**
+   * Cortex status via local runtime facade (product-critical for internal models).
+   * Install/download still uses Cortex /models/* HTTP; this is health + model ids.
+   */
+  async getCortexStatus(options?: {
+    force?: boolean;
+  }): Promise<{
+    available: boolean;
+    models: string[];
+    message?: string;
+    activeGenerations?: number;
+  }> {
+    try {
+      const probe = await probeCortexViaRuntimeFacade({
+        force: options?.force,
+      });
+      return {
+        available: probe.available,
+        models: probe.models,
+        message: probe.message,
+        activeGenerations: probe.activeGenerations,
+      };
+    } catch (err) {
+      console.warn("[ModelManager] Failed to probe Cortex via facade", err);
     }
     return { available: false, models: [] };
   }

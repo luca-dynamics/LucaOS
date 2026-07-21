@@ -129,12 +129,14 @@ class CapabilityRouter {
     }
 
     try {
-      const resp = await fetch("http://127.0.0.1:8765/health", {
-        signal: AbortSignal.timeout(5000), // Increased to 5s for Intel Mac stability
-      });
-      this.lastHealthCheck = resp.ok;
+      // Product path: Cortex facade probe (not hard-coded legacy port).
+      const { probeCortexViaRuntimeFacade } = await import(
+        "./local-models/cortexRuntimeProbe"
+      );
+      const probe = await probeCortexViaRuntimeFacade({ ttlMs: 5_000 });
+      this.lastHealthCheck = probe.available;
       this.lastHealthCheckTime = now;
-      return resp.ok;
+      return probe.available;
     } catch {
       this.lastHealthCheck = false;
       this.lastHealthCheckTime = now;

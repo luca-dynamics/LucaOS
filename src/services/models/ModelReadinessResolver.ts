@@ -371,11 +371,14 @@ class ModelReadinessResolver {
       const status = await modelManager.getOllamaModels();
       return status.available;
     }
+    // Internal local models (vision/STT/TTS/some brains) depend on Cortex,
+    // not a hard-coded alternate port.
     try {
-      const response = await fetch("http://127.0.0.1:8765/health", {
-        signal: AbortSignal.timeout(2500),
-      });
-      return response.ok;
+      const { probeCortexViaRuntimeFacade } = await import(
+        "../local-models/cortexRuntimeProbe"
+      );
+      const probe = await probeCortexViaRuntimeFacade();
+      return probe.available;
     } catch {
       return false;
     }

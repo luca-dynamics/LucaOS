@@ -51,7 +51,7 @@ For LucaOS, Ollama is therefore a pragmatic bootstrap runtime, not the architect
 | Phase 1 foundation | **Done** | Types, catalog, admission, leases under `src/services/local-models/` |
 | Phase 2 Ollama bootstrap | **Done** | `OllamaRuntime` + default registry |
 | Phase 3 diagnostics | **Done** | Facade snapshot in RuntimeDiagnosticsService + panel (PR #631) |
-| Phase 4 Cortex | **Partial** | Adapter registered; hardening (cancel / server load) open |
+| Phase 4 Cortex | **In progress** | Adapter + `cortexRuntimeProbe`; active-generation guard; readiness/diagnostics use facade; install still Cortex HTTP |
 | Phase 5 native runtime | **Not started** | Plan only |
 | Phase 6 call-site migration | **Partial** | `LocalLLMAdapter` uses `lucaLocalModelRuntime`; other sites may still be ad hoc |
 | L1–L3 LocalAI catalog/health | **Done** | `lucaUnifiedModelRegistry`, `lucaEndpointHealth`, `lucaLocalEndpointService` |
@@ -70,8 +70,14 @@ For LucaOS, Ollama is therefore a pragmatic bootstrap runtime, not the architect
 - Ollama delete/canary: `deleteOllamaModelViaRuntimeFacade` / `canaryChatViaRuntimeFacade` in `ollamaRuntimeOps.ts`
 - Ollama generate/chat: `generateViaRuntimeFacade` / `streamGenerateViaRuntimeFacade` / `chatViaRuntimeFacade` (vision + llmService)
 
+### Cortex Phase 4 entry points
+
+- `src/services/local-models/runtimes/CortexRuntime.ts` — health, listModels (live `/v1/models` ∪ catalog), chat/stream with **max concurrent generations** + AbortSignal stream cancel
+- `src/services/local-models/cortexRuntimeProbe.ts` — `probeCortexViaRuntimeFacade()` (cached health)
+- Product wiring: `ModelManagerService.getCortexStatus()`, `ModelReadinessResolver` (internal models), `RuntimeDiagnosticsService` cortex availability
+
 ### Suggested next slices
 
-1. Cortex Phase 4 only if Cortex is a product priority (cancel / server load hardening).
+1. Cortex Phase 4b: migrate high-traffic `CORTEX_URL` chat call sites (AgentPlanner / workforce) through `lucaLocalModelRuntime` or a thin cortex ops helper.
 2. Collapse dual source lists into one maintained data file once divergence report stays green.
-3. Native runtime (Phase 5) when product needs owned lifecycle beyond Ollama bootstrap.
+3. Native runtime (Phase 5) when product needs owned lifecycle beyond Ollama + Cortex.
