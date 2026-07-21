@@ -40,6 +40,7 @@ import {
   LearningEventPreviewCard,
   PrivacyZonesPreviewCard,
 } from "./personalIntelligencePreview";
+import { getThinExecutionPilotStatus } from "../../services/runtime/thinExecutionPilot";
 
 interface SettingsDataTabProps {
   theme?: any;
@@ -235,6 +236,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
         >
           <div className="space-y-4">
             <PersonalIntelligencePersistencePreview />
+            <UnifiedMemoryWriteSummaryCard />
             <PersonalIntelligenceMemoryApprovalPilot
               pendingProposals={pilotQueue.pendingProposals}
               buildBundleForProposal={pilotQueue.buildBundleForProposal}
@@ -511,6 +513,56 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
           }
         />
       </SettingsDangerZone>
+    </div>
+  );
+};
+
+/** Read-only unified write timeline (pilot + proposal + governed write paths). */
+const UnifiedMemoryWriteSummaryCard: React.FC = () => {
+  const snapshot = useMemo(() => {
+    try {
+      return getThinExecutionPilotStatus(5);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  if (!snapshot) return null;
+  const { summary } = snapshot;
+
+  return (
+    <div
+      className="rounded-xl border p-4 text-xs"
+      style={{
+        borderColor: settingsSurfaceTokens.borderSubtle,
+        color: settingsSurfaceTokens.textSecondary,
+      }}
+    >
+      <p
+        className="text-sm font-semibold"
+        style={{ color: settingsSurfaceTokens.textPrimary }}
+      >
+        Unified memory write audit
+      </p>
+      <p className="mt-1 leading-relaxed">
+        Thin execution pilot: {snapshot.label}. Side-effecting writes:{" "}
+        {summary.sideEffectingWrites} · pilot live: {summary.pilotLiveWrites} ·
+        proposal written: {summary.proposalWritten} · governed succeeded:{" "}
+        {summary.governedSucceeded} · blocked/failed: {summary.blockedOrFailed}.
+      </p>
+      <p className="mt-2" style={{ color: settingsSurfaceTokens.textTertiary }}>
+        Skills, tools, shell, browser, and LucaLink remote actions stay blocked
+        outside this memory-write pilot.
+      </p>
+      {snapshot.recentEvents.length > 0 && (
+        <ul className="mt-2 space-y-1">
+          {snapshot.recentEvents.map((event) => (
+            <li key={event.id}>
+              • {event.kind.replace(/_/g, " ")} — {event.title}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

@@ -130,6 +130,11 @@ export interface LucaSettings {
     disabledProviderIds?: string[];
     runtimeRouteSelectionEnabled?: boolean;
     runtimeRouteKillSwitchEnabled?: boolean;
+    /**
+     * When selection is enabled, limit which task types may hand off to Provider Hub.
+     * Default chat_only keeps code/voice/long-context on ProviderFactory.
+     */
+    runtimeRouteSelectionTaskScope?: "chat_only" | "all";
   };
   memory: {
     provider: "local-luca" | "gemini-genai" | "openai";
@@ -376,6 +381,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     disabledProviderIds: [],
     runtimeRouteSelectionEnabled: false,
     runtimeRouteKillSwitchEnabled: false,
+    runtimeRouteSelectionTaskScope: "chat_only",
   },
   memory: {
     provider: "local-luca",

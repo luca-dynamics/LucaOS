@@ -12,16 +12,28 @@ function List({ title, values, empty = "None" }: { title: string; values: readon
   );
 }
 
-export function SkillDryRunPanel({ simulation }: { simulation: PersonalIntelligenceSkillDryRunSimulation }) {
+export function SkillDryRunPanel({
+  simulation,
+  isLive = false,
+  hasMissionContext = false,
+}: {
+  simulation: PersonalIntelligenceSkillDryRunSimulation;
+  isLive?: boolean;
+  hasMissionContext?: boolean;
+}) {
   const act = simulation.runtimeTracePreview.stages.find((stage) => stage.stage === "act");
   return (
     <section className="mt-4 rounded-xl border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]/[0.04] p-4" aria-label="Controlled Dry-run Simulation">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-xs font-bold uppercase tracking-wider text-[var(--luca-info,#4f8cff)]">Controlled Dry-run Simulation</p>
-          <p className="mt-1 text-[11px] leading-5 text-slate-400">Dry-run simulation only — no skill execution occurs.</p>
+          <p className="mt-1 text-[11px] leading-5 text-slate-400">
+            {isLive ? "Live skill dry-run" : "Sample dry-run"} — simulation only, no skill execution occurs.
+            {hasMissionContext ? " Mission alignment context attached." : ""}
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] px-2 py-1 text-[10px] font-bold uppercase text-[var(--luca-info,#4f8cff)]">{isLive ? "live" : "sample"}</span>
           <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] px-2 py-1 text-[10px] font-bold uppercase text-[var(--luca-info,#4f8cff)]">{label(simulation.status)}</span>
           <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] px-2 py-1 text-[10px] font-bold uppercase text-[var(--luca-danger,#f87171)]">execution disabled</span>
         </div>

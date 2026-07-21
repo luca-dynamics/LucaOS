@@ -263,6 +263,8 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
   const continuationSummary =
     lucaLinkManager.console.getContinuationRegistrySummary();
   const handoffSummary = lucaLinkManager.console.getHandoffSummary();
+  const softEnforcementMode =
+    lucaLinkManager.console.getSoftEnforcementMode();
   const readinessItems = createLucaLinkModalReadinessItems({
     connectionState,
     isInitialized,
@@ -277,6 +279,10 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
     rateLimitedGuestInbound: guestSecuritySummary.rateLimitedGuestInbound,
     validContinuations: continuationSummary.valid,
     pendingHandoffs: handoffSummary.pending,
+    continuityStatusLabel:
+      softEnforcementMode && softEnforcementMode !== "disabled"
+        ? `Enforcement: ${softEnforcementMode}`
+        : undefined,
   });
 
   return (
