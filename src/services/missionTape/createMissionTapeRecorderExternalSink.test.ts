@@ -44,4 +44,49 @@ describe("createMissionTapeRecorderExternalSink", () => {
     expect(tape?.guard.length).toBe(1);
     expect(tape?.guard[0].allowed).toBe(true);
   });
+
+  it("completeMission uses verification gate", async () => {
+    const sink = createMissionTapeRecorderExternalSink();
+    await sink.record({
+      missionId: "m-complete-1",
+      timestamp: "2026-07-21T00:00:00.000Z",
+      eventType: "computer_use_step_executed",
+      payload: { stepId: "s1", reason: "ok" },
+      metadata: {
+        tapeSinkKind: "scaffold",
+        eventBridgeKind: "scaffold",
+        storageWritesEnabled: false,
+        missionTapeImported: false,
+        systemApisCalled: false,
+      },
+    });
+
+    const completion = await sink.completeMission("m-complete-1", {
+      success: true,
+    });
+    // Low-risk inferred plan or blocked — either way completeMission is wired.
+    expect(completion.tape.verification.some((v) =>
+      v.stepId.includes("mission-completion"),
+    )).toBe(true);
+  });
+
+  it("auto-finalizes on mission_failed terminal event", async () => {
+    const sink = createMissionTapeRecorderExternalSink();
+    await sink.record({
+      missionId: "m-term-fail",
+      timestamp: "2026-07-21T00:00:00.000Z",
+      eventType: "mission_failed",
+      payload: { reason: "boom" },
+      metadata: {
+        tapeSinkKind: "scaffold",
+        eventBridgeKind: "scaffold",
+        storageWritesEnabled: false,
+        missionTapeImported: false,
+        systemApisCalled: false,
+      },
+    });
+    const tape = await sink.recorder.getTape("m-term-fail");
+    expect(tape?.status).toBe("failed");
+  });
 });
+

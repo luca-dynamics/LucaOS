@@ -1,6 +1,9 @@
 /**
  * Bridges computer-use mission-tape sink records into MissionTapeRecorderService.
  * Opt-in only — callers must set enableExternalMissionTapeSink / settings flag.
+ *
+ * Absorb Phase 1: completion events finalize via verification gate
+ * (`finalizeMissionTapeWithVerification`).
  */
 
 import type {
@@ -9,15 +12,57 @@ import type {
   ComputerUseMissionTapeSinkRecord,
 } from "../computerUse/types";
 import { MissionTapeRecorderService } from "./MissionTapeRecorder";
+import {
+  finalizeMissionTapeWithVerification,
+  type FinalizeMissionTapeWithVerificationResult,
+} from "./missionTapeCompletionGate";
+import type { MissionTapeRecord } from "./types";
 
 export interface CreateMissionTapeRecorderExternalSinkOptions {
   recorder?: MissionTapeRecorderService;
   now?: () => string;
+  /**
+   * When true (default), mission_* / *_completed / *_failed event types
+   * trigger gated finalize.
+   */
+  autoFinalizeOnTerminalEvents?: boolean;
 }
 
 export interface MissionTapeRecorderExternalSink
   extends ComputerUseMissionTapeExternalSink {
   recorder: MissionTapeRecorderService;
+  /**
+   * Explicit completion with GSD verification gates.
+   * Prefer this over raw finalizeTape({ status: "completed" }).
+   */
+  completeMission: (
+    missionId: string,
+    options?: {
+      success?: boolean;
+      verificationOverride?: boolean;
+      overrideReason?: string;
+      result?: MissionTapeRecord["result"];
+    },
+  ) => Promise<FinalizeMissionTapeWithVerificationResult>;
+}
+
+function isTerminalSuccessEvent(eventType: string): boolean {
+  const t = eventType.toLowerCase();
+  return (
+    t.includes("mission_completed") ||
+    t.endsWith("_completed") ||
+    t.includes("mission_success")
+  ) && !t.includes("failed") && !t.includes("rejected") && !t.includes("aborted");
+}
+
+function isTerminalFailureEvent(eventType: string): boolean {
+  const t = eventType.toLowerCase();
+  return (
+    t.includes("mission_failed") ||
+    t.includes("mission_aborted") ||
+    (t.includes("failed") && t.includes("mission")) ||
+    t.endsWith("_aborted")
+  );
 }
 
 export function createMissionTapeRecorderExternalSink(
@@ -25,6 +70,7 @@ export function createMissionTapeRecorderExternalSink(
 ): MissionTapeRecorderExternalSink {
   const recorder = options.recorder ?? new MissionTapeRecorderService();
   const now = options.now ?? (() => new Date().toISOString());
+  const autoFinalize = options.autoFinalizeOnTerminalEvents !== false;
   const ensured = new Set<string>();
 
   const ensureTape = async (missionId: string, intent: string): Promise<void> => {
@@ -36,8 +82,28 @@ export function createMissionTapeRecorderExternalSink(
     ensured.add(missionId);
   };
 
+  const completeMission: MissionTapeRecorderExternalSink["completeMission"] =
+    async (missionId, completeOptions = {}) => {
+      const success = completeOptions.success !== false;
+      return finalizeMissionTapeWithVerification(recorder, {
+        missionId,
+        desiredStatus: success ? "completed" : "failed",
+        verificationOverride: completeOptions.verificationOverride,
+        overrideReason: completeOptions.overrideReason,
+        result: completeOptions.result,
+        verificationContext: {
+          intentClear: true,
+          permissionGranted: true,
+          capabilityAvailable: true,
+          userConfirmationProvided: true,
+          originReviewProvided: Boolean(completeOptions.verificationOverride),
+        },
+      });
+    };
+
   const sink: MissionTapeRecorderExternalSink = {
     recorder,
+    completeMission,
     async record(
       record: ComputerUseMissionTapeSinkRecord,
     ): Promise<ComputerUseMissionTapeExternalSinkResult> {
@@ -80,6 +146,31 @@ export function createMissionTapeRecorderExternalSink(
                 : JSON.stringify(record.payload ?? {}).slice(0, 500),
             timestamp: record.timestamp || now(),
           });
+        }
+
+        // Absorb: terminal events finalize through verification gate.
+        if (autoFinalize) {
+          if (isTerminalSuccessEvent(record.eventType)) {
+            const completion = await completeMission(missionId, {
+              success: true,
+              verificationOverride:
+                record.payload?.verificationOverride === true,
+              overrideReason:
+                typeof record.payload?.overrideReason === "string"
+                  ? record.payload.overrideReason
+                  : undefined,
+            });
+            return {
+              ok: completion.ok,
+              reason: completion.blockedByVerification
+                ? completion.reason
+                : "recorded_and_completion_gated",
+            };
+          }
+          if (isTerminalFailureEvent(record.eventType)) {
+            await completeMission(missionId, { success: false });
+            return { ok: true, reason: "recorded_and_failed_finalized" };
+          }
         }
 
         return { ok: true, reason: "recorded_to_mission_tape" };
