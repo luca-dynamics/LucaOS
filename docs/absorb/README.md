@@ -10,6 +10,20 @@ Read this file first before making major LucaOS architecture changes:
 docs/absorb/Luca_Absorb_Architecture_v12.md
 ```
 
+## Progress snapshot (product code, not doctrine)
+
+Doctrine remains in `Luca_Absorb_Architecture_v12.md`. This table tracks **shipped pilots** vs open absorb phases.
+
+| Absorb roadmap phase | Status | Evidence in repo |
+| --- | --- | --- |
+| **1 Stability + execution** | **Partial → pilot** | Deterministic execution + verification gates (`services/execution/*`); **mission completion gate** `missionTape/missionTapeCompletionGate.ts` (complete only if gates pass or override) |
+| **2 Memory + context** | Partial | PI memory / approval pilots; full readable vault open |
+| **3 Ecosystem + skills** | Partial | MCP/plugins, skill lifecycle, dry-run; marketplace open |
+| **4 Evolution + self-repair** | Partial | Evolution services + governance; Hermes trajectory productization open |
+| **5 Embodiment** | Strong base | LucaLink, computer-use, host control; robotics open |
+
+Related local-runtime work (Cortex/Ollama facade) supports the north star but is tracked in `docs/local-model-runtime-plan.md`.
+
 ## Codex instruction
 
 1. Read `docs/absorb/Luca_Absorb_Architecture_v12.md` fully before creating foundational docs/specs or making major architecture changes.

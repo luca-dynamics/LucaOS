@@ -46,6 +46,10 @@ A mission can be marked complete only when:
 2. mission tape is recorded,
 3. result is reported with outcome + evidence.
 
+### Implementation pilot
+Product code: `src/services/missionTape/missionTapeCompletionGate.ts`  
+(`finalizeMissionTapeWithVerification`) — refuse `status: "completed"` unless GSD verification gates pass or `verificationOverride` is set; always append verification rows to the mission tape.
+
 ## Acceptance Scenarios
 1. Failure mid-task restores prior checkpoint and resumes.
 2. Build/test failure triggers autonomous diagnosis + retry.
