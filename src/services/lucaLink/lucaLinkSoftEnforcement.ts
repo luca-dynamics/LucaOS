@@ -82,7 +82,8 @@ export interface LucaLinkSoftEnforcementOptions {
 
 type UnknownRecord = Record<string, unknown>;
 
-const DEFAULT_MODE: LucaLinkSoftEnforcementMode = "disabled";
+/** Product default: observe high-risk signals without blocking transport. */
+const DEFAULT_MODE: LucaLinkSoftEnforcementMode = "observe-only";
 
 const RESTRICTED_GUEST_LANES: ReadonlySet<string> = new Set([
   "memory",

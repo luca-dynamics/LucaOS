@@ -16,7 +16,8 @@ describe("existing Dashboard Skills modal registry integration", () => {
   });
 
   it("renders explicit execution safety notices", () => {
-    expect(html).toContain("Live registry — inspection only, execution disabled.");
+    expect(html).toMatch(/Live registry|Sample registry/);
+    expect(html).toContain("execution disabled");
     expect(html).toContain("These are your real registered skills, shown for inspection only. From here they cannot run, call tools, call models, write memory, access files, use network, or trigger LucaLink.");
     expect(html).toContain("Execution disabled");
     expect(html).toContain("Sandbox Plan");

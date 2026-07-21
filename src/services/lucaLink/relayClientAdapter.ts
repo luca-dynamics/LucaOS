@@ -209,7 +209,8 @@ class LucaLinkService {
   private adapterDraftStore = lucaLinkAdapterDraftStore;
   private guestSessionStore = lucaLinkGuestSessionStore;
   private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
-    mode: "disabled",
+    // Product default: observe soft-enforcement signals without blocking mesh.
+    mode: "observe-only",
   };
   private localHostRole: "primary" | "guest" = "primary";
 

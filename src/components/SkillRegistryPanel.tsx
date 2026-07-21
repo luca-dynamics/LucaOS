@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   createSkillRegistry,
   filterSkillRegistry,
@@ -9,10 +9,11 @@ import {
   type PersonalIntelligenceSkillStatus,
 } from "../personal-intelligence/skills";
 import { createPersonalIntelligenceSkillSandboxPlan } from "../personal-intelligence/skillSandbox";
-import { createPersonalIntelligenceSkillDryRunSimulation } from "../personal-intelligence/skillDryRun";
 import { createPersonalIntelligenceRuntimeCapabilityRegistry } from "../personal-intelligence/runtimeAuthority";
+import type { MissionAlignmentEvaluation } from "../personal-intelligence/missionRuntime";
 import { skillRegistryService } from "../services/skills/SkillRegistryService";
 import { buildSkillRegistryEntriesFromLive } from "../services/personalIntelligence/skillRegistryBridge";
+import { buildSkillDryRunSimulationForEntry } from "../services/personalIntelligence/skillDryRunBridge";
 import { SkillSandboxPlanPanel } from "./SkillSandboxPlanPanel";
 import { SkillPermissionGrantPanel } from "./SkillPermissionGrantPanel";
 import { SkillDryRunPanel } from "./SkillDryRunPanel";
@@ -56,16 +57,28 @@ function RequirementList({ title, values }: { title: string; values?: string[] }
   );
 }
 
-function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegistryEntry }) {
+function SkillManifestDetail({
+  entry,
+  isLiveRegistry,
+  missionEvaluation,
+}: {
+  entry: PersonalIntelligenceSkillRegistryEntry;
+  isLiveRegistry: boolean;
+  missionEvaluation?: MissionAlignmentEvaluation;
+}) {
   const memoryPolicy = entry.memoryPolicy?.access ?? "none";
   const sandboxPlan = useMemo(() => createPersonalIntelligenceSkillSandboxPlan(entry), [entry]);
   const { state } = useSkillPermissionGrants();
-  const simulation = useMemo(() => createPersonalIntelligenceSkillDryRunSimulation({
-    skillRegistryEntry: entry,
-    sandboxPlan,
-    permissionGates: state.gates,
-    source: "selected_skill",
-  }), [entry, sandboxPlan, state.gates]);
+  // Live dry-run bridge: real entry + live permission gates + optional live mission.
+  const simulation = useMemo(
+    () =>
+      buildSkillDryRunSimulationForEntry(entry, {
+        permissionGates: state.gates,
+        missionEvaluation,
+        source: isLiveRegistry ? "selected_skill" : "fixture",
+      }),
+    [entry, state.gates, missionEvaluation, isLiveRegistry],
+  );
   const authorityRecords = useMemo(() => createPersonalIntelligenceRuntimeCapabilityRegistry({
     skillRegistryEntries: [entry],
     sandboxPlans: [sandboxPlan],
@@ -81,6 +94,14 @@ function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegist
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{entry.description}</p>
         </div>
         <div className="flex gap-2">
+          <Badge
+            value={isLiveRegistry ? "live registry" : "sample registry"}
+            className={
+              isLiveRegistry
+                ? "text-[var(--luca-success,#4fbf7a)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
+                : "text-slate-300 border-slate-400/30 bg-slate-400/10"
+            }
+          />
           <Badge value={entry.status} className={STATUS_COLORS[entry.status]} />
           <Badge value={`${entry.riskLevel} risk`} className={RISK_COLORS[entry.riskLevel]} />
         </div>
@@ -128,7 +149,11 @@ function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegist
 
       <SkillSandboxPlanPanel plan={sandboxPlan} />
       <SkillPermissionGrantPanel plan={sandboxPlan} />
-      <SkillDryRunPanel simulation={simulation} />
+      <SkillDryRunPanel
+        simulation={simulation}
+        isLive={isLiveRegistry}
+        hasMissionContext={Boolean(missionEvaluation)}
+      />
       <SkillRuntimeAuthorityPanel records={authorityRecords} />
 
       <div className="mt-4 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]/[0.06] p-4">
@@ -147,17 +172,48 @@ export const SkillRegistryPanel: React.FC<SkillRegistryPanelProps> = ({ accent }
   // uses); fall back to the illustrative fixtures only when nothing is
   // registered, so the surface still explains itself. Inspection-only either
   // way — the bridge never grants execution.
-  const registry = useMemo(() => {
+  const { registry, isLiveRegistry } = useMemo(() => {
     try {
       const live = buildSkillRegistryEntriesFromLive(
         skillRegistryService.listSkills(),
       );
-      if (live.length > 0) return live;
+      if (live.length > 0) return { registry: live, isLiveRegistry: true };
     } catch {
       /* fall back to fixtures below */
     }
-    return createSkillRegistry(personalIntelligenceSkillRegistryFixtures);
+    return {
+      registry: createSkillRegistry(personalIntelligenceSkillRegistryFixtures),
+      isLiveRegistry: false,
+    };
   }, []);
+
+  // Optional live mission alignment for dry-run mission_check stage (read-only).
+  const [missionEvaluation, setMissionEvaluation] = useState<
+    MissionAlignmentEvaluation | undefined
+  >();
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { missionControlService } = await import(
+          "../services/agent/MissionControlService"
+        );
+        const live = await missionControlService.getActiveMission();
+        if (!active || !live) return;
+        const { buildLiveMissionAdvisoryBundle } = await import(
+          "../services/personalIntelligence/missionAdvisoryBridge"
+        );
+        if (!active) return;
+        setMissionEvaluation(buildLiveMissionAdvisoryBundle(live).evaluation);
+      } catch {
+        /* keep dry-run without mission context */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const summary = useMemo(() => summarizeSkillRegistry(registry), [registry]);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
@@ -178,7 +234,13 @@ export const SkillRegistryPanel: React.FC<SkillRegistryPanelProps> = ({ accent }
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: accent }}>Personal Intelligence</p>
             <h2 className="mt-1 text-xl font-bold text-white">Skill Registry</h2>
-            <p className="mt-1 text-xs text-slate-400">Live registry — inspection only, execution disabled.</p>
+            <p className="mt-1 text-xs text-slate-400">
+              {isLiveRegistry ? "Live registry" : "Sample registry"} — inspection
+              only, dry-run only, execution disabled.
+              {missionEvaluation
+                ? " · Live mission alignment attached to dry-runs."
+                : ""}
+            </p>
           </div>
           <div className="grid grid-cols-5 gap-2 text-center text-[10px]">
             {[
@@ -223,7 +285,15 @@ export const SkillRegistryPanel: React.FC<SkillRegistryPanelProps> = ({ accent }
             {filtered.length === 0 && <p className="py-12 text-center text-xs text-slate-500">No manifests match these filters.</p>}
           </div>
         </div>
-        {selected && <div className="hidden min-w-0 flex-1 md:flex"><SkillManifestDetail entry={selected} /></div>}
+        {selected && (
+          <div className="hidden min-w-0 flex-1 md:flex">
+            <SkillManifestDetail
+              entry={selected}
+              isLiveRegistry={isLiveRegistry}
+              missionEvaluation={missionEvaluation}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

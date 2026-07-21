@@ -30,8 +30,8 @@ describe("LucaLinkService soft enforcement controls", () => {
     };
   });
 
-  it("keeps soft enforcement disabled by default and restores disabled mode", () => {
-    expect(lucaLink.getSoftEnforcementMode()).toBe("disabled");
+  it("defaults soft enforcement to observe-only and can restore disabled mode", () => {
+    expect(lucaLink.getSoftEnforcementMode()).toBe("observe-only");
 
     lucaLink.enableSoftEnforcement({ mode: "high-risk-only" });
     expect(lucaLink.getSoftEnforcementMode()).toBe("high-risk-only");

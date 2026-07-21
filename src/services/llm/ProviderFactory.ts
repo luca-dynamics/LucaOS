@@ -94,6 +94,20 @@ export function isProviderHubRuntimeRouteKillSwitchActive(settings: Pick<LucaSet
   return Boolean(settings.providerHub?.runtimeRouteKillSwitchEnabled);
 }
 
+/**
+ * Whether Provider Hub may hand off execution for this task type.
+ * Default scope is chat_only — other tasks still get shadow diagnostics only.
+ */
+export function isProviderHubRuntimeRouteSelectionActiveForTask(
+  settings: Pick<LucaSettings, "providerHub">,
+  taskType: Extract<LucaModelTaskType, "chat" | "fast_reply" | "long_context" | "code">,
+): boolean {
+  if (!isProviderHubRuntimeRouteSelectionActive(settings)) return false;
+  const scope = settings.providerHub?.runtimeRouteSelectionTaskScope ?? "chat_only";
+  if (scope === "all") return true;
+  return taskType === "chat";
+}
+
 function fallbackCodeForHandoff(handoff: LucaProviderHubRouteHandoffResult | undefined, runtimeRouteSelectionEnabled: boolean): LucaProviderHubFinalRouteFallbackReason {
   if (!runtimeRouteSelectionEnabled) return "flag_disabled";
   if (!handoff) return "no_handoff_result";
@@ -555,8 +569,13 @@ export class ProviderFactory {
   ): { route: ModelProvisioningRoute; providerHubShadowSelection?: LucaProviderFactoryShadowSelection; providerHubRouteHandoff?: LucaProviderHubRouteHandoffResult; finalRouteDecision: LucaProviderFactoryFinalRouteDecision } {
     const route = this.resolveProvisioningRoute(settings, persona, providerOverride);
     const allSettings = { ...settingsService.getSettings(), brain: settings };
-    const runtimeRouteSelectionEnabled = Boolean(allSettings.providerHub?.runtimeRouteSelectionEnabled);
+    const runtimeRouteSelectionEnabledGlobal = Boolean(allSettings.providerHub?.runtimeRouteSelectionEnabled);
     const runtimeRouteKillSwitchEnabled = Boolean(allSettings.providerHub?.runtimeRouteKillSwitchEnabled);
+    // Chat-only by default: non-chat tasks shadow but do not hand off execution.
+    const runtimeRouteSelectionEnabled = isProviderHubRuntimeRouteSelectionActiveForTask(
+      allSettings,
+      taskType,
+    );
     const providerId = getProviderHubIdForProviderFactoryRoute(route);
     const policy = resolveProviderHubTaskRoutePolicy({
       taskType,
@@ -572,7 +591,8 @@ export class ProviderFactory {
       requiredCapabilities: policy.requiredCapabilities,
       currentSettingsSnapshot: allSettings,
       routePreference: policy.preference,
-      runtimeRouteSelectionEnabled,
+      // Shadow still observes when the global flag is on, even if task scope excludes execution.
+      runtimeRouteSelectionEnabled: runtimeRouteSelectionEnabledGlobal && !runtimeRouteKillSwitchEnabled,
       allowFallbacks: policy.allowFallbacks,
       allowPaidProviders: policy.allowPaidProviders,
       allowLocalProviders: policy.allowLocalProviders,
@@ -580,11 +600,11 @@ export class ProviderFactory {
       observedAt: new Date().toISOString(),
     });
     const handoff = createProviderHubProviderFactoryRouteHandoff({
-      runtimeRouteSelectionEnabled: shadow.providerHubEnabled,
+      runtimeRouteSelectionEnabled,
       providerHubSelectedProviderId: shadow.providerHubSelectedProviderId,
       providerHubSelectedModelId: shadow.providerHubSelectedModelId,
       decisionStatus: shadow.decisionStatus,
-      shouldUseProviderHubRoute: shadow.shouldUseProviderHubRoute,
+      shouldUseProviderHubRoute: runtimeRouteSelectionEnabled && shadow.shouldUseProviderHubRoute,
       currentRoute: route,
       settings,
       taskType: policy.taskType,

@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import {
+  createOperationItemsFromSkillDryRunSimulations,
   createOperationItemsFromSkillPermissionGates,
   evaluateOperationCenterReadiness,
   operationCenterFixtureItems,
@@ -7,6 +8,11 @@ import {
   type OperationCenterSource,
 } from "../../operation-center";
 import { evaluateSkillPermissionGrantReadiness } from "../../personal-intelligence/skillPermissions";
+import { skillRegistryService } from "../../services/skills/SkillRegistryService";
+import {
+  buildSkillDryRunSimulationsFromLive,
+  summarizeSkillDryRunPipeline,
+} from "../../services/personalIntelligence/skillDryRunBridge";
 import { useSkillPermissionGrants } from "../SkillPermissionGrantContext";
 import {
   lucaMaterialCardStyle,
@@ -113,14 +119,42 @@ export default function OperationPermissionCenter({
     () => evaluateSkillPermissionGrantReadiness(state.gates),
     [state.gates],
   );
-  const recentEvents = state.auditEvents.slice(0, 4);
-  const operationItems = useMemo(
-    () => [
-      ...operationCenterFixtureItems,
-      ...createOperationItemsFromSkillPermissionGates(state.gates),
-    ],
-    [state.gates],
+  // Live skill dry-run pipeline (inspection only) for the operation list.
+  const liveSkillPipeline = useMemo(() => {
+    try {
+      return buildSkillDryRunSimulationsFromLive(
+        skillRegistryService.listSkills(),
+        { permissionGates: state.gates, limit: 12 },
+      );
+    } catch {
+      return null;
+    }
+  }, [state.gates]);
+  const dryRunPipelineSummary = useMemo(
+    () =>
+      summarizeSkillDryRunPipeline(liveSkillPipeline?.simulations ?? []),
+    [liveSkillPipeline],
   );
+  const recentEvents = state.auditEvents.slice(0, 4);
+  const operationItems = useMemo(() => {
+    const liveDryRunItems = liveSkillPipeline
+      ? createOperationItemsFromSkillDryRunSimulations(
+          liveSkillPipeline.simulations,
+        )
+      : [];
+    // Prefer live skill dry-runs over fixture skill_dry_run rows when present.
+    const fixtures =
+      liveDryRunItems.length > 0
+        ? operationCenterFixtureItems.filter(
+            (item) => item.category !== "skill_dry_run",
+          )
+        : operationCenterFixtureItems;
+    return [
+      ...fixtures,
+      ...createOperationItemsFromSkillPermissionGates(state.gates),
+      ...liveDryRunItems,
+    ];
+  }, [state.gates, liveSkillPipeline]);
   const operationReadiness = useMemo(
     () => evaluateOperationCenterReadiness(operationItems),
     [operationItems],
@@ -163,6 +197,17 @@ export default function OperationPermissionCenter({
                 : "good"
             }
           />
+          {creatorMode && dryRunPipelineSummary.total > 0 && (
+            <RightPanelMetric
+              label={
+                liveSkillPipeline?.isLive
+                  ? "Live dry-runs"
+                  : "Sample dry-runs"
+              }
+              value={dryRunPipelineSummary.total}
+              tone="neutral"
+            />
+          )}
         </div>
 
         {creatorMode && (
