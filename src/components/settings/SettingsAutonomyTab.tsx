@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import SandboxFleetLivePanel from "../sandbox/SandboxFleetLivePanel";
 import { LucaSlider } from "../ui/luca";
 import { LucaSettings } from "../../services/settingsService";
+import { getComputerUseSandboxPilotStatus } from "../../services/computerUse/computerUseSandboxPilot";
 import {
   SettingsAdvancedDisclosure,
   SettingsRow,
@@ -10,6 +11,7 @@ import {
   SettingsToggle,
   settingsControlInlineStyle,
 } from "./SettingsLayout";
+import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 interface SettingsAutonomyTabProps {
   settings: LucaSettings;
@@ -42,6 +44,16 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
     headless: true,
     enableMissionTapeSink: false,
   };
+
+  const sandboxPilot = useMemo(
+    () => getComputerUseSandboxPilotStatus({ computerUse }),
+    [
+      computerUse.realSandboxEnabled,
+      computerUse.driverKind,
+      computerUse.headless,
+      computerUse.enableMissionTapeSink,
+    ],
+  );
 
   const toggle = (key: keyof typeof autonomy) => {
     onUpdate("autonomy", key, !autonomy[key]);
@@ -224,6 +236,33 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
         accentColor={theme.hex}
         isMobile={isMobile}
       >
+        <div
+          className="mb-3 rounded-xl border p-3 text-xs leading-relaxed"
+          style={{
+            borderColor: settingsSurfaceTokens.borderSubtle,
+            color: settingsSurfaceTokens.textSecondary,
+          }}
+        >
+          <p
+            className="text-sm font-semibold"
+            style={{ color: settingsSurfaceTokens.textPrimary }}
+          >
+            Thin pilot: {sandboxPilot.label}
+          </p>
+          <p className="mt-1">
+            Status:{" "}
+            <strong>
+              {sandboxPilot.enabled ? "real stack allowed" : "simulated only"}
+            </strong>
+            {sandboxPilot.enabled
+              ? ` · driver ${sandboxPilot.driverKindResolved}`
+              : ""}
+            . Dry-run/guards still apply before any click or type.
+          </p>
+          <p className="mt-1" style={{ color: settingsSurfaceTokens.textTertiary }}>
+            {sandboxPilot.readinessNotes[0]}
+          </p>
+        </div>
         <SettingsRow
           label="Real sandbox browser"
           description="When on, computer-use can drive Playwright or the Electron sandbox browser behind guards. Default is simulated only."

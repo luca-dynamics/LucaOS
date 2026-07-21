@@ -966,7 +966,7 @@ class LucaLinkService {
   }
 
   getSoftEnforcementMode(): LucaLinkSoftEnforcementMode {
-    return this.softEnforcementOptions.mode ?? "disabled";
+    return this.softEnforcementOptions.mode ?? "observe-only";
   }
 
   enableRuntimeEnforcement(

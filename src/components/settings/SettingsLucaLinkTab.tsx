@@ -708,8 +708,25 @@ export function getLucaLinkSecurityModeLabel(
   mode: ReturnType<typeof lucaLinkManager.console.getSoftEnforcementMode>,
 ): string {
   if (mode === "high-risk-only") return "High-risk gates active";
+  if (mode === "full-outbound") return "Full outbound gates";
   if (mode === "observe-only") return "Observe-only";
   return "Disabled";
+}
+
+/** Product step-up ladder (no full-outbound in simple control). */
+export type LucaLinkSoftEnforcementProductMode =
+  | "disabled"
+  | "observe-only"
+  | "high-risk-only";
+
+export function applyLucaLinkSoftEnforcementProductMode(
+  mode: LucaLinkSoftEnforcementProductMode,
+): void {
+  if (mode === "disabled") {
+    lucaLinkManager.governance.disableSoftEnforcement();
+    return;
+  }
+  lucaLinkManager.governance.enableSoftEnforcement({ mode });
 }
 
 export function inferLucaLinkDeviceRole(
@@ -3389,6 +3406,43 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           accentColor={theme.hex}
           isMobile={isMobile}
         >
+          <SettingsCard>
+            <p className="text-sm font-semibold" style={{ color: settingsSurfaceTokens.textPrimary }}>
+              Soft enforcement step-up
+            </p>
+            <p className="mt-1 text-xs leading-relaxed" style={{ color: settingsSurfaceTokens.textSecondary }}>
+              Default is observe-only (signals without blocking). Step up to high-risk-only to queue approval on high-risk outbound sends. Full outbound is not exposed here.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <label className="text-[12px]" style={{ color: settingsSurfaceTokens.textSecondary }}>
+                Mode
+                <LucaSelect
+                  aria-label="LucaLink soft enforcement mode"
+                  className={`mt-1 ${settingsSelectClassName}`}
+                  value={
+                    deviceCenterSnapshot.softEnforcementMode === "high-risk-only"
+                      ? "high-risk-only"
+                      : deviceCenterSnapshot.softEnforcementMode === "disabled"
+                        ? "disabled"
+                        : "observe-only"
+                  }
+                  onChange={(e) => {
+                    applyLucaLinkSoftEnforcementProductMode(
+                      e.target.value as LucaLinkSoftEnforcementProductMode,
+                    );
+                    setDeviceCenterSnapshot(readLucaLinkDeviceCenterSnapshot());
+                  }}
+                >
+                  <option value="observe-only">observe-only (recommended default)</option>
+                  <option value="high-risk-only">high-risk-only (queue high-risk sends)</option>
+                  <option value="disabled">disabled (no soft gates)</option>
+                </LucaSelect>
+              </label>
+              <p className="text-[11px]" style={{ color: settingsSurfaceTokens.textTertiary }}>
+                Current: {getLucaLinkSecurityModeLabel(deviceCenterSnapshot.softEnforcementMode)}
+              </p>
+            </div>
+          </SettingsCard>
           <SettingsStatList
             items={[
               {
