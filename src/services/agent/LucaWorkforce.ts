@@ -18,7 +18,6 @@ import { AgentTrace } from "./LucaTracing";
 import { personalityService } from "../personalityService";
 import { AgentToolBridge } from "./tools/AgentToolBridge";
 import { llmToolSelector } from "./tools/LLMToolSelector";
-import { CORTEX_URL } from "../../config/api";
 import { pentestSessionStore } from "./PentestSessionStore";
 import type { PentestPhase } from "./pentestTypes";
 import { missionControlService } from "./MissionControlService";
@@ -998,24 +997,16 @@ Analyze the error and provide a FIXED version of the script.
 Return only the Python code, no explanations.`;
       }
 
-      const response = await fetch(`${CORTEX_URL}/chat/completions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [{ role: "user", parts: [{ text: prompt }] }],
-          streamResponse: false,
-        }),
+      // Cortex Phase 4b: runtime facade (not raw CORTEX_URL fetch).
+      const { chatViaCortexRuntimeFacade } = await import(
+        "../local-models/cortexRuntimeOps"
+      );
+      const result = await chatViaCortexRuntimeFacade({
+        messages: [{ role: "user", parts: [{ text: prompt }] }],
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        const script = data.response || data.text || "";
-
-        const codeMatch = script.match(/```python\n([\s\S]*?)\n```/);
-        return codeMatch ? codeMatch[1] : script;
-      }
-
-      return null;
+      const script = result.text || "";
+      const codeMatch = script.match(/```python\n([\s\S]*?)\n```/);
+      return codeMatch ? codeMatch[1] : script;
     } catch (error) {
       console.error("Script generation failed:", error);
       return null;

@@ -7,7 +7,7 @@
 
 import type { WorkflowTask } from "../LucaWorkforce";
 import { ToolSchemas } from "../../schemas";
-import { CORTEX_URL } from "../../../config/api";
+import { chatViaCortexRuntimeFacade } from "../../local-models/cortexRuntimeOps";
 
 export interface ToolSelection {
   toolName: string;
@@ -107,27 +107,11 @@ If NO tool is suitable, respond with:
    */
   private async callLLM(prompt: string): Promise<string> {
     try {
-      // Use Luca's existing LLM infrastructure
-      const response = await fetch(`${CORTEX_URL}/chat/completions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: "user",
-              parts: [{ text: prompt }],
-            },
-          ],
-          streamResponse: false,
-        }),
+      // Cortex Phase 4b: runtime facade (normalizes legacy parts payload).
+      const result = await chatViaCortexRuntimeFacade({
+        messages: [{ role: "user", parts: [{ text: prompt }] }],
       });
-
-      if (!response.ok) {
-        throw new Error(`LLM call failed: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data.response || data.text || "";
+      return result.text || "";
     } catch (error) {
       console.error("[LLMToolSelector] LLM call error:", error);
       throw error;
