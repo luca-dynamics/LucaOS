@@ -56,22 +56,22 @@ For LucaOS, Ollama is therefore a pragmatic bootstrap runtime, not the architect
 | Phase 6 call-site migration | **Partial** | `LocalLLMAdapter` uses `lucaLocalModelRuntime`; other sites may still be ad hoc |
 | L1–L3 LocalAI catalog/health | **Done** | `lucaUnifiedModelRegistry`, `lucaEndpointHealth`, `lucaLocalEndpointService` |
 | L4 onboarding endpoint path | **Partial** | P5b UI + `useLucaLocalEndpointStatus` |
-| **L5 catalog unify** | **Done (projection)** | `lucaLocalCatalogBridge` merges unified + runtime facade + offline registry; ModelRegistry offline list + Model Manager brain metadata via bridge |
+| **L5 catalog unify** | **Done (projection)** | `lucaLocalCatalogBridge` merges unified + runtime facade + offline registry; ModelRegistry offline list + Model Manager / OfflineModelManager read bridge only for display |
 | **L5+ Ollama status probes** | **Done (status path)** | `ollamaRuntimeProbe` + LocalLLMAdapter / ModelManagerService / BIOS boot |
 | **L5++ Ollama ops (delete/canary)** | **Done** | `ollamaRuntimeOps` + `OllamaRuntime.deleteModel`; ModelManager delete/canary via facade |
 | **L5+++ generate/chat providers** | **Done** | `OllamaRuntime.generate` / `streamGenerate`; visionManager + legacy `llmService` OllamaProvider via facade. Install still Electron IPC. |
 
 ### L5 entry points
 
-- `src/services/llm/lucaLocalCatalogBridge.ts` — `listLocalCatalogView()`, `getLocalCatalogDivergenceReport()`, `getOfflineModelsFromLocalCatalog()`, `resolveBrainCatalogMetadata()`
+- `src/services/llm/lucaLocalCatalogBridge.ts` — product SoT reader: `listLocalCatalogView()`, `resolveLocalCatalogMetadata()` / `resolveBrainCatalogMetadata()`, `listRecommendedLocalCatalog()`, `getOfflineModelsFromLocalCatalog()`
 - Offline browser registry (`ModelRegistryService.getModels`) prefers bridge-derived catalog with fallback to `OFFLINE_MODELS`
-- Model Manager brain cards prefer `resolveBrainCatalogMetadata` for name/description/RAM/license/source
+- **UI rule:** Model Manager + OfflineModelManager use `resolveLocalCatalogMetadata` only (no direct `findLucaUnifiedModel` in those surfaces). Source lists still exist for data maintenance.
 - Ollama status: `probeOllamaViaRuntimeFacade()` in `src/services/local-models/ollamaRuntimeProbe.ts`
 - Ollama delete/canary: `deleteOllamaModelViaRuntimeFacade` / `canaryChatViaRuntimeFacade` in `ollamaRuntimeOps.ts`
 - Ollama generate/chat: `generateViaRuntimeFacade` / `streamGenerateViaRuntimeFacade` / `chatViaRuntimeFacade` (vision + llmService)
 
 ### Suggested next slices
 
-1. Optional: drop dual-catalog hand maintenance once all product surfaces read bridge only.
-2. Cortex Phase 4 only if Cortex is a product priority.
+1. Cortex Phase 4 only if Cortex is a product priority (cancel / server load hardening).
+2. Collapse dual source lists into one maintained data file once divergence report stays green.
 3. Native runtime (Phase 5) when product needs owned lifecycle beyond Ollama bootstrap.

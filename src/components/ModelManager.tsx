@@ -6,8 +6,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Icon } from "./ui/Icon";
 import { LucaButton, LucaDialog, LucaDialogOverlay, LucaInput, LucaSwitch } from "./ui/luca";
-import { findLucaUnifiedModel } from "../services/llm/lucaUnifiedModelRegistry";
-import { resolveBrainCatalogMetadata } from "../services/llm/lucaLocalCatalogBridge";
+import { resolveLocalCatalogMetadata } from "../services/llm/lucaLocalCatalogBridge";
 import {
   modelManagerService,
   LocalModel,
@@ -498,19 +497,14 @@ const RenderGrid: React.FC<RenderGridProps> = ({
         <div className="px-3 pb-3 pt-1 animate-in fade-in slide-in-from-top-4 duration-500 ease-out">
           <div className={`grid gap-2 ${compact ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
             {items.map((model) => {
-              const unified = findLucaUnifiedModel(model.id);
-              // L5: prefer merged catalog metadata (unified + runtime facade).
-              const catalog = resolveBrainCatalogMetadata(model.id);
+              // L5 SoT: single bridge reader (no direct unified-registry import).
+              const catalog = resolveLocalCatalogMetadata(model.id);
               const displayName = catalog?.name ?? model.name;
               const displayDescription = catalog?.description ?? model.description;
-              const minRam = catalog?.minRamBytes ?? unified?.minRamBytes ?? model.memoryRequirement;
+              const minRam = catalog?.minRamBytes ?? model.memoryRequirement;
               const sourceLabel =
                 catalog?.sourceLabel ??
-                (model.runtime === "ollama"
-                  ? "Ollama"
-                  : unified?.source === "webllm"
-                    ? "WebGPU"
-                    : "Internal");
+                (model.runtime === "ollama" ? "Ollama" : "Internal");
               return (
               <div key={model.id} className={`border rounded-lg overflow-hidden relative ${model.status === "ready" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]" : "shadow-sm"}`}
                    style={{ backgroundColor: "var(--app-bg-main)", borderColor: model.status === "ready" ? undefined : "var(--app-border-main)" }}>
@@ -569,27 +563,27 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                       <span className={`text-[7px] px-1.5 py-0.5 rounded border uppercase tracking-[0.12em] ${getCatalogBadgeClass(model.catalogStatus)}`}>
                         {model.catalogStatus || "verified"}
                       </span>
-                      {(catalog?.licenseName || unified?.license?.name) && (
+                      {catalog?.licenseName && (
                         <span
                           className="text-[7px] px-1.5 py-0.5 rounded border uppercase tracking-[0.08em]"
                           style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)", opacity: 0.7 }}
                           title={
-                            unified?.license
-                              ? `License: ${unified.license.name} — commercial use: ${unified.license.commercialUse}`
-                              : `License: ${catalog?.licenseName}`
+                            catalog.commercialUse
+                              ? `License: ${catalog.licenseName} — commercial use: ${catalog.commercialUse}`
+                              : `License: ${catalog.licenseName}`
                           }
                         >
-                          {(unified?.license?.name ?? catalog?.licenseName ?? "").split(" ")[0]}
+                          {catalog.licenseName.split(" ")[0]}
                         </span>
                       )}
-                      {unified?.sourceUrl && (
+                      {catalog?.sourceUrl && (
                         <a
-                          href={unified.sourceUrl}
+                          href={catalog.sourceUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-[8px] transition-opacity hover:opacity-80"
                           style={{ color: "var(--app-text-muted)", opacity: 0.4 }}
-                          title={`Model source: ${unified.sourceUrl}`}
+                          title={`Model source: ${catalog.sourceUrl}`}
                           onClick={(e) => e.stopPropagation()}
                         >
                           ↗

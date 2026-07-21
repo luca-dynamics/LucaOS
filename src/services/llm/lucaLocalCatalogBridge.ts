@@ -363,20 +363,33 @@ export function listLocalCatalogForRam(
 }
 
 /**
- * Resolve display metadata for a desktop brain model id (Model Manager).
- * Prefers unified ollama/localai/webllm rows, then runtime facade.
+ * Product-facing display metadata for any local catalog id
+ * (desktop brain, offline browser, LocalAI, runtime facade).
+ * Prefer this over importing lucaUnifiedModelRegistry / LOCAL_MODEL_CATALOG
+ * directly from UI surfaces.
  */
-export function resolveBrainCatalogMetadata(modelId: string): {
+export interface LocalCatalogDisplayMetadata {
   id: string;
   name?: string;
   description?: string;
   minRamBytes?: number;
   sizeBytes?: number;
   licenseName?: string;
+  /** From unified license when known: yes | no | conditional */
+  commercialUse?: "yes" | "no" | "conditional";
+  sourceUrl?: string;
   sourceLabel?: string;
   recommended?: boolean;
   origins: LocalCatalogOrigin[];
-} | undefined {
+}
+
+/**
+ * Resolve display metadata for a model id.
+ * Prefers unified ollama/localai/webllm rows, then runtime facade + offline.
+ */
+export function resolveBrainCatalogMetadata(
+  modelId: string,
+): LocalCatalogDisplayMetadata | undefined {
   const needle = modelId.trim().toLowerCase();
   if (!needle) return undefined;
 
@@ -391,6 +404,8 @@ export function resolveBrainCatalogMetadata(modelId: string): {
 
   if (!unified && !view) return undefined;
 
+  const license =
+    unified?.license ?? view?.unified?.license;
   const runtimeLabel =
     view?.runtime === "ollama"
       ? "Ollama"
@@ -416,9 +431,23 @@ export function resolveBrainCatalogMetadata(modelId: string): {
     description: unified?.description ?? view?.description,
     minRamBytes: unified?.minRamBytes ?? view?.minRamBytes,
     sizeBytes: unified?.sizeBytes ?? view?.sizeBytes,
-    licenseName: unified?.license.name ?? view?.unified?.license.name,
+    licenseName: license?.name,
+    commercialUse: license?.commercialUse,
+    sourceUrl: unified?.sourceUrl ?? view?.unified?.sourceUrl,
     sourceLabel: runtimeLabel,
     recommended: unified?.recommended ?? view?.recommended,
     origins: view?.origins ?? (unified ? (["unified"] as LocalCatalogOrigin[]) : []),
   };
+}
+
+/** Alias — product code should treat the bridge as the local-catalog SoT reader. */
+export const resolveLocalCatalogMetadata = resolveBrainCatalogMetadata;
+
+/**
+ * Recommended models from the merged catalog view (for pickers / onboarding).
+ */
+export function listRecommendedLocalCatalog(
+  offlineModels: readonly OfflineModelCatalogRow[] = [],
+): LocalCatalogViewEntry[] {
+  return listLocalCatalogView(offlineModels).filter((entry) => entry.recommended);
 }

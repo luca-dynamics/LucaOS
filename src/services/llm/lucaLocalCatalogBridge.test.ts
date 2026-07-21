@@ -5,7 +5,9 @@ import {
   listLocalCatalogByRuntime,
   listLocalCatalogForRam,
   listLocalCatalogView,
+  listRecommendedLocalCatalog,
   resolveBrainCatalogMetadata,
+  resolveLocalCatalogMetadata,
 } from "./lucaLocalCatalogBridge";
 import { getLucaUnifiedModels } from "./lucaUnifiedModelRegistry";
 import { LOCAL_MODEL_CATALOG } from "../local-models/LocalModelCatalog";
@@ -58,8 +60,24 @@ describe("lucaLocalCatalogBridge (L5)", () => {
     expect(meta?.name).toBe(sample.name);
     expect(meta?.description).toBe(sample.description);
     expect(meta?.licenseName).toBe(sample.license.name);
+    expect(meta?.commercialUse).toBe(sample.license.commercialUse);
+    expect(meta?.sourceUrl).toBe(sample.sourceUrl);
     expect(meta?.sourceLabel).toBe("Ollama");
     expect(meta?.origins.length).toBeGreaterThan(0);
+  });
+
+  it("resolveLocalCatalogMetadata is the product SoT alias", () => {
+    const sample = getLucaUnifiedModels("webllm")[0];
+    expect(sample).toBeDefined();
+    expect(resolveLocalCatalogMetadata(sample.id)?.id).toBe(
+      resolveBrainCatalogMetadata(sample.id)?.id,
+    );
+  });
+
+  it("listRecommendedLocalCatalog only returns recommended entries", () => {
+    const recommended = listRecommendedLocalCatalog(OFFLINE_MODELS);
+    expect(recommended.length).toBeGreaterThan(0);
+    expect(recommended.every((e) => e.recommended)).toBe(true);
   });
 
   it("resolveBrainCatalogMetadata returns undefined for empty/unknown ids", () => {
