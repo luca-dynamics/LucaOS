@@ -1,8 +1,8 @@
 import { IStreamingSttProvider, TranscriptResult } from "../types";
-import { cortexUrl } from "../../../config/api";
 import { WavEncoder } from "../utils/WavEncoder";
 import { eventBus } from "../../eventBus";
 import { settingsService } from "../../settingsService";
+import { fetchCortexViaRuntimeFacade } from "../../local-models/cortexRuntimeOps";
 
 export class LucaLocalSttProvider implements IStreamingSttProvider {
   public name = "local-luca";
@@ -47,10 +47,11 @@ export class LucaLocalSttProvider implements IStreamingSttProvider {
       );
 
       const startTime = Date.now();
-      const response = await fetch(`${cortexUrl}/stt/transcribe`, {
+      // Cortex Phase 4c: local Whisper via facade base URL.
+      const response = await fetchCortexViaRuntimeFacade("/stt/transcribe", {
         method: "POST",
         body: formData,
-        signal: AbortSignal.timeout(30000),
+        timeoutMs: 30_000,
       });
 
       const latency = Date.now() - startTime;

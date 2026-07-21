@@ -64,6 +64,11 @@ export class CortexRuntime implements LocalRuntimeAdapter {
     return this.activeGenerations;
   }
 
+  /** Resolved Cortex HTTP base (no trailing slash). Used by non-chat ops. */
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
+
   async health(): Promise<LocalRuntimeHealth> {
     if (!this.baseUrl) {
       return createRuntimeHealth({

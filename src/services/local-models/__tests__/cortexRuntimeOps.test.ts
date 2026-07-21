@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   chatViaCortexRuntimeFacade,
+  fetchCortexViaRuntimeFacade,
+  getCortexBaseUrlFromFacade,
   normalizeCortexChatMessages,
+  postCortexJsonViaRuntimeFacade,
 } from "../cortexRuntimeOps";
 import { localRuntimeRegistry } from "../RuntimeRegistry";
 import { CortexRuntime } from "../runtimes/CortexRuntime";
@@ -65,5 +68,48 @@ describe("cortexRuntimeOps", () => {
     } finally {
       held?.release();
     }
+  });
+
+  it("resolves base URL from registered CortexRuntime", () => {
+    localRuntimeRegistry.replace(
+      new CortexRuntime({ baseUrl: "http://127.0.0.1:9001/" }),
+    );
+    expect(getCortexBaseUrlFromFacade()).toBe("http://127.0.0.1:9001");
+  });
+
+  it("fetchCortexViaRuntimeFacade hits facade base path", async () => {
+    localRuntimeRegistry.replace(
+      new CortexRuntime({ baseUrl: "http://127.0.0.1:8000" }),
+    );
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(jsonResponse(200, { ok: true }) as Response);
+
+    const res = await fetchCortexViaRuntimeFacade("/keyboard/type", {
+      method: "POST",
+      body: JSON.stringify({ text: "hi" }),
+    });
+    expect(res.ok).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "http://127.0.0.1:8000/keyboard/type",
+      expect.objectContaining({ method: "POST" }),
+    );
+    fetchSpy.mockRestore();
+  });
+
+  it("postCortexJsonViaRuntimeFacade parses JSON body", async () => {
+    localRuntimeRegistry.replace(
+      new CortexRuntime({ baseUrl: "http://127.0.0.1:8000" }),
+    );
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      jsonResponse(200, { success: true, output: "done" }) as Response,
+    );
+
+    const body = await postCortexJsonViaRuntimeFacade<{
+      success: boolean;
+      output: string;
+    }>("/api/agent/execute-tool", { toolName: "echo" });
+    expect(body).toEqual({ success: true, output: "done" });
+    fetchSpy.mockRestore();
   });
 });
