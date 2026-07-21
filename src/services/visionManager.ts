@@ -189,43 +189,43 @@ export class VisionManager {
       };
     }
 
-    // NEW: Ollama (Local Vision Fallback)
+    // Ollama local vision fallback via runtime facade (not raw /api/generate).
     if (config.provider as string === "ollama") {
-      const { ollamaUrl } = await import("../config/api");
       const model = config.model || "moondream"; // Default to moondream for speed
-      
-      try {
-        const resp = await fetch(ollamaUrl("/api/generate"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: model,
-            prompt: prompt,
-            images: [screenshot.replace(/^data:image\/\w+;base64,/, "")],
-            stream: false,
-            format: "json"
-          }),
-        });
 
-        if (!resp.ok) {
-           const errText = await resp.text();
-           if (errText.includes("not found") || resp.status === 404) {
-               throw new Error(`Local model '${model}' is missing. Would you like me to install it now? (Reply: 'pull moondream')`);
-           }
-           throw new Error(`Ollama API error: ${resp.statusText}`);
-        }
-        
-        const data = await resp.json();
+      try {
+        const { generateViaRuntimeFacade } = await import(
+          "./local-models/ollamaRuntimeOps"
+        );
+        const result = await generateViaRuntimeFacade({
+          model,
+          prompt,
+          images: [screenshot.replace(/^data:image\/\w+;base64,/, "")],
+          format: "json",
+          baseUrl: config.baseUrl || undefined,
+        });
         return {
-          prediction: data.response,
+          prediction: result.text,
           model: `ollama/${model}`,
           intent,
         };
       } catch (e: any) {
-          if (e.message.includes("fetch") || e.message.includes("Failed to fetch") || e.code === "ECONNREFUSED") {
-              throw new Error("Ollama service is not running. Please start Ollama for offline vision fallback.");
-          }
-          throw e;
+        const message = String(e?.message ?? e);
+        if (/404|not found/i.test(message)) {
+          throw new Error(
+            `Local model '${model}' is missing. Would you like me to install it now? (Reply: 'pull moondream')`,
+          );
+        }
+        if (
+          /fetch|Failed to fetch|ECONNREFUSED|unreachable|not running/i.test(
+            message,
+          )
+        ) {
+          throw new Error(
+            "Ollama service is not running. Please start Ollama for offline vision fallback.",
+          );
+        }
+        throw e;
       }
     }
 

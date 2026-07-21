@@ -534,7 +534,7 @@ class ClaudeProvider implements LLMProvider {
   }
 }
 
-// --- OLLAMA PROVIDER (PLACEHOLDER) ---
+// --- OLLAMA PROVIDER (runtime facade) ---
 export class OllamaProvider implements LLMProvider {
   name = "ollama";
   model: string;
@@ -556,26 +556,17 @@ export class OllamaProvider implements LLMProvider {
     options?: LLMGenerateOptions,
   ): Promise<string> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: this.model,
-          prompt,
-          stream: false,
-          options: {
-            temperature: options?.temperature ?? 0.7,
-            num_predict: options?.maxTokens ?? this.maxTokens,
-          },
-        }),
+      const {
+        generateViaRuntimeFacade,
+      } = await import("./local-models/ollamaRuntimeOps");
+      const result = await generateViaRuntimeFacade({
+        model: this.model,
+        prompt,
+        temperature: options?.temperature ?? 0.7,
+        maxTokens: options?.maxTokens ?? this.maxTokens,
+        baseUrl: this.baseUrl,
       });
-
-      if (!response.ok) {
-        throw new Error(`Ollama API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.response || "";
+      return result.text || "";
     } catch (error: any) {
       throw new Error(`Ollama generation failed: ${error.message}`);
     }
@@ -586,45 +577,16 @@ export class OllamaProvider implements LLMProvider {
     options?: LLMGenerateOptions,
   ): AsyncGenerator<string> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: this.model,
-          prompt,
-          stream: true,
-          options: {
-            temperature: options?.temperature ?? 0.7,
-            num_predict: options?.maxTokens ?? this.maxTokens,
-          },
-        }),
+      const {
+        streamGenerateViaRuntimeFacade,
+      } = await import("./local-models/ollamaRuntimeOps");
+      yield* streamGenerateViaRuntimeFacade({
+        model: this.model,
+        prompt,
+        temperature: options?.temperature ?? 0.7,
+        maxTokens: options?.maxTokens ?? this.maxTokens,
+        baseUrl: this.baseUrl,
       });
-
-      if (!response.ok) {
-        throw new Error(`Ollama API error: ${response.status}`);
-      }
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (!reader) throw new Error("No response body");
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\n").filter((l) => l.trim());
-
-        for (const line of lines) {
-          try {
-            const data = JSON.parse(line);
-            if (data.response) yield data.response;
-          } catch {
-            // Skip invalid JSON
-          }
-        }
-      }
     } catch (error: any) {
       throw new Error(`Ollama streaming failed: ${error.message}`);
     }
@@ -635,29 +597,20 @@ export class OllamaProvider implements LLMProvider {
     options?: LLMGenerateOptions,
   ): Promise<string> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: this.model,
-          messages: messages.map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-          })),
-          stream: false,
-          options: {
-            temperature: options?.temperature ?? 0.7,
-            num_predict: options?.maxTokens ?? this.maxTokens,
-          },
-        }),
+      const { chatViaRuntimeFacade } = await import(
+        "./local-models/ollamaRuntimeOps"
+      );
+      const result = await chatViaRuntimeFacade({
+        model: this.model,
+        messages: messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        })),
+        temperature: options?.temperature ?? 0.7,
+        maxTokens: options?.maxTokens ?? this.maxTokens,
+        baseUrl: this.baseUrl,
       });
-
-      if (!response.ok) {
-        throw new Error(`Ollama API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.message?.content || "";
+      return result.text || "";
     } catch (error: any) {
       throw new Error(`Ollama chat failed: ${error.message}`);
     }
