@@ -13,8 +13,15 @@ import {
   type LucaExecutionStepKind,
 } from "../execution/LucaDeterministicExecution";
 import { MissionTapeRecorderService } from "../missionTape/MissionTapeRecorder";
+import { attachMissionTapeReceipt } from "../missionTape/attachMissionTapeReceipt";
 import { finalizeMissionTapeWithVerification } from "../missionTape/missionTapeCompletionGate";
+import {
+  atomicUnitToExecutionStep,
+  type AtomicOperationUnit,
+  validateAtomicOperationUnit,
+} from "./AtomicOperationUnit";
 import { MissionCheckpointStore } from "./MissionCheckpointStore";
+import { verifyBeforeStep } from "./preStepVerificationGate";
 import type { MissionResult, MissionStatus, MissionStep } from "./types";
 
 export interface MissionEngineScaffoldStepInput {
@@ -34,10 +41,17 @@ export interface MissionEngineScaffoldRunInput {
   missionId: string;
   intent: string;
   steps: MissionEngineScaffoldStepInput[];
+  /**
+   * When provided, each unit is contract-validated and pre-step gated
+   * before stub execution (Absorb Phase 1 atomic discipline).
+   */
+  atomicUnits?: AtomicOperationUnit[];
   /** Origin override for completion despite failed gates. */
   verificationOverride?: boolean;
   overrideReason?: string;
   checkpointBeforeRiskySteps?: boolean;
+  /** Attach execution receipts after successful steps (default true). */
+  attachReceipts?: boolean;
 }
 
 export interface MissionEngineScaffoldRunResult {
@@ -45,7 +59,9 @@ export interface MissionEngineScaffoldRunResult {
   status: MissionStatus;
   success: boolean;
   stepsExecuted: number;
+  stepsBlockedPreflight: number;
   checkpoints: number;
+  receiptsAttached: number;
   completionBlocked: boolean;
   reason?: string;
   result: MissionResult;
@@ -78,35 +94,100 @@ export class MissionEngineScaffold {
   ): Promise<MissionEngineScaffoldRunResult> {
     await this.recorder.createTape(input.missionId, input.intent);
 
-    const planSteps = input.steps.map((step, index) => {
-      const kind =
-        step.kind ??
-        (step.toolOrRuntime?.includes("computer")
-          ? "computer_use"
-          : step.toolOrRuntime?.includes("file")
-            ? "filesystem"
-            : "tool_call");
-      const riskLevel = mapRisk(step.riskLevel);
-      return createExecutionStep({
-        id: step.stepId ?? `step-${index + 1}`,
-        summary: step.goal,
-        kind,
-        riskLevel,
-        requiresRollback: riskLevel === "high",
-        rollbackAvailable: Boolean(step.rollback),
-        receiptRequired: riskLevel !== "low",
-        receiptAvailable: false,
-      });
-    });
+    // Prefer strict atomic units when provided.
+    const useAtomic =
+      Array.isArray(input.atomicUnits) && input.atomicUnits.length > 0;
+    const stepCount = useAtomic
+      ? input.atomicUnits!.length
+      : input.steps.length;
+
+    const planSteps = useAtomic
+      ? input.atomicUnits!.map((unit) => {
+          const validated = validateAtomicOperationUnit(unit);
+          if (!validated.ok || !validated.unit) {
+            return createExecutionStep({
+              id: `invalid-${Math.random().toString(36).slice(2, 7)}`,
+              summary: "invalid atomic unit",
+              kind: "unknown",
+              riskLevel: "high",
+            });
+          }
+          return atomicUnitToExecutionStep(validated.unit);
+        })
+      : input.steps.map((step, index) => {
+          const kind =
+            step.kind ??
+            (step.toolOrRuntime?.includes("computer")
+              ? "computer_use"
+              : step.toolOrRuntime?.includes("file")
+                ? "filesystem"
+                : "tool_call");
+          const riskLevel = mapRisk(step.riskLevel);
+          return createExecutionStep({
+            id: step.stepId ?? `step-${index + 1}`,
+            summary: step.goal,
+            kind,
+            riskLevel,
+            requiresRollback: riskLevel === "high",
+            rollbackAvailable: Boolean(step.rollback),
+            receiptRequired: riskLevel !== "low",
+            receiptAvailable: false,
+          });
+        });
 
     let stepsExecuted = 0;
+    let stepsBlockedPreflight = 0;
     let checkpointCount = 0;
+    let receiptsAttached = 0;
     let anyFailed = false;
 
-    for (let i = 0; i < input.steps.length; i += 1) {
-      const step = input.steps[i];
+    for (let i = 0; i < stepCount; i += 1) {
       const planStep = planSteps[i];
       const stepId = planStep.id;
+      const step = useAtomic
+        ? {
+            goal: input.atomicUnits![i].goal,
+            toolOrRuntime: input.atomicUnits![i].tool_or_runtime,
+            expectedOutput: input.atomicUnits![i].expected_output,
+            verification: input.atomicUnits![i].verification,
+            rollback: input.atomicUnits![i].rollback,
+            riskLevel: input.atomicUnits![i].risk_level,
+            simulateSuccess: true as boolean | undefined,
+          }
+        : input.steps[i];
+
+      if (useAtomic) {
+        const pre = verifyBeforeStep({
+          unit: input.atomicUnits![i],
+          context: {
+            intentClear: true,
+            permissionGranted: true,
+            capabilityAvailable: true,
+            userConfirmationProvided: Boolean(input.verificationOverride),
+            originReviewProvided: Boolean(input.verificationOverride),
+            rollbackAvailable: Boolean(input.atomicUnits![i].rollback?.trim()),
+            receiptAvailable: false,
+          },
+        });
+        if (!pre.allowed && !input.verificationOverride) {
+          stepsBlockedPreflight += 1;
+          anyFailed = true;
+          await this.recorder.appendStep(input.missionId, {
+            stepId,
+            goal: step.goal,
+            status: "failed",
+            notes: `pre-step blocked: ${pre.reason}`,
+          });
+          await this.recorder.appendVerification(input.missionId, {
+            stepId,
+            passed: false,
+            details: pre.reason,
+            verificationCommand: "preStepVerificationGate",
+          });
+          planStep.verificationStatus = "blocked";
+          continue;
+        }
+      }
 
       if (
         input.checkpointBeforeRiskySteps !== false &&
@@ -139,7 +220,23 @@ export class MissionEngineScaffold {
         verificationCommand: "mission-engine-scaffold",
       });
 
-      // Mark receipt available on plan step after successful verify for completion gate.
+      if (success && input.attachReceipts !== false) {
+        await attachMissionTapeReceipt(this.recorder, {
+          missionId: input.missionId,
+          stepId,
+          summary: step.expectedOutput || step.goal,
+          passed: true,
+          evidence: [
+            {
+              kind: "manual_note",
+              summary: step.verification || "scaffold step evidence",
+            },
+          ],
+          source: "system",
+        });
+        receiptsAttached += 1;
+      }
+
       if (success) {
         planStep.receiptAvailable = true;
         planStep.verificationStatus = "passed";
@@ -156,7 +253,9 @@ export class MissionEngineScaffold {
       summary: input.intent,
       steps: planSteps,
       actorTier: input.verificationOverride ? "origin" : "normal",
-      rollbackPath: input.steps.find((s) => s.rollback)?.rollback,
+      rollbackPath:
+        input.atomicUnits?.find((u) => u.rollback)?.rollback ||
+        input.steps.find((s) => s.rollback)?.rollback,
     });
 
     const desiredStatus: MissionStatus = anyFailed ? "failed" : "completed";
@@ -194,7 +293,9 @@ export class MissionEngineScaffold {
       status,
       success: status === "completed" && !anyFailed,
       stepsExecuted,
+      stepsBlockedPreflight,
       checkpoints: checkpointCount,
+      receiptsAttached,
       completionBlocked: completion.blockedByVerification,
       reason: completion.reason,
       result: {

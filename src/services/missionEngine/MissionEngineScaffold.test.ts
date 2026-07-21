@@ -76,4 +76,29 @@ describe("MissionEngineScaffold", () => {
     // Override allows complete even if gates would block.
     expect(result.status).toBe("completed");
   });
+
+  it("runs atomic units with pre-step gate and receipts", async () => {
+    const engine = new MissionEngineScaffold();
+    const result = await engine.run({
+      missionId: "scaffold-atomic",
+      intent: "atomic memory write",
+      steps: [],
+      atomicUnits: [
+        {
+          step_id: "a1",
+          goal: "store note",
+          tool_or_runtime: "memory",
+          expected_output: "note stored",
+          verification: "memory has note",
+          rollback: "delete note",
+          risk_level: "safe",
+        },
+      ],
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.receiptsAttached).toBeGreaterThanOrEqual(1);
+    expect(result.stepsBlockedPreflight).toBe(0);
+  });
 });
+
