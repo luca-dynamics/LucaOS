@@ -160,8 +160,15 @@ export class ComputerUseRuntimeEventBridge {
 
   private sanitize(payload: Record<string, unknown>): Record<string, unknown> {
     if (!this.options.redactSensitiveText) return payload;
+    const actionType = payload.actionType;
     return Object.fromEntries(
-      Object.entries(payload).map(([k, v]) => [k, typeof v === "string" && k.toLowerCase().includes("text") ? "[REDACTED]" : v]),
+      Object.entries(payload).map(([k, v]) => {
+        if (typeof v !== "string") return [k, v];
+        if (k.toLowerCase().includes("text")) return [k, "[REDACTED]"];
+        // type_text reasons often carry typed content — redact them.
+        if (k === "reason" && actionType === "type_text") return [k, "[REDACTED]"];
+        return [k, v];
+      }),
     );
   }
 }

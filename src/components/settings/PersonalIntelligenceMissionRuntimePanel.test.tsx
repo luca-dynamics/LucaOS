@@ -44,11 +44,21 @@ describe("PersonalIntelligenceMissionRuntimePanel", () => {
     // A read-only load effect is allowed (it reads the active mission); the
     // panel must never mutate the mission, act on a click, or write anything.
     expect(component).toContain("getActiveMission");
+    expect(component).toContain("buildLiveMissionAdvisoryBundle");
+    expect(component).toContain("missionAdvisoryBridge");
     expect(component).not.toMatch(
       /startMission|addGoal|updateGoalStatus|archiveMission/,
     );
     expect(component).not.toMatch(/onClick\s*=/);
     expect(component).not.toMatch(/saveMemory|liveWrite/i);
+  });
+
+  it("labels live vs sample advisory honestly", () => {
+    const component = sources["./PersonalIntelligenceMissionRuntimePanel.tsx"];
+    expect(component).toContain("Live mission");
+    expect(component).toContain("Sample mission");
+    expect(component).toContain("Live alignment evaluation");
+    expect(component).toContain("Live advisory recommendation");
   });
 
   it("keeps production mission runtime and UI sources free of forbidden APIs", () => {

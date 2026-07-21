@@ -101,7 +101,14 @@ describe("ComputerUseSandboxBrowserAdapter", () => {
     const adapter = new ComputerUseSandboxBrowserAdapter({
       featureFlags: { sandboxBrowserAdapterEnabled: true, browserRuntimeRouterBridgeEnabled: true },
     });
-    const result = await adapter.execute(validRequest);
+    // Router bridge validation requires a target (selector/description).
+    const result = await adapter.execute({
+      ...validRequest,
+      action: {
+        ...validRequest.action,
+        target: { selectorHint: "#save", description: "Save" },
+      },
+    });
     expect(result.status).toBe("executed");
     expect(result.metadata.browserRuntimeRouterBridgeEnabled).toBe(true);
     expect(result.metadata.routerBridgeRequest?.action).toBe("click");
@@ -118,11 +125,15 @@ describe("ComputerUseSandboxBrowserAdapter", () => {
       featureFlags: { sandboxBrowserAdapterEnabled: true, browserRuntimeRouterBridgeEnabled: true },
       recording: { eventBridge },
     });
+    // No target → bridge validation fails; record as failed (honest status).
     const result = await adapter.execute({ ...validRequest, action: { ...validRequest.action, target: undefined } });
     expect(result.status).toBe("failed");
     expect(result.metadata.reason).toContain("Missing BrowserRuntime router bridge target");
     const records = eventBridge.getSnapshot("mission-sb").records;
-    expect(records.map((x) => x.eventType)).toEqual(["computer_use_browser_adapter_started", "computer_use_browser_adapter_completed"]);
+    expect(records.map((x) => x.eventType)).toEqual([
+      "computer_use_browser_adapter_started",
+      "computer_use_browser_adapter_failed",
+    ]);
   });
 
   it("recording failure remains non-fatal and reset clears snapshot", async () => {

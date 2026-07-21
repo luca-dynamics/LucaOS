@@ -1,8 +1,6 @@
 import { VoiceHudRuntimeBridge } from "./VoiceHudRuntimeBridge";
 import { VoiceHudSubscriptionBridge } from "./VoiceHudSubscriptionBridge";
-import { VoiceRuntime } from "./VoiceRuntime";
 import { VoiceRuntimeEventBridge } from "./VoiceRuntimeEventBridge";
-import { VoiceStreamingRuntime } from "./VoiceStreamingRuntime";
 import {
   LucaRealtimeVoiceControllerMetadata,
   LucaRealtimeVoiceEventType,
@@ -17,8 +15,7 @@ export type RealtimeVoiceHudLikeBridge = Pick<
 >;
 
 export interface RealtimeVoiceSessionControllerOptions {
-  runtime?: VoiceRuntime;
-  streamingRuntime?: VoiceStreamingRuntime;
+  /** Optional tape/event bridge for observability (not required for product path). */
   eventBridge?: VoiceRuntimeEventBridge;
   hudBridge?: RealtimeVoiceHudLikeBridge;
 }

@@ -46,13 +46,13 @@ import type {
 } from "../../services/lucaLink/lucaLinkBridgeReview";
 import type { LucaLinkEmbodiedCapabilityEnvelope } from "../../services/lucaLink/lucaLinkEmbodiedHostPolicy";
 import {
-  createLucaLinkLinkedHostRecord,
   getLucaLinkConnectionStateMetadata,
   getLucaLinkDeviceCenterDisclosure,
   getLucaLinkDeviceTypeLabel,
   getLucaLinkTrustStateMetadata,
 } from "../../services/lucaLink/lucaLinkLinkedHostRegistry";
 import type { LucaLinkLinkedHostRecord } from "../../services/lucaLink/lucaLinkLinkedHostRegistry";
+import { buildLucaLinkContinuitySnapshot } from "../../services/lucaLink/lucaLinkContinuityBridge";
 import {
   canUsePermission,
   getLucaLinkGovernanceDecisionLabel,
@@ -1019,49 +1019,24 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const checkpointSyncStatuses = [...deviceCenterSnapshot.checkpointSyncStatuses].sort(
     (left, right) => right.updatedAt - left.updatedAt,
   );
+  // Continuity bridge: trust registry first, mesh-connected devices as
+  // provisional paired rows when missing — single write path for identity view.
+  const continuitySnapshot = buildLucaLinkContinuitySnapshot({
+    state: {
+      connected: deviceCenterSnapshot.state.connected,
+      deviceId: deviceCenterSnapshot.state.deviceId,
+      connectedDevices,
+      error: deviceCenterSnapshot.state.error,
+    },
+    trustedDevices: deviceCenterSnapshot.trustedDevices,
+    deviceTrustSummary: deviceCenterSnapshot.deviceTrustSummary,
+    continuationSummary: deviceCenterSnapshot.continuationSummary,
+    handoffSummary: deviceCenterSnapshot.handoffSummary,
+    softEnforcementMode: deviceCenterSnapshot.softEnforcementMode,
+  });
   const trustedDevices: LucaLinkTrustedDeviceRecord[] =
-    deviceCenterSnapshot.trustedDevices.length > 0
-      ? deviceCenterSnapshot.trustedDevices
-      : connectedDevices.map((device) => ({
-          deviceId: device.deviceId,
-          displayName: device.name || "Unnamed LucaLink device",
-          deviceType: device.type,
-          role: inferLucaLinkDeviceRole(device, currentDeviceId)
-            .toLowerCase()
-            .replace(" ", "-") as LucaLinkTrustedDeviceRecord["role"],
-          trustLevel: "paired" as const,
-          status: "connected" as const,
-          createdAt: device.lastSeen || Date.now(),
-          updatedAt: device.lastSeen || Date.now(),
-          lastSeenAt: device.lastSeen,
-          capabilities: [],
-          deniedCapabilities: [
-            "shell.execute",
-            "files.write",
-            "code.modify",
-            "browser.control",
-            "payment.spend",
-            "physical-world.action",
-          ],
-          permissionSummary: {
-            conversation: true,
-            notification: true,
-            memory: false,
-            tools: false,
-            files: false,
-            code: false,
-            browser: false,
-            shell: false,
-            payment: false,
-            physicalWorld: false,
-            safety: true,
-          },
-          warnings: [],
-          errors: [],
-        }));
-  const linkedHosts = trustedDevices.map((device) =>
-    createLucaLinkLinkedHostRecord(device, currentDeviceId),
-  );
+    continuitySnapshot.trustedDevices;
+  const linkedHosts = continuitySnapshot.linkedHosts;
   const linkedHostsById = new Map<string, LucaLinkLinkedHostRecord>(
     linkedHosts.map((host) => [host.id, host] as const),
   );

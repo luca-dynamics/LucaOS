@@ -251,6 +251,26 @@ export interface LucaSettings {
     resourceAwareThrottling: boolean;
     idleThresholdMinutes: number;
   };
+  /**
+   * Computer-use real sandbox browser path. All flags default off / safe.
+   * When realSandboxEnabled is true, product code may build Playwright or
+   * Electron sandbox drivers via createRealSandboxComputerUseStack.
+   */
+  computerUse?: {
+    /** Master switch for real sandbox browser execution. Default false. */
+    realSandboxEnabled?: boolean;
+    /**
+     * Driver selection when real path is on.
+     * - auto: prefer electron_sandbox when window.luca.sandbox exists, else playwright
+     * - playwright: Node Playwright Chromium
+     * - electron_sandbox: luca-browser via sandbox IPC
+     */
+    driverKind?: "auto" | "playwright" | "electron_sandbox";
+    /** Playwright headless mode (default true). */
+    headless?: boolean;
+    /** Forward computer-use events into MissionTapeRecorderService. Default false. */
+    enableMissionTapeSink?: boolean;
+  };
   onboarding?: {
     modelRouteWarnings?: Array<{
       capability: string;
@@ -448,6 +468,12 @@ const DEFAULT_SETTINGS: LucaSettings = {
     doubleBrainConsensus: true,
     resourceAwareThrottling: true,
     idleThresholdMinutes: 10,
+  },
+  computerUse: {
+    realSandboxEnabled: false,
+    driverKind: "auto",
+    headless: true,
+    enableMissionTapeSink: false,
   },
 };
 

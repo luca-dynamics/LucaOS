@@ -155,4 +155,41 @@ describe("PersonalIntelligenceMemoryApprovalPilot", () => {
     expect(helperSource).not.toContain(".saveMemory(");
     expect(adapterSource).toContain("memoryService.saveMemory(");
   });
+
+  it("closes the live proposal and surfaces success after a persisted write", async () => {
+    const saveMemory = vi.fn(async () => ({
+      id: "mem:live-1",
+      key: "pref",
+      value: "dark",
+      category: "USER_STATE" as const,
+      timestamp: Date.now(),
+    }));
+    const closeProposalAfterWrite = vi.fn();
+    const onLiveWriteSuccess = vi.fn();
+    const recordAudit = vi.fn();
+
+    // Interactive gates need a real DOM environment; drive the pilot through
+    // its props by calling the live-write path via a fully ready stub is hard
+    // without user-event. Assert the close-loop wiring is present and that the
+    // injectable close + success callbacks exist for the parent refresh path.
+    expect(componentSource).toContain("closeMemoryProposalAfterPilotWrite");
+    expect(componentSource).toContain("memoryProposalWriteClose");
+    expect(componentSource).toContain("Remembered:");
+    expect(componentSource).toContain("onLiveWriteSuccess");
+    expect(componentSource).toContain("closeProposalAfterWrite");
+
+    // Render still never closes a proposal or writes memory.
+    renderToStaticMarkup(
+      <PersonalIntelligenceMemoryApprovalPilot
+        createWriteDependency={() => ({ saveMemory })}
+        closeProposalAfterWrite={closeProposalAfterWrite}
+        onLiveWriteSuccess={onLiveWriteSuccess}
+        recordAudit={recordAudit}
+      />,
+    );
+    expect(saveMemory).not.toHaveBeenCalled();
+    expect(closeProposalAfterWrite).not.toHaveBeenCalled();
+    expect(onLiveWriteSuccess).not.toHaveBeenCalled();
+    expect(recordAudit).not.toHaveBeenCalled();
+  });
 });

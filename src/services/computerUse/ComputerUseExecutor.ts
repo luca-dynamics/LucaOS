@@ -55,6 +55,10 @@ export class ComputerUseExecutor {
     const result = await adapter.execute(action, request);
     const scaffoldMetadata = this.baseMetadata();
     const adapterMetadata = result.metadata;
+    const executorKind =
+      typeof adapterMetadata?.executorKind === "string"
+        ? adapterMetadata.executorKind
+        : "scaffold";
 
     return {
       ...result,
@@ -66,10 +70,10 @@ export class ComputerUseExecutor {
         ...(scaffoldMetadata.adapterCount !== undefined
           ? { adapterCount: scaffoldMetadata.adapterCount }
           : {}),
-        systemApisCalled: false,
+        systemApisCalled: adapterMetadata?.systemApisCalled === true ? true : false,
         delegatesOnly: true,
         noDirectSystemCalls: true,
-        executorKind: "scaffold",
+        executorKind,
         executionMode: adapterMetadata?.executionMode ?? adapter.mode,
       },
     };

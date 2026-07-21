@@ -73,7 +73,9 @@ export function deriveVoiceRuntimeProviderPolicy(input: VoiceRuntimeProviderPoli
     return basePolicy(preset, { preferredProviderKind: "auto", latencyMode: "balanced", privacyMode: allowByok ? "byok_allowed" : "cloud_allowed", fallbackAllowed: true, networkAllowed: true, localModelPreferred: false, enableStreaming: true });
   }
 
-  const networkAllowed = Boolean(input.allowCloudFallback ?? (allowCloud || allowByok));
+  // Privacy preset: network off unless user explicitly allows cloud fallback.
+  // Do not inherit cloudEnabled defaults (those apply to non-privacy presets).
+  const networkAllowed = Boolean(input.allowCloudFallback);
   return basePolicy(preset, {
     preferredProviderKind: "local",
     latencyMode: "privacy",

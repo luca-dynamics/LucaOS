@@ -118,6 +118,34 @@ interface PersonalIntelligenceMemoryApprovalPilotProps {
   ) => void;
   /** Prior durable audit trail, read by the parent at mount. */
   initialAuditSummary?: MemoryApprovalAuditSummary;
+  /**
+   * Called after a successful live write once the proposal queue has been
+   * closed (markWritten). Parent uses this to refresh the queue + memory list.
+   */
+  onLiveWriteSuccess?: (detail: {
+    proposalId: string;
+    memoryId?: string;
+    title: string;
+    content: string;
+  }) => void;
+  /**
+   * Close the live proposal after a successful write (default: composition-edge
+   * helper resolved lazily). Tests inject a no-op or spy.
+   */
+  closeProposalAfterWrite?: (
+    proposalId: string,
+    memoryId: string,
+  ) => void;
+}
+
+async function resolveCloseProposalAfterWrite(
+  proposalId: string,
+  memoryId: string,
+): Promise<void> {
+  const module = await import(
+    "../../services/personalIntelligence/memoryProposalWriteClose"
+  );
+  module.closeMemoryProposalAfterPilotWrite(proposalId, memoryId);
 }
 
 export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
@@ -129,6 +157,8 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
   createWriteDependency,
   recordAudit,
   initialAuditSummary,
+  onLiveWriteSuccess,
+  closeProposalAfterWrite,
 }) => {
   const queue = pendingProposals ?? [];
   const [selectedProposalId, setSelectedProposalId] = useState<
@@ -158,6 +188,7 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
     setPilotState(
       createDefaultMemoryApprovalPilotState({ selectedProposalId: proposalId }),
     );
+    setSuccessBanner(null);
   };
 
   const [dryRunPending, setDryRunPending] = useState(false);
@@ -165,6 +196,8 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
   const [auditTotal, setAuditTotal] = useState(
     initialAuditSummary?.totalRecords ?? 0,
   );
+  /** In-panel success feedback after a real live write ("Remembered: …"). */
+  const [successBanner, setSuccessBanner] = useState<string | null>(null);
 
   const logAudit = (
     result: GovernedMemoryAdapterResult,
@@ -244,6 +277,7 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
 
   const runLiveWrite = async () => {
     setLiveWritePending(true);
+    setSuccessBanner(null);
     try {
       const dependency = createWriteDependency
         ? createWriteDependency()
@@ -271,6 +305,27 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
             ? "live_write_failed"
             : "live_write_blocked",
       );
+
+      // Close the live proposal loop only after a real side-effecting write.
+      if (result.status === "persisted" && result.performed) {
+        const memoryId =
+          result.memoryNodeId ?? `memory:${proposal.proposalId}`;
+        const title =
+          proposal.memoryItem.title ?? proposal.memoryItem.content.slice(0, 80);
+        const content = proposal.memoryItem.content;
+        if (closeProposalAfterWrite) {
+          closeProposalAfterWrite(proposal.proposalId, memoryId);
+        } else {
+          await resolveCloseProposalAfterWrite(proposal.proposalId, memoryId);
+        }
+        setSuccessBanner(`Remembered: ${title}`);
+        onLiveWriteSuccess?.({
+          proposalId: proposal.proposalId,
+          memoryId,
+          title,
+          content,
+        });
+      }
     } finally {
       setLiveWritePending(false);
     }
@@ -480,6 +535,22 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
           />
         </StepRow>
       </div>
+
+      {successBanner && (
+        <div
+          role="status"
+          className="rounded-xl border px-3.5 py-3 text-[13px] font-semibold"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--luca-success, #4fbf7a) 36%, transparent)",
+            background:
+              "color-mix(in srgb, var(--luca-success, #4fbf7a) 10%, transparent)",
+            color: "var(--luca-success, #4fbf7a)",
+          }}
+        >
+          {successBanner}
+        </div>
+      )}
 
       {/* The one write action */}
       <div

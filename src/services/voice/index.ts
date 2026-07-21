@@ -1,59 +1,55 @@
-export * from "./types";
-export * from "./VoiceBackendRegistry";
-export * from "./VoiceProviderRouter";
-export * from "./createVoiceProviderRouter";
-export * from "./VoiceLocalProviderAdapter";
-export * from "./VoiceLucaPrimeProviderAdapter";
-export * from "./VoiceByokProviderAdapter";
-export * from "./createVoiceProviderAdapters";
-export * from "./VoiceProviderReadiness";
-export * from "./VoiceRealProviderAdapterShell";
-export * from "./createVoiceRealProviderAdapterShell";
+/**
+ * Voice module public surface — product path only.
+ *
+ * Production spine: voiceSessionOrchestrator → liveService / hybridVoiceService /
+ * BrowserHfRealtimeVoiceSession (+ CanonicalVoiceSessionBus, realtimeVoiceUiBridge).
+ *
+ * Dual-stack scaffolds (VoiceRuntime, stub provider registry/router, OpenAI-compatible
+ * placeholders, onboarding/computer-use confirmation bridges) were removed after
+ * reference audit (zero product callers outside voice/ self-tests).
+ */
 
-export * from "./VoiceInMemoryTapeSink";
-export * from "./VoiceRuntimeEventBridge";
-export * from "./VoiceRuntime";
-export * from "./createVoiceRuntime";
-export * from "./VoiceStreamingRuntime";
-export * from "./createVoiceStreamingRuntime";
-export * from "./VoiceOpenAICompatibleAudioApi";
-export * from "./createVoiceOpenAICompatibleAudioApi";
-export * from "./VoiceMockProviderTransport";
-export * from "./VoiceOpenAICompatibleProviderAdapter";
-export * from "./createVoiceOpenAICompatibleProviderAdapter";
-export * from "./createLucaVoiceRuntime";
+export * from "./types";
+
+// Product session + HUD
 export * from "./RealtimeVoiceSessionController";
 export * from "./createRealtimeVoiceSessionController";
 export * from "./HfRealtimeVoiceRuntime";
 export * from "./createHfRealtimeVoiceRuntime";
 export * from "./BrowserHfRealtimeVoiceSession";
 export * from "./CanonicalVoiceSessionBus";
+export * from "./realtimeVoiceUiBridge";
+export * from "./useRealtimeVoiceHudState";
 
-
-export * from "./VoiceOnboardingBridge";
-export * from "./createVoiceOnboardingBridge";
-
-export * from "./VoiceComputerUseConfirmationBridge";
-export * from "./createVoiceComputerUseConfirmationBridge";
-
+// HUD / mode / live diagnostics bridges used by OverlayManager + diagnostics
 export * from "./VoiceHudRuntimeBridge";
-export * from "./createVoiceHudRuntimeBridge";
-
-export * from "./VoiceModeUiBridge";
-export * from "./createVoiceModeUiBridge";
 export * from "./VoiceHudSubscriptionBridge";
 export * from "./createVoiceHudSubscriptionBridge";
-export * from "./VoiceOnboardingUiBridge";
-export * from "./createVoiceOnboardingUiBridge";
-export * from "./createLucaRuntimeUiBridgeSnapshot";
-
+export * from "./VoiceModeUiBridge";
+export * from "./createVoiceModeUiBridge";
 export * from "./LiveVoiceRuntimeBridge";
 export * from "./createLiveVoiceRuntimeBridge";
 
+// Routing policy + shadow/authority (used by orchestrator / liveService)
+export * from "./VoiceRuntimeProviderPolicy";
+export * from "./VoiceRouteShadowEvaluator";
+export * from "./VoiceRouteAuthorityGate";
+export * from "./VoiceProviderReadiness";
 export * from "./VoiceRuntimeStatePrecedence";
 
-export * from "./VoiceRuntimeProviderPolicy";
+// Optional in-memory tape (optional eventBridge on RealtimeVoiceSessionController)
+export * from "./VoiceInMemoryTapeSink";
+export * from "./VoiceRuntimeEventBridge";
 
-export * from "./VoiceRouteShadowEvaluator";
-
-export * from "./VoiceRouteAuthorityGate";
+// Real STT/TTS provider implementations (CapabilityRouter / hybrid path)
+export * from "./providers/CortexTtsProvider";
+export * from "./providers/DeepgramSttProvider";
+export * from "./providers/DeepgramTtsProvider";
+export * from "./providers/GeminiSttProvider";
+export * from "./providers/GeminiTtsProvider";
+export * from "./providers/GoogleTtsProvider";
+export * from "./providers/GroqSttProvider";
+export * from "./providers/LucaBrainProvider";
+export * from "./providers/LucaLocalSttProvider";
+export * from "./providers/OpenAiSttProvider";
+export * from "./providers/OpenAiTtsProvider";

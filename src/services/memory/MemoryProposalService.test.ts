@@ -132,4 +132,27 @@ describe("MemoryProposalService", () => {
     expect(summary.totalProposals).toBe(1);
     expect(summary.approvedWaitingWriteProposals).toBe(1);
   });
+
+  it("markWritten closes the loop with inbox + bus and leaves no waiting write", () => {
+    const stack = createStack();
+    const prov = makeProvenance(stack);
+    const proposal = stack.proposals.createProposal(baseInput(prov.provenanceId));
+    stack.proposals.approveProposal(proposal.proposalId);
+    const written = stack.proposals.markWritten(proposal.proposalId, "mem:1");
+    expect(written?.status).toBe("written");
+    expect(written?.memoryId).toBe("mem:1");
+    expect(written?.writtenAt).toBeTruthy();
+    expect(stack.inbox.ingestEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: "memory_write_succeeded",
+        body: expect.stringContaining("Remembered:"),
+      }),
+    );
+    expect(stack.bus.emit).toHaveBeenCalledWith(
+      "memory_write_succeeded",
+      expect.objectContaining({ proposalId: proposal.proposalId, memoryId: "mem:1" }),
+    );
+    expect(stack.proposals.getDiagnosticsSummary().approvedWaitingWriteProposals).toBe(0);
+    expect(stack.proposals.getDiagnosticsSummary().writtenProposals).toBe(1);
+  });
 });

@@ -291,13 +291,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   ) => {
     setSettings((prev) => {
       const sectionData = prev[section];
-      if (typeof sectionData === "object" && sectionData !== null) {
+      if (typeof sectionData === "object" && sectionData !== null && !Array.isArray(sectionData)) {
         return {
           ...prev,
           [section]: {
             ...sectionData,
             [key]: value,
           },
+        };
+      }
+      // Missing optional sections (e.g. computerUse on older saves) become objects.
+      if (sectionData === undefined || sectionData === null) {
+        return {
+          ...prev,
+          [section]: { [key]: value },
         };
       }
       return {

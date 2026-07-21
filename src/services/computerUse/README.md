@@ -1,13 +1,52 @@
-# Computer-use Focus Context + Action Planner
+# Computer-use runtime
 
-Minimal context-modeling and planning scaffold for computer-use focus signals and candidate actions.
+Planning, guard, mission, and browser execution for Luca computer-use.
 
-## Scope
+## Preferred real path (product)
+
+```ts
+import { computerUseStackService } from "./computerUseStackService";
+// or: createRealSandboxComputerUseStack / resolveComputerUseStackFromSettings
+
+// Settings → Autonomy → Computer-use sandbox → Real sandbox browser
+const stack = await computerUseStackService.getStack();
+await stack.pipeline.run({ /* guardApprovalProvided when needed */ });
+```
+
+Real body: `src/services/browserRuntime` (`SandboxPlaywrightBrowserRuntimeAdapter`, drivers, stack factory).
+
+## Canonical feature flags
+
+See `computerUseFeatureFlags.ts`. Prefer:
+
+| Canonical | Deprecated alias |
+|-----------|------------------|
+| `sandboxBrowserAdapterEnabled` | `enableSandboxBrowserAdapter` |
+| `browserRuntimeRouterBridgeEnabled` | `enableBrowserRuntimeRouterBridge` |
+| `LucaSettings.computerUse.realSandboxEnabled` | (product master switch) |
+
+Aliases still work; new code should use canonical names only.
+
+## Removed scaffold leftovers (hard-deleted)
+
+After verifying zero product/runtime callers outside their own tests:
+
+- `ComputerUseBrowserRuntimeBridge` (+ tests)
+- `ComputerUseBrowserRuntimeAdapterScaffold` / `createComputerUseBrowserRuntimeAdapter` (+ tests)
+- `ComputerUseSandboxBrowserProvider` (+ tests)
+- `createBrowserRuntimeContractProbe` / `BrowserRuntimeContract` (+ tests)
+
+Use `BrowserRuntimeRouterBridge`, `ComputerUseSandboxBrowserAdapter`, and `createRealSandboxComputerUseStack` instead.
+
+Safety spine (keep): dry-run, invocation guard, guarded adapter, RealInvocationShell, MissionTape bridges.
+
+## Scope (planning layer)
 
 - Define shared types for cursor, region, focused element, screenshot, user-pointed target grounding, and action planning.
 - Build immutable-ish context snapshots through `ComputerUseFocusContextBuilder`.
 - Build planning-only action candidates through `ComputerUseActionPlanner`.
 - Encode safety defaults and metadata only.
+- Default pipeline adapter simulates unless `realSandboxExecutionEnabled` + shell/router are injected (or settings enable real stack).
 
 ## Rules encoded in scaffold
 
@@ -76,11 +115,11 @@ Minimal context-modeling and planning scaffold for computer-use focus signals an
   - `systemApisCalled: false`
 
 
-## Browser-runtime bridge + sandbox browser provider scaffold
+## Browser-runtime mapping (canonical)
 
-- `ComputerUseBrowserRuntimeBridge` maps computer-use execution modes/actions into browser-runtime-style route requests/results without importing BrowserRuntime yet.
-- `ComputerUseSandboxBrowserProvider` handles only `sandbox_browser` lanes and simulates route execution without real browser API calls.
-- Both components report scaffold metadata and keep `browserRuntimeImported: false` / `browserApisCalled: false` for this phase.
+- `BrowserRuntimeRouterBridge` maps computer-use actions into BrowserRuntimeRouter request shapes.
+- `ComputerUseSandboxBrowserAdapter` validates sandbox-lane actions and optional router-bridge metadata.
+- Real browser execution is only via `createRealSandboxComputerUseStack` / `computerUseStackService` (settings-gated).
 
 ## Default pipeline factory scaffold
 
@@ -168,33 +207,18 @@ import {
 - Direct-host remains forbidden and system APIs remain disabled in guard decision event metadata.
 
 
-## BrowserRuntime Adapter Boundary
+## BrowserRuntime adapter event recording
 
-- `ComputerUseBrowserRuntimeAdapter` defines a feature-flag-gated adapter boundary for future BrowserRuntime/Ghost Browser/sandbox browser integrations.
-- The scaffold adapter requires explicit opt-in (`browserRuntimeEnabled` or `enableBrowserRuntimeBridge`) before it can handle or execute browser-runtime requests.
-- The adapter does **not** import real BrowserRuntime and does **not** call Playwright in this phase.
-- The adapter returns simulated scaffold-only delegation results and keeps side-effect metadata explicit (`browserRuntimeImported: false`, `playwrightCalled: false`, `browserApisCalled: false`, `systemApisCalled: false`).
-- Future PRs can replace or inject a real BrowserRuntime-backed adapter implementation behind the same contract.
+- Browser adapter attempts are observable through `ComputerUseRuntimeEventBridge` (`started`, `completed`, `rejected`, `failed`).
+- Requests can carry mission context (`missionId`, `stepId`, `traceId`, `source`).
+- `createComputerUseSandboxBrowserAdapter()` exposes tape/event helpers; recording is in-memory by default.
+- Real execution uses the browserRuntime stack; this adapter’s mapping path stays non-executing unless wired through the real invocation shell.
 
-## BrowserRuntime Adapter Event Recording
+## Sandbox browser adapter
 
-- BrowserRuntime adapter attempts are now observable through `ComputerUseRuntimeEventBridge` using browser adapter event types (`started`, `completed`, `rejected`, `failed`).
-- Browser adapter requests can carry optional mission context (`missionId`, `stepId`, `traceId`, `source`) via request context metadata.
-- Runtime event bridge uses request mission context to group adapter records by `missionId` when present.
-- Missing mission context still falls back to `missionId: "unknown"` for compatibility.
-- `createComputerUseBrowserRuntimeAdapter()` now exposes default in-memory `tapeSink`, `eventBridge`, and `getTapeSnapshot()` accessors unless recording is explicitly disabled.
-- Recording remains scaffold-only and in-memory by default; no storage writes are performed.
-- No real BrowserRuntime imports, Playwright calls, browser API calls, or system/OS API calls are performed in this phase.
-- Future real BrowserRuntime-backed adapter implementations should preserve the same event contract so observability stays stable across scaffold and production integrations.
-
-
-## Sandbox Browser Adapter (feature-flagged scaffold)
-
-- `ComputerUseSandboxBrowserAdapter` adds a dedicated `sandbox_browser` adapter path that maps browser adapter requests into a BrowserRuntime-shaped target request/result while staying fully simulated.
-- Explicit opt-in is required via `sandboxBrowserAdapterEnabled` or `enableSandboxBrowserAdapter`.
-- Default behavior remains safe scaffold mode: no BrowserRuntime runtime import, no Playwright/browser/system calls, and no direct-host allowance.
-- Metadata remains explicit for safety/conformance (`adapterKind: "sandbox_browser_scaffold"`, `realBrowserExecutionEnabled: false`, `directHostAllowed: false`, `requiresExplicitOptIn: true`).
-- Event recording contract is preserved (`started`, `completed`, `rejected`, `failed`) and mission context is forwarded when available.
+- `ComputerUseSandboxBrowserAdapter` maps `sandbox_browser` actions with optional router-bridge metadata.
+- Opt-in via `sandboxBrowserAdapterEnabled` (alias `enableSandboxBrowserAdapter`).
+- Mapping path does not call Playwright by itself; real work goes through the real stack factory.
 
 ## BrowserRuntime Conformance Matrix (sandbox bridge hardening)
 

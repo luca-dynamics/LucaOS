@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "vitest";
 import { realtimeVoiceUiBridge } from "./realtimeVoiceUiBridge";
 
 describe("realtimeVoiceUiBridge wiring", () => {

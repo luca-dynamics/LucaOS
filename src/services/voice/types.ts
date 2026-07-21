@@ -568,6 +568,17 @@ export type LucaVoiceRuntimeEventType =
   | "voice_output_completed"
   | "voice_output_interrupted";
 
+/**
+ * Lightweight runtime state snapshot used by HUD bridges.
+ * (Former VoiceRuntime class was removed as an unused dual-stack scaffold.)
+ */
+export interface VoiceRuntimeState {
+  status: LucaVoiceRuntimeStatus;
+  session?: LucaVoiceSession;
+  pendingConfirmation?: LucaVoiceSafetyConfirmation;
+  metadata: LucaVoiceRuntimeMetadata;
+}
+
 export interface LucaVoiceSession {
   sessionId: string;
   mode: LucaVoiceMode;

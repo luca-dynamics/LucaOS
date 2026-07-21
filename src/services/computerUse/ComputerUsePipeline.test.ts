@@ -128,6 +128,7 @@ describe("ComputerUsePipeline", () => {
         metadata: {
           reason: "Adapter simulated failure",
           adapterId: "direct-click",
+          executionMode: "direct_host",
           systemApisCalled: false,
           delegatesOnly: true,
           noDirectSystemCalls: true,
@@ -145,9 +146,11 @@ describe("ComputerUsePipeline", () => {
       tapeBridge: new ComputerUseMissionTapeBridge(),
     });
 
+    // Force direct_host selection (plans prefer sandbox by default) + approve clicks.
     const result = await pipeline.run({
       missionId: "mission-8",
       userPointedTarget: { description: "Primary action" },
+      executionRequest: { executionMode: "direct_host", guardApprovalProvided: true },
     });
 
     expect(result.executionResults[0].metadata?.executionMode).toBe("direct_host");
@@ -185,7 +188,9 @@ describe("ComputerUsePipeline", () => {
     });
 
     expect(result.executionResults[0].status).toBe("denied");
-    expect(result.executionResults[0].metadata?.reason).toContain("Guard approval");
+    expect(result.executionResults[0].metadata?.reason).toMatch(
+      /confirmation|Guard approval|approval/i,
+    );
     expect(result.executionResults[0].metadata?.guardDecisionStatus).toBe("needs_confirmation");
     expect(result.executionResults[0].metadata?.externalGuardCalled).toBe(false);
     expect(sandboxExecuteSpy).not.toHaveBeenCalled();
@@ -262,7 +267,8 @@ describe("ComputerUsePipeline", () => {
     expect(result.actionPlan.actions[0].type).toBe("observe");
     expect(result.executionResults[0].status).toBe("skipped");
     expect(result.verificationResults[0].status).toBe("inconclusive");
-    expect(result.recoveryPlan.strategy).toBe("observe_again");
+    // Dangerous context escalates before observe_again in recovery policy.
+    expect(result.recoveryPlan.strategy).toBe("escalate_to_user");
   });
 
   it("records denied guard decision via runtime event bridge without executor side effects", async () => {

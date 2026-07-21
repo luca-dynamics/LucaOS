@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Icon } from "../ui/Icon";
 import { LucaInput, LucaSelect } from "../ui/luca";
 import { memoryService } from "../../services/memoryService";
@@ -8,8 +8,10 @@ import {
   buildBundleFromPendingProposals,
   buildBundleFromProposalId,
   listReviewableMemoryProposals,
+  type MemoryApprovalQueueItem,
 } from "../../services/personalIntelligence/memoryProposalBridge";
 import { summarizeStoredMemoryApprovalAudit } from "../../services/personalIntelligence/memoryApprovalAuditStore";
+import type { MemoryApprovalProposalBundle } from "../../personal-intelligence/approval";
 import { MemoryNode } from "../../types";
 import { cortexUrl } from "../../config/api";
 import {
@@ -46,6 +48,34 @@ interface SettingsDataTabProps {
   isMobile?: boolean;
 }
 
+interface PilotQueueSnapshot {
+  pendingProposals: MemoryApprovalQueueItem[];
+  buildBundleForProposal:
+    | ((id: string) => MemoryApprovalProposalBundle | null)
+    | undefined;
+  buildProposalBundle: (() => MemoryApprovalProposalBundle) | undefined;
+}
+
+function readPilotQueue(): PilotQueueSnapshot {
+  try {
+    const records = memoryProposalService.listProposals();
+    const pending = listReviewableMemoryProposals(records);
+    const fallback = buildBundleFromPendingProposals(records);
+    return {
+      pendingProposals: pending,
+      buildBundleForProposal: (id: string) =>
+        buildBundleFromProposalId(records, id),
+      buildProposalBundle: fallback ? () => fallback : undefined,
+    };
+  } catch {
+    return {
+      pendingProposals: [],
+      buildBundleForProposal: undefined,
+      buildProposalBundle: undefined,
+    };
+  }
+}
+
 const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
   memoryStats,
   loadMemoryStats,
@@ -57,28 +87,9 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
   const [loading, setLoading] = useState(true);
 
   // Feed the governed write pilot the REAL reviewable queue from the live
-  // proposal service (read once when the tab opens). The pilot shows a selector
-  // when more than one is waiting, and falls back to its sample when the queue
-  // is empty so the surface still explains itself.
-  const pilotQueue = useMemo(() => {
-    try {
-      const records = memoryProposalService.listProposals();
-      const pending = listReviewableMemoryProposals(records);
-      const fallback = buildBundleFromPendingProposals(records);
-      return {
-        pendingProposals: pending,
-        buildBundleForProposal: (id: string) =>
-          buildBundleFromProposalId(records, id),
-        buildProposalBundle: fallback ? () => fallback : undefined,
-      };
-    } catch {
-      return {
-        pendingProposals: [],
-        buildBundleForProposal: undefined,
-        buildProposalBundle: undefined,
-      };
-    }
-  }, []);
+  // proposal service. Refreshed after a successful pilot write so the written
+  // item leaves the selector and the memory list updates.
+  const [pilotQueue, setPilotQueue] = useState<PilotQueueSnapshot>(readPilotQueue);
 
   // The durable governed-write audit trail (persisted across sessions), read
   // once at mount so the pilot can show prior history.
@@ -102,6 +113,11 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
     setLoading(false);
     loadMemoryStats();
   };
+
+  const handlePilotLiveWriteSuccess = useCallback(() => {
+    setPilotQueue(readPilotQueue());
+    loadAllMemories();
+  }, [loadMemoryStats]);
 
   const deleteMemory = (id: string) => {
     if (confirm("Permanently delete this memory?")) {
@@ -224,6 +240,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
               buildBundleForProposal={pilotQueue.buildBundleForProposal}
               buildProposalBundle={pilotQueue.buildProposalBundle}
               initialAuditSummary={initialAuditSummary}
+              onLiveWriteSuccess={handlePilotLiveWriteSuccess}
             />
           </div>
           <PersonalIntelligenceRuntimeTracePanel />

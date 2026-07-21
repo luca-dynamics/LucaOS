@@ -2,6 +2,7 @@ import {
   createBrowserRuntimeRouterBridgeRequest,
   validateBrowserRuntimeRouterBridgeRequest,
 } from "./BrowserRuntimeRouterBridge";
+import { normalizeSandboxBrowserAdapterFlags } from "./computerUseFeatureFlags";
 import {
   ComputerUseBrowserRuntimeAdapter,
   ComputerUseBrowserRuntimeAdapterRequest,
@@ -133,12 +134,14 @@ export class ComputerUseSandboxBrowserAdapter implements ComputerUseBrowserRunti
   }
 
   getSnapshot(): ComputerUseSandboxBrowserAdapterSnapshot {
+    const normalized = normalizeSandboxBrowserAdapterFlags(this.options.featureFlags);
     return {
       featureFlags: {
-        sandboxBrowserAdapterEnabled: Boolean(this.options.featureFlags?.sandboxBrowserAdapterEnabled),
-        enableSandboxBrowserAdapter: Boolean(this.options.featureFlags?.enableSandboxBrowserAdapter),
-        browserRuntimeRouterBridgeEnabled: Boolean(this.options.featureFlags?.browserRuntimeRouterBridgeEnabled),
-        enableBrowserRuntimeRouterBridge: Boolean(this.options.featureFlags?.enableBrowserRuntimeRouterBridge),
+        sandboxBrowserAdapterEnabled: normalized.sandboxBrowserAdapterEnabled,
+        // Deprecated aliases mirrored for older snapshot consumers.
+        enableSandboxBrowserAdapter: normalized.sandboxBrowserAdapterEnabled,
+        browserRuntimeRouterBridgeEnabled: normalized.browserRuntimeRouterBridgeEnabled,
+        enableBrowserRuntimeRouterBridge: normalized.browserRuntimeRouterBridgeEnabled,
       },
       executionCount: this.executionCount,
       lastRequest: this.lastRequest,
@@ -147,7 +150,8 @@ export class ComputerUseSandboxBrowserAdapter implements ComputerUseBrowserRunti
   }
 
   private isRouterBridgeEnabled(): boolean {
-    return Boolean(this.options.featureFlags?.browserRuntimeRouterBridgeEnabled || this.options.featureFlags?.enableBrowserRuntimeRouterBridge);
+    return normalizeSandboxBrowserAdapterFlags(this.options.featureFlags)
+      .browserRuntimeRouterBridgeEnabled;
   }
 
   reset(): void {
@@ -157,7 +161,8 @@ export class ComputerUseSandboxBrowserAdapter implements ComputerUseBrowserRunti
   }
 
   private isEnabled(): boolean {
-    return Boolean(this.options.featureFlags?.sandboxBrowserAdapterEnabled || this.options.featureFlags?.enableSandboxBrowserAdapter);
+    return normalizeSandboxBrowserAdapterFlags(this.options.featureFlags)
+      .sandboxBrowserAdapterEnabled;
   }
 
   private fail(reason: string): ComputerUseSandboxBrowserAdapterResult {

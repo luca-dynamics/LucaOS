@@ -260,6 +260,9 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
     lucaLinkManager.console.getFreshHostConnectionSummary();
   const guestSecuritySummary =
     lucaLinkManager.console.getGuestSecuritySummary();
+  const continuationSummary =
+    lucaLinkManager.console.getContinuationRegistrySummary();
+  const handoffSummary = lucaLinkManager.console.getHandoffSummary();
   const readinessItems = createLucaLinkModalReadinessItems({
     connectionState,
     isInitialized,
@@ -272,6 +275,8 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
     pendingGuestAuth: guestSecuritySummary.authChallenge,
     deniedGuestInbound: guestSecuritySummary.deniedGuestInbound,
     rateLimitedGuestInbound: guestSecuritySummary.rateLimitedGuestInbound,
+    validContinuations: continuationSummary.valid,
+    pendingHandoffs: handoffSummary.pending,
   });
 
   return (

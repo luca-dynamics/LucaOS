@@ -4,6 +4,11 @@ import {
   ComputerUseBrowserRuntimeRealInvocationShellOptions,
 } from "./types";
 
+/**
+ * Factory for the real-invocation shell.
+ * Pass `router` (e.g. from `createSandboxBrowserRuntimeRouter`) to enable real route()
+ * when readiness gates pass. Without `router`, ready paths stay disabled.
+ */
 export const createBrowserRuntimeRouterRealInvocationShell = (
   options: ComputerUseBrowserRuntimeRealInvocationShellOptions = {},
 ) => {

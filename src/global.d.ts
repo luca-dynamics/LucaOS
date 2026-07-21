@@ -37,6 +37,19 @@ declare global {
         getActive: () => Promise<unknown>;
         archive: (missionId: number) => Promise<void>;
       };
+      /** Electron sandbox broker IPC (preload). Used by ElectronSandboxBrowserDriver. */
+      sandbox?: {
+        probe: () => Promise<unknown>;
+        create: (request?: unknown) => Promise<unknown>;
+        list: () => Promise<unknown>;
+        listSnapshots: (sessionId: string) => Promise<unknown>;
+        snapshot: (sessionId: string) => Promise<unknown>;
+        cleanupExpired: () => Promise<unknown>;
+        execute: (sessionId: string, command: unknown) => Promise<unknown>;
+        exportArtifact: (sessionId: string, request: unknown) => Promise<unknown>;
+        importArtifact: (sessionId: string, artifact: unknown) => Promise<unknown>;
+        destroy: (sessionId: string) => Promise<unknown>;
+      };
       applySystemSettings(settings: any): void;
       connectSocial(appId: string): Promise<any>;
       getAboutInfo(): Promise<{ version: string; arch: string; platform: string }>;

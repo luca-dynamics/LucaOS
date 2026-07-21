@@ -178,6 +178,14 @@ export default defineConfig(({ mode }) => {
     },
     test: {
       setupFiles: ["./src/test/setup.ts"],
+      // Worktree checkouts under tool caches should not be collected as tests.
+      exclude: [
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/.claude/**",
+        "**/.codex/**",
+        "**/.agents/**",
+      ],
     },
   });
 });

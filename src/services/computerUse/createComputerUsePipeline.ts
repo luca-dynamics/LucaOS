@@ -11,6 +11,14 @@ import { ComputerUseVerifier } from "./ComputerUseVerifier";
 export interface CreateComputerUsePipelineOptions {
   registerDefaultSandboxAdapter?: boolean;
   riskLevel?: "safe" | "sensitive" | "dangerous";
+  /**
+   * When true with an invocationShell (or router via shell factory), the default
+   * sandbox executor uses the real browser path. Default false.
+   */
+  realSandboxExecutionEnabled?: boolean;
+  /** Injected real-invocation shell for the default sandbox adapter. */
+  invocationShell?: import("./BrowserRuntimeRouterRealInvocationShell").BrowserRuntimeRouterRealInvocationShell;
+  sandboxAdapterOptions?: import("./types").ComputerUseSandboxExecutorAdapterOptions;
 }
 
 export function createComputerUsePipeline(options: CreateComputerUsePipelineOptions = {}): ComputerUsePipeline {
@@ -23,7 +31,16 @@ export function createComputerUsePipeline(options: CreateComputerUsePipelineOpti
   const tapeBridge = new ComputerUseMissionTapeBridge();
 
   if (options.registerDefaultSandboxAdapter !== false) {
-    executor.registerAdapter(new ComputerUseSandboxExecutorAdapter());
+    executor.registerAdapter(
+      new ComputerUseSandboxExecutorAdapter({
+        ...options.sandboxAdapterOptions,
+        realSandboxExecutionEnabled:
+          options.realSandboxExecutionEnabled ??
+          options.sandboxAdapterOptions?.realSandboxExecutionEnabled,
+        invocationShell:
+          options.invocationShell ?? options.sandboxAdapterOptions?.invocationShell,
+      }),
+    );
   }
 
   return new ComputerUsePipeline({

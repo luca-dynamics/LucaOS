@@ -54,6 +54,34 @@ describe("buildMissionContextSnapshotFromLive", () => {
     expect(result.warnings.join(" ")).toContain("no explicit constraints");
   });
 
+  it("carries metadata constraints and success criteria when the live mission has them", () => {
+    const result = buildMissionContextSnapshotFromLive(
+      snapshot({
+        mission: {
+          id: 7,
+          title: "Ship the release",
+          status: "ACTIVE",
+          created_at: 1_700_000_000_000,
+          updated_at: 1_700_000_100_000,
+          metadata: {
+            description: "Release train for 1.2",
+            constraints: ["Do not ship without user approval", "No secrets in notes"],
+            successCriteria: ["Notes reviewed", "Build tagged"],
+            activeProjectRefs: ["project:release-1.2"],
+          },
+        },
+      }),
+      fixedNow,
+    );
+    expect(result.constraints).toEqual([
+      "Do not ship without user approval",
+      "No secrets in notes",
+    ]);
+    expect(result.successCriteria).toEqual(["Notes reviewed", "Build tagged"]);
+    expect(result.relatedProjectIds).toEqual(["project:release-1.2"]);
+    expect(result.warnings.join(" ")).not.toContain("no explicit constraints");
+  });
+
   it("blocks unsafe live content through PI's own sanitizer", () => {
     const result = buildMissionContextSnapshotFromLive(
       snapshot({

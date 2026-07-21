@@ -50,19 +50,34 @@ describe("selectReviewableMemoryProposal", () => {
     expect(chosen?.proposalId).toBe("new");
   });
 
-  it("skips blocked, rejected, written, and expired records", () => {
+  it("skips blocked, rejected, written, expired, and revoked records", () => {
     const skipStatuses: MemoryProposalStatus[] = [
       "blocked",
       "rejected",
       "written",
       "expired",
       "revoked",
-      "approved_waiting_write",
     ];
     const records = skipStatuses.map((status, i) =>
       record({ proposalId: `s${i}`, status }),
     );
     expect(selectReviewableMemoryProposal(records)).toBeUndefined();
+  });
+
+  it("includes approved_waiting_write so approved proposals can still be written", () => {
+    const chosen = selectReviewableMemoryProposal([
+      record({
+        proposalId: "waiting",
+        status: "approved_waiting_write",
+        updatedAt: "2026-07-04T12:00:00.000Z",
+      }),
+      record({
+        proposalId: "written",
+        status: "written",
+        updatedAt: "2026-07-05T00:00:00.000Z",
+      }),
+    ]);
+    expect(chosen?.proposalId).toBe("waiting");
   });
 });
 

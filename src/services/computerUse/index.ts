@@ -9,23 +9,52 @@ export { ComputerUseGuardConfirmationBridge } from "./ComputerUseGuardConfirmati
 export { createComputerUseGuardConfirmationBridge } from "./createComputerUseGuardConfirmationBridge";
 export { ComputerUseSandboxExecutorAdapter } from "./ComputerUseSandboxExecutorAdapter";
 export { ComputerUseMissionTapeBridge } from "./ComputerUseMissionTapeBridge";
-export { ComputerUseBrowserRuntimeBridge } from "./ComputerUseBrowserRuntimeBridge";
-export { ComputerUseSandboxBrowserProvider } from "./ComputerUseSandboxBrowserProvider";
-export { ComputerUseBrowserRuntimeAdapterScaffold as ComputerUseBrowserRuntimeAdapter } from "./ComputerUseBrowserRuntimeAdapter";
-export { createComputerUseBrowserRuntimeAdapter } from "./createComputerUseBrowserRuntimeAdapter";
 export { ComputerUseSandboxBrowserAdapter } from "./ComputerUseSandboxBrowserAdapter";
 export { createComputerUseSandboxBrowserAdapter } from "./createComputerUseSandboxBrowserAdapter";
-export { COMPUTER_USE_BROWSER_RUNTIME_ACTION_MAPPING, getComputerUseBrowserRuntimeConformanceMatrix, validateComputerUseBrowserRuntimeMapping } from "./BrowserRuntimeConformance";
-export { createBrowserRuntimeRouterBridgeRequest, mapComputerUseActionToBrowserRuntimeRoute, validateBrowserRuntimeRouterBridgeRequest } from "./BrowserRuntimeRouterBridge";
-export type { BrowserRuntimeRouterBridgeMetadata, BrowserRuntimeRouterBridgeRequest, BrowserRuntimeRouterBridgeRoute } from "./BrowserRuntimeRouterBridge";
+export {
+  COMPUTER_USE_BROWSER_RUNTIME_ACTION_MAPPING,
+  getComputerUseBrowserRuntimeConformanceMatrix,
+  validateComputerUseBrowserRuntimeMapping,
+} from "./BrowserRuntimeConformance";
+/** Canonical CU → BrowserRuntimeRouter request mapping. */
+export {
+  createBrowserRuntimeRouterBridgeRequest,
+  mapComputerUseActionToBrowserRuntimeRoute,
+  validateBrowserRuntimeRouterBridgeRequest,
+} from "./BrowserRuntimeRouterBridge";
+export type {
+  BrowserRuntimeRouterBridgeMetadata,
+  BrowserRuntimeRouterBridgeRequest,
+  BrowserRuntimeRouterBridgeRoute,
+} from "./BrowserRuntimeRouterBridge";
 export { BrowserRuntimeRouterDryRunAdapter } from "./BrowserRuntimeRouterDryRunAdapter";
 export { createBrowserRuntimeRouterDryRunAdapter } from "./createBrowserRuntimeRouterDryRunAdapter";
 export { BrowserRuntimeRouterGuardedAdapter } from "./BrowserRuntimeRouterGuardedAdapter";
 export { createBrowserRuntimeRouterGuardedAdapter } from "./createBrowserRuntimeRouterGuardedAdapter";
 export { BrowserRuntimeRouterRealInvocationShell } from "./BrowserRuntimeRouterRealInvocationShell";
 export { createBrowserRuntimeRouterRealInvocationShell } from "./createBrowserRuntimeRouterRealInvocationShell";
-export { evaluateBrowserRuntimeRouterInvocationReadiness, createBrowserRuntimeRouterInvocationGate, createBrowserRuntimeRouterInvocationReadinessInputFromSandboxResult } from "./BrowserRuntimeRouterInvocationGuard";
-export type { BrowserRuntimeRouterInvocationReadinessFeatureFlags, BrowserRuntimeRouterInvocationReadinessInput, BrowserRuntimeRouterInvocationReadinessFromSandboxOptions } from "./BrowserRuntimeRouterInvocationGuard";
+export type { ComputerUseBrowserRuntimeRouterPort } from "./types";
+export {
+  resolveComputerUseStackFromSettings,
+  getComputerUseSettings,
+  resolveDriverKindFromSettings,
+} from "./resolveComputerUseStackFromSettings";
+export { computerUseStackService } from "./computerUseStackService";
+export {
+  normalizeSandboxBrowserAdapterFlags,
+  normalizeInvocationReadinessFlags,
+  COMPUTER_USE_FLAG_CANONICAL_MAP,
+} from "./computerUseFeatureFlags";
+export {
+  evaluateBrowserRuntimeRouterInvocationReadiness,
+  createBrowserRuntimeRouterInvocationGate,
+  createBrowserRuntimeRouterInvocationReadinessInputFromSandboxResult,
+} from "./BrowserRuntimeRouterInvocationGuard";
+export type {
+  BrowserRuntimeRouterInvocationReadinessFeatureFlags,
+  BrowserRuntimeRouterInvocationReadinessInput,
+  BrowserRuntimeRouterInvocationReadinessFromSandboxOptions,
+} from "./BrowserRuntimeRouterInvocationGuard";
 export { createComputerUsePipeline } from "./createComputerUsePipeline";
 export { ComputerUseMissionEngineBridge } from "./ComputerUseMissionEngineBridge";
 export { ComputerUseMissionStepAdapter } from "./ComputerUseMissionStepAdapter";
@@ -41,8 +70,6 @@ export { createComputerUseMissionIntegrationAdapter } from "./createComputerUseM
 export { ComputerUseInMemoryMissionTapeSink } from "./ComputerUseInMemoryMissionTapeSink";
 export { ComputerUseMissionTapeSinkAdapter } from "./ComputerUseMissionTapeSinkAdapter";
 export { ComputerUseRuntimeEventBridge } from "./ComputerUseRuntimeEventBridge";
-export { createBrowserRuntimeContractProbe, getDiscoverySnapshot, DISCOVERED_BROWSER_RUNTIME_CANDIDATES } from "./createBrowserRuntimeContractProbe";
-export type { ComputerUseBrowserRuntimeTarget, ComputerUseBrowserRuntimeTargetMetadata, ComputerUseBrowserRuntimeTargetRequest, ComputerUseBrowserRuntimeTargetResult } from "./BrowserRuntimeContract";
 
 export * from "./types";
 
