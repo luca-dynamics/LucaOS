@@ -51,7 +51,7 @@ For LucaOS, Ollama is therefore a pragmatic bootstrap runtime, not the architect
 | Phase 1 foundation | **Done** | Types, catalog, admission, leases under `src/services/local-models/` |
 | Phase 2 Ollama bootstrap | **Done** | `OllamaRuntime` + default registry |
 | Phase 3 diagnostics | **Done** | Facade snapshot in RuntimeDiagnosticsService + panel (PR #631) |
-| Phase 4 Cortex | **In progress** | Adapter + `cortexRuntimeProbe`; active-generation guard; readiness/diagnostics use facade; install still Cortex HTTP |
+| Phase 4 Cortex | **In progress (4a+4b)** | Probe + load guard + readiness; agent chat call sites via `cortexRuntimeOps`; install/tool-execute still Cortex HTTP |
 | Phase 5 native runtime | **Not started** | Plan only |
 | Phase 6 call-site migration | **Partial** | `LocalLLMAdapter` uses `lucaLocalModelRuntime`; other sites may still be ad hoc |
 | L1–L3 LocalAI catalog/health | **Done** | `lucaUnifiedModelRegistry`, `lucaEndpointHealth`, `lucaLocalEndpointService` |
@@ -74,10 +74,11 @@ For LucaOS, Ollama is therefore a pragmatic bootstrap runtime, not the architect
 
 - `src/services/local-models/runtimes/CortexRuntime.ts` — health, listModels (live `/v1/models` ∪ catalog), chat/stream with **max concurrent generations** + AbortSignal stream cancel
 - `src/services/local-models/cortexRuntimeProbe.ts` — `probeCortexViaRuntimeFacade()` (cached health)
-- Product wiring: `ModelManagerService.getCortexStatus()`, `ModelReadinessResolver` (internal models), `RuntimeDiagnosticsService` cortex availability
+- `src/services/local-models/cortexRuntimeOps.ts` — `chatViaCortexRuntimeFacade()` + message normalize (parts → content) + admission
+- Product wiring: `getCortexStatus`, readiness/diagnostics/CapabilityRouter; **AgentPlanner**, **LLMToolSelector**, **LucaWorkforce** script gen
 
 ### Suggested next slices
 
-1. Cortex Phase 4b: migrate high-traffic `CORTEX_URL` chat call sites (AgentPlanner / workforce) through `lucaLocalModelRuntime` or a thin cortex ops helper.
+1. Cortex Phase 4c: remaining non-chat Cortex surfaces (tools execute, chroma, computer control) only where product-safe.
 2. Collapse dual source lists into one maintained data file once divergence report stays green.
 3. Native runtime (Phase 5) when product needs owned lifecycle beyond Ollama + Cortex.

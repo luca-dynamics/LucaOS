@@ -6,7 +6,7 @@
  */
 
 import type { AgentStep } from "./types";
-import { CORTEX_URL } from "../../config/api";
+import { chatViaCortexRuntimeFacade } from "../local-models/cortexRuntimeOps";
 
 export class AgentPlannerService {
   /**
@@ -36,14 +36,12 @@ export class AgentPlannerService {
    */
   private async createPlanWithLLM(goal: string): Promise<AgentStep[] | null> {
     try {
-      const response = await fetch(`${CORTEX_URL}/chat/completions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: "system",
-              content: `You are a task planning AI. Break down user goals into specific, executable steps.
+      // Cortex Phase 4b: facade + admission (not raw CORTEX_URL fetch).
+      const result = await chatViaCortexRuntimeFacade({
+        messages: [
+          {
+            role: "system",
+            content: `You are a task planning AI. Break down user goals into specific, executable steps.
 
 Available tool categories:
 - file_read, file_write: File operations
@@ -61,26 +59,17 @@ Return ONLY valid JSON array format:
     "dependencies": [step_ids]
   }
 ]`,
-            },
-            {
-              role: "user",
-              content: `Goal: ${goal}\n\nGenerate execution plan:`,
-            },
-          ],
-          temperature: 0.3,
-          max_tokens: 1000,
-        }),
+          },
+          {
+            role: "user",
+            content: `Goal: ${goal}\n\nGenerate execution plan:`,
+          },
+        ],
+        temperature: 0.3,
+        maxTokens: 1000,
       });
 
-      if (!response.ok) {
-        console.warn(`[AgentPlanner] LLM API error: ${response.status}`);
-        return null;
-      }
-
-      const data = await response.json();
-      const planText = data.choices?.[0]?.message?.content || "";
-
-      return this.parseLLMPlan(planText);
+      return this.parseLLMPlan(result.text || "");
     } catch (error) {
       console.warn("[AgentPlanner] LLM planning failed:", error);
       return null;
