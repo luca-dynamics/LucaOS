@@ -73,7 +73,7 @@ Luca does not have *one* local-model registry — it has **two parallel hand-cur
 2. `local-models/LocalModelCatalog` (runtime facade including cortex/mediapipe),
 3. `ModelRegistry.OFFLINE_MODELS` (browser install metadata).
 
-`ModelRegistryService.getModels()` now prefers `getOfflineModelsFromLocalCatalog()` with fallback to the static offline list. Model Manager brain cards use `resolveBrainCatalogMetadata()` for display metadata. Ollama **status** probes (`LocalLLMAdapter`, `ModelManagerService.getOllamaModels` / refresh, BIOS discovery) go through `probeOllamaViaRuntimeFacade()`. Operational download status remains in ModelRegistry; desktop install status remains in ModelManagerService. Full deletion of parallel source lists is still a later cleanup step after call-sites migrate.
+`ModelRegistryService.getModels()` prefers `getOfflineModelsFromLocalCatalog()`. Model Manager + OfflineModelManager display metadata use `resolveLocalCatalogMetadata()` only (license, sourceUrl, RAM, labels). Ollama status/delete/canary/generate paths go through runtime facade helpers. Operational download status remains in ModelRegistry; desktop install status remains in ModelManagerService. Parallel source lists are still the write-side data files; product UI should not import them directly.
 
 ## 7. Rules honored
 

@@ -13,7 +13,7 @@ import React, { useState, useEffect } from "react";
 import { Icon } from "../../components/ui/Icon";
 import { lucaMaterialDialogStyle } from "../../styles/lucaMaterialSystem";
 import { LucaDialog, LucaDialogOverlay } from "../ui/luca";
-import { findLucaUnifiedModel } from "../../services/llm/lucaUnifiedModelRegistry";
+import { resolveLocalCatalogMetadata } from "../../services/llm/lucaLocalCatalogBridge";
 import { mobileOfflineBrain } from "../../services/mobile/MobileOfflineBrain";
 import { llmService } from "../../services/llmService";
 import {
@@ -309,7 +309,11 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
             const isDownloading = downloadingModelId === model.id;
             const isActive = activeModelId === model.id;
             const isReady = model.status.downloaded || model.status.initialized;
-            const unified = findLucaUnifiedModel(model.id);
+            // L5 SoT: bridge metadata (license/source/name) — not direct unified import.
+            const catalog = resolveLocalCatalogMetadata(model.id);
+            const displayName = catalog?.name ?? model.name;
+            const displayDescription = catalog?.description ?? model.description;
+            const isRecommended = catalog?.recommended ?? model.recommended;
 
             return (
               <div
@@ -338,16 +342,16 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                        {model.name}
-                        {model.recommended && (
+                        {displayName}
+                        {isRecommended && (
                           <span className="text-[8px] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)] px-1.5 py-0.5 rounded font-mono">
                             REC
                           </span>
                         )}
                       </h4>
                       <p className="text-[10px] text-slate-500 font-mono">
-                        {modelRegistry.formatSize(model.size)} ·{" "}
-                        {model.runtime.toUpperCase()}
+                        {modelRegistry.formatSize(catalog?.sizeBytes ?? model.size)} ·{" "}
+                        {(catalog?.sourceLabel ?? model.runtime).toUpperCase()}
                       </p>
                     </div>
                   </div>
@@ -360,25 +364,29 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
 
                 {/* Description */}
                 <p className="text-[11px] text-slate-400 mb-2 line-clamp-2">
-                  {model.description}
+                  {displayDescription}
                 </p>
-                {unified?.license && (
+                {catalog?.licenseName && (
                   <div className="flex items-center gap-1.5 mb-3">
                     <span
                       className="text-[7px] px-1.5 py-0.5 rounded border uppercase tracking-[0.08em] opacity-60"
                       style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.5)" }}
-                      title={`License: ${unified.license.name} — commercial use: ${unified.license.commercialUse}`}
+                      title={
+                        catalog.commercialUse
+                          ? `License: ${catalog.licenseName} — commercial use: ${catalog.commercialUse}`
+                          : `License: ${catalog.licenseName}`
+                      }
                     >
-                      {unified.license.name.split(" ")[0]}
+                      {catalog.licenseName.split(" ")[0]}
                     </span>
-                    {unified.sourceUrl && (
+                    {catalog.sourceUrl && (
                       <a
-                        href={unified.sourceUrl}
+                        href={catalog.sourceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[8px] opacity-30 hover:opacity-70 transition-opacity"
                         style={{ color: "rgba(255,255,255,0.6)" }}
-                        title={`Model source: ${unified.sourceUrl}`}
+                        title={`Model source: ${catalog.sourceUrl}`}
                         onClick={(e) => e.stopPropagation()}
                       >
                         ↗
