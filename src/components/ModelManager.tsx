@@ -154,14 +154,16 @@ const RoutePreviewPanel: React.FC<{
   runtimeSelection: LucaProviderHubRuntimeRouteSelectionResult;
   runtimeRouteSelectionEnabled: boolean;
   runtimeRouteKillSwitchEnabled: boolean;
+  runtimeRouteSelectionTaskScope: "chat_only" | "all";
   taskRouteMatrix: LucaProviderHubTaskRouteDiagnosticsMatrix;
   onRuntimeRouteSelectionEnabledChange: (enabled: boolean) => void;
   onRuntimeRouteKillSwitchEnabledChange: (enabled: boolean) => void;
+  onRuntimeRouteSelectionTaskScopeChange: (scope: "chat_only" | "all") => void;
   preview: RoutePreviewState;
   policyResolution: LucaProviderHubTaskRoutePolicyResolution;
   onPreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>;
   theme: any;
-}> = ({ decision, dryRunComparison, shadowTrace, runtimeSelection, runtimeRouteSelectionEnabled, runtimeRouteKillSwitchEnabled, taskRouteMatrix, onRuntimeRouteSelectionEnabledChange, onRuntimeRouteKillSwitchEnabledChange, preview, policyResolution, onPreviewChange, theme }) => {
+}> = ({ decision, dryRunComparison, shadowTrace, runtimeSelection, runtimeRouteSelectionEnabled, runtimeRouteKillSwitchEnabled, runtimeRouteSelectionTaskScope, taskRouteMatrix, onRuntimeRouteSelectionEnabledChange, onRuntimeRouteKillSwitchEnabledChange, onRuntimeRouteSelectionTaskScopeChange, preview, policyResolution, onPreviewChange, theme }) => {
   const copyRouteDiagnostics = useCallback(() => {
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
       void navigator.clipboard.writeText(decision.safeDiagnosticsText);
@@ -194,7 +196,20 @@ const RoutePreviewPanel: React.FC<{
 
       <label className="mb-2 flex items-start gap-2 rounded border p-2 text-[9px]" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)", backgroundColor: "var(--app-bg-tint)" }}>
         <input type="checkbox" checked={runtimeRouteSelectionEnabled} onChange={(e) => onRuntimeRouteSelectionEnabledChange(e.target.checked)} />
-        <span><b style={{ color: "var(--app-text-main)" }}>Use Provider Hub route selection</b><br />Preview/runtime guard. Existing runtime remains default unless enabled.<br /><span className="font-mono">Flag: {runtimeSelection.enabled ? "enabled" : "disabled"}; runtime outcome: {runtimeRouteKillSwitchEnabled ? "kill switch forces current runtime" : runtimeSelection.shouldUseProviderHubRoute ? "Provider Hub route would be returned" : "current runtime remains active"}.</span><br /><span className="font-mono">Execution guard: {runtimeRouteKillSwitchEnabled ? "Provider Hub runtime kill switch active; using current ProviderFactory route." : !runtimeSelection.enabled ? "Current ProviderFactory route is active" : runtimeSelection.shouldUseProviderHubRoute ? "Provider Hub handoff route will be used through ProviderFactory" : "Provider Hub handoff not eligible; current route remains active"}</span><br /><span className="font-mono">Fallback reason: {runtimeRouteKillSwitchEnabled ? "kill_switch_enabled" : !runtimeSelection.enabled ? "flag_disabled" : runtimeSelection.shouldUseProviderHubRoute ? "none — Provider Hub handoff active" : runtimeSelection.decisionStatus === "configuration_required" ? "missing_configuration" : runtimeSelection.decisionStatus === "blocked" ? "blocked_decision" : "provider_hub_not_selected"}</span></span>
+        <span><b style={{ color: "var(--app-text-main)" }}>Use Provider Hub route selection (chat cohort)</b><br />Opt-in only. Default remains ProviderFactory. Scope controls which task types may hand off.<br /><span className="font-mono">Flag: {runtimeSelection.enabled ? "enabled" : "disabled"}; task scope: {runtimeRouteSelectionTaskScope}; runtime outcome: {runtimeRouteKillSwitchEnabled ? "kill switch forces current runtime" : runtimeSelection.shouldUseProviderHubRoute ? "Provider Hub route would be returned" : "current runtime remains active"}.</span><br /><span className="font-mono">Execution guard: {runtimeRouteKillSwitchEnabled ? "Provider Hub runtime kill switch active; using current ProviderFactory route." : !runtimeSelection.enabled ? "Current ProviderFactory route is active" : runtimeRouteSelectionTaskScope === "chat_only" && preview.taskType !== "chat" ? "Task outside chat_only scope — current route remains active" : runtimeSelection.shouldUseProviderHubRoute ? "Provider Hub handoff route will be used through ProviderFactory" : "Provider Hub handoff not eligible; current route remains active"}</span><br /><span className="font-mono">Fallback reason: {runtimeRouteKillSwitchEnabled ? "kill_switch_enabled" : !runtimeSelection.enabled ? "flag_disabled" : runtimeRouteSelectionTaskScope === "chat_only" && preview.taskType !== "chat" ? "task_scope_chat_only" : runtimeSelection.shouldUseProviderHubRoute ? "none — Provider Hub handoff active" : runtimeSelection.decisionStatus === "configuration_required" ? "missing_configuration" : runtimeSelection.decisionStatus === "blocked" ? "blocked_decision" : "provider_hub_not_selected"}</span></span>
+      </label>
+      <label className="mb-2 flex items-start gap-2 rounded border p-2 text-[9px]" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)", backgroundColor: "var(--app-bg-tint)" }}>
+        <span className="w-full"><b style={{ color: "var(--app-text-main)" }}>Task scope for runtime handoff</b><br />Recommended: chat only. Other tasks still get shadow/diagnostics when selection is on.<br />
+          <select
+            aria-label="Provider Hub runtime task scope"
+            value={runtimeRouteSelectionTaskScope}
+            onChange={(e) => onRuntimeRouteSelectionTaskScopeChange(e.target.value as "chat_only" | "all")}
+            className="mt-1 w-full rounded border px-2 py-1 bg-transparent"
+          >
+            <option value="chat_only">chat_only — handoff chat only (recommended)</option>
+            <option value="all">all — handoff every task type (advanced)</option>
+          </select>
+        </span>
       </label>
       <label className="mb-3 flex items-start gap-2 rounded border p-2 text-[9px]" style={{ borderColor: runtimeRouteKillSwitchEnabled ? "#ef4444" : "#7f1d1d", color: "var(--app-text-muted)", backgroundColor: runtimeRouteKillSwitchEnabled ? "rgba(239, 68, 68, 0.14)" : "rgba(127, 29, 29, 0.08)" }}>
         <input type="checkbox" checked={runtimeRouteKillSwitchEnabled} onChange={(e) => onRuntimeRouteKillSwitchEnabledChange(e.target.checked)} />
@@ -265,7 +280,7 @@ const RoutePreviewPanel: React.FC<{
   );
 };
 
-const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDecision: LucaProviderHubRouteDecision; dryRunComparison: LucaProviderHubRuntimeDryRunComparison; shadowTrace: LucaProviderHubShadowRouteTrace; runtimeSelection: LucaProviderHubRuntimeRouteSelectionResult; taskRouteMatrix: LucaProviderHubTaskRouteDiagnosticsMatrix; runtimeRouteSelectionEnabled: boolean; runtimeRouteKillSwitchEnabled: boolean; onRuntimeRouteSelectionEnabledChange: (enabled: boolean) => void; onRuntimeRouteKillSwitchEnabledChange: (enabled: boolean) => void; routePreview: RoutePreviewState; onRoutePreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, routeDecision, dryRunComparison, shadowTrace, runtimeSelection, taskRouteMatrix, runtimeRouteSelectionEnabled, runtimeRouteKillSwitchEnabled, onRuntimeRouteSelectionEnabledChange, onRuntimeRouteKillSwitchEnabledChange, routePreview, onRoutePreviewChange, theme, isMobile, onConfigure }) => (
+const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDecision: LucaProviderHubRouteDecision; dryRunComparison: LucaProviderHubRuntimeDryRunComparison; shadowTrace: LucaProviderHubShadowRouteTrace; runtimeSelection: LucaProviderHubRuntimeRouteSelectionResult; taskRouteMatrix: LucaProviderHubTaskRouteDiagnosticsMatrix; runtimeRouteSelectionEnabled: boolean; runtimeRouteKillSwitchEnabled: boolean; runtimeRouteSelectionTaskScope: "chat_only" | "all"; onRuntimeRouteSelectionEnabledChange: (enabled: boolean) => void; onRuntimeRouteKillSwitchEnabledChange: (enabled: boolean) => void; onRuntimeRouteSelectionTaskScopeChange: (scope: "chat_only" | "all") => void; routePreview: RoutePreviewState; onRoutePreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, routeDecision, dryRunComparison, shadowTrace, runtimeSelection, taskRouteMatrix, runtimeRouteSelectionEnabled, runtimeRouteKillSwitchEnabled, runtimeRouteSelectionTaskScope, onRuntimeRouteSelectionEnabledChange, onRuntimeRouteKillSwitchEnabledChange, onRuntimeRouteSelectionTaskScopeChange, routePreview, onRoutePreviewChange, theme, isMobile, onConfigure }) => (
   <div className="mb-4 rounded-xl border overflow-hidden shadow-sm" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)" }}>
     <div className="p-4 border-b" style={{ borderColor: "var(--app-border-main)" }}>
       <div className="flex items-start justify-between gap-3">
@@ -280,7 +295,7 @@ const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDe
       </div>
     </div>
     <div className="p-3">
-      <RoutePreviewPanel decision={routeDecision} dryRunComparison={dryRunComparison} shadowTrace={shadowTrace} runtimeSelection={runtimeSelection} taskRouteMatrix={taskRouteMatrix} runtimeRouteSelectionEnabled={runtimeRouteSelectionEnabled} runtimeRouteKillSwitchEnabled={runtimeRouteKillSwitchEnabled} onRuntimeRouteSelectionEnabledChange={onRuntimeRouteSelectionEnabledChange} onRuntimeRouteKillSwitchEnabledChange={onRuntimeRouteKillSwitchEnabledChange} preview={routePreview} policyResolution={resolveProviderHubTaskRoutePolicy({ taskType: routePreview.taskType, preferenceOverride: routePreview.preference, allowFallbacksOverride: routePreview.allowFallbacks, allowPaidProvidersOverride: routePreview.allowPaidProviders, allowLocalProvidersOverride: routePreview.allowLocalProviders, allowCloudProvidersOverride: routePreview.allowCloudProviders })} onPreviewChange={onRoutePreviewChange} theme={theme} />
+      <RoutePreviewPanel decision={routeDecision} dryRunComparison={dryRunComparison} shadowTrace={shadowTrace} runtimeSelection={runtimeSelection} taskRouteMatrix={taskRouteMatrix} runtimeRouteSelectionEnabled={runtimeRouteSelectionEnabled} runtimeRouteKillSwitchEnabled={runtimeRouteKillSwitchEnabled} runtimeRouteSelectionTaskScope={runtimeRouteSelectionTaskScope} onRuntimeRouteSelectionEnabledChange={onRuntimeRouteSelectionEnabledChange} onRuntimeRouteKillSwitchEnabledChange={onRuntimeRouteKillSwitchEnabledChange} onRuntimeRouteSelectionTaskScopeChange={onRuntimeRouteSelectionTaskScopeChange} preview={routePreview} policyResolution={resolveProviderHubTaskRoutePolicy({ taskType: routePreview.taskType, preferenceOverride: routePreview.preference, allowFallbacksOverride: routePreview.allowFallbacks, allowPaidProvidersOverride: routePreview.allowPaidProviders, allowLocalProvidersOverride: routePreview.allowLocalProviders, allowCloudProvidersOverride: routePreview.allowCloudProviders })} onPreviewChange={onRoutePreviewChange} theme={theme} />
       <div className="mt-3" />
       {viewModel.sections.map((section) => (
         <div key={section.id} className="mb-3 last:mb-0">
@@ -824,6 +839,10 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
   const currentSettings = settingsService.getSettings();
   const providerHubRuntimeRouteSelectionEnabled = Boolean(currentSettings.providerHub?.runtimeRouteSelectionEnabled);
   const providerHubRuntimeRouteKillSwitchEnabled = Boolean(currentSettings.providerHub?.runtimeRouteKillSwitchEnabled);
+  const providerHubRuntimeRouteSelectionTaskScope =
+    currentSettings.providerHub?.runtimeRouteSelectionTaskScope === "all"
+      ? "all"
+      : "chat_only";
   const providerHubSnapshots = useMemo(() => createProviderHubSettingsSnapshots({ settings: settingsService.getSettings(), ollamaAvailable: isOllamaRunning }), [activeBrainId, isOllamaRunning, settingsRevision]);
 
   const providerHubViewModel = useMemo(() => createProviderHubPanelViewModel(providerHubSnapshots), [providerHubSnapshots]);
@@ -901,6 +920,12 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
     setSettingsRevision((revision) => revision + 1);
   }, []);
 
+  const handleRuntimeRouteSelectionTaskScopeChange = useCallback(async (scope: "chat_only" | "all") => {
+    const existing = settingsService.getSettings().providerHub ?? {};
+    await settingsService.saveSettings({ providerHub: { ...existing, runtimeRouteSelectionTaskScope: scope } });
+    setSettingsRevision((revision) => revision + 1);
+  }, []);
+
   const handleProviderHubConfigure = useCallback((card: ProviderHubPanelCardViewModel) => {
     setProviderHubConfigureCard(card);
   }, []);
@@ -967,7 +992,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-        <ProviderHubPanel viewModel={providerHubViewModel} routeDecision={routePreviewDecision} dryRunComparison={runtimeDryRunComparison} shadowTrace={shadowRouteTrace} runtimeSelection={runtimeRouteSelection} taskRouteMatrix={taskRouteDiagnosticsMatrix} runtimeRouteSelectionEnabled={providerHubRuntimeRouteSelectionEnabled} runtimeRouteKillSwitchEnabled={providerHubRuntimeRouteKillSwitchEnabled} onRuntimeRouteSelectionEnabledChange={handleRuntimeRouteSelectionToggle} onRuntimeRouteKillSwitchEnabledChange={handleRuntimeRouteKillSwitchToggle} routePreview={routePreview} onRoutePreviewChange={setRoutePreview} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
+        <ProviderHubPanel viewModel={providerHubViewModel} routeDecision={routePreviewDecision} dryRunComparison={runtimeDryRunComparison} shadowTrace={shadowRouteTrace} runtimeSelection={runtimeRouteSelection} taskRouteMatrix={taskRouteDiagnosticsMatrix} runtimeRouteSelectionEnabled={providerHubRuntimeRouteSelectionEnabled} runtimeRouteKillSwitchEnabled={providerHubRuntimeRouteKillSwitchEnabled} runtimeRouteSelectionTaskScope={providerHubRuntimeRouteSelectionTaskScope} onRuntimeRouteSelectionEnabledChange={handleRuntimeRouteSelectionToggle} onRuntimeRouteKillSwitchEnabledChange={handleRuntimeRouteKillSwitchToggle} onRuntimeRouteSelectionTaskScopeChange={handleRuntimeRouteSelectionTaskScopeChange} routePreview={routePreview} onRoutePreviewChange={setRoutePreview} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
         {providerHubConfigureCard && activeProviderHubIntent && (
           <ProviderHubConfigurationPanel
             card={providerHubConfigureCard}

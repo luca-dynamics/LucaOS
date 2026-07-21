@@ -52,6 +52,9 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain('{ id: "devices", label: "Devices" }');
     expect(lucaLinkSource).toContain('{ id: "approvals", label: "Approvals" }');
     expect(lucaLinkSource).toContain('{ id: "advanced", label: "Advanced" }');
+    expect(lucaLinkSource).toContain("Soft enforcement step-up");
+    expect(lucaLinkSource).toContain("applyLucaLinkSoftEnforcementProductMode");
+    expect(lucaLinkSource).toContain("high-risk-only");
   });
 
   it("renders the creator-only pairing policy review card", () => {
