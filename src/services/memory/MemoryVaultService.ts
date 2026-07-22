@@ -19,6 +19,20 @@ import {
   mapLegacyMemoryToLucaMemoryItem,
   mapLucaMemoryItemToLegacyMemory,
 } from "./MemoryTierMapping";
+import {
+  normalizeMemoryIngestBatch,
+  type MemoryIngestEvent,
+  type MemoryVaultIngestBatchResult,
+} from "./memoryVaultIngest";
+import {
+  compressMemoryNodes,
+  type MemoryVaultCompressOptions,
+  type MemoryVaultCompressResult,
+} from "./memoryVaultCompress";
+import {
+  coerceToMemoryVaultExport,
+  type MemoryImportFormatHint,
+} from "./memoryVaultImportFormats";
 
 export const MEMORY_VAULT_EXPORT_FORMAT = "luca_memory_vault_v1" as const;
 const ARCHIVE_KEY = "LUCA_LUCA_ARCHIVE_V1";
@@ -356,7 +370,8 @@ export class MemoryVaultService {
     try {
       const node = await this.saveMemory(key, content, category, false);
       if (!node) {
-        return { ok: false, reason: "saveMemory returned null (filtered or failed)" };
+        // Fallback: direct archive write when saveMemory filters/unavailable.
+        return this.writeNodeDirect(key, content, category);
       }
       const item = mapLegacyMemoryToLucaMemoryItem(
         node as unknown as Record<string, unknown>,
@@ -369,6 +384,166 @@ export class MemoryVaultService {
         reason: error instanceof Error ? error.message : "writeNote failed",
       };
     }
+  }
+
+  /** Direct local-archive write without embedding pipeline. */
+  private writeNodeDirect(
+    key: string,
+    content: string,
+    category: MemoryNode["category"] = "SEMANTIC",
+  ): LucaMemoryWriteResult {
+    const nodes = [...this.listNodes()];
+    const id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `vault-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const node: MemoryNode = {
+      id,
+      key,
+      value: content,
+      category,
+      timestamp: Date.now(),
+      confidence: 0.9,
+      metadata: { source: "memory-vault" },
+    };
+    const existing = nodes.findIndex(
+      (n) => n.key.toLowerCase() === key.toLowerCase(),
+    );
+    if (existing >= 0) {
+      nodes[existing] = {
+        ...nodes[existing],
+        value: content,
+        timestamp: Date.now(),
+      };
+    } else {
+      nodes.push(node);
+    }
+    try {
+      this.persistNodes(nodes);
+    } catch (error) {
+      return {
+        ok: false,
+        reason:
+          error instanceof Error ? error.message : "Direct vault write failed",
+      };
+    }
+    const stored = existing >= 0 ? nodes[existing] : node;
+    return {
+      ok: true,
+      item: mapLegacyMemoryToLucaMemoryItem(
+        stored as unknown as Record<string, unknown>,
+        { source: "memory-vault" },
+      ),
+      metadata: { mode: "direct" },
+    };
+  }
+
+  /**
+   * Ingest app/device/chat events into the vault (Phase 2 auto-ingestion pilot).
+   */
+  async ingestEvents(
+    events: MemoryIngestEvent[],
+  ): Promise<MemoryVaultIngestBatchResult> {
+    const normalized = normalizeMemoryIngestBatch(events);
+    if (normalized.length === 0) {
+      return {
+        ok: false,
+        accepted: 0,
+        skipped: events.length,
+        written: 0,
+        results: [],
+        reason: "No ingestible events (empty text or all duplicates)",
+      };
+    }
+
+    const existing = this.listNodes();
+    const existingBodies = new Set(
+      existing.map((n) =>
+        (n.value || "").trim().toLowerCase().replace(/\s+/g, " "),
+      ),
+    );
+
+    const results: LucaMemoryWriteResult[] = [];
+    let written = 0;
+    let skipped = events.length - normalized.length;
+
+    for (const n of normalized) {
+      const bodyKey = n.content.trim().toLowerCase().replace(/\s+/g, " ");
+      if (existingBodies.has(bodyKey)) {
+        skipped += 1;
+        results.push({ ok: false, reason: "duplicate_content" });
+        continue;
+      }
+      const result = await this.writeNote(n.key, n.content, n.category);
+      results.push(result);
+      if (result.ok) {
+        written += 1;
+        existingBodies.add(bodyKey);
+      } else {
+        skipped += 1;
+      }
+    }
+
+    return {
+      ok: written > 0,
+      accepted: normalized.length,
+      skipped,
+      written,
+      results,
+    };
+  }
+
+  /**
+   * Compress vault (dedupe + truncate). TokenJuice-style pilot, local only.
+   */
+  async compress(
+    options?: MemoryVaultCompressOptions,
+  ): Promise<MemoryVaultCompressResult> {
+    const before = this.listNodes();
+    const { nodes, result } = compressMemoryNodes(before, options);
+    try {
+      this.persistNodes(nodes);
+    } catch (error) {
+      return {
+        ok: false,
+        beforeCount: before.length,
+        afterCount: before.length,
+        removedDuplicates: 0,
+        truncated: 0,
+        reason:
+          error instanceof Error ? error.message : "Failed to persist compress",
+      };
+    }
+    return result;
+  }
+
+  /**
+   * Multi-format import (vault / plain array / ChatGPT / Claude heuristics).
+   */
+  async importLoose(
+    payload: unknown,
+    options?: {
+      mode?: "merge" | "replace";
+      formatHint?: MemoryImportFormatHint;
+    },
+  ): Promise<MemoryVaultImportResult & { detected?: string }> {
+    const coerced = coerceToMemoryVaultExport(
+      payload,
+      options?.formatHint ?? "auto",
+    );
+    if ("error" in coerced) {
+      return {
+        ok: false,
+        imported: 0,
+        skipped: 0,
+        mode: options?.mode ?? "merge",
+        reason: coerced.error,
+      };
+    }
+    const result = await this.importVault(coerced.export, {
+      mode: options?.mode,
+    });
+    return { ...result, detected: coerced.detected };
   }
 }
 
@@ -396,9 +571,20 @@ export const memoryVaultService = {
     payload: MemoryVaultExport | string | unknown,
     options?: { mode?: "merge" | "replace" },
   ) => getMemoryVaultService().importVault(payload, options),
+  importLoose: (
+    payload: unknown,
+    options?: {
+      mode?: "merge" | "replace";
+      formatHint?: MemoryImportFormatHint;
+    },
+  ) => getMemoryVaultService().importLoose(payload, options),
   writeNote: (
     key: string,
     content: string,
     category?: MemoryNode["category"],
   ) => getMemoryVaultService().writeNote(key, content, category),
+  ingestEvents: (events: MemoryIngestEvent[]) =>
+    getMemoryVaultService().ingestEvents(events),
+  compress: (options?: MemoryVaultCompressOptions) =>
+    getMemoryVaultService().compress(options),
 };

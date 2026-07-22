@@ -105,4 +105,58 @@ describe("MemoryVaultService", () => {
     expect(result.ok).toBe(false);
     expect(result.reason).toMatch(/Expected format/);
   });
+
+  it("ingests device events and compresses duplicates", async () => {
+    let store: MemoryNode[] = [];
+    const vault = new MemoryVaultService({
+      listNodes: () => store,
+      persistNodes: (n) => {
+        store = n;
+      },
+      saveMemory: async () => null,
+    });
+
+    const ingest = await vault.ingestEvents([
+      {
+        sourceKind: "device",
+        sourceId: "watch",
+        text: "User runs at 7am",
+      },
+      {
+        sourceKind: "app",
+        sourceId: "calendar",
+        text: "User runs at 7am",
+      },
+    ]);
+    expect(ingest.written).toBe(1);
+
+    // Force a same-key style duplicate for compress
+    store.push(
+      makeNode({
+        id: "dup",
+        key: store[0].key,
+        value: store[0].value,
+        timestamp: Date.now() + 1,
+      }),
+    );
+    const compressed = await vault.compress();
+    expect(compressed.ok).toBe(true);
+    expect(compressed.afterCount).toBeLessThan(compressed.beforeCount);
+  });
+
+  it("importLoose accepts plain array", async () => {
+    let store: MemoryNode[] = [];
+    const vault = new MemoryVaultService({
+      listNodes: () => store,
+      persistNodes: (n) => {
+        store = n;
+      },
+    });
+    const result = await vault.importLoose([
+      { id: "x", content: "imported note" },
+    ]);
+    expect(result.ok).toBe(true);
+    expect(result.detected).toBe("plain_array");
+    expect(store.some((n) => n.value.includes("imported note"))).toBe(true);
+  });
 });

@@ -143,15 +143,75 @@ export const UnifiedMemoryVaultPanel: React.FC<
     setBusy(true);
     setNote(null);
     try {
-      const result = await memoryVaultService.importVault(importText, { mode });
+      // Multi-format: luca vault, plain array, ChatGPT/Claude heuristics.
+      const result = await memoryVaultService.importLoose(importText, { mode });
       if (result.ok) {
         setNote(
-          `Imported ${result.imported} (skipped ${result.skipped}) · mode ${result.mode}.`,
+          `Imported ${result.imported} (skipped ${result.skipped}) · mode ${result.mode}` +
+            (result.detected ? ` · detected ${result.detected}` : "") +
+            ".",
         );
         setImportText("");
       } else {
         setNote(result.reason || "Import failed.");
       }
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleCompress = async () => {
+    if (busy) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const result = await memoryVaultService.compress();
+      if (result.ok) {
+        setNote(
+          `Compressed vault: ${result.beforeCount} → ${result.afterCount} (removed ${result.removedDuplicates}, truncated ${result.truncated}).`,
+        );
+      } else {
+        setNote(result.reason || "Compress failed.");
+      }
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDemoIngest = async () => {
+    if (busy) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const result = await memoryVaultService.ingestEvents([
+        {
+          sourceKind: "device",
+          sourceId: "demo-device",
+          title: "Presence",
+          text: "User often works from the home office in the morning.",
+          tags: ["demo", "presence"],
+        },
+        {
+          sourceKind: "app",
+          sourceId: "demo-calendar",
+          title: "Focus block",
+          text: "Prefers deep-work blocks before noon.",
+          tags: ["demo", "calendar"],
+        },
+        {
+          sourceKind: "lucalink",
+          sourceId: "demo-phone",
+          text: "Synced preference: concise status updates.",
+          tags: ["demo", "lucalink"],
+        },
+      ]);
+      setNote(
+        result.ok
+          ? `Ingested ${result.written} demo event(s) (skipped ${result.skipped}).`
+          : result.reason || "Ingest produced no writes.",
+      );
       await refresh();
     } finally {
       setBusy(false);
@@ -233,6 +293,32 @@ export const UnifiedMemoryVaultPanel: React.FC<
           >
             Export JSON
           </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void handleCompress()}
+            className="rounded-full border px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
+            style={{
+              borderColor: settingsSurfaceTokens.borderSubtle,
+              color: "var(--luca-warning, #e6b450)",
+            }}
+          >
+            Compress
+          </button>
+          {!compact && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void handleDemoIngest()}
+              className="rounded-full border px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
+              style={{
+                borderColor: settingsSurfaceTokens.borderSubtle,
+                color: "var(--luca-info, #4f8cff)",
+              }}
+            >
+              Demo ingest
+            </button>
+          )}
         </div>
 
         <p
@@ -404,12 +490,12 @@ export const UnifiedMemoryVaultPanel: React.FC<
                 className="text-[11px] font-semibold uppercase tracking-wide"
                 style={{ color: settingsSurfaceTokens.textTertiary }}
               >
-                Import vault JSON
+                Import (vault / ChatGPT / Claude / array)
               </p>
               <textarea
                 className={`${inputClass} min-h-[72px] font-mono text-[10px]`}
                 style={inputStyle}
-                placeholder='{"format":"luca_memory_vault_v1","items":[...]}'
+                placeholder='luca_memory_vault_v1, plain [{content}], ChatGPT conversations, or Claude chats JSON'
                 value={importText}
                 onChange={(e) => setImportText(e.target.value)}
               />

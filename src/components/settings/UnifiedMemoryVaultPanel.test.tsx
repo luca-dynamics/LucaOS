@@ -18,12 +18,14 @@ describe("UnifiedMemoryVaultPanel", () => {
     expect(markup).toContain("Absorb Phase 2");
   });
 
-  it("wires vault service export/import paths", () => {
+  it("wires vault service export/import/ingest/compress paths", () => {
     const file = sources["./UnifiedMemoryVaultPanel.tsx"] || "";
     expect(file).toContain("memoryVaultService");
     expect(file).toContain("exportVault");
-    expect(file).toContain("importVault");
+    expect(file).toContain("importLoose");
+    expect(file).toContain("ingestEvents");
+    expect(file).toContain("compress");
     expect(file).toContain("writeNote");
-    expect(file).toContain("luca_memory_vault_v1");
+    expect(file).toContain("Demo ingest");
   });
 });
