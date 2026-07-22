@@ -38,7 +38,11 @@ describe("settings skin integration", () => {
   });
 
   it("presents skins as the active visual environment, not a dashboard-only preview", () => {
-    expect(skinSectionSource).toContain("visual operating environment");
+    // Wording moved to "active LucaOS visual environment" when the catalog
+    // became the optional "More environments" shelf; the guarantee this test
+    // guards — skins are the LIVE environment, never a dashboard preview —
+    // is unchanged, as the negative assertions below still enforce.
+    expect(skinSectionSource).toContain("active LucaOS visual environment");
     expect(skinSectionSource).not.toContain("Preview only");
     expect(skinSectionSource).not.toContain("dashboard shell only");
     expect(skinSectionSource).not.toContain("not skinned yet");

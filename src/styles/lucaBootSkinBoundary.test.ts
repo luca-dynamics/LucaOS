@@ -100,7 +100,7 @@ describe("lucaBootSkinBoundary", () => {
 
     expect(boundary.skinId).toBe(DEFAULT_LUCA_SKIN_ID);
     expect(boundary.reducedMotion).toBe(true);
-    expect(boundary.materialVariables["--luca-material-blur"]).toBe("10px");
+    expect(boundary.materialVariables["--luca-material-blur"]).toBe("16px");
     expect(boundary.safetyNotes.join(" ")).toContain("Reduced motion");
   });
 

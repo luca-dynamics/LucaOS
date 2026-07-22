@@ -78,15 +78,19 @@ describe("Luca skin QA matrix source boundaries", () => {
 });
 
 describe("Luca skin QA matrix resolver contract", () => {
-  it("falls invalid boot, dashboard, and mobile selections back to Carbon", () => {
+  // Pearl (Luca Light) is the default identity; Carbon is its after-dark
+  // sibling. The id stays spelled out rather than read from
+  // DEFAULT_LUCA_SKIN_ID so an accidental change to the default still fails
+  // here instead of silently following it.
+  it("falls invalid boot, dashboard, and mobile selections back to Luca Light", () => {
     expect(resolveLucaBootSkinBoundary({ selectedSkinId: "invalid" }).skinId).toBe(
-      "carbon",
+      "pearl",
     );
     expect(resolveLucaDashboardSkinBoundary({ selectedSkinId: "invalid" }).skinId).toBe(
-      "carbon",
+      "pearl",
     );
     expect(resolveLucaMobileSkinBoundary({ selectedSkinId: "invalid" }).skinId).toBe(
-      "carbon",
+      "pearl",
     );
   });
 

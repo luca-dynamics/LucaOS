@@ -46,8 +46,8 @@ describe("lucaSkinMaterialBridge", () => {
     const variables = getLucaSkinMaterialVariables({ skinId: "carbon" });
 
     expect(variables["--luca-text-primary"]).toBe("#e8edf2");
-    expect(variables["--luca-text-secondary"]).toBe("#bac5cc");
-    expect(variables["--luca-text-tertiary"]).toBe("#89949c");
+    expect(variables["--luca-text-secondary"]).toBe("#a8b3bd");
+    expect(variables["--luca-text-tertiary"]).toBe("#76818c");
   });
 
   it("maps skin accent variables into Luca accent targets", () => {
@@ -64,7 +64,7 @@ describe("lucaSkinMaterialBridge", () => {
     const dark = getLucaSkinMaterialVariables({ skinId: "carbon" });
 
     expect(light["--luca-material-glass-highlight"]).toContain("#3d8fa6");
-    expect(light["--luca-material-glass-rim"]).toContain("#4f5e68");
+    expect(light["--luca-material-glass-rim"]).toContain("#5b636f");
     expect(adaptiveLight["--luca-material-glass-highlight"]).toContain("#5f8fa3");
     expect(adaptiveLight["--luca-material-glass-rim"]).toContain("#4e6270");
     expect(dark["--luca-material-glass-highlight"]).toBe("rgb(255 255 255 / 0.14)");
