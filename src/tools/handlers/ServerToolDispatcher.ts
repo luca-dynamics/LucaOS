@@ -231,36 +231,42 @@ export class ServerToolDispatcher {
     }
 
     if (isProtectedAction && highRiskTools.includes(name)) {
-      // Check for ROOT ADMINISTRATIVE MISSION override in the prompt/context
-      const lastUserMsg = [...context.messages].reverse().find(m => m.role === "user");
-      const hasMissionOverride = lastUserMsg?.content.includes("ROOT ADMINISTRATIVE MISSION");
+      // Authorization comes from the operator through the permission gate, and
+      // from nowhere else.
+      //
+      // This used to be skipped when the last user message contained a
+      // particular magic phrase (deliberately not repeated here, so it stays
+      // out of the codebase and out of any prompt built from it). That is not
+      // an authorization channel: a user turn also carries pasted documents,
+      // fetched web pages, file contents read back, and quoted tool output. Any
+      // of those could contain the phrase — by accident or because someone put
+      // it there — and unlock writes to protected infrastructure. Text in the
+      // transcript cannot distinguish operator intent from attacker-supplied
+      // content, so the gate is now unconditional.
+      thoughtStreamService.pushThought("WARNING", `Constitutional Guardrail triggered for ${name} on ${targetPath || 'system infrastructure'}. Requesting operator authorization.`);
 
-      if (!hasMissionOverride) {
-        thoughtStreamService.pushThought("WARNING", `Constitutional Guardrail triggered for ${name} on ${targetPath || 'system infrastructure'}. Requesting operator authorization.`);
-        
-        const requestId = permissionGateService.requestPermission(
-          name, 
-          args, 
-          `Authorization required: Modifying protected infrastructure (${targetPath || name}).`
-        );
+      const requestId = permissionGateService.requestPermission(
+        name,
+        args,
+        `Authorization required: Modifying protected infrastructure (${targetPath || name}).`
+      );
 
-        // Wait for operator response (10 minute timeout for mission-critical tasks)
-        const authorized = await new Promise<boolean>((resolve) => {
-          const timeout = setTimeout(() => resolve(false), 600000); 
-          eventBus.once(`permission-resolved:${requestId}`, (data: { authorized: boolean }) => {
-            clearTimeout(timeout);
-            resolve(data.authorized);
-          });
+      // Wait for operator response (10 minute timeout for mission-critical tasks)
+      const authorized = await new Promise<boolean>((resolve) => {
+        const timeout = setTimeout(() => resolve(false), 600000);
+        eventBus.once(`permission-resolved:${requestId}`, (data: { authorized: boolean }) => {
+          clearTimeout(timeout);
+          resolve(data.authorized);
         });
+      });
 
-        if (!authorized) {
-          console.error(`[CONSTITUTION] 🛑 Blocked attempt to modify protected infrastructure: ${targetPath || name}`);
-          return `CONSTITUTIONAL VIOLATION: The requested action targets protected LUCA infrastructure (Operator Sovereignty). Permission was NOT granted by the Operator.`;
-        }
-        
-        thoughtStreamService.pushThought("ACTION", `Operator granted explicit authorization for ${name}. Proceeding.`);
+      if (!authorized) {
+        console.error(`[CONSTITUTION] 🛑 Blocked attempt to modify protected infrastructure: ${targetPath || name}`);
+        return `CONSTITUTIONAL VIOLATION: The requested action targets protected LUCA infrastructure (Operator Sovereignty). Permission was NOT granted by the Operator.`;
       }
-      console.log(`[CONSTITUTION] 🔓 Authorized modification of protected infrastructure: ${targetPath || name} (Mission Mode Active)`);
+
+      thoughtStreamService.pushThought("ACTION", `Operator granted explicit authorization for ${name}. Proceeding.`);
+      console.log(`[CONSTITUTION] 🔓 Authorized modification of protected infrastructure: ${targetPath || name}`);
     }
 
     const {
