@@ -80,8 +80,11 @@ export function assessMissionCompletionReadiness(input: {
   }
 
   if (hasTape) {
+    const recoveryCount = tape?.recovery.length ?? 0;
     signals.push(
-      `Tape: ${tapeSteps} step(s), ${tapeVerificationsPassed} verification(s) passed.`,
+      `Tape: ${tapeSteps} step(s), ${tapeVerificationsPassed} verification(s) passed` +
+        (recoveryCount > 0 ? `, ${recoveryCount} recovery/checkpoint row(s)` : "") +
+        ".",
     );
     if (tapeVerificationsFailed > 0) {
       blockers.push(

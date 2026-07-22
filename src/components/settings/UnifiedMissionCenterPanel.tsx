@@ -22,6 +22,12 @@ import {
   assessMissionCompletionReadiness,
   formatGateSnapshotLines,
 } from "../../services/missionTape/missionCompletionReadiness";
+import {
+  getLatestMissionCheckpoint,
+  listMissionCheckpoints,
+  recordMissionCheckpoint,
+  recordMissionRollback,
+} from "../../services/missionTape/missionTapeCheckpoint";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 export interface UnifiedMissionCenterPanelProps {
@@ -216,6 +222,69 @@ export const UnifiedMissionCenterPanel: React.FC<
     () => formatGateSnapshotLines(lastCompletion?.gateSnapshot, 6),
     [lastCompletion],
   );
+  const checkpoints = useMemo(() => listMissionCheckpoints(tape), [tape]);
+  const latestCheckpoint = useMemo(
+    () => getLatestMissionCheckpoint(tape),
+    [tape],
+  );
+
+  const handleCheckpoint = async () => {
+    if (!snapshot?.mission?.id || busy) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const result = await recordMissionCheckpoint({
+        missionId: String(snapshot.mission.id),
+        intent: snapshot.mission.title,
+        label: `Operator checkpoint · goals ${completedGoals}/${goals.length}`,
+        goals: goals.map((g) => ({
+          id: g.id,
+          description: g.description,
+          status: g.status,
+        })),
+        recorder: missionControlService.getMissionTapeRecorder(),
+      });
+      setNote(
+        result.ok
+          ? `Checkpoint recorded (${result.checkpointId}).`
+          : "Checkpoint failed.",
+      );
+      await refresh({ silent: true });
+    } catch (error) {
+      setNote(
+        error instanceof Error ? error.message : "Could not record checkpoint.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRollback = async () => {
+    if (!snapshot?.mission?.id || busy) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const result = await recordMissionRollback({
+        missionId: String(snapshot.mission.id),
+        reason: "Operator rollback from Mission Center (tape-level)",
+        recorder: missionControlService.getMissionTapeRecorder(),
+      });
+      if (result.ok) {
+        setNote(
+          `Rollback recorded to checkpoint ${result.checkpointId}. Tape-level only — host state is not restored.`,
+        );
+      } else {
+        setNote(result.reason || "Rollback failed.");
+      }
+      await refresh({ silent: true });
+    } catch (error) {
+      setNote(
+        error instanceof Error ? error.message : "Could not record rollback.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
   const inputClass =
     "w-full rounded-lg border bg-transparent px-2.5 py-1.5 text-[11px] outline-none";
   const inputStyle: React.CSSProperties = {
@@ -542,6 +611,72 @@ export const UnifiedMissionCenterPanel: React.FC<
                   ))}
                 </ul>
               )}
+            </div>
+
+            <div
+              className="rounded-xl border p-3"
+              style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+            >
+              <p
+                className="text-[11px] font-semibold uppercase tracking-wide"
+                style={{ color: settingsSurfaceTokens.textTertiary }}
+              >
+                Checkpoint / rollback
+              </p>
+              <p
+                className="mt-1 text-[10px] leading-relaxed"
+                style={{ color: settingsSurfaceTokens.textTertiary }}
+              >
+                Tape-level restore points for absorb verification (does not
+                reverse host side-effects).
+              </p>
+              <p
+                className="mt-2 text-[11px]"
+                style={{ color: settingsSurfaceTokens.textSecondary }}
+              >
+                {checkpoints.length === 0
+                  ? "No checkpoints yet."
+                  : `${checkpoints.length} checkpoint(s) · latest: ${latestCheckpoint?.label ?? "—"}`}
+              </p>
+              {!compact && checkpoints.length > 0 && (
+                <ul className="mt-1 space-y-0.5">
+                  {checkpoints.slice(-3).map((cp) => (
+                    <li
+                      key={cp.checkpointId}
+                      className="font-mono text-[10px]"
+                      style={{ color: settingsSurfaceTokens.textTertiary }}
+                    >
+                      {cp.checkpointId}: {cp.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void handleCheckpoint()}
+                  className="rounded-full border px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
+                  style={{
+                    borderColor: settingsSurfaceTokens.borderSubtle,
+                    color: settingsSurfaceTokens.textPrimary,
+                  }}
+                >
+                  Record checkpoint
+                </button>
+                <button
+                  type="button"
+                  disabled={busy || !latestCheckpoint}
+                  onClick={() => void handleRollback()}
+                  className="rounded-full border px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
+                  style={{
+                    borderColor: settingsSurfaceTokens.borderSubtle,
+                    color: "var(--luca-warning, #e6b450)",
+                  }}
+                >
+                  Rollback to latest
+                </button>
+              </div>
             </div>
 
             <div
