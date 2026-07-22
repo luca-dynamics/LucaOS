@@ -34,6 +34,11 @@ export interface ToolProviderEntry {
   register: () => void;
 }
 
+// Every `register` is a lazy thunk (`() => X.register()`), never a direct
+// method reference. A direct `X.register` dereferences the provider class at
+// module-evaluation time, which throws "Cannot access 'X' before
+// initialization" whenever a circular import puts this module ahead of the
+// provider in the evaluation order (seen with SystemProvider during boot).
 export const TOOL_PROVIDER_REGISTRY: ToolProviderEntry[] = [
   {
     id: "vision",
@@ -41,7 +46,7 @@ export const TOOL_PROVIDER_REGISTRY: ToolProviderEntry[] = [
     minimumAudienceTier: "public_standard",
     rationale:
       "Vision features are part of the core product runtime and should remain broadly available.",
-    register: VisionProvider.register,
+    register: () => VisionProvider.register(),
   },
   {
     id: "hacking",
@@ -49,7 +54,7 @@ export const TOOL_PROVIDER_REGISTRY: ToolProviderEntry[] = [
     minimumAudienceTier: "origin",
     rationale:
       "Offensive and exploit-oriented tooling belongs to privileged origin-only surfaces.",
-    register: HackingProvider.register,
+    register: () => HackingProvider.register(),
   },
   {
     id: "communication",
@@ -57,7 +62,7 @@ export const TOOL_PROVIDER_REGISTRY: ToolProviderEntry[] = [
     minimumAudienceTier: "public_standard",
     rationale:
       "User messaging and social connector flows are product-facing capabilities.",
-    register: CommunicationProvider.register,
+    register: () => CommunicationProvider.register(),
   },
   {
     id: "system",
@@ -65,7 +70,7 @@ export const TOOL_PROVIDER_REGISTRY: ToolProviderEntry[] = [
     minimumAudienceTier: "public_standard",
     rationale:
       "System tools include standard-public utilities, with deeper controls curated inside the provider at the tool level.",
-    register: SystemProvider.register,
+    register: () => SystemProvider.register(),
   },
   {
     id: "mobile",
@@ -73,7 +78,7 @@ export const TOOL_PROVIDER_REGISTRY: ToolProviderEntry[] = [
     minimumAudienceTier: "public_standard",
     rationale:
       "Mobile/device interactions are user-facing product capabilities.",
-    register: MobileProvider.register,
+    register: () => MobileProvider.register(),
   },
   {
     id: "trading",
@@ -81,7 +86,7 @@ export const TOOL_PROVIDER_REGISTRY: ToolProviderEntry[] = [
     minimumAudienceTier: "public_tactical",
     rationale:
       "Current trading and market operation tooling is reserved for tactical and origin audiences rather than standard public builds.",
-    register: TradingProvider.register,
+    register: () => TradingProvider.register(),
   },
   {
     id: "intelligence",
@@ -89,7 +94,7 @@ export const TOOL_PROVIDER_REGISTRY: ToolProviderEntry[] = [
     minimumAudienceTier: "public_standard",
     rationale:
       "Intelligence includes shared memory and knowledge features, while deeper tactical intelligence is curated at the tool level.",
-    register: IntelligenceProvider.register,
+    register: () => IntelligenceProvider.register(),
   },
   {
     id: "autonomous",
@@ -97,7 +102,7 @@ export const TOOL_PROVIDER_REGISTRY: ToolProviderEntry[] = [
     minimumAudienceTier: "public_standard",
     rationale:
       "Autonomy includes standard-public goal management, with deeper self-evolution and operational tooling curated at the tool level.",
-    register: AutonomousProvider.register,
+    register: () => AutonomousProvider.register(),
   },
   {
     id: "iot",
@@ -105,7 +110,7 @@ export const TOOL_PROVIDER_REGISTRY: ToolProviderEntry[] = [
     minimumAudienceTier: "public_standard",
     rationale:
       "IoT and device-control capabilities can belong to shared product surfaces when curated appropriately.",
-    register: IoTProvider.register,
+    register: () => IoTProvider.register(),
   },
   {
     id: "configuration",
@@ -113,7 +118,7 @@ export const TOOL_PROVIDER_REGISTRY: ToolProviderEntry[] = [
     minimumAudienceTier: "public_standard",
     rationale:
       "Settings and general configuration are part of normal product operation.",
-    register: ConfigurationProvider.register,
+    register: () => ConfigurationProvider.register(),
   },
 ];
 
