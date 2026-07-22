@@ -11,7 +11,8 @@ import type {
   ComputerUseMissionTapeExternalSinkResult,
   ComputerUseMissionTapeSinkRecord,
 } from "../computerUse/types";
-import { MissionTapeRecorderService } from "./MissionTapeRecorder";
+import type { MissionTapeRecorderService } from "./MissionTapeRecorder";
+import { sharedMissionTapeRecorder } from "./sharedMissionTapeRecorder";
 import {
   finalizeMissionTapeWithVerification,
   type FinalizeMissionTapeWithVerificationResult,
@@ -68,7 +69,7 @@ function isTerminalFailureEvent(eventType: string): boolean {
 export function createMissionTapeRecorderExternalSink(
   options: CreateMissionTapeRecorderExternalSinkOptions = {},
 ): MissionTapeRecorderExternalSink {
-  const recorder = options.recorder ?? new MissionTapeRecorderService();
+  const recorder = options.recorder ?? sharedMissionTapeRecorder;
   const now = options.now ?? (() => new Date().toISOString());
   const autoFinalize = options.autoFinalizeOnTerminalEvents !== false;
   const ensured = new Set<string>();

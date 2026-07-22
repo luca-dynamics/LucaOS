@@ -1,5 +1,6 @@
 import { loggerService } from "../loggerService";
-import { MissionTapeRecorderService } from "../missionTape/MissionTapeRecorder";
+import type { MissionTapeRecorderService } from "../missionTape/MissionTapeRecorder";
+import { sharedMissionTapeRecorder } from "../missionTape/sharedMissionTapeRecorder";
 import {
   completeProductMission,
   type CompleteProductMissionResult,
@@ -53,7 +54,7 @@ function isMissionSnapshot(value: unknown): value is MissionSnapshot {
 export class MissionControlService {
   private static instance: MissionControlService;
   /** Shared in-process tape for gated completion (product path). */
-  private readonly missionTape = new MissionTapeRecorderService();
+  private readonly missionTape = sharedMissionTapeRecorder;
 
   private constructor() {
     loggerService.info("MISSION_CONTROL", "Mission Control Proxy initialized (Bridge: Electron Main).");

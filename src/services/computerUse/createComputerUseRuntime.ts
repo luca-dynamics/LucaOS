@@ -1,4 +1,4 @@
-import { MissionTapeRecorderService } from "../missionTape/MissionTapeRecorder";
+import { sharedMissionTapeRecorder } from "../missionTape/sharedMissionTapeRecorder";
 import { ComputerUseMissionEngineBridge } from "./ComputerUseMissionEngineBridge";
 import { ComputerUseMissionRunner } from "./ComputerUseMissionRunner";
 import { ComputerUseMissionStepAdapter } from "./ComputerUseMissionStepAdapter";
@@ -22,7 +22,9 @@ export function resolveMissionTapeCompletion(
   if (options.missionTapeCompletion === null) return undefined;
   if (options.missionTapeCompletion) return options.missionTapeCompletion;
   return {
-    recorder: new MissionTapeRecorderService(),
+    // Shared, so a computer-use run's tape is readable by Mission Center and
+    // the gated-completion path rather than stranded in a private instance.
+    recorder: sharedMissionTapeRecorder,
     completeAfterRun: true,
   };
 }

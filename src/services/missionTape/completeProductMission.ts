@@ -12,7 +12,8 @@ import {
   createExecutionStep,
   type LucaExecutionStepKind,
 } from "../execution/LucaDeterministicExecution";
-import { MissionTapeRecorderService } from "./MissionTapeRecorder";
+import type { MissionTapeRecorderService } from "./MissionTapeRecorder";
+import { sharedMissionTapeRecorder } from "./sharedMissionTapeRecorder";
 import { getExecutionVerificationGateSnapshot } from "../execution/LucaExecutionVerificationGate";
 import {
   finalizeMissionTapeWithVerification,
@@ -196,7 +197,7 @@ function goalStatusToStepStatus(
 export async function completeProductMission(
   input: CompleteProductMissionInput,
 ): Promise<CompleteProductMissionResult> {
-  const recorder = input.recorder ?? new MissionTapeRecorderService();
+  const recorder = input.recorder ?? sharedMissionTapeRecorder;
   const missionId = input.missionId.trim();
   if (!missionId) throw new Error("completeProductMission requires missionId");
 
