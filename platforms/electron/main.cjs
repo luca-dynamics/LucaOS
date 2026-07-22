@@ -1343,6 +1343,28 @@ ipcMain.on('wake-word-triggered', () => {
 // CRITICAL: Allow AudioContext to start without user gesture (Global Shortcut fix)
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
+// --- SINGLE INSTANCE GUARD ---
+// One LucaOS per machine. A second launch spawns a SECOND core server and a
+// SECOND Cortex: double memory and CPU, competing MCP connections, and — worst
+// — two processes writing the same SQLite file.
+//
+// This used to be masked. With fixed ports the second core died on EADDRINUSE,
+// so the collision was an accidental guard. Now that both backends take
+// ephemeral ports there is nothing left to collide with, so the duplicate
+// starts cleanly and silently and the guard has to be explicit. A second launch
+// focuses the window you already have, which is what it meant anyway.
+if (!app.requestSingleInstanceLock()) {
+    console.log('[MAIN] Another LucaOS instance is already running — exiting.');
+    app.quit();
+} else {
+    app.on('second-instance', () => {
+        if (!mainWindow) return;
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+    });
+}
+
 // App Lifecycle
 app.on('ready', () => {
     // Standardize userData path — must happen inside ready, not at module load time
