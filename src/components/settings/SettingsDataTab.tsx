@@ -30,6 +30,7 @@ import { PersonalIntelligencePersistencePreview } from "./PersonalIntelligencePe
 import { PersonalIntelligenceMemoryApprovalPilot } from "./PersonalIntelligenceMemoryApprovalPilot";
 import { PersonalIntelligenceRuntimeTracePanel } from "./PersonalIntelligenceRuntimeTracePanel";
 import { PersonalIntelligenceMissionRuntimePanel } from "./PersonalIntelligenceMissionRuntimePanel";
+import { UnifiedMissionCenterPanel } from "./UnifiedMissionCenterPanel";
 import {
   createLearningEventPreview,
   createPrivacyZonesPreview,
@@ -247,6 +248,17 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
           </div>
           <PersonalIntelligenceRuntimeTracePanel />
           <PersonalIntelligenceMissionRuntimePanel />
+        </SettingsSection>
+      )}
+
+      {showGovernancePreviews && (
+        <SettingsSection
+          title="Mission Center"
+          description="Unified control for the active MissionControl mission: goals, verification tape, and gated complete. Workforce and computer-use share this completion path. Mission Profile advisory (above) stays read-only alignment context."
+          icon="Flag"
+          isMobile={isMobile}
+        >
+          <UnifiedMissionCenterPanel />
         </SettingsSection>
       )}
 

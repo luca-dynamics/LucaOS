@@ -29,5 +29,6 @@ An old unused `MissionEngine` was deleted (never wired).
 
 - **Scaffold** = prove plan → verify → gated complete without host/tool mutation.
 - **Real wire** = MissionControl archive + CU runner completion call the same completion helper.
+- **UI** = `UnifiedMissionCenterPanel` (settings) — control surface for active mission + gated complete. PI Mission Profile panel remains read-only advisory.
 
 Do not treat `MissionEngineScaffold` as a second product orchestrator.
