@@ -103,11 +103,18 @@ export function mountLucaReactApp(): void {
       "Desktop app ready",
     );
     console.info("[LucaOS web boot] React mounted");
-    document.getElementById("root-loader")?.remove();
-    // The pre-React boot loader has its OWN window controls (index.html
-    // .root-window-controls). Once React mounts it renders its own controls,
-    // so remove the loader's to avoid two overlapping min/max/close clusters.
-    document.querySelector(".root-window-controls")?.remove();
+    // Ready gate: the loader swaps to "LucaOS is ready." with a Continue
+    // button and dismisses itself (plus its window controls) on click. Fall
+    // back to immediate removal when the hook is absent (tests, stale HTML).
+    const loaderHandledHandoff =
+      window.__LUCA_BOOT_LOADER_HANDOFF__?.() === true;
+    if (!loaderHandledHandoff) {
+      document.getElementById("root-loader")?.remove();
+      // The pre-React boot loader has its OWN window controls (index.html
+      // .root-window-controls). Once React mounts it renders its own controls,
+      // so remove the loader's to avoid two overlapping min/max/close clusters.
+      document.querySelector(".root-window-controls")?.remove();
+    }
     // NOTE: the Electron main window is revealed only once the app is past boot
     // (READY/ONBOARDING) — signaled from App.tsx — so the native splash covers
     // the whole boot and the redundant in-app boot screen is never shown.

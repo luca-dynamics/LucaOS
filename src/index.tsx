@@ -24,6 +24,13 @@ declare global {
       detail?: string,
     ) => void;
     __LUCA_CLEAR_BOOT_STATUS_LOOP__?: () => void;
+    /**
+     * Provided by the pre-React loader (index.html): swaps the boot checklist
+     * to the "LucaOS is ready." summary with a Continue gate and takes over
+     * dismissing itself. Returns true when it handled the handoff — the
+     * caller must then NOT remove #root-loader.
+     */
+    __LUCA_BOOT_LOADER_HANDOFF__?: () => boolean;
     __LUCA_SELECTED_ENTRY__?: LucaBootstrapEntry;
     __LUCA_WEB_BRIDGE_MOUNT_ATTEMPTED__?: boolean;
     __LUCA_WEB_BRIDGE_MOUNTED__?: boolean;

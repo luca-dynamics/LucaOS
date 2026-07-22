@@ -15,7 +15,7 @@ Menu.setApplicationMenu(null);
 require('dotenv').config(); // Load environment variables for Main process (and Medic)
 const path = require('path');
 const fs = require('fs');
-const { findAvailableExecutable, getNodeCandidates, getPythonCandidates } = require('../shared/platform.cjs');
+const { findAvailableExecutable, getPythonCandidates } = require('../shared/platform.cjs');
 const {
     createMiniChatWindow: createMiniChatWindowFactory,
     createHologramWindow: createHologramWindowFactory,
@@ -226,11 +226,48 @@ let sensorState = {
 };
 
 // --- PORT CONFIGURATION ---
-// These should match cortex/server/config/constants.js
+// VITE_DEV_PORT is fixed because the dev server must exist before Electron can
+// point at it (see ops/scripts/start-electron.cjs, which verifies the server's
+// identity rather than trusting whoever holds the port).
+//
+// The two backends we OWN and SPAWN use ephemeral ports instead: we start them,
+// so they can simply tell us where they landed. A well-known port would invite
+// collisions with other apps and — worse — let a stale LucaOS process keep
+// answering as though it were the live backend.
 const VITE_DEV_PORT = process.env.VITE_DEV_PORT || 3000;  // Frontend dev server
-const SERVER_PORT = process.env.SERVER_PORT || 3002;      // Node.js backend API
-const CORTEX_PORT = process.env.CORTEX_PORT || 8000;      // Python Cortex (dynamically overridden if port unavailable)
+const SERVER_PORT = process.env.SERVER_PORT || 3002;      // Legacy fallback only
+const CORTEX_PORT = process.env.CORTEX_PORT || 8000;      // Legacy fallback only
 // Note: WS_PORT (3003) is only used by backend server.js, not in this Electron main process
+
+// Resolved at runtime once each backend reports in. Null until then.
+let serverPort = process.env.SERVER_PORT ? Number(process.env.SERVER_PORT) : null;
+const serverPortWaiters = [];
+
+/** Resolves with the Local Core's real port once it announces itself. */
+function whenServerPortKnown() {
+    if (serverPort) return Promise.resolve(serverPort);
+    return new Promise((resolve) => serverPortWaiters.push(resolve));
+}
+
+function setServerPort(port) {
+    if (!port || serverPort === port) return;
+    serverPort = port;
+    console.log(`[MAIN] Local Core registered on port ${port}`);
+    while (serverPortWaiters.length) serverPortWaiters.shift()(port);
+}
+
+/** Ask the OS for a free port by binding :0 and releasing it immediately. */
+function findFreePort() {
+    return new Promise((resolve, reject) => {
+        const probe = net.createServer();
+        probe.unref();
+        probe.once('error', reject);
+        probe.listen(0, '127.0.0.1', () => {
+            const { port } = probe.address();
+            probe.close(() => resolve(port));
+        });
+    });
+}
 
 // Default UI zoom (native webContents zoom, reflows the viewport). The shell's
 // fixed-px sizing renders small at 1.0; ~1.1 gives a comfortable desktop scale.
@@ -783,19 +820,23 @@ setInterval(() => logSystemResource('HEARTBEAT'), 5 * 60 * 1000); // Every 5 min
 // Start the Backend Server (Node.js)
 function startServer() {
     const serverPath = path.join(__dirname, '../../server.js');
-    const projectRoot = path.join(__dirname, '../..');
-    const nodeCmd = findAvailableExecutable(getNodeCandidates({
-        projectRoot,
-        resourcesPath: app.isPackaged ? process.resourcesPath : undefined,
-    }));
     console.log('Starting Backend Server at:', serverPath);
-    console.log('[SERVER] Using Node runtime:', nodeCmd);
+    console.log('[SERVER] Using Electron-as-Node runtime:', process.execPath);
 
-    // Prefer a Luca-owned runtime, falling back to PATH only for local development.
-    serverProcess = spawn(nodeCmd, [serverPath], {
+    // Run server.js on Electron's OWN runtime (ELECTRON_RUN_AS_NODE) instead of
+    // a system Node. postinstall rebuilds native modules (better-sqlite3, …)
+    // for Electron's ABI; a system Node has a different ABI and fails their
+    // dlopen ("NODE_MODULE_VERSION mismatch"), silently degrading the DB to a
+    // mock. Electron-as-Node keeps ONE ABI everywhere and needs no Node on the
+    // user's machine — process.execPath is the Electron binary in dev and the
+    // packaged app exe in production.
+    serverProcess = spawn(process.execPath, [serverPath], {
         env: {
             ...process.env,
-            PORT: SERVER_PORT,
+            ELECTRON_RUN_AS_NODE: '1',
+            // PORT=0 → the OS assigns a free port and server.js reports it back
+            // on stdout (LISTENING_PORT=…). Nothing here pins a guessable port.
+            PORT: '0',
             CORTEX_PORT: cortexPort.toString(), // Pass dynamic port
             VITE_DEV_PORT: VITE_DEV_PORT.toString(), // Sync dev port
             ELECTRON_RUN: 'true'

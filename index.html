@@ -281,7 +281,9 @@
         top: 50%;
         transform: translateY(-50%);
         z-index: 2;
-        width: min(32vw, 300px);
+        /* Wide enough that the nowrap title and subtitle both sit on one
+           line with headroom, instead of clipping. */
+        width: min(46vw, 420px);
       }
       /* The brand row is now the sole title: comet spinner + "Starting
          LucaOS" at heading scale, so there's only one wordmark on screen. */
@@ -290,6 +292,9 @@
         align-items: center;
         gap: 13px;
         margin-bottom: 12px;
+        /* The title stays on one line — it must never break to "Starting" /
+           "LucaOS" as the panel narrows. */
+        white-space: nowrap;
         font-family: "Segoe UI Variable Display", Inter, "Segoe UI", system-ui, sans-serif;
         font-size: clamp(28px, 4vw, 40px);
         font-weight: 600;
@@ -307,26 +312,85 @@
         font-size: 13.5px;
         line-height: 1.5;
         color: #6b7480;
+        /* Stays on one line, same as the title above it. */
+        white-space: nowrap;
       }
       .loader-card {
-        border-radius: 15px;
-        /* Glassmorphic panel: a frosted, faintly graduated translucent fill
-           over a strong blur+saturate of the ice-blue backdrop, a bright top
-           edge, and a soft inner highlight so it reads as lit glass. */
-        border: 1px solid rgba(255, 255, 255, 0.55);
+        position: relative;
+        border-radius: 18px;
+        /* Lens: a thick piece of glass sitting on the glacier. The body
+           refracts the backdrop (blur + saturate + a touch of brightness),
+           ::before draws the bent light caught in the rim, and ::after lays
+           the specular highlights a curved lens would throw. */
+        border: none;
         background: linear-gradient(
           150deg,
-          rgba(255, 255, 255, 0.42) 0%,
-          rgba(255, 255, 255, 0.24) 55%,
-          rgba(233, 242, 248, 0.28) 100%
+          rgba(255, 255, 255, 0.46) 0%,
+          rgba(255, 255, 255, 0.2) 52%,
+          rgba(229, 240, 248, 0.3) 100%
         );
         box-shadow:
-          0 18px 50px rgba(120, 150, 190, 0.18),
-          inset 0 1px 0 rgba(255, 255, 255, 0.7),
-          inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-        -webkit-backdrop-filter: blur(20px) saturate(1.4);
-        backdrop-filter: blur(20px) saturate(1.4);
+          0 26px 60px rgba(118, 150, 192, 0.24),
+          0 4px 14px rgba(118, 150, 192, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.92),
+          inset 0 -1px 0 rgba(255, 255, 255, 0.4);
+        -webkit-backdrop-filter: blur(24px) saturate(1.7) brightness(1.06);
+        backdrop-filter: blur(24px) saturate(1.7) brightness(1.06);
         padding: 6px;
+      }
+      /* Refractive rim — a gradient ring painted only on the border, so the
+         edge catches light the way a lens edge bends it. */
+      .loader-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1.5px;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.95) 0%,
+          rgba(255, 255, 255, 0.28) 24%,
+          rgba(168, 211, 238, 0.55) 48%,
+          rgba(255, 255, 255, 0.22) 70%,
+          rgba(255, 255, 255, 0.9) 100%
+        );
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        mask-composite: exclude;
+        pointer-events: none;
+        z-index: 0;
+      }
+      /* Specular sweep — the bright bloom off the top-left curve and the
+         cool bounce returning at the lower-right. */
+      .loader-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background:
+          radial-gradient(
+            125% 82% at 10% -12%,
+            rgba(255, 255, 255, 0.6) 0%,
+            rgba(255, 255, 255, 0) 46%
+          ),
+          radial-gradient(
+            95% 62% at 102% 110%,
+            rgba(186, 223, 245, 0.4) 0%,
+            rgba(255, 255, 255, 0) 56%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+      /* Content rides above the lens highlights so the type stays crisp. */
+      .loader-check,
+      .loader-card-foot {
+        position: relative;
+        z-index: 1;
       }
       .loader-check {
         display: flex;
@@ -395,6 +459,111 @@
       .loader-card-foot svg {
         width: 12px;
         height: 12px;
+      }
+      /* Returning user: the "Details" disclosure sits left, under a hairline. */
+      .loader-card-foot--details {
+        justify-content: flex-start;
+        gap: 8px;
+        margin-top: 2px;
+        padding: 10px 11px 8px;
+        border-top: 1px solid rgba(43, 48, 58, 0.07);
+        font-size: 12px;
+      }
+      .loader-card-foot--details svg {
+        width: 14px;
+        height: 14px;
+      }
+      /* Standalone health pill below the card (returning user). */
+      #loader-healthpill:empty {
+        display: none;
+      }
+      .loader-health {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 18px;
+        padding: 9px 16px;
+        border-radius: 999px;
+        font-size: 12.5px;
+        color: #5b636f;
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        box-shadow: 0 10px 26px rgba(118, 150, 192, 0.16);
+        -webkit-backdrop-filter: blur(14px) saturate(1.4);
+        backdrop-filter: blur(14px) saturate(1.4);
+      }
+      .loader-health-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #4bb07a;
+        box-shadow: 0 0 0 3px rgba(75, 176, 122, 0.18);
+      }
+      /* Ready gate: settled summary rows — tick left, live status right. */
+      .loader-check--ready {
+        gap: 13px;
+        padding: 9px 12px;
+      }
+      .loader-check--ready .loader-check-status {
+        flex: none;
+      }
+      .loader-check--ready .loader-check-title {
+        flex: 1;
+      }
+      .loader-ready-value {
+        flex: none;
+        font-size: 11.5px;
+        color: #99a1ab;
+      }
+      /* Continue — a frosted aqua pill, full width of the card. */
+      .loader-continue {
+        display: block;
+        width: 100%;
+        margin-top: 20px;
+        padding: 14px 20px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        font-family: inherit;
+        font-size: 14.5px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        color: #ffffff;
+        text-shadow: 0 1px 1px rgba(80, 130, 150, 0.3);
+        cursor: pointer;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.08) 46%, rgba(255, 255, 255, 0) 62%),
+          linear-gradient(150deg, #b2dbe8 0%, #8fc4d8 52%, #7db7cf 100%);
+        box-shadow:
+          0 16px 36px rgba(105, 160, 185, 0.42),
+          inset 0 1px 0 rgba(255, 255, 255, 0.85),
+          inset 0 -8px 18px rgba(85, 140, 165, 0.28);
+        -webkit-backdrop-filter: blur(8px) saturate(1.3);
+        backdrop-filter: blur(8px) saturate(1.3);
+        transition: transform 160ms ease, box-shadow 160ms ease;
+        -webkit-app-region: no-drag;
+      }
+      .loader-continue:hover {
+        transform: translateY(-1px);
+        box-shadow:
+          0 20px 42px rgba(105, 160, 185, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9),
+          inset 0 -8px 18px rgba(85, 140, 165, 0.28);
+      }
+      .loader-continue:active {
+        transform: translateY(0);
+      }
+      /* The returning-user headline and lead are long by design (they wrap to
+         two lines in the mockup), so they opt out of the first-run nowrap. */
+      #root-loader[data-variant="returning"] .loader-brandtag,
+      #root-loader[data-variant="returning"] .loader-lead {
+        white-space: normal;
+      }
+      #root-loader[data-variant="returning"] .loader-brandtag {
+        align-items: flex-start;
+        font-size: clamp(26px, 3.2vw, 34px);
+      }
+      #root-loader[data-variant="returning"] .loader-spinner {
+        margin-top: 4px;
       }
       /* Awaken cluster: status label + progress bar + phase, lower-left. */
       .loader-awaken {
@@ -567,9 +736,10 @@
           <span class="loader-text">Starting LucaOS</span>
         </div>
         <p class="loader-lead loader-status">
-          Performing readiness checks.<br />This will only take a moment.
+          Performing readiness checks. This will only take a moment.
         </p>
         <div class="loader-card" id="loader-checklist"></div>
+        <div id="loader-healthpill"></div>
         <div class="loader-failure-details" aria-live="polite"></div>
       </div>
     </div>
@@ -615,6 +785,12 @@
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3.5l7 2.6v5.2c0 4.3-2.9 7.4-7 8.7-4.1-1.3-7-4.4-7-8.7V6.1l7-2.6z" stroke-linejoin="round"/></svg>';
         const ICON_VOICE =
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 10v4M9 6.5v11M13 8.5v7M17 5.5v13M21 10v4"/></svg>';
+        const ICON_SLIDERS =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 8h10M18 8h2M4 16h4M12 16h8"/><circle cx="16" cy="8" r="2"/><circle cx="10" cy="16" r="2"/></svg>';
+        const ICON_LOCK =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4.5" y="10" width="15" height="10" rx="2.4"/><path d="M8 10V7.5a4 4 0 018 0V10" stroke-linecap="round"/></svg>';
+        const ICON_SPARK =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 4v16M4 12h16M6.3 6.3l11.4 11.4M17.7 6.3L6.3 17.7"/></svg>';
 
         // A returning user (setup already complete) sees a "welcome back"
         // resume sequence; a fresh install sees the first-run setup checks.
@@ -625,38 +801,44 @@
 
         const readinessCopy = isReturningUser
           ? {
-              title: "Welcome back",
-              lead: "Restoring your workspace.<br />This will only take a moment.",
+              // Returning user: the environment is already theirs, so Luca is
+              // "preparing" it rather than setting it up (founder mockup).
+              title: "Preparing your LucaOS environment",
+              lead:
+                "Almost ready. Luca is preparing everything for a safe and seamless experience.",
+              footer: "details",
+              healthPill: "System is healthy and up to date",
               checks: [
                 {
-                  title: "Restoring your session",
-                  detail: "Reloading your workspace state",
+                  title: "Checking your preferences",
+                  detail: "Personalizing your experience",
                   at: 0.32,
-                  icon: ICON_PROFILE,
+                  icon: ICON_SLIDERS,
                 },
                 {
-                  title: "Loading your memory",
-                  detail: "Reconnecting secure memory layers",
+                  title: "Restoring memory boundaries",
+                  detail: "Securing your context",
                   at: 0.54,
-                  icon: ICON_MEMORY,
-                },
-                {
-                  title: "Reconnecting your tools",
-                  detail: "Verifying permissions and sandbox",
-                  at: 0.76,
                   icon: ICON_TOOLS,
                 },
                 {
-                  title: "Bringing Luca online",
-                  detail: "Warming voice and presence",
+                  title: "Preparing safe tool access",
+                  detail: "Enabling trusted tools and services",
+                  at: 0.76,
+                  icon: ICON_LOCK,
+                },
+                {
+                  title: "Ready to continue",
+                  detail: "Handoff to your Luca experience",
                   at: 0.94,
-                  icon: ICON_VOICE,
+                  icon: ICON_SPARK,
                 },
               ],
             }
           : {
               title: "Starting LucaOS",
-              lead: "Performing readiness checks.<br />This will only take a moment.",
+              lead: "Performing readiness checks. This will only take a moment.",
+              footer: "integrity",
               checks: [
                 {
                   title: "Checking your preferences",
@@ -690,12 +872,16 @@
         // Apply the matching title + lead before first paint (this inline
         // script runs before the browser paints, so there's no flash).
         {
+          const rootEl = document.getElementById("root-loader");
+          if (rootEl) {
+            rootEl.dataset.variant = isReturningUser ? "returning" : "first-run";
+          }
           const brandTextEl = document.querySelector(
             ".loader-brandtag .loader-text",
           );
           if (brandTextEl) brandTextEl.textContent = readinessCopy.title;
           const leadEl = document.querySelector(".loader-lead");
-          if (leadEl) leadEl.innerHTML = readinessCopy.lead;
+          if (leadEl) leadEl.textContent = readinessCopy.lead;
         }
 
         const CHECK_TICK =
@@ -721,8 +907,22 @@
                   `</div><span class="loader-check-status"></span></div>`,
               )
               .join("") +
-            '<div class="loader-card-foot">System integrity verified ' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 10V8a5 5 0 0110 0v2" stroke-linecap="round"/><rect x="4.5" y="10" width="15" height="10" rx="2.4"/></svg></div>';
+            (readinessCopy.footer === "details"
+              ? // Returning user: a quiet "Details" disclosure row.
+                '<div class="loader-card-foot loader-card-foot--details">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"/></svg>' +
+                "Details</div>"
+              : '<div class="loader-card-foot">System integrity verified ' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 10V8a5 5 0 0110 0v2" stroke-linecap="round"/><rect x="4.5" y="10" width="15" height="10" rx="2.4"/></svg></div>');
+
+          // Returning user also gets the standalone health pill under the card.
+          const pillHost = document.getElementById("loader-healthpill");
+          if (pillHost && readinessCopy.healthPill) {
+            pillHost.innerHTML =
+              '<span class="loader-health"><span class="loader-health-dot"></span>' +
+              readinessCopy.healthPill +
+              "</span>";
+          }
         };
 
         const paintChecklist = () => {
@@ -754,6 +954,7 @@
         window.__LUCA_SET_BOOT_STATUS__ = (text, progress) => {
           const loader = document.getElementById("root-loader");
           if (!loader || loader.dataset.state === "failed") return;
+          if (loader.dataset.state === "ready") return;
           if (typeof progress === "number") {
             readinessProgress = Math.max(
               readinessProgress,
@@ -761,6 +962,62 @@
             );
           }
           paintChecklist();
+        };
+
+        // ---- Ready gate -----------------------------------------------------
+        // Once React has mounted, the checks resolve into "LucaOS is ready."
+        // — a settled summary of what's now live — and wait for the user to
+        // press Continue before the loader hands the screen to the app.
+        const READY_SUMMARY = [
+          ["Core services", "Online"],
+          ["Memory systems", "Synchronized"],
+          ["Models & tools", "Loaded"],
+          ["Personal context", "Ready"],
+          ["Security & privacy", "Active"],
+        ];
+
+        window.__LUCA_BOOT_LOADER_HANDOFF__ = () => {
+          const loader = document.getElementById("root-loader");
+          if (!loader || loader.dataset.state === "failed") return false;
+          window.__LUCA_CLEAR_BOOT_STATUS_LOOP__?.();
+          loader.dataset.state = "ready";
+
+          const brandTextEl = loader.querySelector(
+            ".loader-brandtag .loader-text",
+          );
+          if (brandTextEl) brandTextEl.textContent = "LucaOS is ready.";
+          const leadEl = loader.querySelector(".loader-lead");
+          if (leadEl)
+            leadEl.textContent = "Your AI environment is online and aware.";
+
+          const host = document.getElementById("loader-checklist");
+          if (host) {
+            host.innerHTML = READY_SUMMARY.map(
+              (item) =>
+                '<div class="loader-check loader-check--ready" data-state="done">' +
+                `<span class="loader-check-status">${CHECK_TICK}</span>` +
+                `<div class="loader-check-title">${item[0]}</div>` +
+                `<span class="loader-ready-value">${item[1]}</span></div>`,
+            ).join("");
+          }
+          const pillHost = document.getElementById("loader-healthpill");
+          if (pillHost) {
+            pillHost.innerHTML =
+              '<button type="button" class="loader-continue" id="loader-continue">Continue</button>';
+            const btn = document.getElementById("loader-continue");
+            if (btn) {
+              btn.addEventListener("click", () => {
+                loader.style.opacity = "0";
+                window.setTimeout(() => {
+                  loader.remove();
+                  document
+                    .querySelector(".root-window-controls")
+                    ?.remove();
+                }, 520);
+              });
+            }
+          }
+          return true;
         };
 
         window.__LUCA_CLEAR_BOOT_STATUS_LOOP__ = () => {
