@@ -1497,10 +1497,38 @@ REPLACEMENT_CODE:`;
   }
 
   private async extractLifeDirectives(userMsg: string) {
-    const patterns = [/i prefer\s+([\w\s-]+)/i, /always use\s+([\w\s-]+)/i];
+    const patterns = [
+      /i prefer\s+([\w\s-]+)/i,
+      /always use\s+([\w\s-]+)/i,
+      /i like\s+([\w\s-]+)/i,
+      /remember (?:that|this)[:\s]+(.+)/i,
+      /my name is\s+([\w\s-]+)/i,
+      /call me\s+([\w\s-]+)/i,
+    ];
     for (const p of patterns) {
       const m = userMsg.match(p);
-      if (m) await (settingsService as any).addSovereignFact({ category: "PREFERENCE", content: m[0], confidence: 0.8 });
+      if (m) {
+        await (settingsService as any).addSovereignFact({
+          category: "PREFERENCE",
+          content: m[0],
+          confidence: 0.8,
+        });
+      }
+    }
+
+    // Absorb Phase 2: durable chat turns → Memory Vault (soft-fail).
+    // TurnRunner calls extractTurnDirectives after successful turns.
+    try {
+      const { maybeIngestUserChatTurn } = await import(
+        "./memory/memoryVaultProductBridge"
+      );
+      const { eventBus } = await import("./eventBus");
+      await maybeIngestUserChatTurn(userMsg, {
+        conversationId: "luca-chat",
+        bus: eventBus,
+      });
+    } catch (e) {
+      console.warn("[MEMORY_VAULT] Auto chat ingest skipped:", e);
     }
   }
 

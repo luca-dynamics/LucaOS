@@ -22,17 +22,44 @@ function notImplementedWrite(name: string): LucaMemoryWriteResult {
 export const FrontendMemoryServiceAdapter: LucaMemoryStoreAdapter = {
   name: "FrontendMemoryServiceAdapter",
   kind: "frontend_memory_service",
-  async read(_query: LucaMemoryQuery): Promise<LucaMemoryQueryResult> {
-    const items = memoryService.getAllMemories().map((item: Record<string, unknown>) =>
-      mapLegacyMemoryToLucaMemoryItem(item, { source: "frontend-memoryService" })
-    );
-    return { items, total: items.length, metadata: getMemoryContractSnapshot({ adapter: this.name }) };
+  async read(query: LucaMemoryQuery): Promise<LucaMemoryQueryResult> {
+    // Phase 2: product vault is the readable path over the local archive.
+    const { getMemoryVaultService } = await import("./MemoryVaultService");
+    return getMemoryVaultService().list(query);
   },
-  async write(_item: LucaMemoryItem): Promise<LucaMemoryWriteResult> {
-    return notImplementedWrite(this.name);
+  async write(item: LucaMemoryItem): Promise<LucaMemoryWriteResult> {
+    const { getMemoryVaultService } = await import("./MemoryVaultService");
+    const vault = getMemoryVaultService();
+    const existing = await vault.get(item.id);
+    if (existing) {
+      return vault.update(item.id, {
+        content: item.content,
+        summary: item.summary,
+        tags: item.tags,
+      });
+    }
+    return vault.writeNote(item.id, item.content, "SEMANTIC");
+  },
+  async update(id: string, patch: Partial<LucaMemoryItem>): Promise<LucaMemoryWriteResult> {
+    const { getMemoryVaultService } = await import("./MemoryVaultService");
+    return getMemoryVaultService().update(id, {
+      content: patch.content,
+      summary: patch.summary,
+      tags: patch.tags,
+    });
+  },
+  async delete(id: string): Promise<LucaMemoryWriteResult> {
+    const { getMemoryVaultService } = await import("./MemoryVaultService");
+    return getMemoryVaultService().delete(id);
   },
   getSnapshot() {
-    return getMemoryContractSnapshot({ adapter: this.name, kind: this.kind, optIn: true });
+    return getMemoryContractSnapshot({
+      adapter: this.name,
+      kind: this.kind,
+      optIn: true,
+      absorbPhase: 2,
+      writable: true,
+    });
   },
 };
 

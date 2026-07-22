@@ -39,21 +39,15 @@ import { ProviderFactory } from "./llm/ProviderFactory";
 // Track if we've already logged Cortex unavailability (to avoid spam)
 let _cortexUnavailableLogged = false;
 
-// Import lucaLinkManager for memory sync
+// Import lucaLinkManager for memory sync (+ Phase 2 vault product bridge).
 let lucaLinkManager: any = null;
-try {
-  // Dynamic import to avoid circular dependency
-  import("./lucaLink/manager").then((module) => {
-    lucaLinkManager = module.lucaLinkManager;
-  });
-} catch {
-  console.warn("[MEMORY] Luca Link Manager not available for memory sync");
-}
+let memoryVaultBridgeDispose: (() => void) | undefined;
 
-// 2. Setup Memory Sync Listeners
-if (lucaLinkManager) {
-  lucaLinkManager.on("sync:memory_update", async (event: any) => {
-    const { memory } = event.data;
+function installMemorySyncListeners(manager: any) {
+  if (!manager?.on) return;
+
+  manager.on("sync:memory_update", async (event: any) => {
+    const { memory } = event?.data ?? {};
     if (memory) {
       console.log(`[MEMORY SYNC] Received remote memory update: ${memory.key}`);
 
@@ -88,7 +82,7 @@ if (lucaLinkManager) {
     }
   });
 
-  lucaLinkManager.on("sync:memory_wipe", async () => {
+  manager.on("sync:memory_wipe", async () => {
     console.log(
       "[MEMORY SYNC] Received remote memory wipe. Resetting local storage.",
     );
@@ -104,18 +98,54 @@ if (lucaLinkManager) {
     }
   });
 
-  lucaLinkManager.on("event:memory:ingest", async (event: any) => {
-    const { text } = event.data;
-    if (text) {
-      console.log(`[MEMORY SYNC] Received proxy ingestion request: "${text}"`);
-      // We are the desktop, so we save it to our local storage and cortex
-      memoryService
-        .saveMemory(`REMOTE_${Date.now()}`, text, "SEMANTIC")
-        .catch((e) =>
-          console.warn("[MEMORY SYNC] Failed to save proxied memory:", e),
+  // Absorb Phase 2: route LucaLink text ingest through Memory Vault (deduped).
+  // Structural full-node sync above remains source of truth for remote nodes.
+  manager.on("event:memory:ingest", async (event: any) => {
+    try {
+      const { ingestLucaLinkMemoryPayload } = await import(
+        "./memory/memoryVaultProductBridge"
+      );
+      const result = await ingestLucaLinkMemoryPayload(event);
+      if (!result.ok && event?.data?.text) {
+        // Fallback to legacy save if vault path produced nothing.
+        console.log(
+          `[MEMORY SYNC] Vault ingest soft-miss; legacy save for: "${event.data.text}"`,
         );
+        await memoryService.saveMemory(
+          `REMOTE_${Date.now()}`,
+          event.data.text,
+          "SEMANTIC",
+        );
+      }
+    } catch (e) {
+      console.warn("[MEMORY SYNC] Failed vault/legacy proxied memory:", e);
     }
   });
+}
+
+try {
+  // Dynamic import to avoid circular dependency; install after resolve.
+  import("./lucaLink/manager").then((module) => {
+    lucaLinkManager = module.lucaLinkManager;
+    installMemorySyncListeners(lucaLinkManager);
+    // Product bridge also listens on eventBus for chat/manual vault ingest.
+    import("./memory/memoryVaultProductBridge")
+      .then(({ installMemoryVaultProductBridge }) =>
+        import("./eventBus").then(({ eventBus }) => {
+          const installed = installMemoryVaultProductBridge({
+            lucaLink: lucaLinkManager,
+            bus: eventBus,
+          });
+          memoryVaultBridgeDispose = installed.dispose;
+          if (installed.installed) {
+            console.log("[MEMORY] Phase 2 Memory Vault product bridge installed");
+          }
+        }),
+      )
+      .catch(() => undefined);
+  });
+} catch {
+  console.warn("[MEMORY] Luca Link Manager not available for memory sync");
 }
 
 export const memoryService = {
