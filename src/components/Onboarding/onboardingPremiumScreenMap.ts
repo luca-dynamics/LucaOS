@@ -41,7 +41,7 @@ export interface PremiumOnboardingScreenMapEntry {
 export type PremiumOnboardingScreenMap = Record<PremiumOnboardingScreenId, PremiumOnboardingScreenMapEntry>;
 
 export interface PremiumOnboardingDefaultSelections {
-  environment: "carbon";
+  environment: "light";
   presence: "minichat";
   permission_style: "ask_when_needed";
   memory_boundaries: "ask_before_personal";
@@ -92,7 +92,7 @@ const premiumOnboardingScreenMap: PremiumOnboardingScreenMap = {
     id: "environment",
     category: "appearance",
     copyScreenId: "environment",
-    defaultOptionId: "carbon",
+    defaultOptionId: "light",
     savedDataIntent: ["environment_preference"],
     runtimeEffect: "deferred_preference_only",
     canSkip: true,
@@ -229,7 +229,7 @@ export const getPremiumOnboardingPreviousScreen = (
 ): PremiumOnboardingScreenId | undefined => premiumOnboardingScreenMapOrder[premiumOnboardingScreenMap[id].order - 1];
 
 export const getPremiumOnboardingDefaultSelections = (): PremiumOnboardingDefaultSelections => ({
-  environment: "carbon",
+  environment: "light",
   presence: "minichat",
   permission_style: "ask_when_needed",
   memory_boundaries: "ask_before_personal",

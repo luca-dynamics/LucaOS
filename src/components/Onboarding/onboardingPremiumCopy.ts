@@ -1,5 +1,3 @@
-import { getLucaSkinPreviewMetadataList } from "../../config/lucaSkinPreviewMetadata";
-
 export type PremiumOnboardingAudienceMode = "basic" | "pro" | "creator";
 
 export type PremiumOnboardingScreenId =
@@ -63,40 +61,53 @@ export const premiumOnboardingBasicBannedTerms = [
   "command center",
 ] as const;
 
-const environmentOptions: PremiumOnboardingOptionCopy[] =
-  getLucaSkinPreviewMetadataList().map((skin) => ({
-    id: skin.id,
-    title: skin.shortLabel,
-    description: skin.tagline,
-    recommended: skin.capabilities.includes("recommended-default"),
-  }));
+// Appearance modes (Claude-desktop style): LucaOS wears ONE identity — the
+// glacier — in light (Pearl) or dark (Carbon), with "system" following the
+// device. The wider skin catalog stays available later in Settings.
+const environmentOptions: PremiumOnboardingOptionCopy[] = [
+  {
+    id: "light",
+    title: "Luca Light",
+    description: "The glacier-bright LucaOS look.",
+    recommended: true,
+  },
+  {
+    id: "dark",
+    title: "Luca Dark",
+    description: "The same identity, tuned for night.",
+  },
+  {
+    id: "system",
+    title: "System",
+    description: "Match your device appearance automatically.",
+  },
+];
 
+// Startup-surface choices. The dashboard is deliberately absent: every user
+// lands in the full workspace right after onboarding, so this screen only
+// asks which companion surfaces come alive at launch ("Active now" vs
+// "Enable later" per surface).
 const presenceOptions: PremiumOnboardingOptionCopy[] = [
   {
     id: "minichat",
     title: "MiniChat",
-    description: "I'll stay in a small chat surface until you bring me forward.",
+    description: "A compact chat companion that stays by your side.",
     recommended: true,
   },
   {
     id: "voice",
     title: "Voice",
-    description: "I'll be available for spoken conversations when you choose to enable voice.",
+    description: "Talk naturally. Luca listens and responds with voice.",
   },
   {
     id: "widget",
     title: "Widget",
-    description: "I'll keep a compact entry point near your workspace.",
+    description: "Get context and updates at a glance on any surface.",
   },
   {
     id: "presence",
-    title: "Presence",
-    description: "I'll stay visible as a subtle presence while you work.",
-  },
-  {
-    id: "dashboard",
-    title: "Dashboard",
-    description: "I'll open the full LucaOS workspace when you want a broader view.",
+    title: "Presence / Hologram",
+    description: "Bring Luca to life on-device with a calm visual presence.",
   },
 ];
 
@@ -191,8 +202,8 @@ const basicScreens: PremiumOnboardingCopySet["screens"] = {
   },
   environment: {
     id: "environment",
-    title: "How should this space feel?",
-    summary: "Choose the look you want me to use first. You can change it anytime in Settings.",
+    title: "Choose your environment",
+    summary: "Pick the look that feels right. You can change it anytime in Settings.",
     reassurance:
       "This only describes a future visual choice. It does not change safety behavior or apply a device-wide look now.",
     primaryCta: "Continue",
@@ -202,11 +213,12 @@ const basicScreens: PremiumOnboardingCopySet["screens"] = {
   },
   presence: {
     id: "presence",
-    title: "How should I stay nearby?",
-    summary: "Choose where I should appear first. You can turn on more surfaces later.",
-    reassurance: "These are starting points, not permanent limits.",
+    title: "Choose how Luca appears.",
+    summary:
+      "Luca can show up as a quick chat, a voice, a widget, or on-device presence.",
+    reassurance: "You can change these settings anytime in LucaOS Settings.",
     primaryCta: "Continue",
-    secondaryCta: "Decide later",
+    secondaryCta: "Set up later",
     detailsLabel: "About Luca surfaces",
     options: presenceOptions,
   },
@@ -280,7 +292,8 @@ export const premiumOnboardingCopy: Readonly<Record<PremiumOnboardingAudienceMod
         "I'll become a calm intelligence layer across your device, with chat, voice, workspace surfaces, memory, tools, and actions you approve.",
     },
     presence: {
-      summary: "Choose the surfaces I should emphasize first. Every core surface remains available later.",
+      summary:
+        "Choose which surfaces come alive at launch. Every core surface remains available later.",
     },
     permission_style: {
       summary: "Set the default approval style for actions I may take on your behalf.",
@@ -298,7 +311,8 @@ export const premiumOnboardingCopy: Readonly<Record<PremiumOnboardingAudienceMod
       summary: "Choose the visual environment you want me to keep around your writing, planning, and making.",
     },
     presence: {
-      summary: "Choose how I should stay close while you draft, organize, and publish work.",
+      summary:
+        "Choose how I should appear at launch while you draft, organize, and publish work.",
     },
     intelligence_route: {
       summary: "Choose the thinking style you prefer for future creative work. You can refine it later.",

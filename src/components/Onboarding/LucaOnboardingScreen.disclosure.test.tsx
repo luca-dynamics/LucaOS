@@ -43,7 +43,7 @@ describe("LucaOnboardingScreen progressive disclosure", () => {
         <LucaOnboardingScreen screenId="environment" audienceMode={mode} />,
       );
       expect(markup, mode).not.toContain("data-luca-onboarding-advanced");
-      expect(markup, mode).toContain('data-luca-onboarding-option="pearl"');
+      expect(markup, mode).toContain('data-luca-onboarding-option="light"');
     }
   });
 });

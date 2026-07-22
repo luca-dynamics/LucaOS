@@ -57,6 +57,14 @@ export interface LucaOnboardingFlowState {
    */
   readonly connectorSelections?: readonly string[];
   /**
+   * Startup surfaces the user marked "Active now" on the presence screen
+   * (multi-enable; the dashboard is implicit — everyone lands there after
+   * setup). Preference only — nothing is activated during onboarding. The
+   * single `selectedOptions.presence` stays in sync as the legacy primary
+   * (voice wins when active) so existing completion mappings keep working.
+   */
+  readonly startupSurfaceSelections?: readonly string[];
+  /**
    * Material feel chosen alongside the environment (skin): background
    * opacity (0..1) and blur (px). Optional — the completion bridge falls
    * back to its defaults when the user never touches the sliders.
@@ -122,6 +130,10 @@ export const createLucaOnboardingFlowState = (
     selectedOptions,
     displayName: options.displayName ?? "",
     connectorSelections: [],
+    // The recommended presence surface starts "Active now".
+    startupSurfaceSelections: selectedOptions.presence
+      ? [selectedOptions.presence]
+      : [],
     complete: false,
   };
 };
@@ -223,6 +235,44 @@ export const lucaOnboardingFlowSetConnectors = (
     return state;
   }
   return { ...state, connectorSelections: next };
+};
+
+/**
+ * Record which startup surfaces are "Active now" on the presence screen.
+ * Ids are validated against the presence options (unknown ids are dropped)
+ * and deduped, preserving the caller's order. The single
+ * `selectedOptions.presence` stays in sync as the legacy primary surface:
+ * voice wins when active, otherwise the first active id, otherwise the
+ * previous single selection. Returns the same reference when nothing changes.
+ */
+export const lucaOnboardingFlowSetStartupSurfaces = (
+  state: LucaOnboardingFlowState,
+  surfaceIds: readonly string[],
+): LucaOnboardingFlowState => {
+  const next: string[] = [];
+  for (const id of surfaceIds) {
+    if (isValidOption(state.audienceMode, "presence", id) && !next.includes(id)) {
+      next.push(id);
+    }
+  }
+  const prev = state.startupSurfaceSelections ?? [];
+  const primary = next.includes("voice")
+    ? "voice"
+    : (next[0] ?? state.selectedOptions.presence);
+  if (
+    prev.length === next.length &&
+    prev.every((id, i) => id === next[i]) &&
+    primary === state.selectedOptions.presence
+  ) {
+    return state;
+  }
+  return {
+    ...state,
+    startupSurfaceSelections: next,
+    selectedOptions: primary
+      ? { ...state.selectedOptions, presence: primary }
+      : state.selectedOptions,
+  };
 };
 
 /**

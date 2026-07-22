@@ -22,17 +22,17 @@ const mount = (ui: React.ReactElement) => {
 };
 
 describe("LucaPremiumOnboardingPreview", () => {
-  it("starts on welcome inside the shell with the default Carbon skin", () => {
+  it("starts on welcome inside the shell with the default Pearl skin", () => {
     const { container, cleanup } = mount(<LucaPremiumOnboardingPreview settleDurationMs={0} />);
     expect(
       container.querySelector('[data-luca-onboarding-preview-screen="welcome"]'),
     ).not.toBeNull();
     expect(
-      container.querySelector('[data-luca-onboarding-skin="carbon"]'),
+      container.querySelector('[data-luca-onboarding-skin="pearl"]'),
     ).not.toBeNull();
-    // welcome shows the identity presence hero
+    // welcome shows the hologram hero face (bespoke light hero, no orb)
     expect(
-      container.querySelector('[data-luca-presence="identity"]'),
+      container.querySelector('[data-luca-onboarding-screen="welcome"] img'),
     ).not.toBeNull();
     cleanup();
   });
@@ -53,21 +53,21 @@ describe("LucaPremiumOnboardingPreview", () => {
     const { container, cleanup } = mount(
       <LucaPremiumOnboardingPreview settleDurationMs={0} initialScreenId="environment" />,
     );
-    // default environment selection is carbon
-    expect(
-      container.querySelector('[data-luca-onboarding-skin="carbon"]'),
-    ).not.toBeNull();
-
-    const pearl = container.querySelector(
-      '[data-luca-onboarding-option="pearl"]',
-    ) as HTMLButtonElement;
-    act(() => pearl.click());
-
+    // default appearance mode is light -> Pearl
     expect(
       container.querySelector('[data-luca-onboarding-skin="pearl"]'),
     ).not.toBeNull();
+
+    const darkMode = container.querySelector(
+      '[data-luca-onboarding-option="dark"]',
+    ) as HTMLButtonElement;
+    act(() => darkMode.click());
+
     expect(
       container.querySelector('[data-luca-onboarding-skin="carbon"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-luca-onboarding-skin="pearl"]'),
     ).toBeNull();
     cleanup();
   });

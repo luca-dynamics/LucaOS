@@ -46,20 +46,22 @@ describe("lucaOnboardingCompletionBridge", () => {
 
   it("never drops a premium selection — all are returned as premiumPreferences", () => {
     let flow = createLucaOnboardingFlowState();
-    flow = lucaOnboardingFlowSetOption(flow, "environment", "carbon");
+    flow = lucaOnboardingFlowSetOption(flow, "environment", "dark");
     flow = lucaOnboardingFlowSetOption(flow, "permission_style", "ask_every_time");
     flow = lucaOnboardingFlowSetOption(flow, "memory_boundaries", "ask_before_anything");
     flow = lucaOnboardingFlowSetOption(flow, "connect_tools", "connect_now");
 
     const prefs = getLucaOnboardingPremiumPreferences(flow);
     expect(prefs).toEqual({
-      environment: "carbon",
+      environment: "dark",
       presence: "minichat",
       permissionStyle: "ask_every_time",
       memoryBoundaries: "ask_before_anything",
       connectTools: "connect_now",
       intelligenceRoute: "luca_prime",
       connectors: [],
+      // The recommended startup surface is active by default.
+      startupSurfaces: ["minichat"],
     });
 
     // The same preferences ride along the web completion result.

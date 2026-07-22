@@ -1,11 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
 import LucaPresence from "../presence/LucaPresence";
 import { LucaOnboardingShell } from "./LucaOnboardingShell";
-import { LucaOnboardingScreen } from "./LucaOnboardingScreen";
+import {
+  LucaOnboardingScreen,
+  LUCA_ONBOARDING_LIGHT_BACKGROUND,
+} from "./LucaOnboardingScreen";
 import { LucaOnboardingMotion } from "./LucaOnboardingMotion";
 import { isElectron } from "../../utils/env";
 import { startConnectorAuth } from "../../services/connectorAuth";
 import type { ConnectorCatalogEntry } from "../../config/connectorCatalog";
+import {
+  DEFAULT_LUCA_APPEARANCE_MODE,
+  isLucaAppearanceMode,
+  resolveLucaAppearanceSkinId,
+  type LucaSkinHostKind,
+} from "../../config/lucaSkins";
 import {
   canLucaOnboardingFlowGoBack,
   canLucaOnboardingFlowSkip,
@@ -22,6 +31,7 @@ import {
   lucaOnboardingFlowSetMaterial,
   lucaOnboardingFlowSetOption,
   lucaOnboardingFlowSetConnectors,
+  lucaOnboardingFlowSetStartupSurfaces,
   lucaOnboardingFlowSkip,
   type LucaOnboardingFlowState,
 } from "./lucaOnboardingFlowEngine";
@@ -40,7 +50,6 @@ import { LucaFaceRecognitionMoment } from "./LucaFaceRecognitionMoment";
 import { LucaLocalIntelligenceMoment } from "./LucaLocalIntelligenceMoment";
 import type { LucaLocalEndpointStatus } from "../../services/llm/lucaLocalEndpointService";
 import type { LucaOnboardingSkinBoundarySurface } from "../../styles/lucaOnboardingSkinBoundary";
-import type { LucaSkinHostKind } from "../../config/lucaSkins";
 
 const NOT_CONFIGURED_ENDPOINT: LucaLocalEndpointStatus = {
   configured: false,
@@ -156,9 +165,20 @@ export const LucaPremiumOnboardingPreview: React.FC<
   }, [flow, onComplete]);
 
   const screenId = flow.currentScreenId;
-  // The environment selection is also the skin choice (ids align 1:1).
-  const chosenSkinId =
-    getLucaOnboardingFlowSelection(flow, "environment") ?? "carbon";
+  // The environment selection is an APPEARANCE MODE (light / dark / system) —
+  // one glacier identity worn two ways. Resolve it to the concrete skin here;
+  // "system" follows the host OS.
+  const environmentMode = getLucaOnboardingFlowSelection(flow, "environment");
+  const prefersDark =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches === true;
+  const chosenSkinId = resolveLucaAppearanceSkinId(
+    isLucaAppearanceMode(environmentMode)
+      ? environmentMode
+      : DEFAULT_LUCA_APPEARANCE_MODE,
+    prefersDark,
+  );
   // Hover preview: the being tries the room on while the pointer hovers a
   // skin card — the WHOLE surface re-skins live, then falls back to the
   // chosen room on leave. Display-only; nothing persists until selection.
@@ -237,6 +257,11 @@ export const LucaPremiumOnboardingPreview: React.FC<
   const handleConnectorSelections = (connectorIds: string[]) =>
     setFlow((current) => lucaOnboardingFlowSetConnectors(current, connectorIds));
 
+  const handleStartupSurfaces = (surfaceIds: string[]) =>
+    setFlow((current) =>
+      lucaOnboardingFlowSetStartupSurfaces(current, surfaceIds),
+    );
+
   // Real connect flow is only offered where a desktop host is present (LucaLink
   // events + local API resolve there). In browser-safe / offline onboarding the
   // tiles fall back to marking intent for later setup in Settings.
@@ -257,6 +282,11 @@ export const LucaPremiumOnboardingPreview: React.FC<
     reducedTransparency,
   } as const;
   const reserveWindowControls = hostKind === "desktop-app";
+  // Every flow screen is a bespoke light hero: the shell drops its ambient
+  // blurred face and dark-skin background so the glacier owns the whole
+  // surface, and each hero renders its own progress/back chrome. Only the
+  // tail moments keep the classic shell treatment.
+  const isWelcomeHero = !activeTailStep;
 
   return (
     <LucaOnboardingShell
@@ -267,8 +297,13 @@ export const LucaPremiumOnboardingPreview: React.FC<
       reducedTransparency={reducedTransparency}
       userMaterialOpacity={flow.materialOpacity}
       userMaterialBlurPx={flow.materialBlur}
+      ambientPresence={!isWelcomeHero}
       className={className}
-      style={style}
+      style={
+        isWelcomeHero
+          ? { ...style, background: LUCA_ONBOARDING_LIGHT_BACKGROUND }
+          : style
+      }
     >
       {settling && (
         <div
@@ -304,7 +339,13 @@ export const LucaPremiumOnboardingPreview: React.FC<
           minHeight: "100%",
           display: "flex",
           flexDirection: "column",
-          padding: reserveWindowControls ? "36px 24px 32px" : "28px 24px 32px",
+          // The welcome hero is full-bleed (it owns its own insets); other
+          // screens keep the padded, centered column.
+          padding: isWelcomeHero
+            ? 0
+            : reserveWindowControls
+              ? "36px 24px 32px"
+              : "28px 24px 32px",
         }}
       >
         {activeTailStep ? (
@@ -330,54 +371,15 @@ export const LucaPremiumOnboardingPreview: React.FC<
           </div>
         ) : (
           <>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 18,
-            paddingRight: reserveWindowControls ? 88 : 0,
-          }}
-        >
-          {canBack ? (
-            <button
-              type="button"
-              data-luca-onboarding-preview-back
-              onClick={handleBack}
-              style={{
-                cursor: "pointer",
-                background: "transparent",
-                border: "none",
-                padding: "6px 8px",
-                fontSize: 14,
-                color: "var(--luca-text-secondary)",
-              }}
-            >
-              ← Back
-            </button>
-          ) : (
-            <span />
-          )}
-          <span
-            data-luca-onboarding-preview-progress
-            style={{
-              fontSize: 12,
-              letterSpacing: "0.12em",
-              color: "var(--luca-text-tertiary)",
-            }}
-          >
-            {getLucaOnboardingFlowIndex(flow) + 1} / {getLucaOnboardingFlowTotal()}
-          </span>
-        </div>
-
+        {/* Each light hero renders its own back + progress chrome; the old
+            shared header is gone. */}
         <div
           style={{
             flex: 1,
             display: "flex",
-            alignItems: "center",
+            alignItems: "stretch",
             width: "100%",
-            maxWidth: screenId === "environment" ? 1100 : undefined,
-            margin: "0 auto",
+            margin: 0,
           }}
         >
           <LucaOnboardingMotion
@@ -388,6 +390,10 @@ export const LucaPremiumOnboardingPreview: React.FC<
             <LucaOnboardingScreen
               screenId={screenId}
               audienceMode={audienceMode}
+              stepIndex={getLucaOnboardingFlowIndex(flow)}
+              stepTotal={getLucaOnboardingFlowTotal()}
+              canGoBack={canBack}
+              onBack={handleBack}
               selectedOptionId={getLucaOnboardingFlowSelection(flow, screenId)}
               onSelectOption={handleSelectOption}
               nameValue={flow.displayName}
@@ -405,6 +411,8 @@ export const LucaPremiumOnboardingPreview: React.FC<
                 )
               }
               onConnectorSelectionsChange={handleConnectorSelections}
+              startupSurfaceSelections={flow.startupSurfaceSelections}
+              onStartupSurfacesChange={handleStartupSurfaces}
               canConnectTools={canConnectTools}
               onConnectorConnect={handleConnectorConnect}
               onPrimary={handlePrimary}

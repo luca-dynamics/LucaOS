@@ -55,7 +55,7 @@ describe("premium onboarding screen map", () => {
 
   it("returns typed default selections without storage writes", () => {
     expect(getPremiumOnboardingDefaultSelections()).toEqual({
-      environment: "carbon",
+      environment: "light",
       presence: "minichat",
       permission_style: "ask_when_needed",
       memory_boundaries: "ask_before_personal",

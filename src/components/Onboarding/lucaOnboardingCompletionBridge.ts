@@ -39,6 +39,11 @@ export interface LucaOnboardingPremiumPreferences {
    * `settings.connectors` keys so Settings can surface them as pending setup.
    */
   connectors?: string[];
+  /**
+   * Startup surfaces marked "Active now" on the presence screen (multi-enable;
+   * the dashboard is implicit). Preference only — nothing was activated.
+   */
+  startupSurfaces?: string[];
 }
 
 export interface LucaOnboardingWebCompletion {
@@ -88,6 +93,7 @@ export function getLucaOnboardingPremiumPreferences(
     connectTools: getLucaOnboardingFlowSelection(flow, "connect_tools"),
     intelligenceRoute: getLucaOnboardingFlowSelection(flow, "intelligence_route"),
     connectors: [...(flow.connectorSelections ?? [])],
+    startupSurfaces: [...(flow.startupSurfaceSelections ?? [])],
   };
 }
 

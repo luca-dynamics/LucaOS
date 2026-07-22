@@ -36,11 +36,11 @@ describe("lucaOnboardingDisclosure", () => {
   it("preserves option order and handles a no-advanced / undefined option set", () => {
     const noAdvanced = getLucaOnboardingDisclosure("basic", environmentOptions);
     expect(noAdvanced.advancedOptions).toEqual([]);
+    // Environment options are the three appearance modes, none advanced.
     expect(noAdvanced.primaryOptions.map((o) => o.id)).toEqual([
-      "pearl",
-      "carbon",
-      "flow",
-      "canvas",
+      "light",
+      "dark",
+      "system",
     ]);
 
     const empty = getLucaOnboardingDisclosure("pro", undefined);

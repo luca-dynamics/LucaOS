@@ -167,22 +167,25 @@ describe("premium onboarding QA matrix", () => {
 
   it("holds the per-screen presence mapping across skins", () => {
     for (const skinId of LUCA_SKIN_IDS) {
+      // The bespoke light heroes (welcome, presence) carry the being as the
+      // large hologram face itself rather than the LucaPresence orb.
       const welcome = renderToStaticMarkup(
         <LucaOnboardingScreen screenId="welcome" skinId={skinId} />,
       );
-      expect(welcome).toContain('data-luca-presence="identity"');
+      expect(welcome).toContain("/hologram.png");
 
       const presence = renderToStaticMarkup(
         <LucaOnboardingScreen screenId="presence" skinId={skinId} />,
       );
-      expect(presence).toContain('data-luca-presence="identity"');
+      expect(presence).toContain("/hologram.png");
 
-      // Incarnation rhythm: the being is present on every screen, small
-      // while the user is choosing.
+      // The centered choice screens ride the light chrome (own progress
+      // label) instead of a face.
       const trust = renderToStaticMarkup(
         <LucaOnboardingScreen screenId="permission_style" skinId={skinId} />,
       );
-      expect(trust).toContain('data-luca-presence="identity"');
+      expect(trust).toContain('data-luca-onboarding-screen="permission_style"');
+      expect(trust).toContain("data-luca-onboarding-preview-progress");
     }
   });
 });

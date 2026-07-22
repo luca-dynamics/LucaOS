@@ -1,15 +1,10 @@
 import React from "react";
-import {
-  LucaPresence,
-  type LucaPresenceState,
-} from "../presence/LucaPresence";
+import { type LucaPresenceState } from "../presence/LucaPresence";
 import {
   LUCA_SKINS,
-  isLucaSkinId,
   type LucaSkinHostKind,
   type LucaSkinId,
 } from "../../config/lucaSkins";
-import { getLucaSkinPreviewMetadata } from "../../config/lucaSkinPreviewMetadata";
 import {
   getPremiumOnboardingCopy,
   type PremiumOnboardingAudienceMode,
@@ -75,18 +70,6 @@ const DEFAULT_SCREEN_PRESENCE: Record<
   finish: "identity",
 };
 
-/** Face size per screen — the presence rhythm. Hero, mark, glad. */
-const SCREEN_FACE_SIZE: Record<PremiumOnboardingScreenId, number> = {
-  welcome: 190,
-  environment: 72,
-  presence: 104,
-  permission_style: 72,
-  memory_boundaries: 72,
-  connect_tools: 64,
-  intelligence_route: 72,
-  finish: 210,
-};
-
 /** The presence expression a given onboarding screen shows by default. */
 export const getLucaOnboardingScreenPresence = (
   screenId: PremiumOnboardingScreenId,
@@ -136,11 +119,24 @@ export interface LucaOnboardingScreenProps {
   reducedMotion?: boolean;
   reducedTransparency?: boolean;
   faceSrc?: string;
+  /** 0-based step index + total, shown as the welcome "Onboarding · N of M" pill. */
+  stepIndex?: number;
+  stepTotal?: number;
+  /** Welcome "What is LucaOS?" affordance. Inert (opens nothing) when omitted. */
+  onLearnMore?: () => void;
+  /** Back affordance for bespoke hero screens that hide the shared header. */
+  canGoBack?: boolean;
+  onBack?: () => void;
+  /**
+   * Presence screen: which startup surfaces are "Active now" (multi-enable).
+   * Controlled; toggling a row reports the full next set. Preference only.
+   */
+  startupSurfaceSelections?: readonly string[];
+  onStartupSurfacesChange?: (surfaceIds: string[]) => void;
   className?: string;
   style?: React.CSSProperties;
 }
 
-const textPrimary = "var(--luca-text-primary)";
 const textSecondary = "var(--luca-text-secondary)";
 const textTertiary = "var(--luca-text-tertiary)";
 const accent = "var(--luca-accent-primary)";
@@ -151,16 +147,1243 @@ const LUCA_BRAND_DISPLAY_STYLE: React.CSSProperties = {
   letterSpacing: "-0.035em",
 };
 
-function OptionCard({
+/**
+ * The light "glacier" environment shared with the boot surfaces (boot.html and
+ * the frontend loader): a luminous glow behind the face, soft light upper-left,
+ * a cool base deepening at the edges. The welcome hero renders on this so the
+ * onboarding opens in the same world the boot faded up from.
+ */
+export const LUCA_ONBOARDING_LIGHT_BACKGROUND =
+  "radial-gradient(55% 70% at 72% 42%, rgba(238, 249, 251, 0.92) 0%, rgba(238, 249, 251, 0) 60%), " +
+  "radial-gradient(80% 100% at 18% 28%, rgba(243, 250, 252, 0.7) 0%, rgba(243, 250, 252, 0) 55%), " +
+  "linear-gradient(160deg, #e2edf2 0%, #d8e4ec 48%, #c9d9e3 100%)";
+
+// Dark-on-light palette for the light hero (independent of the dark-skin
+// --luca-* tokens, which assume a dark surface).
+const HERO_INK = "#2b303a";
+const HERO_INK_2 = "#5b636f";
+const HERO_ACCENT = "#3d8fa6";
+
+/**
+ * WelcomeHero — the bespoke first onboarding screen (per the founder mockup):
+ * a two-column hero on the boot's light glacier. Left: an "Onboarding · N of M"
+ * pill, a two-line "Welcome to / LucaOS." wordmark, the subtitle, a glass
+ * "Get started" CTA, and a quiet "What is LucaOS?" link. Right: the hologram
+ * face, large, bleeding off the edge and dissolving into the misty base.
+ *
+ * It is inert and controlled: the CTA calls `onPrimary`, the link calls
+ * `onLearnMore` (nothing when omitted). It authors no flow or side effects.
+ */
+function WelcomeHero({
+  title,
+  summary,
+  stepIndex,
+  stepTotal,
+  onPrimary,
+  onLearnMore,
+  faceSrc = "/hologram.png",
+  reducedMotion,
+  className,
+  style,
+}: {
+  title: string;
+  summary: string;
+  stepIndex?: number;
+  stepTotal?: number;
+  onPrimary?: () => void;
+  onLearnMore?: () => void;
+  faceSrc?: string;
+  reducedMotion?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+}): React.ReactElement {
+  const total = stepTotal ?? 0;
+  const step = (stepIndex ?? 0) + 1;
+  // Split the wordmark off the lead ("Welcome to LucaOS" -> "Welcome to" +
+  // accented "LucaOS.") without hard-coding the lead words.
+  const brand = "LucaOS";
+  const lead = title.includes(brand) ? title.replace(brand, "").trim() : title;
+
+  return (
+    <section
+      data-luca-onboarding-screen="welcome"
+      data-luca-onboarding-category="intro"
+      aria-label={title}
+      className={className}
+      style={{
+        position: "relative",
+        width: "100%",
+        minHeight: "100%",
+        overflow: "hidden",
+        background: LUCA_ONBOARDING_LIGHT_BACKGROUND,
+        color: HERO_INK,
+        ...style,
+      }}
+    >
+      {/* Face: large, center-right, bleeding off the edge; the boot high-key
+          treatment plus a bottom fade so the shoulders dissolve into the mist. */}
+      <img
+        src={faceSrc}
+        alt=""
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          right: "clamp(-80px, -4vw, -20px)",
+          top: "50%",
+          transform: "translateY(-50%)",
+          height: "min(96vh, 760px)",
+          width: "auto",
+          maxWidth: "58%",
+          objectFit: "contain",
+          opacity: 0.96,
+          filter:
+            "brightness(1.06) saturate(0.86) contrast(0.98) drop-shadow(0 18px 60px rgba(150, 185, 215, 0.32))",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, black 60%, rgba(0, 0, 0, 0.5) 82%, transparent 98%)",
+          maskImage:
+            "linear-gradient(to bottom, black 60%, rgba(0, 0, 0, 0.5) 82%, transparent 98%)",
+          animation: reducedMotion
+            ? undefined
+            : "luca-hologram-breathe 6.4s ease-in-out infinite",
+          pointerEvents: "none",
+          userSelect: "none",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Left column: pill, wordmark, subtitle, CTA, learn-more. */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          height: "100%",
+          minHeight: "inherit",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          gap: 0,
+          maxWidth: "min(52%, 560px)",
+          paddingLeft: "clamp(8px, 3vw, 40px)",
+        }}
+      >
+        <span
+          data-luca-onboarding-preview-progress
+          style={{
+            alignSelf: "flex-start",
+            display: "inline-flex",
+            alignItems: "center",
+            padding: "6px 14px",
+            borderRadius: 999,
+            fontSize: 12.5,
+            letterSpacing: "0.01em",
+            color: HERO_INK_2,
+            background: "rgba(255, 255, 255, 0.5)",
+            border: "1px solid rgba(43, 48, 58, 0.1)",
+            WebkitBackdropFilter: "blur(8px)",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          Onboarding{total ? ` · ${step} of ${total}` : ""}
+        </span>
+
+        <h1
+          style={{
+            ...LUCA_BRAND_DISPLAY_STYLE,
+            margin: "22px 0 0",
+            fontSize: "clamp(30px, 4.2vw, 50px)",
+            lineHeight: 1.06,
+            fontWeight: 600,
+            color: HERO_INK,
+            // One straight line — never broken into "Welcome to" / "LucaOS."
+            whiteSpace: "nowrap",
+          }}
+        >
+          {lead} <span style={{ color: HERO_ACCENT }}>{brand}.</span>
+        </h1>
+
+        <p
+          style={{
+            margin: "20px 0 0",
+            maxWidth: 360,
+            fontSize: 16,
+            lineHeight: 1.55,
+            color: HERO_INK_2,
+          }}
+        >
+          {summary}
+        </p>
+
+        <button
+          type="button"
+          data-luca-onboarding-cta="primary"
+          className="luca-material-pressable"
+          onClick={onPrimary}
+          style={{
+            marginTop: 34,
+            alignSelf: "flex-start",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 18,
+            minWidth: 300,
+            cursor: onPrimary ? "pointer" : "default",
+            padding: "17px 14px 17px 26px",
+            borderRadius: 18,
+            border: "1px solid rgba(255, 255, 255, 0.55)",
+            fontSize: 16,
+            fontWeight: 600,
+            letterSpacing: "0.01em",
+            color: "#ffffff",
+            textShadow: "0 1px 1px rgba(52, 92, 148, 0.35)",
+            // Liquid-glass fill: a bright top sheen layered over a luminous
+            // blue body that deepens toward the base.
+            background:
+              "linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 34%, rgba(255, 255, 255, 0) 55%), " +
+              "linear-gradient(150deg, #9cc8ef 0%, #74a4da 50%, #5d8ecb 100%)",
+            // Blue bloom below, crisp lit top edge, and inner depth at the base.
+            boxShadow:
+              "0 20px 44px rgba(96, 140, 202, 0.5), 0 3px 10px rgba(96, 140, 202, 0.28), " +
+              "inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -10px 22px rgba(70, 110, 172, 0.3)",
+            WebkitBackdropFilter: "blur(8px) saturate(1.3)",
+            backdropFilter: "blur(8px) saturate(1.3)",
+          }}
+        >
+          Get started
+          {/* Arrow in its own soft glass chip, echoing the mockup. */}
+          <span
+            aria-hidden="true"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 34,
+              height: 34,
+              borderRadius: 999,
+              fontSize: 17,
+              lineHeight: 1,
+              color: "#ffffff",
+              background:
+                "linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.12) 100%)",
+              boxShadow:
+                "inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -3px 8px rgba(70, 110, 172, 0.28)",
+            }}
+          >
+            →
+          </span>
+        </button>
+
+        <button
+          type="button"
+          data-luca-onboarding-cta="learn-more"
+          onClick={onLearnMore}
+          style={{
+            marginTop: 20,
+            alignSelf: "flex-start",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 9,
+            cursor: onLearnMore ? "pointer" : "default",
+            background: "transparent",
+            border: "none",
+            padding: "4px 2px",
+            fontSize: 14,
+            color: HERO_INK_2,
+          }}
+        >
+          <span
+            aria-hidden="true"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 20,
+              height: 20,
+              borderRadius: 999,
+              border: `1.4px solid ${HERO_INK_2}`,
+              fontSize: 12,
+              fontStyle: "italic",
+              fontWeight: 600,
+            }}
+          >
+            i
+          </span>
+          What is LucaOS?
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Preview art per appearance mode (Claude-desktop model: one identity, two
+ * modes). Light shows Pearl's glacier, Dark shows Carbon's ice-slate, System
+ * splits the two down the middle.
+ */
+const APPEARANCE_MODE_PREVIEWS: Record<string, string> = {
+  light: LUCA_SKINS.pearl.backgroundProfile.hero,
+  dark: LUCA_SKINS.carbon.backgroundProfile.hero,
+  system:
+    "linear-gradient(105deg, #e2edf2 0%, #d8e4ec 49.8%, #131c22 50.2%, #0c1216 100%)",
+};
+
+/** Whether a mode's preview art is dark (drives the mini-UI overlay tone). */
+const APPEARANCE_MODE_DARK_PREVIEW: Record<string, boolean> = {
+  light: false,
+  dark: true,
+  system: false,
+};
+
+/**
+ * HeroFrame — the shared chrome for the bespoke light onboarding screens
+ * (environment, presence, …): glacier background, ← Back, dots progress with
+ * the "Onboarding · Step N of M" label, centered title + summary, the screen's
+ * own content (cards) as children, then the premium Continue CTA, a quiet
+ * secondary action, and an optional footnote.
+ */
+function HeroFrame({
+  screenId,
+  category,
+  title,
+  summary,
+  stepIndex,
+  stepTotal,
+  canBack,
+  onBack,
+  onPrimary,
+  onSecondary,
+  primaryCta,
+  secondaryCta,
+  footnote,
+  children,
+  className,
+  style,
+}: {
+  screenId: PremiumOnboardingScreenId;
+  category: string;
+  title: string;
+  summary: string;
+  stepIndex?: number;
+  stepTotal?: number;
+  canBack?: boolean;
+  onBack?: () => void;
+  onPrimary?: () => void;
+  onSecondary?: () => void;
+  primaryCta: string;
+  secondaryCta?: string;
+  footnote?: string;
+  children?: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}): React.ReactElement {
+  const total = stepTotal ?? 0;
+  const step = (stepIndex ?? 0) + 1;
+
+  return (
+    <section
+      data-luca-onboarding-screen={screenId}
+      data-luca-onboarding-category={category}
+      aria-label={title}
+      className={className}
+      style={{
+        position: "relative",
+        width: "100%",
+        minHeight: "100%",
+        overflow: "hidden",
+        background: LUCA_ONBOARDING_LIGHT_BACKGROUND,
+        color: HERO_INK,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "48px 28px 34px",
+        ...style,
+      }}
+    >
+      {canBack && (
+        <button
+          type="button"
+          data-luca-onboarding-preview-back
+          onClick={onBack}
+          style={{
+            position: "absolute",
+            top: 18,
+            left: 18,
+            cursor: "pointer",
+            background: "transparent",
+            border: "none",
+            padding: "6px 8px",
+            fontSize: 14,
+            color: HERO_INK_2,
+          }}
+        >
+          ← Back
+        </button>
+      )}
+
+      {/* Dots progress + step label. */}
+      <div
+        aria-hidden="true"
+        style={{ display: "flex", alignItems: "center", gap: 7 }}
+      >
+        {Array.from({ length: total }, (_, i) => (
+          <span
+            key={i}
+            style={{
+              width: i === step - 1 ? 9 : 6,
+              height: i === step - 1 ? 9 : 6,
+              borderRadius: 999,
+              background:
+                i === step - 1 ? HERO_ACCENT : "rgba(43, 48, 58, 0.18)",
+              boxShadow:
+                i === step - 1
+                  ? "0 0 0 3px rgba(61, 143, 166, 0.18)"
+                  : undefined,
+            }}
+          />
+        ))}
+      </div>
+      <p
+        data-luca-onboarding-preview-progress
+        style={{
+          margin: "12px 0 0",
+          fontSize: 12.5,
+          letterSpacing: "0.02em",
+          color: HERO_INK_2,
+        }}
+      >
+        Onboarding · Step {step} of {total}
+      </p>
+
+      <h2
+        style={{
+          ...LUCA_BRAND_DISPLAY_STYLE,
+          margin: "14px 0 0",
+          fontSize: "clamp(24px, 2.8vw, 32px)",
+          fontWeight: 650,
+          color: HERO_INK,
+          textAlign: "center",
+        }}
+      >
+        {title}
+      </h2>
+      <p
+        style={{
+          margin: "10px 0 0",
+          maxWidth: 420,
+          fontSize: 14,
+          lineHeight: 1.55,
+          color: HERO_INK_2,
+          textAlign: "center",
+        }}
+      >
+        {summary}
+      </p>
+
+      {children}
+
+      {/* Continue + secondary. */}
+      <button
+        type="button"
+        data-luca-onboarding-cta="primary"
+        className="luca-material-pressable"
+        onClick={onPrimary}
+        style={{
+          marginTop: 30,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          minWidth: 210,
+          cursor: onPrimary ? "pointer" : "default",
+          padding: "13px 26px",
+          borderRadius: 14,
+          border: "1px solid rgba(255, 255, 255, 0.55)",
+          fontSize: 15,
+          fontWeight: 600,
+          color: "#ffffff",
+          textShadow: "0 1px 1px rgba(52, 92, 148, 0.35)",
+          background:
+            "linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 34%, rgba(255, 255, 255, 0) 55%), " +
+            "linear-gradient(150deg, #9cc8ef 0%, #74a4da 50%, #5d8ecb 100%)",
+          boxShadow:
+            "0 16px 36px rgba(96, 140, 202, 0.44), inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -8px 18px rgba(70, 110, 172, 0.28)",
+        }}
+      >
+        {primaryCta}
+        <span aria-hidden="true" style={{ fontSize: 16, lineHeight: 1 }}>
+          →
+        </span>
+      </button>
+      {secondaryCta && (
+        <button
+          type="button"
+          data-luca-onboarding-cta="secondary"
+          onClick={onSecondary}
+          style={{
+            marginTop: 14,
+            cursor: onSecondary ? "pointer" : "default",
+            background: "transparent",
+            border: "none",
+            padding: "4px 8px",
+            fontSize: 13.5,
+            fontWeight: 500,
+            color: HERO_INK_2,
+          }}
+        >
+          {secondaryCta}
+        </button>
+      )}
+
+      {footnote && (
+        <p
+          style={{
+            margin: "18px 0 0",
+            fontSize: 11.5,
+            color: "#8b929d",
+          }}
+        >
+          {footnote}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** Shared selected-state check badge for light hero cards. */
+function HeroCardCheckBadge(): React.ReactElement {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        position: "absolute",
+        top: 10,
+        right: 10,
+        zIndex: 1,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 24,
+        height: 24,
+        borderRadius: 999,
+        background: HERO_ACCENT,
+        boxShadow: "0 4px 10px rgba(61, 143, 166, 0.4)",
+      }}
+    >
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M5 12.5l4.3 4.3L19 7.4" />
+      </svg>
+    </span>
+  );
+}
+
+/** Shared card shell style for light hero option cards. */
+const heroCardStyle = (checked: boolean): React.CSSProperties => ({
+  position: "relative",
+  display: "flex",
+  flexDirection: "column",
+  gap: 0,
+  padding: 10,
+  textAlign: "center",
+  borderRadius: 18,
+  border: checked
+    ? `1.6px solid ${HERO_ACCENT}`
+    : "1px solid rgba(43, 48, 58, 0.1)",
+  background: "rgba(255, 255, 255, 0.55)",
+  boxShadow: checked
+    ? "0 18px 40px rgba(96, 140, 202, 0.24), 0 0 0 4px rgba(61, 143, 166, 0.1)"
+    : "0 12px 30px rgba(120, 150, 190, 0.14)",
+  WebkitBackdropFilter: "blur(14px) saturate(1.3)",
+  backdropFilter: "blur(14px) saturate(1.3)",
+  transition: "box-shadow 180ms ease, border-color 180ms ease",
+});
+
+/**
+ * EnvironmentHero — onboarding screen 2 (founder mockup): "Choose your
+ * environment" on the boot's light glacier. Dots progress on top, centered
+ * title + summary, a row of four skin cards (mini UI preview, name, mood
+ * words, Recommended pill, check badge when selected), then the premium
+ * Continue CTA, a quiet "Skip for now", and the Settings footnote.
+ *
+ * Controlled + inert like every screen: selection/CTAs only call the provided
+ * callbacks. The card previews are painted from each skin's own material
+ * profile, so no skin is activated during onboarding.
+ */
+function EnvironmentHero({
+  title,
+  summary,
+  options,
+  selectedOptionId,
+  onSelectOption,
+  onPrimary,
+  onSecondary,
+  primaryCta,
+  secondaryCta,
+  stepIndex,
+  stepTotal,
+  canBack,
+  onBack,
+  className,
+  style,
+}: {
+  title: string;
+  summary: string;
+  options: PremiumOnboardingOptionCopy[];
+  selectedOptionId?: string;
+  onSelectOption?: (optionId: string) => void;
+  onPrimary?: () => void;
+  onSecondary?: () => void;
+  primaryCta: string;
+  secondaryCta?: string;
+  stepIndex?: number;
+  stepTotal?: number;
+  canBack?: boolean;
+  onBack?: () => void;
+  className?: string;
+  style?: React.CSSProperties;
+}): React.ReactElement {
+  const cards = options;
+
+  return (
+    <HeroFrame
+      screenId="environment"
+      category="appearance"
+      title={title}
+      summary={summary}
+      stepIndex={stepIndex}
+      stepTotal={stepTotal}
+      canBack={canBack}
+      onBack={onBack}
+      onPrimary={onPrimary}
+      onSecondary={onSecondary}
+      primaryCta={primaryCta}
+      secondaryCta={secondaryCta}
+      footnote="You can customize colors, accents, and more in Settings."
+      className={className}
+      style={style}
+    >
+      {/* Appearance-mode cards: Light / Dark / System. */}
+      <div
+        role="radiogroup"
+        aria-label={title}
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: 16,
+          marginTop: 28,
+          width: "100%",
+          maxWidth: 800,
+        }}
+      >
+        {cards.map((option) => {
+          const checked = option.id === selectedOptionId;
+          const previewArt =
+            APPEARANCE_MODE_PREVIEWS[option.id] ?? "rgba(255,255,255,0.6)";
+          const darkPreview = APPEARANCE_MODE_DARK_PREVIEW[option.id] === true;
+          return (
+            <button
+              key={option.id}
+              type="button"
+              role="radio"
+              aria-checked={checked}
+              data-luca-onboarding-option={option.id}
+              data-luca-onboarding-appearance-option={option.id}
+              onClick={onSelectOption ? () => onSelectOption(option.id) : undefined}
+              style={{
+                ...heroCardStyle(checked),
+                flex: "1 1 190px",
+                maxWidth: 230,
+                cursor: onSelectOption ? "pointer" : "default",
+              }}
+            >
+              {checked && <HeroCardCheckBadge />}
+
+              {/* Mini UI preview painted with the mode's glacier. */}
+              <span
+                aria-hidden="true"
+                style={{
+                  display: "block",
+                  position: "relative",
+                  height: 148,
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  border: "1px solid rgba(43, 48, 58, 0.08)",
+                  background: previewArt,
+                }}
+              >
+                {/* sidebar */}
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 8,
+                    top: 8,
+                    bottom: 8,
+                    width: 26,
+                    borderRadius: 6,
+                    background: darkPreview
+                      ? "rgba(255, 255, 255, 0.09)"
+                      : "rgba(255, 255, 255, 0.5)",
+                  }}
+                />
+                {/* content rows */}
+                {[0, 1, 2].map((row) => (
+                  <span
+                    key={row}
+                    style={{
+                      position: "absolute",
+                      left: 42,
+                      right: 8,
+                      top: 10 + row * 34,
+                      height: 26,
+                      borderRadius: 6,
+                      background: darkPreview
+                        ? "rgba(255, 255, 255, 0.07)"
+                        : "rgba(255, 255, 255, 0.42)",
+                    }}
+                  />
+                ))}
+              </span>
+
+              <span
+                style={{
+                  marginTop: 12,
+                  fontSize: 14.5,
+                  fontWeight: 650,
+                  color: HERO_INK,
+                }}
+              >
+                {option.title}
+              </span>
+              {option.recommended ? (
+                <span
+                  data-luca-onboarding-chip="recommended"
+                  style={{
+                    alignSelf: "center",
+                    marginTop: 6,
+                    marginBottom: 4,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 5,
+                    padding: "3px 10px",
+                    borderRadius: 999,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: HERO_ACCENT,
+                    background: "rgba(61, 143, 166, 0.1)",
+                  }}
+                >
+                  ★ Recommended
+                </span>
+              ) : (
+                <span
+                  style={{
+                    marginTop: 6,
+                    marginBottom: 4,
+                    fontSize: 11.5,
+                    color: HERO_INK_2,
+                  }}
+                >
+                  {option.description}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+    </HeroFrame>
+  );
+}
+
+/** Line icons for the startup-surface rows (presence screen). */
+const STARTUP_SURFACE_ICONS: Record<string, React.ReactElement> = {
+  minichat: (
+    <path d="M5 5h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-9L5.5 19.5V16H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />
+  ),
+  voice: <path d="M5 10v4M9 7v10M13 9v6M17 6v12M21 10v4" />,
+  widget: (
+    <>
+      <rect x="4" y="4" width="7" height="7" rx="1.6" />
+      <rect x="13" y="4" width="7" height="7" rx="1.6" />
+      <rect x="4" y="13" width="7" height="7" rx="1.6" />
+      <rect x="13" y="13" width="7" height="7" rx="1.6" />
+    </>
+  ),
+  presence: (
+    <>
+      <circle cx="12" cy="9" r="3.2" />
+      <path d="M6 19c0-3 2.7-4.8 6-4.8s6 1.8 6 4.8" />
+    </>
+  ),
+};
+
+/**
+ * PresenceHero — onboarding screen 3 (founder mockup): "Choose how Luca
+ * appears." on the welcome-family layout — pill + heading + a LIST of startup
+ * surfaces on the left (each row: icon, name, one-liner, and an
+ * "Active now / Enable later" toggle), the hologram face on the right, and
+ * Set up later + Continue in the lower-right. The dashboard is not listed —
+ * everyone lands there after setup.
+ *
+ * Controlled + inert: toggles report the full next "Active now" set via
+ * `onStartupSurfacesChange`; nothing is activated during onboarding.
+ */
+function PresenceHero({
+  title,
+  summary,
+  options,
+  startupSurfaceSelections,
+  onStartupSurfacesChange,
+  onPrimary,
+  onSecondary,
+  primaryCta,
+  secondaryCta,
+  stepIndex,
+  stepTotal,
+  canBack,
+  onBack,
+  reassurance,
+  faceSrc = "/hologram.png",
+  reducedMotion,
+  className,
+  style,
+}: {
+  title: string;
+  summary: string;
+  options: PremiumOnboardingOptionCopy[];
+  startupSurfaceSelections?: readonly string[];
+  onStartupSurfacesChange?: (surfaceIds: string[]) => void;
+  onPrimary?: () => void;
+  onSecondary?: () => void;
+  primaryCta: string;
+  secondaryCta?: string;
+  stepIndex?: number;
+  stepTotal?: number;
+  canBack?: boolean;
+  onBack?: () => void;
+  reassurance?: string;
+  faceSrc?: string;
+  reducedMotion?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+}): React.ReactElement {
+  const total = stepTotal ?? 0;
+  const step = (stepIndex ?? 0) + 1;
+  const activeSurfaces = startupSurfaceSelections ?? [];
+  const toggleSurface = (surfaceId: string) => {
+    if (!onStartupSurfacesChange) return;
+    onStartupSurfacesChange(
+      activeSurfaces.includes(surfaceId)
+        ? activeSurfaces.filter((id) => id !== surfaceId)
+        : [...activeSurfaces, surfaceId],
+    );
+  };
+
+  return (
+    <section
+      data-luca-onboarding-screen="presence"
+      data-luca-onboarding-category="presence"
+      aria-label={title}
+      className={className}
+      style={{
+        position: "relative",
+        width: "100%",
+        minHeight: "100%",
+        overflow: "hidden",
+        background: LUCA_ONBOARDING_LIGHT_BACKGROUND,
+        color: HERO_INK,
+        ...style,
+      }}
+    >
+      {/* Face: large, center-right, dissolving into the mist (welcome family). */}
+      <img
+        src={faceSrc}
+        alt=""
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          right: "clamp(-70px, -3vw, -14px)",
+          top: "50%",
+          transform: "translateY(-50%)",
+          height: "min(88vh, 700px)",
+          width: "auto",
+          maxWidth: "50%",
+          objectFit: "contain",
+          opacity: 0.96,
+          filter:
+            "brightness(1.06) saturate(0.86) contrast(0.98) drop-shadow(0 18px 60px rgba(150, 185, 215, 0.32))",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, black 60%, rgba(0, 0, 0, 0.5) 82%, transparent 98%)",
+          maskImage:
+            "linear-gradient(to bottom, black 60%, rgba(0, 0, 0, 0.5) 82%, transparent 98%)",
+          animation: reducedMotion
+            ? undefined
+            : "luca-hologram-breathe 6.4s ease-in-out infinite",
+          pointerEvents: "none",
+          userSelect: "none",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Left column: back, pill, heading, summary, surface rows, note. */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          height: "100%",
+          minHeight: "inherit",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          maxWidth: "min(52%, 560px)",
+          padding: "56px 0 72px clamp(14px, 3vw, 44px)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            alignSelf: "flex-start",
+          }}
+        >
+          {canBack && (
+            <button
+              type="button"
+              data-luca-onboarding-preview-back
+              onClick={onBack}
+              style={{
+                cursor: "pointer",
+                background: "transparent",
+                border: "none",
+                padding: "4px 6px",
+                fontSize: 13.5,
+                color: HERO_INK_2,
+              }}
+            >
+              ← Back
+            </button>
+          )}
+          <span
+            data-luca-onboarding-preview-progress
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "5px 13px",
+              borderRadius: 999,
+              fontSize: 12,
+              letterSpacing: "0.01em",
+              color: HERO_INK_2,
+              background: "rgba(255, 255, 255, 0.5)",
+              border: "1px solid rgba(43, 48, 58, 0.1)",
+              WebkitBackdropFilter: "blur(8px)",
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            Onboarding{total ? ` · ${step} of ${total}` : ""}
+          </span>
+        </div>
+
+        <h2
+          style={{
+            ...LUCA_BRAND_DISPLAY_STYLE,
+            margin: "16px 0 0",
+            fontSize: "clamp(24px, 2.9vw, 34px)",
+            fontWeight: 650,
+            lineHeight: 1.1,
+            color: HERO_INK,
+          }}
+        >
+          {title}
+        </h2>
+        <p
+          style={{
+            margin: "8px 0 0",
+            fontSize: 14,
+            lineHeight: 1.55,
+            color: HERO_INK_2,
+          }}
+        >
+          {summary}
+        </p>
+
+        {/* Startup-surface rows. */}
+        <div
+          data-luca-onboarding-options
+          data-luca-onboarding-options-layout="startup-list"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 11,
+            marginTop: 22,
+          }}
+        >
+          {options.map((option) => {
+            const isActive = activeSurfaces.includes(option.id);
+            return (
+              <div
+                key={option.id}
+                data-luca-startup-surface={option.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "11px 13px",
+                  borderRadius: 15,
+                  background: "rgba(255, 255, 255, 0.55)",
+                  border: "1px solid rgba(43, 48, 58, 0.09)",
+                  boxShadow: "0 10px 26px rgba(120, 150, 190, 0.12)",
+                  WebkitBackdropFilter: "blur(12px) saturate(1.25)",
+                  backdropFilter: "blur(12px) saturate(1.25)",
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  style={{
+                    flex: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 38,
+                    height: 38,
+                    borderRadius: 11,
+                    color: "#4e7fae",
+                    background: "rgba(109, 158, 209, 0.14)",
+                  }}
+                >
+                  <svg
+                    width="19"
+                    height="19"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {STARTUP_SURFACE_ICONS[option.id] ?? (
+                      <circle cx="12" cy="12" r="8" />
+                    )}
+                  </svg>
+                </span>
+
+                <span style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                  <span
+                    style={{
+                      display: "block",
+                      fontSize: 13.5,
+                      fontWeight: 650,
+                      color: HERO_INK,
+                    }}
+                  >
+                    {option.title}
+                  </span>
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: 1,
+                      fontSize: 12,
+                      lineHeight: 1.4,
+                      color: HERO_INK_2,
+                    }}
+                  >
+                    {option.description}
+                  </span>
+                </span>
+
+                {/* Active now / Enable later toggle. */}
+                <button
+                  type="button"
+                  data-luca-onboarding-option={option.id}
+                  data-luca-startup-state={isActive ? "active" : "later"}
+                  aria-pressed={isActive}
+                  onClick={() => toggleSurface(option.id)}
+                  style={{
+                    flex: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 7,
+                    padding: "6px 11px",
+                    borderRadius: 999,
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    cursor: onStartupSurfacesChange ? "pointer" : "default",
+                    color: isActive ? "#2e7d54" : "#6b7480",
+                    background: isActive
+                      ? "rgba(87, 181, 131, 0.13)"
+                      : "rgba(255, 255, 255, 0.65)",
+                    border: isActive
+                      ? "1px solid rgba(87, 181, 131, 0.4)"
+                      : "1px solid rgba(43, 48, 58, 0.13)",
+                    transition:
+                      "color 160ms ease, background 160ms ease, border-color 160ms ease",
+                  }}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: 999,
+                      background: isActive ? "#4bb07a" : "#a3a9b2",
+                      boxShadow: isActive
+                        ? "0 0 0 3px rgba(75, 176, 122, 0.18)"
+                        : undefined,
+                    }}
+                  />
+                  {isActive ? "Active now" : "Enable later"}
+                  <svg
+                    aria-hidden="true"
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ opacity: 0.55 }}
+                  >
+                    <path d="M6 9.5l6 6 6-6" />
+                  </svg>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {reassurance && (
+          <span
+            role="note"
+            data-luca-onboarding-reassurance
+            style={{
+              alignSelf: "flex-start",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              marginTop: 16,
+              padding: "7px 14px",
+              borderRadius: 999,
+              fontSize: 11.5,
+              color: HERO_INK_2,
+              background: "rgba(255, 255, 255, 0.5)",
+              border: "1px solid rgba(43, 48, 58, 0.09)",
+              WebkitBackdropFilter: "blur(8px)",
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 15,
+                height: 15,
+                borderRadius: 999,
+                border: `1.2px solid ${HERO_INK_2}`,
+                fontSize: 9.5,
+                fontStyle: "italic",
+                fontWeight: 600,
+              }}
+            >
+              i
+            </span>
+            {reassurance}
+          </span>
+        )}
+      </div>
+
+      {/* Lower-right actions: quiet secondary + premium Continue. */}
+      <div
+        style={{
+          position: "absolute",
+          right: 26,
+          bottom: 24,
+          zIndex: 2,
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
+        {secondaryCta && (
+          <button
+            type="button"
+            data-luca-onboarding-cta="secondary"
+            onClick={onSecondary}
+            style={{
+              cursor: onSecondary ? "pointer" : "default",
+              padding: "11px 18px",
+              borderRadius: 13,
+              fontSize: 13.5,
+              fontWeight: 550,
+              color: HERO_INK_2,
+              background: "rgba(255, 255, 255, 0.6)",
+              border: "1px solid rgba(43, 48, 58, 0.12)",
+              WebkitBackdropFilter: "blur(10px)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            {secondaryCta}
+          </button>
+        )}
+        <button
+          type="button"
+          data-luca-onboarding-cta="primary"
+          className="luca-material-pressable"
+          onClick={onPrimary}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 9,
+            cursor: onPrimary ? "pointer" : "default",
+            padding: "12px 22px",
+            borderRadius: 13,
+            border: "1px solid rgba(255, 255, 255, 0.55)",
+            fontSize: 14,
+            fontWeight: 600,
+            color: "#ffffff",
+            textShadow: "0 1px 1px rgba(52, 92, 148, 0.35)",
+            background:
+              "linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 34%, rgba(255, 255, 255, 0) 55%), " +
+              "linear-gradient(150deg, #9cc8ef 0%, #74a4da 50%, #5d8ecb 100%)",
+            boxShadow:
+              "0 14px 32px rgba(96, 140, 202, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -8px 18px rgba(70, 110, 172, 0.28)",
+          }}
+        >
+          {primaryCta}
+          <span aria-hidden="true" style={{ fontSize: 15, lineHeight: 1 }}>
+            →
+          </span>
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * ChoiceRow — one selectable option row for the centered choice screens
+ * (permission_style, memory_boundaries, intelligence_route, connect_tools):
+ * title + Recommended/Advanced chips + description on the left, a teal radio
+ * indicator on the right. Controlled + inert.
+ */
+function ChoiceRow({
   option,
   checked,
   onSelect,
-  onPreview,
 }: {
   option: PremiumOnboardingOptionCopy;
   checked: boolean;
   onSelect?: (optionId: string) => void;
-  onPreview?: (optionId: string | null) => void;
 }): React.ReactElement {
   return (
     <button
@@ -168,249 +1391,511 @@ function OptionCard({
       role="radio"
       aria-checked={checked}
       data-luca-onboarding-option={option.id}
-      data-luca-material-role={checked ? "control-active" : "card"}
-      className="luca-shell-control"
       onClick={onSelect ? () => onSelect(option.id) : undefined}
-      onMouseEnter={onPreview ? () => onPreview(option.id) : undefined}
-      onMouseLeave={onPreview ? () => onPreview(null) : undefined}
       style={{
-        ...(checked ? lucaMaterialControlActiveStyle : lucaMaterialCardStyle),
-        display: "block",
+        ...heroCardStyle(checked),
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 14,
         width: "100%",
+        padding: "12px 15px",
+        borderRadius: 15,
         textAlign: "left",
         cursor: onSelect ? "pointer" : "default",
-        padding: "14px 16px",
-        borderRadius: 14,
-        borderWidth: 1,
-        borderStyle: "solid",
-        ...(checked ? { borderColor: accent } : {}),
-        boxShadow: checked ? "var(--luca-shadow-soft)" : "none",
       }}
     >
-      <span
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          fontWeight: 600,
-          fontSize: 15,
-        }}
-      >
-        {option.title}
-        {option.recommended && (
-          <span
-            data-luca-onboarding-chip="recommended"
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: "0.02em",
-              padding: "2px 8px",
-              borderRadius: 999,
-              color: accent,
-              border: `1px solid ${accent}`,
-            }}
-          >
-            Recommended
-          </span>
-        )}
-        {option.advanced && (
-          <span
-            data-luca-onboarding-chip="advanced"
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: "0.02em",
-              padding: "2px 8px",
-              borderRadius: 999,
-              color: textTertiary,
-              border: "1px solid var(--luca-surface-hover)",
-            }}
-          >
-            Advanced
-          </span>
-        )}
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 8,
+            fontSize: 13.5,
+            fontWeight: 650,
+            color: HERO_INK,
+          }}
+        >
+          {option.title}
+          {option.recommended && (
+            <span
+              data-luca-onboarding-chip="recommended"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                padding: "2px 9px",
+                borderRadius: 999,
+                fontSize: 10.5,
+                fontWeight: 600,
+                color: HERO_ACCENT,
+                background: "rgba(61, 143, 166, 0.1)",
+              }}
+            >
+              ★ Recommended
+            </span>
+          )}
+          {option.advanced && (
+            <span
+              data-luca-onboarding-chip="advanced"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "2px 9px",
+                borderRadius: 999,
+                fontSize: 10.5,
+                fontWeight: 600,
+                color: "#6b7480",
+                background: "rgba(43, 48, 58, 0.06)",
+              }}
+            >
+              Advanced
+            </span>
+          )}
+        </span>
+        <span
+          style={{
+            display: "block",
+            marginTop: 3,
+            fontSize: 12,
+            lineHeight: 1.45,
+            color: HERO_INK_2,
+          }}
+        >
+          {option.description}
+        </span>
       </span>
+
+      {/* Radio indicator. */}
       <span
+        aria-hidden="true"
         style={{
-          display: "block",
-          marginTop: 4,
-          fontSize: 13,
-          lineHeight: 1.45,
-          color: textSecondary,
+          flex: "none",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 21,
+          height: 21,
+          borderRadius: 999,
+          background: checked ? HERO_ACCENT : "rgba(255, 255, 255, 0.65)",
+          border: checked ? "none" : "1.6px solid rgba(43, 48, 58, 0.22)",
+          boxShadow: checked
+            ? "0 4px 10px rgba(61, 143, 166, 0.35)"
+            : undefined,
+          transition: "background 160ms ease, border-color 160ms ease",
         }}
       >
-        {option.description}
+        {checked && (
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="3.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M5 12.5l4.3 4.3L19 7.4" />
+          </svg>
+        )}
       </span>
     </button>
   );
 }
 
 /**
- * SurfaceMockupTile — a Claude-style option tile that leads with a small CSS
- * mockup of the surface, used by the presence ("Choose how Luca appears")
- * screen so all surfaces are showcased in a compact grid that fits one screen.
- * Keeps radio semantics + the data-luca-onboarding-option hook.
+ * ChoiceHero — the centered light layout for the text-led choice screens:
+ * HeroFrame chrome (dots, title, summary, Continue, secondary, footnote)
+ * around a single-column radiogroup of ChoiceRows, with Basic-tier advanced
+ * options collapsed behind the same native disclosure contract as before
+ * (data-luca-onboarding-advanced / -toggle).
  */
-function SkinOptionTile({
-  option,
-  checked,
-  onSelect,
-  onPreview,
+function ChoiceHero({
+  screenId,
+  category,
+  title,
+  summary,
+  options,
+  advancedOptions,
+  advancedShownByDefault,
+  selectedOptionId,
+  onSelectOption,
+  onPrimary,
+  onSecondary,
+  primaryCta,
+  secondaryCta,
+  stepIndex,
+  stepTotal,
+  canBack,
+  onBack,
+  footnote,
+  children,
+  className,
+  style,
 }: {
-  option: PremiumOnboardingOptionCopy;
-  checked: boolean;
-  onSelect?: (optionId: string) => void;
-  onPreview?: (optionId: string | null) => void;
+  screenId: PremiumOnboardingScreenId;
+  category: string;
+  title: string;
+  summary: string;
+  options: PremiumOnboardingOptionCopy[];
+  advancedOptions: PremiumOnboardingOptionCopy[];
+  advancedShownByDefault: boolean;
+  selectedOptionId?: string;
+  onSelectOption?: (optionId: string) => void;
+  onPrimary?: () => void;
+  onSecondary?: () => void;
+  primaryCta: string;
+  secondaryCta?: string;
+  stepIndex?: number;
+  stepTotal?: number;
+  canBack?: boolean;
+  onBack?: () => void;
+  footnote?: string;
+  children?: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
 }): React.ReactElement {
-  if (!isLucaSkinId(option.id)) {
-    return (
-      <OptionCard
-        option={option}
-        checked={checked}
-        onSelect={onSelect}
-        onPreview={onPreview}
-      />
-    );
-  }
-
-  const skin = LUCA_SKINS[option.id];
-  const metadata = getLucaSkinPreviewMetadata(option.id);
-
   return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={checked}
-      data-luca-onboarding-option={option.id}
-      data-luca-material-role={checked ? "control-active" : "card"}
-      className="luca-shell-control"
-      data-luca-onboarding-skin-option={option.id}
-      onClick={onSelect ? () => onSelect(option.id) : undefined}
-      onMouseEnter={onPreview ? () => onPreview(option.id) : undefined}
-      onMouseLeave={onPreview ? () => onPreview(null) : undefined}
-      style={{
-        ...(checked ? lucaMaterialControlActiveStyle : lucaMaterialCardStyle),
-        display: "flex",
-        minHeight: 138,
-        flexDirection: "column",
-        gap: 10,
-        textAlign: "left",
-        cursor: onSelect ? "pointer" : "default",
-        padding: 12,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderStyle: "solid",
-        ...(checked ? { borderColor: accent } : {}),
-        boxShadow: checked ? "var(--luca-shadow-soft)" : "none",
-      }}
+    <HeroFrame
+      screenId={screenId}
+      category={category}
+      title={title}
+      summary={summary}
+      stepIndex={stepIndex}
+      stepTotal={stepTotal}
+      canBack={canBack}
+      onBack={onBack}
+      onPrimary={onPrimary}
+      onSecondary={onSecondary}
+      primaryCta={primaryCta}
+      secondaryCta={secondaryCta}
+      footnote={footnote}
+      className={className}
+      style={style}
     >
-      <span
-        aria-hidden="true"
-        style={{
-          display: "block",
-          height: 42,
-          width: "100%",
-          borderRadius: 12,
-          border: "1px solid var(--luca-surface-hover)",
-          background: skin.backgroundProfile.hero,
-          boxShadow: `inset 0 0 0 1px ${skin.accentProfile.glow}`,
-        }}
-      />
-      <span
+      <div
+        role="radiogroup"
+        aria-label={title}
+        data-luca-onboarding-options
+        data-luca-onboarding-options-layout="choice-list"
         style={{
           display: "flex",
-          alignItems: "center",
-          gap: 7,
-          fontWeight: 700,
-          fontSize: 14,
+          flexDirection: "column",
+          gap: 10,
+          marginTop: 24,
+          width: "100%",
+          maxWidth: 560,
         }}
       >
-        {metadata.shortLabel}
-        {option.recommended && (
-          <span
-            data-luca-onboarding-chip="recommended"
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              padding: "1px 7px",
-              borderRadius: 999,
-              color: accent,
-              border: `1px solid ${accent}`,
-            }}
-          >
-            Default
-          </span>
-        )}
-      </span>
-      <span style={{ fontSize: 12, lineHeight: 1.38, color: textSecondary }}>
-        {metadata.tagline}
-      </span>
-    </button>
+        {options.map((option) => (
+          <ChoiceRow
+            key={option.id}
+            option={option}
+            checked={option.id === selectedOptionId}
+            onSelect={onSelectOption}
+          />
+        ))}
+        {advancedOptions.length > 0 &&
+          (advancedShownByDefault ? (
+            advancedOptions.map((option) => (
+              <ChoiceRow
+                key={option.id}
+                option={option}
+                checked={option.id === selectedOptionId}
+                onSelect={onSelectOption}
+              />
+            ))
+          ) : (
+            <details data-luca-onboarding-advanced style={{ textAlign: "left" }}>
+              <summary
+                data-luca-onboarding-advanced-toggle
+                style={{
+                  cursor: "pointer",
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  color: HERO_INK_2,
+                  padding: "2px 4px",
+                }}
+              >
+                Advanced options
+              </summary>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                  marginTop: 10,
+                }}
+              >
+                {advancedOptions.map((option) => (
+                  <ChoiceRow
+                    key={option.id}
+                    option={option}
+                    checked={option.id === selectedOptionId}
+                    onSelect={onSelectOption}
+                  />
+                ))}
+              </div>
+            </details>
+          ))}
+      </div>
+      {children}
+    </HeroFrame>
   );
 }
 
-function SurfaceMockupTile({
-  option,
-  checked,
-  onSelect,
-  onPreview,
+/**
+ * FinishHero — the completion screen (welcome family): the hologram face on
+ * the right, the ready copy on the left, and the premium Enter LucaOS action
+ * with a quiet Review choices beside it.
+ */
+function FinishHero({
+  title,
+  summary,
+  accessibilityLabel,
+  onPrimary,
+  onSecondary,
+  primaryCta,
+  secondaryCta,
+  stepIndex,
+  stepTotal,
+  canBack,
+  onBack,
+  faceSrc = "/hologram.png",
+  reducedMotion,
+  className,
+  style,
 }: {
-  option: PremiumOnboardingOptionCopy;
-  checked: boolean;
-  onSelect?: (optionId: string) => void;
-  onPreview?: (optionId: string | null) => void;
+  title: string;
+  summary: string;
+  accessibilityLabel?: string;
+  onPrimary?: () => void;
+  onSecondary?: () => void;
+  primaryCta: string;
+  secondaryCta?: string;
+  stepIndex?: number;
+  stepTotal?: number;
+  canBack?: boolean;
+  onBack?: () => void;
+  faceSrc?: string;
+  reducedMotion?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
 }): React.ReactElement {
+  const total = stepTotal ?? 0;
+  const step = (stepIndex ?? 0) + 1;
+
   return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={checked}
-      data-luca-onboarding-option={option.id}
-      data-luca-material-role={checked ? "control-active" : "card"}
-      className="luca-shell-control"
-      onClick={onSelect ? () => onSelect(option.id) : undefined}
-      onMouseEnter={onPreview ? () => onPreview(option.id) : undefined}
-      onMouseLeave={onPreview ? () => onPreview(null) : undefined}
+    <section
+      data-luca-onboarding-screen="finish"
+      data-luca-onboarding-category="finish"
+      aria-label={accessibilityLabel ?? title}
+      className={className}
       style={{
-        ...(checked ? lucaMaterialControlActiveStyle : lucaMaterialCardStyle),
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-        textAlign: "left",
-        cursor: onSelect ? "pointer" : "default",
-        padding: 10,
-        borderRadius: 14,
-        borderWidth: 1,
-        borderStyle: "solid",
-        ...(checked ? { borderColor: accent } : {}),
-        boxShadow: checked ? "var(--luca-shadow-soft)" : "none",
+        position: "relative",
+        width: "100%",
+        minHeight: "100%",
+        overflow: "hidden",
+        background: LUCA_ONBOARDING_LIGHT_BACKGROUND,
+        color: HERO_INK,
+        ...style,
       }}
     >
-      <LucaSurfaceMockup surfaceId={option.id} />
-      <span style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, fontSize: 14 }}>
-        {option.title}
-        {option.recommended && (
+      {/* Face: at its largest and warmest — the being is glad to be here. */}
+      <img
+        src={faceSrc}
+        alt=""
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          right: "clamp(-80px, -4vw, -20px)",
+          top: "50%",
+          transform: "translateY(-50%)",
+          height: "min(96vh, 760px)",
+          width: "auto",
+          maxWidth: "56%",
+          objectFit: "contain",
+          opacity: 0.96,
+          filter:
+            "brightness(1.08) saturate(0.9) contrast(0.98) drop-shadow(0 18px 64px rgba(150, 195, 220, 0.4))",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, black 60%, rgba(0, 0, 0, 0.5) 82%, transparent 98%)",
+          maskImage:
+            "linear-gradient(to bottom, black 60%, rgba(0, 0, 0, 0.5) 82%, transparent 98%)",
+          animation: reducedMotion
+            ? undefined
+            : "luca-hologram-breathe 6.4s ease-in-out infinite",
+          pointerEvents: "none",
+          userSelect: "none",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Left column: back + pill, ready copy, actions. */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          height: "100%",
+          minHeight: "inherit",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          maxWidth: "min(50%, 540px)",
+          padding: "56px 0 64px clamp(14px, 3vw, 44px)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            alignSelf: "flex-start",
+          }}
+        >
+          {canBack && (
+            <button
+              type="button"
+              data-luca-onboarding-preview-back
+              onClick={onBack}
+              style={{
+                cursor: "pointer",
+                background: "transparent",
+                border: "none",
+                padding: "4px 6px",
+                fontSize: 13.5,
+                color: HERO_INK_2,
+              }}
+            >
+              ← Back
+            </button>
+          )}
           <span
-            data-luca-onboarding-chip="recommended"
+            data-luca-onboarding-preview-progress
             style={{
-              fontSize: 10,
-              fontWeight: 600,
-              padding: "1px 7px",
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "5px 13px",
               borderRadius: 999,
-              color: accent,
-              border: `1px solid ${accent}`,
+              fontSize: 12,
+              letterSpacing: "0.01em",
+              color: HERO_INK_2,
+              background: "rgba(255, 255, 255, 0.5)",
+              border: "1px solid rgba(43, 48, 58, 0.1)",
+              WebkitBackdropFilter: "blur(8px)",
+              backdropFilter: "blur(8px)",
             }}
           >
-            Recommended
+            Onboarding{total ? ` · ${step} of ${total}` : ""}
           </span>
+        </div>
+
+        <h1
+          style={{
+            ...LUCA_BRAND_DISPLAY_STYLE,
+            margin: "20px 0 0",
+            fontSize: "clamp(34px, 4.6vw, 52px)",
+            lineHeight: 1.05,
+            fontWeight: 600,
+            color: HERO_INK,
+          }}
+        >
+          {title}
+          <span style={{ color: HERO_ACCENT }}>.</span>
+        </h1>
+        <p
+          style={{
+            margin: "16px 0 0",
+            maxWidth: 380,
+            fontSize: 15.5,
+            lineHeight: 1.55,
+            color: HERO_INK_2,
+          }}
+        >
+          {summary}
+        </p>
+
+        <button
+          type="button"
+          data-luca-onboarding-cta="primary"
+          className="luca-material-pressable"
+          onClick={onPrimary}
+          style={{
+            marginTop: 32,
+            alignSelf: "flex-start",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 18,
+            minWidth: 300,
+            cursor: onPrimary ? "pointer" : "default",
+            padding: "17px 14px 17px 26px",
+            borderRadius: 18,
+            border: "1px solid rgba(255, 255, 255, 0.55)",
+            fontSize: 16,
+            fontWeight: 600,
+            letterSpacing: "0.01em",
+            color: "#ffffff",
+            textShadow: "0 1px 1px rgba(52, 92, 148, 0.35)",
+            background:
+              "linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 34%, rgba(255, 255, 255, 0) 55%), " +
+              "linear-gradient(150deg, #9cc8ef 0%, #74a4da 50%, #5d8ecb 100%)",
+            boxShadow:
+              "0 20px 44px rgba(96, 140, 202, 0.5), 0 3px 10px rgba(96, 140, 202, 0.28), " +
+              "inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -10px 22px rgba(70, 110, 172, 0.3)",
+            WebkitBackdropFilter: "blur(8px) saturate(1.3)",
+            backdropFilter: "blur(8px) saturate(1.3)",
+          }}
+        >
+          {primaryCta}
+          <span
+            aria-hidden="true"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 34,
+              height: 34,
+              borderRadius: 999,
+              fontSize: 17,
+              lineHeight: 1,
+              color: "#ffffff",
+              background:
+                "linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.12) 100%)",
+              boxShadow:
+                "inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -3px 8px rgba(70, 110, 172, 0.28)",
+            }}
+          >
+            →
+          </span>
+        </button>
+
+        {secondaryCta && (
+          <button
+            type="button"
+            data-luca-onboarding-cta="secondary"
+            onClick={onSecondary}
+            style={{
+              marginTop: 16,
+              alignSelf: "flex-start",
+              cursor: onSecondary ? "pointer" : "default",
+              background: "transparent",
+              border: "none",
+              padding: "4px 2px",
+              fontSize: 14,
+              fontWeight: 500,
+              color: HERO_INK_2,
+            }}
+          >
+            {secondaryCta}
+          </button>
         )}
-      </span>
-      <span style={{ fontSize: 12, lineHeight: 1.4, color: textSecondary }}>
-        {option.description}
-      </span>
-    </button>
+      </div>
+    </section>
   );
 }
+
 
 /**
  * ConnectorTile — one compact, selectable tool-app card for the "Connect now"
@@ -703,403 +2188,180 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
   audienceMode = "basic",
   selectedOptionId,
   onSelectOption,
-  onPreviewOption,
   onPrimary,
   onSecondary,
-  presenceState,
-  nameValue,
-  onNameChange,
-  materialValue,
-  onMaterialChange,
   onConnectorSelectionsChange,
   canConnectTools,
   onConnectorConnect,
-  skinId,
-  hostKind,
   reducedMotion,
-  reducedTransparency,
   faceSrc,
+  stepIndex,
+  stepTotal,
+  onLearnMore,
+  canGoBack,
+  onBack,
+  startupSurfaceSelections,
+  onStartupSurfacesChange,
   className,
   style,
 }) => {
   const copy = getPremiumOnboardingCopy(audienceMode).screens[screenId];
+
+  // Welcome is a bespoke light hero (founder mockup), not the shared card
+  // layout — it opens onboarding in the same glacier world as the boot.
+  if (screenId === "welcome") {
+    return (
+      <WelcomeHero
+        title={copy.title}
+        summary={copy.summary}
+        stepIndex={stepIndex}
+        stepTotal={stepTotal}
+        onPrimary={onPrimary}
+        onLearnMore={onLearnMore}
+        faceSrc={faceSrc}
+        reducedMotion={reducedMotion}
+        className={className}
+        style={style}
+      />
+    );
+  }
   const entry = getPremiumOnboardingScreenEntry(screenId);
-  const presence = presenceState ?? getLucaOnboardingScreenPresence(screenId);
   const activeOptionId = selectedOptionId ?? entry.defaultOptionId;
   const { primaryOptions, advancedOptions, advancedShownByDefault } =
     getLucaOnboardingDisclosure(audienceMode, copy.options);
 
-  const presenceProps = {
-    skinId,
-    hostKind,
-    reducedMotion,
-    reducedTransparency,
-    faceSrc,
-  } as const;
+  // Environment is the second bespoke light screen (founder mockup): the
+  // "Choose your environment" skin picker on the same glacier as welcome.
+  if (screenId === "environment") {
+    return (
+      <EnvironmentHero
+        title={copy.title}
+        summary={copy.summary}
+        options={primaryOptions}
+        selectedOptionId={activeOptionId}
+        onSelectOption={onSelectOption}
+        onPrimary={onPrimary}
+        onSecondary={onSecondary}
+        primaryCta={copy.primaryCta}
+        secondaryCta={copy.secondaryCta}
+        stepIndex={stepIndex}
+        stepTotal={stepTotal}
+        canBack={canGoBack}
+        onBack={onBack}
+        className={className}
+        style={style}
+      />
+    );
+  }
 
-  const heroPresence =
-    presence === "identity" ? (
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
-        <LucaPresence
-          state="identity"
-          size={SCREEN_FACE_SIZE[screenId] ?? 104}
-          label="Luca"
-          wake={screenId === "welcome"}
-          warm={screenId === "finish"}
-          breathing
-          {...presenceProps}
-        />
-      </div>
-    ) : presence === "voice" ? (
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
-        <LucaPresence state="voice" size={96} label="Luca voice" {...presenceProps} />
-      </div>
-    ) : null;
+  // Presence is the third bespoke light screen: the surface picker rides the
+  // same glacier chrome (HeroFrame) as welcome + environment.
+  if (screenId === "presence") {
+    return (
+      <PresenceHero
+        title={copy.title}
+        summary={copy.summary}
+        options={[...primaryOptions, ...advancedOptions]}
+        startupSurfaceSelections={startupSurfaceSelections}
+        onStartupSurfacesChange={onStartupSurfacesChange}
+        onPrimary={onPrimary}
+        onSecondary={onSecondary}
+        primaryCta={copy.primaryCta}
+        secondaryCta={copy.secondaryCta}
+        stepIndex={stepIndex}
+        stepTotal={stepTotal}
+        canBack={canGoBack}
+        onBack={onBack}
+        reassurance={copy.reassurance}
+        faceSrc={faceSrc}
+        reducedMotion={reducedMotion}
+        className={className}
+        style={style}
+      />
+    );
+  }
 
-  return (
-    <section
-      data-luca-onboarding-screen={screenId}
-      data-luca-onboarding-category={entry.category}
-      aria-label={copy.accessibilityLabel ?? copy.title}
-      className={className}
-      style={{
-        // The surface-picker ("presence") needs room for 5 cards across on
-        // desktop; the connect_tools screen widens for its 2-up connector grid;
-        // other text-led screens stay narrow for readability.
-        maxWidth:
-          screenId === "presence"
-            ? 980
-            : screenId === "environment"
-              ? 1040
-              : screenId === "connect_tools"
-                ? 900
-                : 560,
-        margin: "0 auto",
-        color: textPrimary,
-        ...style,
-      }}
-    >
-      {heroPresence}
-
-      {copy.eyebrow && (
-        <p
-          data-luca-onboarding-eyebrow
-          style={{
-            margin: 0,
-            fontSize: 12,
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: textTertiary,
-          }}
-        >
-          {copy.eyebrow}
-        </p>
-      )}
-
-      <h2
-        style={{
-          margin: copy.eyebrow ? "6px 0 0" : 0,
-          fontSize: 26,
-          lineHeight: 1.15,
-          ...(copy.title.includes("LucaOS")
-            ? LUCA_BRAND_DISPLAY_STYLE
-            : {
-                letterSpacing: "-0.02em",
-                fontWeight: 650,
-              }),
-        }}
+  // Trust + route screens (permission_style, memory_boundaries,
+  // intelligence_route, connect_tools) share the centered ChoiceHero on the
+  // same glacier; connect_tools reveals the connector panel when the user
+  // chooses to connect now.
+  if (
+    screenId === "permission_style" ||
+    screenId === "memory_boundaries" ||
+    screenId === "intelligence_route" ||
+    screenId === "connect_tools"
+  ) {
+    return (
+      <ChoiceHero
+        screenId={screenId}
+        category={entry.category}
+        title={copy.title}
+        summary={copy.summary}
+        options={primaryOptions}
+        advancedOptions={advancedOptions}
+        advancedShownByDefault={advancedShownByDefault}
+        selectedOptionId={activeOptionId}
+        onSelectOption={onSelectOption}
+        onPrimary={onPrimary}
+        onSecondary={onSecondary}
+        primaryCta={copy.primaryCta}
+        secondaryCta={copy.secondaryCta}
+        stepIndex={stepIndex}
+        stepTotal={stepTotal}
+        canBack={canGoBack}
+        onBack={onBack}
+        footnote={copy.reassurance}
+        className={className}
+        style={style}
       >
-        {copy.title}
-      </h2>
-
-      <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.5, color: textSecondary }}>
-        {copy.summary}
-      </p>
-
-      {copy.reassurance && (
-        <p
-          role="note"
-          data-luca-onboarding-reassurance
-          style={{
-            margin: "12px 0 0",
-            fontSize: 13,
-            lineHeight: 1.5,
-            color: textTertiary,
-          }}
-        >
-          {copy.reassurance}
-        </p>
-      )}
-
-      {screenId === "welcome" && onNameChange && (
-        <label
-          data-luca-onboarding-name
-          style={{ display: "block", margin: "18px 0 0", textAlign: "left" }}
-        >
-          <span
-            style={{
-              display: "block",
-              fontSize: 13,
-              fontWeight: 600,
-              color: textSecondary,
-              marginBottom: 6,
-            }}
+        {screenId === "connect_tools" && activeOptionId === "connect_now" && (
+          <div
+            style={
+              {
+                width: "100%",
+                maxWidth: 620,
+                marginTop: 4,
+                textAlign: "left",
+                // The connector panel reads scoped --luca-* tokens (dark-skin
+                // values); re-pin text + accent to the light hero ink so it
+                // stays readable on the glacier.
+                "--luca-text-primary": HERO_INK,
+                "--luca-text-secondary": HERO_INK_2,
+                "--luca-text-tertiary": "#8b929d",
+                "--luca-accent-primary": HERO_ACCENT,
+              } as React.CSSProperties
+            }
           >
-            What should I call you? (optional)
-          </span>
-          <input
-            type="text"
-            value={nameValue ?? ""}
-            onChange={(event) => onNameChange(event.target.value)}
-            autoComplete="off"
-            placeholder="Your name"
-            data-luca-material-role="control"
-            style={{
-              ...lucaMaterialControlStyle,
-              width: "100%",
-              padding: "11px 14px",
-              borderRadius: 12,
-              borderWidth: 1,
-              borderStyle: "solid",
-              fontSize: 15,
-            }}
-          />
-        </label>
-      )}
-
-      {screenId === "environment" && onMaterialChange && materialValue && (
-        <div
-          data-luca-onboarding-material
-          style={{ margin: "18px 0 0", textAlign: "left", display: "grid", gap: 12 }}
-        >
-          {[
-            {
-              key: "opacity" as const,
-              label: "Background opacity",
-              display: `${Math.round(materialValue.opacity * 100)}%`,
-              min: 0, max: 100, value: Math.round(materialValue.opacity * 100),
-              toChange: (v: number) => ({ opacity: v / 100 }),
-            },
-            {
-              key: "blur" as const,
-              label: "Background blur",
-              display: `${materialValue.blur}px`,
-              min: 0, max: 40, value: materialValue.blur,
-              toChange: (v: number) => ({ blur: v }),
-            },
-          ].map((slider) => (
-            <label key={slider.key} style={{ display: "block" }}>
-              <span
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: textSecondary,
-                  marginBottom: 6,
-                }}
-              >
-                <span>{slider.label}</span>
-                <span>{slider.display}</span>
-              </span>
-              <input
-                type="range"
-                min={slider.min}
-                max={slider.max}
-                value={slider.value}
-                onChange={(event) =>
-                  onMaterialChange(slider.toChange(Number(event.target.value)))
-                }
-                style={{ width: "100%", accentColor: "var(--luca-accent-primary)" }}
-              />
-            </label>
-          ))}
-        </div>
-      )}
-
-      {copy.options && copy.options.length > 0 && screenId === "environment" ? (
-        <div
-          role={entry.accessibilityRole === "radiogroup" ? "radiogroup" : "group"}
-          aria-label={copy.detailsLabel ?? copy.title}
-          data-luca-onboarding-options
-          data-luca-onboarding-options-layout="skin-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-            gap: 12,
-            margin: "18px 0 0",
-          }}
-        >
-          {[...primaryOptions, ...advancedOptions].map((option) => (
-            <SkinOptionTile
-              key={option.id}
-              option={option}
-              checked={option.id === activeOptionId}
-              onSelect={onSelectOption}
-              onPreview={onPreviewOption}
+            <OnboardingConnectorPanel
+              onSelectionChange={onConnectorSelectionsChange}
+              canConnect={canConnectTools}
+              onConnect={onConnectorConnect}
             />
-          ))}
-        </div>
-      ) : copy.options && copy.options.length > 0 && screenId === "presence" ? (
-        // "Choose how Luca appears": showcase every surface as a compact
-        // mockup tile in a responsive grid that fits one screen (no scroll, no
-        // progressive disclosure). Radio semantics + option hooks are kept.
-        <div
-          role={entry.accessibilityRole === "radiogroup" ? "radiogroup" : "group"}
-          aria-label={copy.detailsLabel ?? copy.title}
-          data-luca-onboarding-options
-          data-luca-onboarding-options-layout="surface-grid"
-          // Responsive: stacked on mobile, 2-up on small screens, all 5 across on
-          // desktop — so the whole screen fits without scrolling and the cards
-          // get comfortable width instead of being crushed.
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3"
-          style={{ margin: "18px 0 0" }}
-        >
-          {[...primaryOptions, ...advancedOptions].map((option) => (
-            <SurfaceMockupTile
-              key={option.id}
-              option={option}
-              checked={option.id === activeOptionId}
-              onSelect={onSelectOption}
-              onPreview={onPreviewOption}
-            />
-          ))}
-        </div>
-      ) : copy.options && copy.options.length > 0 ? (
-        <div
-          role={entry.accessibilityRole === "radiogroup" ? "radiogroup" : "group"}
-          aria-label={copy.detailsLabel ?? copy.title}
-          data-luca-onboarding-options
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 10,
-            margin: "20px 0 0",
-          }}
-        >
-          {primaryOptions.map((option) => (
-            <OptionCard
-              key={option.id}
-              option={option}
-              checked={option.id === activeOptionId}
-              onSelect={onSelectOption}
-                  onPreview={onPreviewOption}
-            />
-          ))}
-
-          {/* Progressive disclosure: Basic collapses advanced options behind a
-              native, stateless disclosure; Pro / Creator show them inline. The
-              advanced radio cards stay inside the radiogroup either way. */}
-          {advancedOptions.length > 0 &&
-            (advancedShownByDefault ? (
-              advancedOptions.map((option) => (
-                <OptionCard
-                  key={option.id}
-                  option={option}
-                  checked={option.id === activeOptionId}
-                  onSelect={onSelectOption}
-                  onPreview={onPreviewOption}
-                />
-              ))
-            ) : (
-              <details data-luca-onboarding-advanced>
-                <summary
-                  data-luca-onboarding-advanced-toggle
-                  style={{
-                    cursor: "pointer",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: textSecondary,
-                    padding: "4px 2px",
-                  }}
-                >
-                  Advanced options
-                </summary>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 10,
-                    marginTop: 10,
-                  }}
-                >
-                  {advancedOptions.map((option) => (
-                    <OptionCard
-                      key={option.id}
-                      option={option}
-                      checked={option.id === activeOptionId}
-                      onSelect={onSelectOption}
-                  onPreview={onPreviewOption}
-                    />
-                  ))}
-                </div>
-              </details>
-            ))}
-        </div>
-      ) : null}
-
-      {/* Connect-now path: reveal the expandable tool-app connector cards once
-          the user chooses to connect now. Inert/honest — queues for Settings. */}
-      {screenId === "connect_tools" && activeOptionId === "connect_now" && (
-        <OnboardingConnectorPanel
-          onSelectionChange={onConnectorSelectionsChange}
-          canConnect={canConnectTools}
-          onConnect={onConnectorConnect}
-        />
-      )}
-
-      <div
-        data-luca-onboarding-actions
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          margin: "26px 0 0",
-        }}
-      >
-        <button
-          type="button"
-          data-luca-onboarding-cta="primary"
-          className="luca-material-pressable"
-          onClick={onPrimary}
-          style={{
-            cursor: onPrimary ? "pointer" : "default",
-            padding: "11px 22px",
-            borderRadius: 12,
-            border: "none",
-            fontSize: 15,
-            fontWeight: 600,
-            color: "var(--luca-background-base)",
-            background: accent,
-            boxShadow: "var(--luca-shadow-soft)",
-          }}
-        >
-          {copy.primaryCta}
-        </button>
-        {copy.secondaryCta && (
-          <button
-            type="button"
-            data-luca-onboarding-cta="secondary"
-            data-luca-material-role="control"
-            className="luca-shell-control"
-            onClick={onSecondary}
-            style={{
-              ...lucaMaterialControlStyle,
-              cursor: onSecondary ? "pointer" : "default",
-              padding: "11px 18px",
-              borderRadius: 12,
-              borderWidth: 1,
-              borderStyle: "solid",
-              fontSize: 15,
-              fontWeight: 500,
-            }}
-          >
-            {copy.secondaryCta}
-          </button>
+          </div>
         )}
-      </div>
-    </section>
+      </ChoiceHero>
+    );
+  }
+
+  // Finish: the completion hero (welcome family) — the face at its warmest,
+  // the ready copy, and the premium Enter LucaOS action.
+  return (
+    <FinishHero
+      title={copy.title}
+      summary={copy.summary}
+      accessibilityLabel={copy.accessibilityLabel}
+      onPrimary={onPrimary}
+      onSecondary={onSecondary}
+      primaryCta={copy.primaryCta}
+      secondaryCta={copy.secondaryCta}
+      stepIndex={stepIndex}
+      stepTotal={stepTotal}
+      canBack={canGoBack}
+      onBack={onBack}
+      faceSrc={faceSrc}
+      reducedMotion={reducedMotion}
+      className={className}
+      style={style}
+    />
   );
 };
-
-export default LucaOnboardingScreen;

@@ -13,6 +13,7 @@ import {
   lucaOnboardingFlowGoNext,
   lucaOnboardingFlowRequiresConsent,
   lucaOnboardingFlowSetOption,
+  lucaOnboardingFlowSetStartupSurfaces,
   lucaOnboardingFlowSkip,
 } from "./lucaOnboardingFlowEngine";
 import { getPremiumOnboardingDefaultSelections } from "./onboardingPremiumScreenMap";
@@ -28,12 +29,46 @@ describe("lucaOnboardingFlowEngine", () => {
     expect(getLucaOnboardingFlowTotal()).toBe(8);
   });
 
+  it("seeds the recommended startup surface as active and validates toggles", () => {
+    const state = createLucaOnboardingFlowState();
+    expect(state.startupSurfaceSelections).toEqual(["minichat"]);
+
+    // Unknown ids are dropped, duplicates collapse, order is preserved.
+    const toggled = lucaOnboardingFlowSetStartupSurfaces(state, [
+      "minichat",
+      "widget",
+      "widget",
+      "dashboard", // no longer a presence option — dropped
+      "not-real",
+    ]);
+    expect(toggled.startupSurfaceSelections).toEqual(["minichat", "widget"]);
+    // Legacy single presence selection tracks the primary (first active).
+    expect(toggled.selectedOptions.presence).toBe("minichat");
+
+    // Voice wins the primary slot whenever it is active.
+    const voiced = lucaOnboardingFlowSetStartupSurfaces(toggled, [
+      "minichat",
+      "voice",
+    ]);
+    expect(voiced.selectedOptions.presence).toBe("voice");
+
+    // No change returns the same reference.
+    expect(
+      lucaOnboardingFlowSetStartupSurfaces(voiced, ["minichat", "voice"]),
+    ).toBe(voiced);
+
+    // Emptying the set keeps the previous primary (preference only).
+    const emptied = lucaOnboardingFlowSetStartupSurfaces(voiced, []);
+    expect(emptied.startupSurfaceSelections).toEqual([]);
+    expect(emptied.selectedOptions.presence).toBe("voice");
+  });
+
   it("can start without seeding defaults and merges only valid initial selections", () => {
     const state = createLucaOnboardingFlowState({
       seedDefaults: false,
-      initialSelections: { environment: "carbon", presence: "not-real" },
+      initialSelections: { environment: "dark", presence: "not-real" },
     });
-    expect(state.selectedOptions.environment).toBe("carbon");
+    expect(state.selectedOptions.environment).toBe("dark");
     // invalid option ignored
     expect(state.selectedOptions.presence).toBeUndefined();
   });
@@ -94,16 +129,16 @@ describe("lucaOnboardingFlowEngine", () => {
 
   it("setOption records valid options immutably and ignores invalid ones", () => {
     const state = createLucaOnboardingFlowState();
-    const next = lucaOnboardingFlowSetOption(state, "environment", "flow");
+    const next = lucaOnboardingFlowSetOption(state, "environment", "system");
     expect(next).not.toBe(state);
-    expect(next.selectedOptions.environment).toBe("flow");
+    expect(next.selectedOptions.environment).toBe("system");
     // original untouched (immutability)
-    expect(state.selectedOptions.environment).toBe("carbon");
+    expect(state.selectedOptions.environment).toBe("light");
 
     // invalid option -> same reference
     expect(lucaOnboardingFlowSetOption(state, "environment", "nope")).toBe(state);
     // re-selecting the same value -> same reference
-    const same = lucaOnboardingFlowSetOption(next, "environment", "flow");
+    const same = lucaOnboardingFlowSetOption(next, "environment", "system");
     expect(same).toBe(next);
   });
 

@@ -43,11 +43,11 @@ describe("LucaOnboardingShell", () => {
     expect(without).not.toContain('data-luca-presence="ambient"');
   });
 
-  it("falls back to Carbon for an invalid skin id", () => {
+  it("falls back to Pearl for an invalid skin id", () => {
     const markup = renderToStaticMarkup(
       <LucaOnboardingShell selectedSkinId="not-a-skin">x</LucaOnboardingShell>,
     );
-    expect(markup).toContain('data-luca-onboarding-skin="carbon"');
+    expect(markup).toContain('data-luca-onboarding-skin="pearl"');
   });
 
   it("does not mutate document root / body styles when mounted", () => {
