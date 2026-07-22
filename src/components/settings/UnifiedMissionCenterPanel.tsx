@@ -567,10 +567,55 @@ export const UnifiedMissionCenterPanel: React.FC<
                     Steps {tape.steps.length} · Verifications{" "}
                     {tape.verification.length} · Guards {tape.guard.length}
                   </p>
+                  {tape.steps.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      <p
+                        className="text-[10px] font-semibold uppercase tracking-wide"
+                        style={{ color: settingsSurfaceTokens.textTertiary }}
+                      >
+                        Step timeline (tape replay)
+                      </p>
+                      {(compact ? tape.steps.slice(-4) : tape.steps).map(
+                        (step, i) => {
+                          const ver = tape.verification.find(
+                            (v) => v.stepId === step.stepId && v.passed,
+                          );
+                          return (
+                            <p
+                              key={`${step.stepId}-${i}`}
+                              className="font-mono text-[10px] leading-relaxed opacity-90"
+                            >
+                              <span
+                                style={{
+                                  color:
+                                    step.status === "failed"
+                                      ? "var(--luca-danger, #f07178)"
+                                      : step.status === "verified" || ver
+                                        ? "var(--luca-success, #4fbf7a)"
+                                        : settingsSurfaceTokens.textSecondary,
+                                }}
+                              >
+                                [{step.status}]
+                              </span>{" "}
+                              {step.stepId}: {(step.goal || "").slice(0, 72)}
+                            </p>
+                          );
+                        },
+                      )}
+                      {compact && tape.steps.length > 4 && (
+                        <p
+                          className="text-[10px]"
+                          style={{ color: settingsSurfaceTokens.textTertiary }}
+                        >
+                          +{tape.steps.length - 4} earlier steps
+                        </p>
+                      )}
+                    </div>
+                  )}
                   {!compact &&
                     tape.verification.slice(-3).map((v, i) => (
                       <p
-                        key={`${v.stepId}-${i}`}
+                        key={`${v.stepId}-v-${i}`}
                         className="font-mono text-[10px] opacity-80"
                       >
                         {v.passed ? "✓" : "✗"} {v.stepId}:{" "}
