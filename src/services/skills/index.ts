@@ -7,3 +7,6 @@ export * from "./SkillMarketplaceService";
 export * from "./SkillRegistryService";
 export * from "./skillMarketplaceSandbox";
 export * from "./skillMarketplaceLinkSync";
+export * from "./skillMarketplaceDiscovery";
+export * from "./skillMarketplaceInvokeSim";
+export * from "./skillMarketplaceProductBridge";

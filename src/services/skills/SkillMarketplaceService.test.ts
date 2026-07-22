@@ -96,4 +96,24 @@ describe("SkillMarketplaceService", () => {
     expect(applied.ok).toBe(true);
     expect(other.listCatalog()).toHaveLength(1);
   });
+
+  it("discovers and simulates invoke without executing", () => {
+    const registry = new SkillRegistryService(memoryStore());
+    const market = new SkillMarketplaceService(registry);
+    market.importLoose({
+      skills: [
+        { name: "FindMe", description: "searchable", version: "1.0.0", tools: ["x"] },
+        { name: "Other", description: "nope", version: "1.0.0", tools: ["y"] },
+      ],
+    });
+    const found = market.discover({ text: "FindMe" });
+    expect(found.totalMatched).toBe(1);
+
+    const skillId = market.listCatalog().find((s) => s.name === "FindMe")!
+      .skillId;
+    const sim = market.simulateInvoke({ skillId, intendedTool: "x" });
+    expect(sim.executed).toBe(false);
+    expect(sim.simulated).toBe(true);
+    expect(sim.wouldInvoke).toBe(false);
+  });
 });

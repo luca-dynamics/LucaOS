@@ -31,6 +31,16 @@ import {
   type LucaLinkLike,
   type SkillCatalogSyncEnvelope,
 } from "./skillMarketplaceLinkSync";
+import {
+  discoverSkills,
+  type SkillCatalogDiscoveryQuery,
+  type SkillCatalogDiscoveryResult,
+} from "./skillMarketplaceDiscovery";
+import {
+  simulateSkillInvoke,
+  type SkillInvokeSimulationInput,
+  type SkillInvokeSimulationResult,
+} from "./skillMarketplaceInvokeSim";
 
 export interface SkillMarketplaceImportResult {
   ok: boolean;
@@ -56,6 +66,13 @@ export class SkillMarketplaceService {
 
   listCatalog(): SkillRegistryRecord[] {
     return this.registry.listSkills();
+  }
+
+  /**
+   * Richer discovery with facets (text, lifecycle, risk, source, capability).
+   */
+  discover(query?: SkillCatalogDiscoveryQuery): SkillCatalogDiscoveryResult {
+    return discoverSkills(this.registry.listSkills(), query);
   }
 
   getDiagnostics() {
@@ -280,6 +297,31 @@ export class SkillMarketplaceService {
   ): { ok: boolean; reason?: string; envelope?: SkillCatalogSyncEnvelope } {
     return pushSkillCatalogViaLucaLink(link, this, options);
   }
+
+  /**
+   * Permission-scoped invoke simulation — never executes tools.
+   */
+  simulateInvoke(
+    input: SkillInvokeSimulationInput,
+  ): SkillInvokeSimulationResult {
+    const record = this.registry
+      .listSkills()
+      .find((s) => s.skillId === input.skillId);
+    const dryRun = record
+      ? this.dryRun(input.skillId, {
+          tier: input.tier,
+          action: "invoke",
+        })
+      : null;
+    const sandboxPlan = record ? this.planSandbox(input.skillId) : null;
+    return simulateSkillInvoke({
+      record,
+      dryRun,
+      sandboxPlan,
+      intendedTool: input.intendedTool,
+      argKeys: input.argKeys,
+    });
+  }
 }
 
 let singleton: SkillMarketplaceService | null = null;
@@ -294,6 +336,8 @@ export function getSkillMarketplaceService(
 
 export const skillMarketplaceService = {
   listCatalog: () => getSkillMarketplaceService().listCatalog(),
+  discover: (query?: SkillCatalogDiscoveryQuery) =>
+    getSkillMarketplaceService().discover(query),
   getDiagnostics: () => getSkillMarketplaceService().getDiagnostics(),
   exportCatalog: () => getSkillMarketplaceService().exportCatalog(),
   importLoose: (
@@ -318,4 +362,6 @@ export const skillMarketplaceService = {
     link: LucaLinkLike | null | undefined,
     options?: { fromDeviceId?: string },
   ) => getSkillMarketplaceService().pushViaLucaLink(link, options),
+  simulateInvoke: (input: SkillInvokeSimulationInput) =>
+    getSkillMarketplaceService().simulateInvoke(input),
 };

@@ -12,6 +12,10 @@ import {
   type SkillMarketplaceDryRun,
 } from "../../services/skills/SkillMarketplaceService";
 import type { PersonalIntelligenceSkillSandboxPlan } from "../../personal-intelligence/skillSandbox/skillSandboxTypes";
+import type { SkillInvokeSimulationResult } from "../../services/skills/skillMarketplaceInvokeSim";
+import { ensureSkillMarketplaceProductBridge } from "../../services/skills/skillMarketplaceProductBridge";
+import type { SkillContinuityLifecycleState } from "../../types/skillContinuity";
+import type { LucaSkillRiskLevel } from "../../services/skills/SkillManifest";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 export interface UnifiedSkillMarketplacePanelProps {
@@ -27,10 +31,19 @@ export const UnifiedSkillMarketplacePanel: React.FC<
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [lifecycleFilter, setLifecycleFilter] = useState<
+    SkillContinuityLifecycleState | "all"
+  >("all");
+  const [riskFilter, setRiskFilter] = useState<LucaSkillRiskLevel | "all">(
+    "all",
+  );
   const [importText, setImportText] = useState("");
   const [dryRun, setDryRun] = useState<SkillMarketplaceDryRun | null>(null);
   const [sandboxPlan, setSandboxPlan] =
     useState<PersonalIntelligenceSkillSandboxPlan | null>(null);
+  const [invokeSim, setInvokeSim] =
+    useState<SkillInvokeSimulationResult | null>(null);
+  const [matchedCount, setMatchedCount] = useState(0);
 
   const refresh = useCallback(() => {
     setLoading(true);
@@ -48,23 +61,32 @@ export const UnifiedSkillMarketplacePanel: React.FC<
     refresh();
   }, [refresh]);
 
+  // Soft-install LucaLink/eventBus catalog sync hooks once UI is open.
+  useEffect(() => {
+    void ensureSkillMarketplaceProductBridge().catch(() => undefined);
+  }, []);
+
   const diagnostics = useMemo(
     () => skillMarketplaceService.getDiagnostics(),
     [skills],
   );
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = q
-      ? skills.filter(
-          (s) =>
-            s.name.toLowerCase().includes(q) ||
-            s.skillId.toLowerCase().includes(q) ||
-            s.source.toLowerCase().includes(q),
-        )
-      : skills;
-    return compact ? list.slice(0, 6) : list;
-  }, [skills, query, compact]);
+  const discovery = useMemo(
+    () =>
+      skillMarketplaceService.discover({
+        text: query,
+        lifecycle: lifecycleFilter,
+        riskLevel: riskFilter,
+        sort: "lifecycle",
+        limit: compact ? 6 : undefined,
+      }),
+    [skills, query, lifecycleFilter, riskFilter, compact],
+  );
+
+  const filtered = discovery.items;
+  useEffect(() => {
+    setMatchedCount(discovery.totalMatched);
+  }, [discovery.totalMatched]);
 
   const inputClass =
     "w-full rounded-lg border bg-transparent px-2.5 py-1.5 text-[11px] outline-none";
@@ -139,6 +161,7 @@ export const UnifiedSkillMarketplacePanel: React.FC<
     const result = skillMarketplaceService.dryRun(skillId);
     setDryRun(result);
     setSandboxPlan(null);
+    setInvokeSim(null);
     setNote(result?.summary ?? "Skill not found.");
   };
 
@@ -146,11 +169,24 @@ export const UnifiedSkillMarketplacePanel: React.FC<
     const plan = skillMarketplaceService.planSandbox(skillId);
     setSandboxPlan(plan);
     setDryRun(null);
+    setInvokeSim(null);
     setNote(
       plan
         ? `Sandbox plan: ${plan.status} · ${plan.requiredPermissions.length} permission(s) · execution disabled.`
         : "Skill not found.",
     );
+  };
+
+  const handleSimulateInvoke = (skillId: string) => {
+    const sim = skillMarketplaceService.simulateInvoke({
+      skillId,
+      intendedTool: "primary",
+      tier: "normal",
+    });
+    setInvokeSim(sim);
+    setDryRun(null);
+    setSandboxPlan(null);
+    setNote(sim.reason);
   };
 
   const handlePackageSync = async () => {
@@ -305,19 +341,53 @@ export const UnifiedSkillMarketplacePanel: React.FC<
           className="text-[11px]"
           style={{ color: settingsSurfaceTokens.textSecondary }}
         >
-          {diagnostics.totalSkills} skill(s) · {diagnostics.enabledSkills}{" "}
-          enabled · {diagnostics.quarantinedSkills} quarantined ·{" "}
-          {diagnostics.skillsMissingProvenance} missing provenance
+          {diagnostics.totalSkills} skill(s) · showing {matchedCount} ·{" "}
+          {diagnostics.enabledSkills} enabled · {diagnostics.quarantinedSkills}{" "}
+          quarantined · {diagnostics.skillsMissingProvenance} missing provenance
         </p>
 
         <div className="flex flex-wrap gap-2">
           <input
             className={`${inputClass} min-w-[160px] flex-1`}
             style={inputStyle}
-            placeholder="Search catalog…"
+            placeholder="Search name, source, capability…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
+          {!compact && (
+            <>
+              <select
+                className={inputClass}
+                style={{ ...inputStyle, width: "auto", minWidth: 120 }}
+                value={lifecycleFilter}
+                onChange={(e) =>
+                  setLifecycleFilter(
+                    e.target.value as SkillContinuityLifecycleState | "all",
+                  )
+                }
+              >
+                <option value="all">All lifecycle</option>
+                <option value="discovered">discovered</option>
+                <option value="enabled">enabled</option>
+                <option value="disabled">disabled</option>
+                <option value="quarantined">quarantined</option>
+              </select>
+              <select
+                className={inputClass}
+                style={{ ...inputStyle, width: "auto", minWidth: 110 }}
+                value={riskFilter}
+                onChange={(e) =>
+                  setRiskFilter(e.target.value as LucaSkillRiskLevel | "all")
+                }
+              >
+                <option value="all">All risk</option>
+                <option value="low">low</option>
+                <option value="medium">medium</option>
+                <option value="high">high</option>
+                <option value="critical">critical</option>
+              </select>
+            </>
+          )}
           <button
             type="button"
             disabled={busy}
@@ -433,6 +503,18 @@ export const UnifiedSkillMarketplacePanel: React.FC<
                   >
                     Sandbox
                   </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => handleSimulateInvoke(skill.skillId)}
+                    className="rounded border px-1.5 py-0.5 text-[10px] disabled:opacity-50"
+                    style={{
+                      borderColor: settingsSurfaceTokens.borderSubtle,
+                      color: settingsSurfaceTokens.textSecondary,
+                    }}
+                  >
+                    Sim invoke
+                  </button>
                   {skill.lifecycleState !== "enabled" && (
                     <button
                       type="button"
@@ -507,6 +589,33 @@ export const UnifiedSkillMarketplacePanel: React.FC<
               use: {dryRun.useCheck.allowed ? "allowed" : "blocked"} · gate:{" "}
               {dryRun.lifecycleGate.allowed ? "open" : "blocked"} ·
               executionEnabled: false
+            </p>
+          </div>
+        )}
+
+        {invokeSim && !compact && (
+          <div
+            className="rounded-xl border p-3 space-y-1"
+            style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+          >
+            <p
+              className="text-[11px] font-semibold uppercase tracking-wide"
+              style={{ color: settingsSurfaceTokens.textTertiary }}
+            >
+              Invoke simulation (never executes)
+            </p>
+            <p
+              className="text-[11px]"
+              style={{ color: settingsSurfaceTokens.textSecondary }}
+            >
+              {invokeSim.reason}
+            </p>
+            <p
+              className="font-mono text-[10px]"
+              style={{ color: settingsSurfaceTokens.textTertiary }}
+            >
+              wouldInvoke: {String(invokeSim.wouldInvoke)} · executed: false ·
+              blocked: {invokeSim.blockedBy.slice(0, 4).join(", ")}
             </p>
           </div>
         )}
@@ -616,9 +725,10 @@ export const UnifiedSkillMarketplacePanel: React.FC<
             style={{ color: settingsSurfaceTokens.textTertiary }}
           >
             Catalog format:{" "}
-            <span className="font-mono">luca_skill_catalog_v1</span>. Sandbox
-            dry-run panels remain separate; marketplace never auto-executes
-            tools.
+            <span className="font-mono">luca_skill_catalog_v1</span>. Sync:{" "}
+            <span className="font-mono">luca_skill_sync_v1</span>. Discovery
+            filters + sim invoke stay planning-only; product bridge installs
+            catalog sync hooks when this panel opens.
           </p>
         )}
       </div>
