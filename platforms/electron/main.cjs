@@ -234,7 +234,7 @@ let sensorState = {
 // so they can simply tell us where they landed. A well-known port would invite
 // collisions with other apps and — worse — let a stale LucaOS process keep
 // answering as though it were the live backend.
-const VITE_DEV_PORT = process.env.VITE_DEV_PORT || 3000;  // Frontend dev server
+const VITE_DEV_PORT = process.env.VITE_DEV_PORT || 5822;  // Frontend dev server
 const SERVER_PORT = process.env.SERVER_PORT || 3002;      // Legacy fallback only
 const CORTEX_PORT = process.env.CORTEX_PORT || 8000;      // Legacy fallback only
 // Note: WS_PORT (3003) is only used by backend server.js, not in this Electron main process
@@ -650,10 +650,27 @@ function createWindow() {
         x: savedBounds.x,
         y: savedBounds.y,
         show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
-        // Light glacier base matching the boot surfaces, so any unpainted
-        // frame during the boot -> onboarding handoff shows light, not black.
-        backgroundColor: '#e2edf2',
-        transparent: false,
+        // The Appearance sliders (background opacity/blur) are meant to turn
+        // LucaOS into liquid glass over the user's desktop. The renderer half
+        // has always been built for it: the desktop-native policy sets the root
+        // background to `transparent` and LiquidBackground fades itself out as
+        // opacity rises (see lucaPlatformBackgroundPolicy.ts, which says in as
+        // many words that it is waiting for "the host window configured for
+        // transparency/glass"). Nobody ever configured the host window, so the
+        // sliders uncovered this opaque backgroundColor instead of the desktop
+        // and the feature looked broken.
+        //
+        // The opaque colour was added to stop an unpainted frame flashing black
+        // during boot. That job now belongs to `show: false` — the window is
+        // revealed only on 'renderer-ready' (see launchInterface) — so it is no
+        // longer paying for itself. A fully transparent backgroundColor is
+        // required as well: a solid one paints over the transparency.
+        //
+        // LUCA_OPAQUE_WINDOW=1 restores the old behaviour if a machine's
+        // compositor misbehaves; transparency is construction-time only in
+        // Electron, so it cannot be toggled at runtime.
+        backgroundColor: process.env.LUCA_OPAQUE_WINDOW === '1' ? '#e2edf2' : '#00000000',
+        transparent: process.env.LUCA_OPAQUE_WINDOW !== '1',
         frame: process.platform === 'win32' ? false : true,
         autoHideMenuBar: true,
         // Premium window chrome: no native titlebar. Per platform:
@@ -717,6 +734,19 @@ function createWindow() {
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
         console.error('Failed to load:', errorCode, errorDescription);
     });
+
+    // Dev-only: forward the main renderer's console to the terminal. The widget
+    // window has done this since it was written (windows/createWidgetWindow.cjs)
+    // but the MAIN window never did — so renderer-side boot failures were
+    // invisible exactly when you most need them, and a boot that stalls before
+    // 'renderer-ready' looked identical to one that crashed. Packaged builds
+    // stay quiet. Both the legacy (event, level, message) and the current
+    // single-event signatures are handled.
+    if (!app.isPackaged) {
+        mainWindow.webContents.on('console-message', (event, level, message) => {
+            console.log('[RENDERER]', message ?? event?.message ?? '');
+        });
+    }
 
     mainWindow.webContents.on('dom-ready', () => {
         console.log('DOM Ready');
@@ -1329,6 +1359,28 @@ ipcMain.on('wake-word-triggered', () => {
 
 // CRITICAL: Allow AudioContext to start without user gesture (Global Shortcut fix)
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+
+// --- SINGLE INSTANCE GUARD ---
+// One LucaOS per machine. A second launch spawns a SECOND core server and a
+// SECOND Cortex: double memory and CPU, competing MCP connections, and — worst
+// — two processes writing the same SQLite file.
+//
+// This used to be masked. With fixed ports the second core died on EADDRINUSE,
+// so the collision was an accidental guard. Now that both backends take
+// ephemeral ports there is nothing left to collide with, so the duplicate
+// starts cleanly and silently and the guard has to be explicit. A second launch
+// focuses the window you already have, which is what it meant anyway.
+if (!app.requestSingleInstanceLock()) {
+    console.log('[MAIN] Another LucaOS instance is already running — exiting.');
+    app.quit();
+} else {
+    app.on('second-instance', () => {
+        if (!mainWindow) return;
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+    });
+}
 
 // App Lifecycle
 app.on('ready', () => {

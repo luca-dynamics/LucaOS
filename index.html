@@ -329,14 +329,16 @@
           rgba(255, 255, 255, 0.2) 52%,
           rgba(229, 240, 248, 0.3) 100%
         );
+        /* One soft lift instead of four stacked shadows, and a backdrop that
+           refracts without repainting the glacier behind it — saturate(1.7)
+           plus brightness pushed the colour so hard the card read as a
+           different material from the background it sits on. */
         box-shadow:
-          0 26px 60px rgba(118, 150, 192, 0.24),
-          0 4px 14px rgba(118, 150, 192, 0.12),
-          inset 0 1px 0 rgba(255, 255, 255, 0.92),
-          inset 0 -1px 0 rgba(255, 255, 255, 0.4);
-        -webkit-backdrop-filter: blur(24px) saturate(1.7) brightness(1.06);
-        backdrop-filter: blur(24px) saturate(1.7) brightness(1.06);
-        padding: 6px;
+          0 18px 40px rgba(118, 150, 192, 0.16),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        -webkit-backdrop-filter: blur(22px) saturate(1.25);
+        backdrop-filter: blur(22px) saturate(1.25);
+        padding: 8px;
       }
       /* Refractive rim — a gradient ring painted only on the border, so the
          edge catches light the way a lens edge bends it. */
@@ -365,27 +367,10 @@
         pointer-events: none;
         z-index: 0;
       }
-      /* Specular sweep — the bright bloom off the top-left curve and the
-         cool bounce returning at the lower-right. */
-      .loader-card::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        background:
-          radial-gradient(
-            125% 82% at 10% -12%,
-            rgba(255, 255, 255, 0.6) 0%,
-            rgba(255, 255, 255, 0) 46%
-          ),
-          radial-gradient(
-            95% 62% at 102% 110%,
-            rgba(186, 223, 245, 0.4) 0%,
-            rgba(255, 255, 255, 0) 56%
-          );
-        pointer-events: none;
-        z-index: 0;
-      }
+      /* The specular sweep that used to live here (::after) is deliberately
+         gone. The rim above already says "glass"; a second highlight layer on
+         a 400px card was the accessory to remove — it read as glare, and glare
+         is the opposite of calm. */
       /* Content rides above the lens highlights so the type stays crisp. */
       .loader-check,
       .loader-card-foot {
@@ -395,13 +380,18 @@
       .loader-check {
         display: flex;
         align-items: center;
-        gap: 11px;
-        padding: 8px 11px;
-        border-radius: 10px;
-        transition: opacity 320ms ease, background 320ms ease;
+        gap: 13px;
+        padding: 11px 13px;
+        border-radius: 11px;
+        /* Slower than the eye's flicker threshold, so rows settle rather than
+           snap as each check resolves. */
+        transition: opacity 480ms ease, background 480ms ease;
       }
       .loader-check[data-state="pending"] {
-        opacity: 0.42;
+        /* 0.42 -> 0.55: still clearly "not yet", but the step up to done is a
+           lift rather than a pop. Four rows popping in sequence read as
+           activity; the screen should read as composure. */
+        opacity: 0.55;
       }
       .loader-check-icon {
         flex: none;
@@ -416,22 +406,29 @@
         flex: 1;
         min-width: 0;
       }
+      /* Two sizes, not four. 12.5 / 11 / 10.5 / 10.5 sat inside a 2px band —
+         too close to read as hierarchy, too far apart to read as one voice, so
+         it registered as noise. 13px leads; everything secondary shares 11.5px
+         and separates by colour instead. Explicit line-heights give the rows a
+         rhythm rather than letting it fall out of the default. */
       .loader-check-title {
-        font-size: 12.5px;
+        font-size: 13px;
         font-weight: 500;
+        line-height: 1.35;
         color: #2b303a;
       }
       .loader-check-detail {
-        margin-top: 1px;
-        font-size: 11px;
+        margin-top: 2px;
+        font-size: 11.5px;
+        line-height: 1.4;
         color: #8b929d;
       }
       .loader-check-status {
         flex: none;
         display: flex;
         align-items: center;
-        gap: 6px;
-        font-size: 10.5px;
+        gap: 7px;
+        font-size: 11.5px;
         color: #8b929d;
       }
       .loader-check-tick {
@@ -451,9 +448,9 @@
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 5px;
-        padding: 6px 11px 5px;
-        font-size: 10.5px;
+        gap: 6px;
+        padding: 8px 13px 7px;
+        font-size: 11.5px;
         color: #8b929d;
       }
       .loader-card-foot svg {
@@ -965,9 +962,14 @@
         };
 
         // ---- Ready gate -----------------------------------------------------
-        // Once React has mounted, the checks resolve into "LucaOS is ready."
-        // — a settled summary of what's now live — and wait for the user to
-        // press Continue before the loader hands the screen to the app.
+        // FIRST RUN ONLY. Once React has mounted, the checks resolve into
+        // "LucaOS is ready." — a settled summary of what's now live — and wait
+        // for the user to press Continue before handing over the screen.
+        //
+        // A RETURNING user never sees this. Their environment is already theirs,
+        // so a manual Continue on every launch and every refresh is friction
+        // wearing the costume of ceremony: it turns a reload into a click. They
+        // get the same readiness checks, then the loader simply fades away.
         const READY_SUMMARY = [
           ["Core services", "Online"],
           ["Memory systems", "Synchronized"],
@@ -976,11 +978,29 @@
           ["Security & privacy", "Active"],
         ];
 
+        // Fade the loader out and take its window controls with it (React
+        // renders its own once mounted, so leaving these would double them up).
+        const dismissLoader = (loader) => {
+          loader.style.opacity = "0";
+          window.setTimeout(() => {
+            loader.remove();
+            document.querySelector(".root-window-controls")?.remove();
+          }, 520);
+        };
+
         window.__LUCA_BOOT_LOADER_HANDOFF__ = () => {
           const loader = document.getElementById("root-loader");
           if (!loader || loader.dataset.state === "failed") return false;
           window.__LUCA_CLEAR_BOOT_STATUS_LOOP__?.();
           loader.dataset.state = "ready";
+
+          // Returning user: straight into the workspace, no click. Returning
+          // true still tells the caller we own the dismissal, so it must not
+          // rip the loader out from under the fade.
+          if (isReturningUser) {
+            dismissLoader(loader);
+            return true;
+          }
 
           const brandTextEl = loader.querySelector(
             ".loader-brandtag .loader-text",
@@ -1006,15 +1026,7 @@
               '<button type="button" class="loader-continue" id="loader-continue">Continue</button>';
             const btn = document.getElementById("loader-continue");
             if (btn) {
-              btn.addEventListener("click", () => {
-                loader.style.opacity = "0";
-                window.setTimeout(() => {
-                  loader.remove();
-                  document
-                    .querySelector(".root-window-controls")
-                    ?.remove();
-                }, 520);
-              });
+              btn.addEventListener("click", () => dismissLoader(loader));
             }
           }
           return true;

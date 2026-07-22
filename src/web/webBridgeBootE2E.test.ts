@@ -34,6 +34,7 @@ const forbiddenDesktopImports = [
   "settingsService",
   "secureVault",
   "better-sqlite3",
+  "node:sqlite",
 ];
 
 const productUiSources = [

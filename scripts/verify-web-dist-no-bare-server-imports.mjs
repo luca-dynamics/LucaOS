@@ -14,6 +14,7 @@ const serverOnlySpecifiers = [
   "robotjs",
   "playwright",
   "better-sqlite3",
+  "node:sqlite",
   "electron",
   "express",
   "ccxt",

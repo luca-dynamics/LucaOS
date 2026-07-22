@@ -99,18 +99,20 @@ export class CheckpointManager {
       }
 
       try {
+        // node:sqlite is part of the runtime (Node 22.5+/Electron 40), so there
+        // is no native binary to load and no ABI mismatch to fall back from.
         let Database: any;
         if (typeof window !== "undefined" && (window as any).require) {
-          Database = (window as any).require("better-sqlite3");
+          Database = (window as any).require("node:sqlite").DatabaseSync;
         } else {
-          const sqliteMod = "better-sqlite3";
-          Database = (await import(/* @vite-ignore */ sqliteMod)).default || await import(/* @vite-ignore */ sqliteMod);
+          const sqliteMod = "node:sqlite";
+          Database = (await import(/* @vite-ignore */ sqliteMod)).DatabaseSync;
         }
         this.db = new Database(dbPath);
         this.initSchema();
         console.log("[CheckpointManager] Initialized at:", dbPath);
       } catch (dbErr: any) {
-        console.warn("[CheckpointManager] Native better-sqlite3 failed, using mock:", dbErr.message);
+        console.warn("[CheckpointManager] node:sqlite unavailable, using mock:", dbErr.message);
         this.setupMock();
       }
     } catch (err: any) {

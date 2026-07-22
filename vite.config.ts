@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => {
         "robotjs",
         "playwright",
         "better-sqlite3",
+        "node:sqlite",
         "electron",
         "express",
         "ccxt",
@@ -55,7 +56,13 @@ export default defineConfig(({ mode }) => {
     ],
     base: isVercelRelease ? "/" : "./",
     server: {
-      port: Number(process.env.VITE_DEV_PORT || 3000),
+      // 5822 spells LUCA on a phone keypad. The point is not the mnemonic but
+      // the vacancy: 3000 is the single most contested port on a dev machine
+      // (CRA, Next, Express, Rails all default to it), and with strictPort the
+      // dev server does not shift when it is taken — it exits, and the app
+      // cannot start. Unlike the backends this port cannot be ephemeral: the
+      // launcher and Electron have to know the address before it exists.
+      port: Number(process.env.VITE_DEV_PORT || 5822),
       strictPort: true,
       host: "127.0.0.1",
       proxy: {
@@ -102,6 +109,12 @@ export default defineConfig(({ mode }) => {
         "node:os": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         url: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         "node:url": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        // The core uses the runtime's built-in node:sqlite; the browser build
+        // has no filesystem, so it gets a stub that throws (callers already
+        // fall back to their in-memory stores). better-sqlite3 stays mapped
+        // while any third-party dep still reaches for it.
+        "node:sqlite": path.resolve(__dirname, "src/mocks/browser_node_sqlite.ts"),
+        sqlite: path.resolve(__dirname, "src/mocks/browser_node_sqlite.ts"),
         "better-sqlite3": path.resolve(
           __dirname,
           "src/mocks/browser_better_sqlite3.ts",
