@@ -20,6 +20,7 @@ import {
   SettingsRow,
   SettingsSection,
   SettingsStatList,
+  SettingsToggle,
   settingsControlInlineStyle,
   settingsInputClassName,
   settingsSelectClassName,
@@ -89,6 +90,22 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [loading, setLoading] = useState(true);
+
+  // Consent gate for memory the agent proposes about the operator. Off by
+  // default; when on, storeMemory stages a proposal instead of writing.
+  const [memoryWriteApproval, setMemoryWriteApproval] = useState<boolean>(
+    () => settingsService.get("memory")?.writeApproval === true,
+  );
+
+  const toggleMemoryWriteApproval = useCallback(() => {
+    setMemoryWriteApproval((previous) => {
+      const next = !previous;
+      void settingsService.saveSettings({
+        memory: { ...settingsService.get("memory"), writeApproval: next },
+      });
+      return next;
+    });
+  }, []);
 
   // Feed the governed write pilot the REAL reviewable queue from the live
   // proposal service. Refreshed after a successful pilot write so the written
@@ -426,6 +443,17 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
         icon="Sliders"
         isMobile={isMobile}
       >
+        <SettingsRow
+          label="Approve what Luca remembers"
+          description="Hold memories Luca proposes about you for review instead of saving them straight away. Pending items appear in Memory Control and the chat approval strip."
+          control={
+            <SettingsToggle
+              checked={memoryWriteApproval}
+              onChange={toggleMemoryWriteApproval}
+              ariaLabel="Require approval before Luca saves a memory"
+            />
+          }
+        />
         <SettingsRow
           label="Update memory"
           description="Refresh Luca's local memory archive and backend snapshot when available."
