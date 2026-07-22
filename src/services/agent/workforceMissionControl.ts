@@ -87,6 +87,15 @@ export async function syncWorkflowTaskGoalStatus(
     ((id: number, status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "FAILED") =>
       missionControlService.updateGoalStatus(id, status));
 
-  await update(goalId, task.status === "complete" ? "COMPLETED" : "FAILED");
+  const goalStatus =
+    task.status === "complete"
+      ? "COMPLETED"
+      : task.status === "in-progress"
+        ? "IN_PROGRESS"
+        : task.status === "failed"
+          ? "FAILED"
+          : "PENDING";
+
+  await update(goalId, goalStatus);
   return true;
 }

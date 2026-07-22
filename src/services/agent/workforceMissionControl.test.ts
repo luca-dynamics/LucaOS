@@ -83,6 +83,19 @@ describe("workforceMissionControl", () => {
     expect(updateGoalStatus).toHaveBeenCalledWith(55, "COMPLETED");
   });
 
+  it("syncs in-progress task to IN_PROGRESS goal", async () => {
+    const updateGoalStatus = vi.fn(async () => undefined);
+    const plan = samplePlan();
+    plan.taskGoalIds = { task_0: 55 };
+    const task = { ...plan.tasks[0], status: "in-progress" as const };
+
+    const ok = await syncWorkflowTaskGoalStatus(plan, task, {
+      updateGoalStatus: updateGoalStatus as any,
+    });
+    expect(ok).toBe(true);
+    expect(updateGoalStatus).toHaveBeenCalledWith(55, "IN_PROGRESS");
+  });
+
   it("returns false when task has no mapped goal", async () => {
     const plan = samplePlan();
     const ok = await syncWorkflowTaskGoalStatus(plan, plan.tasks[0]);

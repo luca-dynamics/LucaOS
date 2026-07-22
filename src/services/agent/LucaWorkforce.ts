@@ -462,6 +462,9 @@ export class LucaWorkforce {
     }
 
     task.status = "in-progress";
+    // Live Mission Center: mark goal IN_PROGRESS when the task starts.
+    const owningPlan = this.findPlanForTask(task.id);
+    if (owningPlan) await this.syncTaskGoalStatus(owningPlan, task);
 
     console.log(`[${task.persona} Luca] Starting: ${task.description}`);
 
@@ -487,6 +490,7 @@ export class LucaWorkforce {
         await this.executePersonaWork(task);
 
         task.status = "complete";
+        if (owningPlan) await this.syncTaskGoalStatus(owningPlan, task);
 
         const duration = Date.now() - startTime;
         console.log(
@@ -509,6 +513,7 @@ export class LucaWorkforce {
     } catch (error) {
       task.status = "failed";
       task.error = error instanceof Error ? error.message : "Unknown error";
+      if (owningPlan) await this.syncTaskGoalStatus(owningPlan, task);
 
       console.error(
         `[${task.persona} Luca] ❌ Failed: ${task.description}`,
@@ -521,6 +526,14 @@ export class LucaWorkforce {
 
       throw error;
     }
+  }
+
+  /** Locate the active workflow plan that owns a task id (for goal sync). */
+  private findPlanForTask(taskId: string): WorkflowPlan | undefined {
+    for (const plan of this.activeWorkflows.values()) {
+      if (plan.tasks.some((t) => t.id === taskId)) return plan;
+    }
+    return undefined;
   }
 
   /**
