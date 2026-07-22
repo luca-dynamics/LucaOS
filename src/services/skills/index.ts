@@ -5,3 +5,5 @@ export * from "./SkillManifestAdapter";
 export * from "./skillImportFormats";
 export * from "./SkillMarketplaceService";
 export * from "./SkillRegistryService";
+export * from "./skillMarketplaceSandbox";
+export * from "./skillMarketplaceLinkSync";

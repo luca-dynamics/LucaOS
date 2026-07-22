@@ -11,6 +11,7 @@ import {
   skillMarketplaceService,
   type SkillMarketplaceDryRun,
 } from "../../services/skills/SkillMarketplaceService";
+import type { PersonalIntelligenceSkillSandboxPlan } from "../../personal-intelligence/skillSandbox/skillSandboxTypes";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 export interface UnifiedSkillMarketplacePanelProps {
@@ -28,6 +29,8 @@ export const UnifiedSkillMarketplacePanel: React.FC<
   const [query, setQuery] = useState("");
   const [importText, setImportText] = useState("");
   const [dryRun, setDryRun] = useState<SkillMarketplaceDryRun | null>(null);
+  const [sandboxPlan, setSandboxPlan] =
+    useState<PersonalIntelligenceSkillSandboxPlan | null>(null);
 
   const refresh = useCallback(() => {
     setLoading(true);
@@ -135,7 +138,90 @@ export const UnifiedSkillMarketplacePanel: React.FC<
   const handleDryRun = (skillId: string) => {
     const result = skillMarketplaceService.dryRun(skillId);
     setDryRun(result);
+    setSandboxPlan(null);
     setNote(result?.summary ?? "Skill not found.");
+  };
+
+  const handleSandboxPlan = (skillId: string) => {
+    const plan = skillMarketplaceService.planSandbox(skillId);
+    setSandboxPlan(plan);
+    setDryRun(null);
+    setNote(
+      plan
+        ? `Sandbox plan: ${plan.status} · ${plan.requiredPermissions.length} permission(s) · execution disabled.`
+        : "Skill not found.",
+    );
+  };
+
+  const handlePackageSync = async () => {
+    setBusy(true);
+    setNote(null);
+    try {
+      const envelope = skillMarketplaceService.packageSyncEnvelope({
+        fromDeviceId: "desktop",
+      });
+      const json = JSON.stringify(envelope, null, 2);
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(json);
+        setNote(
+          `Packaged ${envelope.catalog.skillCount} skill(s) as luca_skill_sync_v1 (clipboard).`,
+        );
+      } else {
+        setImportText(json);
+        setNote("Sync envelope written to import box.");
+      }
+    } catch (error) {
+      setNote(error instanceof Error ? error.message : "Sync package failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleApplySync = () => {
+    if (!importText.trim() || busy) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const result = skillMarketplaceService.applySyncPayload(importText);
+      if (result.ok) {
+        setNote(
+          `Sync applied: imported ${result.imported}` +
+            (result.detected ? ` · ${result.detected}` : "") +
+            ".",
+        );
+        setImportText("");
+      } else {
+        setNote(result.reason || "Sync apply failed.");
+      }
+      refresh();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handlePushLucaLink = async () => {
+    setBusy(true);
+    setNote(null);
+    try {
+      let link: { sendEvent?: (t: string, type: string, p: unknown) => void } | null =
+        null;
+      try {
+        const mod = await import("../../services/lucaLink/manager");
+        link = mod.lucaLinkManager as typeof link;
+      } catch {
+        link = null;
+      }
+      const result = skillMarketplaceService.pushViaLucaLink(link, {
+        fromDeviceId: "desktop",
+      });
+      setNote(
+        result.ok
+          ? "Pushed skill catalog via LucaLink (soft)."
+          : result.reason || "LucaLink push unavailable.",
+      );
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleDemoImport = () => {
@@ -245,18 +331,44 @@ export const UnifiedSkillMarketplacePanel: React.FC<
             Export catalog
           </button>
           {!compact && (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={handleDemoImport}
-              className="rounded-full border px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
-              style={{
-                borderColor: settingsSurfaceTokens.borderSubtle,
-                color: "var(--luca-info, #4f8cff)",
-              }}
-            >
-              Demo payload
-            </button>
+            <>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void handlePackageSync()}
+                className="rounded-full border px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
+                style={{
+                  borderColor: settingsSurfaceTokens.borderSubtle,
+                  color: settingsSurfaceTokens.textPrimary,
+                }}
+              >
+                Package sync
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void handlePushLucaLink()}
+                className="rounded-full border px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
+                style={{
+                  borderColor: settingsSurfaceTokens.borderSubtle,
+                  color: "var(--luca-info, #4f8cff)",
+                }}
+              >
+                Push LucaLink
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={handleDemoImport}
+                className="rounded-full border px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
+                style={{
+                  borderColor: settingsSurfaceTokens.borderSubtle,
+                  color: "var(--luca-info, #4f8cff)",
+                }}
+              >
+                Demo payload
+              </button>
+            </>
           )}
         </div>
 
@@ -308,6 +420,18 @@ export const UnifiedSkillMarketplacePanel: React.FC<
                     }}
                   >
                     Dry-run
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => handleSandboxPlan(skill.skillId)}
+                    className="rounded border px-1.5 py-0.5 text-[10px] disabled:opacity-50"
+                    style={{
+                      borderColor: settingsSurfaceTokens.borderSubtle,
+                      color: "var(--luca-warning, #e6b450)",
+                    }}
+                  >
+                    Sandbox
                   </button>
                   {skill.lifecycleState !== "enabled" && (
                     <button
@@ -387,6 +511,49 @@ export const UnifiedSkillMarketplacePanel: React.FC<
           </div>
         )}
 
+        {sandboxPlan && !compact && (
+          <div
+            className="rounded-xl border p-3 space-y-1"
+            style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+          >
+            <p
+              className="text-[11px] font-semibold uppercase tracking-wide"
+              style={{ color: settingsSurfaceTokens.textTertiary }}
+            >
+              Permission-scoped sandbox plan
+            </p>
+            <p
+              className="text-[11px]"
+              style={{ color: settingsSurfaceTokens.textSecondary }}
+            >
+              {sandboxPlan.permissionSummary} {sandboxPlan.approvalSummary}
+            </p>
+            <p
+              className="font-mono text-[10px]"
+              style={{ color: settingsSurfaceTokens.textTertiary }}
+            >
+              status: {sandboxPlan.status} · mode: {sandboxPlan.sandboxMode} ·
+              perms: {sandboxPlan.requiredPermissions.length} · blocked
+              surfaces: {sandboxPlan.blockedSurfaces.length} ·
+              executionEnabled: false
+            </p>
+            {sandboxPlan.requiredPermissions.slice(0, 6).map((p) => (
+              <p
+                key={p.permissionId}
+                className="font-mono text-[10px]"
+                style={{
+                  color: p.blocked
+                    ? "var(--luca-danger, #f07178)"
+                    : settingsSurfaceTokens.textTertiary,
+                }}
+              >
+                [{p.kind}] {p.label}
+                {p.blocked ? " (blocked)" : ""}
+              </p>
+            ))}
+          </div>
+        )}
+
         {!compact && (
           <div
             className="rounded-xl border p-3 space-y-2"
@@ -396,27 +563,41 @@ export const UnifiedSkillMarketplacePanel: React.FC<
               className="text-[11px] font-semibold uppercase tracking-wide"
               style={{ color: settingsSurfaceTokens.textTertiary }}
             >
-              Import skills JSON
+              Import / sync skills JSON
             </p>
             <textarea
               className={`${inputClass} min-h-[80px] font-mono text-[10px]`}
               style={inputStyle}
-              placeholder='OpenClaw {skills:[...]}, Claude tools [...], MCP {mcpServers:{...}}, or luca_skill_catalog_v1'
+              placeholder='OpenClaw/Claude/MCP, luca_skill_catalog_v1, or luca_skill_sync_v1 envelope'
               value={importText}
               onChange={(e) => setImportText(e.target.value)}
             />
-            <button
-              type="button"
-              disabled={busy || !importText.trim()}
-              onClick={() => void handleImport()}
-              className="rounded-full border px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
-              style={{
-                borderColor: settingsSurfaceTokens.borderSubtle,
-                color: settingsSurfaceTokens.textPrimary,
-              }}
-            >
-              Import skills
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={busy || !importText.trim()}
+                onClick={() => void handleImport()}
+                className="rounded-full border px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
+                style={{
+                  borderColor: settingsSurfaceTokens.borderSubtle,
+                  color: settingsSurfaceTokens.textPrimary,
+                }}
+              >
+                Import skills
+              </button>
+              <button
+                type="button"
+                disabled={busy || !importText.trim()}
+                onClick={handleApplySync}
+                className="rounded-full border px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
+                style={{
+                  borderColor: settingsSurfaceTokens.borderSubtle,
+                  color: "var(--luca-info, #4f8cff)",
+                }}
+              >
+                Apply sync envelope
+              </button>
+            </div>
           </div>
         )}
 

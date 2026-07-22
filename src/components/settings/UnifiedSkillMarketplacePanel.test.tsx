@@ -24,6 +24,9 @@ describe("UnifiedSkillMarketplacePanel", () => {
     expect(file).toContain("importLoose");
     expect(file).toContain("exportCatalog");
     expect(file).toContain("dryRun");
+    expect(file).toContain("planSandbox");
+    expect(file).toContain("packageSyncEnvelope");
+    expect(file).toContain("pushViaLucaLink");
     expect(file).toContain("quarantine");
   });
 });

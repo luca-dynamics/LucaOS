@@ -22,6 +22,15 @@ import {
   type SkillImportCandidate,
   type SkillImportFormatHint,
 } from "./skillImportFormats";
+import { planSkillMarketplaceSandbox } from "./skillMarketplaceSandbox";
+import type { PersonalIntelligenceSkillSandboxPlan } from "../../personal-intelligence/skillSandbox/skillSandboxTypes";
+import {
+  applySkillCatalogSyncPayload,
+  packageSkillCatalogForSync,
+  pushSkillCatalogViaLucaLink,
+  type LucaLinkLike,
+  type SkillCatalogSyncEnvelope,
+} from "./skillMarketplaceLinkSync";
 
 export interface SkillMarketplaceImportResult {
   ok: boolean;
@@ -240,6 +249,37 @@ export class SkillMarketplaceService {
       summary,
     };
   }
+
+  /**
+   * Permission-scoped sandbox plan (planning only, never executes).
+   */
+  planSandbox(skillId: string): PersonalIntelligenceSkillSandboxPlan | null {
+    const skill = this.registry.listSkills().find((s) => s.skillId === skillId);
+    if (!skill) return null;
+    return planSkillMarketplaceSandbox(skill);
+  }
+
+  /** Package catalog for LucaLink / clipboard sync. */
+  packageSyncEnvelope(options?: {
+    fromDeviceId?: string;
+  }): SkillCatalogSyncEnvelope {
+    return packageSkillCatalogForSync(this, options);
+  }
+
+  /** Apply remote sync envelope or catalog into this marketplace. */
+  applySyncPayload(payload: unknown): SkillMarketplaceImportResult & {
+    envelope?: boolean;
+  } {
+    return applySkillCatalogSyncPayload(payload, this);
+  }
+
+  /** Soft-push catalog over LucaLink when available. */
+  pushViaLucaLink(
+    link: LucaLinkLike | null | undefined,
+    options?: { fromDeviceId?: string },
+  ): { ok: boolean; reason?: string; envelope?: SkillCatalogSyncEnvelope } {
+    return pushSkillCatalogViaLucaLink(link, this, options);
+  }
 }
 
 let singleton: SkillMarketplaceService | null = null;
@@ -268,4 +308,14 @@ export const skillMarketplaceService = {
     skillId: string,
     options?: { tier?: LucaUserOperationTier; action?: "view" | "invoke" },
   ) => getSkillMarketplaceService().dryRun(skillId, options),
+  planSandbox: (skillId: string) =>
+    getSkillMarketplaceService().planSandbox(skillId),
+  packageSyncEnvelope: (options?: { fromDeviceId?: string }) =>
+    getSkillMarketplaceService().packageSyncEnvelope(options),
+  applySyncPayload: (payload: unknown) =>
+    getSkillMarketplaceService().applySyncPayload(payload),
+  pushViaLucaLink: (
+    link: LucaLinkLike | null | undefined,
+    options?: { fromDeviceId?: string },
+  ) => getSkillMarketplaceService().pushViaLucaLink(link, options),
 };

@@ -64,4 +64,36 @@ describe("SkillMarketplaceService", () => {
     expect(market.disable(skillId)?.lifecycleState).toBe("disabled");
     expect(market.quarantine(skillId)?.lifecycleState).toBe("quarantined");
   });
+
+  it("plans sandbox and packages sync envelope", () => {
+    const registry = new SkillRegistryService(memoryStore());
+    const market = new SkillMarketplaceService(registry);
+    market.importLoose({
+      skills: [
+        {
+          name: "Net",
+          description: "network helper",
+          version: "0.1.0",
+          tools: ["http.get"],
+          permissions: ["network"],
+        },
+      ],
+    });
+    const skillId = market.listCatalog()[0].skillId;
+    const plan = market.planSandbox(skillId);
+    expect(plan).toBeTruthy();
+    expect(plan!.executionEnabled).toBe(false);
+    expect(plan!.requiredPermissions.length).toBeGreaterThan(0);
+
+    const envelope = market.packageSyncEnvelope({ fromDeviceId: "t" });
+    expect(envelope.format).toBe("luca_skill_sync_v1");
+    expect(envelope.catalog.skillCount).toBe(1);
+
+    const other = new SkillMarketplaceService(
+      new SkillRegistryService(memoryStore()),
+    );
+    const applied = other.applySyncPayload(envelope);
+    expect(applied.ok).toBe(true);
+    expect(other.listCatalog()).toHaveLength(1);
+  });
 });
