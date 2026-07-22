@@ -6,6 +6,15 @@ import { BRAIN_CONFIG } from "../config/brain.config";
 import { eventBus } from "./eventBus";
 import { creditService } from "./creditService";
 import { memoryReadinessResolver } from "./memory/MemoryReadinessResolver";
+import {
+  MEMORY_ITEM_CHAR_LIMIT,
+  selectMemoriesForContext,
+} from "./memory/memoryContextSelection";
+import { evaluateMemoryWrite } from "./memory/memoryWriteCapacity";
+
+// Why the most recent write was refused, so the tool layer can tell the model
+// how to recover instead of surfacing a bare null.
+let _lastWriteRejection: string | null = null;
 
 // API Key sourced from environment variable
 // For Vite/browser: VITE_API_KEY, For Node.js: API_KEY
@@ -484,6 +493,14 @@ export const memoryService = {
    * Supports automatic expiry for SESSION_STATE memories
    * @param autoConsolidate - If true, check for and merge duplicates after saving (default: false)
    */
+  /**
+   * Why the last saveMemory call refused to write, if it did. Cleared by the
+   * next admitted write.
+   */
+  getLastWriteRejection(): string | null {
+    return _lastWriteRejection;
+  },
+
   async saveMemory(
     key: string,
     value: string,
@@ -507,6 +524,16 @@ export const memoryService = {
     }
 
     const memories = this.getAllMemories();
+
+    // 0. Capacity gate. Checked before the embedding call so a refused write
+    // costs nothing, and before any mutation so the archive is left untouched.
+    const capacity = evaluateMemoryWrite(memories, { key, value, category });
+    if (!capacity.admitted) {
+      _lastWriteRejection = capacity.reason || "Memory tier is full.";
+      console.warn(`[MEMORY] Write refused (${capacity.tier} tier): ${key}`);
+      return null;
+    }
+    _lastWriteRejection = null;
 
     // 1. Generate Embedding
     const contentToEmbed = `${key}: ${value}`;
@@ -1208,23 +1235,26 @@ export const memoryService = {
    * Formatted Memory Output For LLM Context
    * UPDATED: Token Safeguard Applied - Truncates large memory values.
    */
-  getMemoryContext(): string {
+  getMemoryContext(query?: string): string {
     const memories = this.getAllMemories();
     if (memories.length === 0) return "Memory Core Empty.";
 
+    const { selected, omitted } = selectMemoriesForContext(memories, query);
+
     // Mem0 Logic: Separate into distinct state layers
-    const userState = memories.filter((m) => m.category === "USER_STATE");
-    const sessionState = memories.filter((m) => m.category === "SESSION_STATE");
-    const agentState = memories.filter((m) => m.category === "AGENT_STATE");
-    const facts = memories.filter(
+    const userState = selected.filter((m) => m.category === "USER_STATE");
+    const sessionState = selected.filter((m) => m.category === "SESSION_STATE");
+    const agentState = selected.filter((m) => m.category === "AGENT_STATE");
+    const facts = selected.filter(
       (m) =>
         !["USER_STATE", "SESSION_STATE", "AGENT_STATE"].includes(m.category),
     );
 
     // HELPER: Truncate huge memories to prevent 429 Quota errors
     const formatMem = (m: MemoryNode) => {
-      let val = m.value;
-      if (val.length > 300) val = val.substring(0, 300) + "...[TRUNCATED]";
+      let val = m.value || "";
+      if (val.length > MEMORY_ITEM_CHAR_LIMIT)
+        val = val.substring(0, MEMORY_ITEM_CHAR_LIMIT) + "...[TRUNCATED]";
       return `- ${m.key}: ${val}`;
     };
 
@@ -1242,6 +1272,11 @@ export const memoryService = {
         "[AGENT KNOWLEDGE]:\n" + agentState.map(formatMem).join("\n") + "\n\n";
     if (facts.length)
       context += "[SEMANTIC FACTS]:\n" + facts.map(formatMem).join("\n");
+
+    if (omitted > 0) {
+      // State the omission rather than presenting a filtered view as complete.
+      context += `\n\n[${omitted} lower-ranked memor${omitted === 1 ? "y" : "ies"} withheld to stay within the context budget.]`;
+    }
 
     return context;
   },

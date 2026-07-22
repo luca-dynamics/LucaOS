@@ -10,7 +10,13 @@
  * Workforce and computer-use use the same completion path.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   missionControlService,
   type MissionGoal,
@@ -61,29 +67,45 @@ export const UnifiedMissionCenterPanel: React.FC<
   const [lastCompletion, setLastCompletion] =
     useState<CompleteProductMissionResult | null>(null);
 
+  const requestSeqRef = useRef(0);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const refresh = useCallback(async (opts?: { silent?: boolean }) => {
+    // Ordering is enforced by sequence number rather than an in-flight lock:
+    // a lock would stop polling for good if one request ever hung, which is a
+    // worse failure than the overlapping fetch it prevents.
+    const seq = ++requestSeqRef.current;
     if (!opts?.silent) setLoading(true);
     try {
       const live = await missionControlService.getActiveMission();
+      let nextTape: MissionTapeRecord | null = null;
+      if (live?.mission?.id != null) {
+        nextTape = await missionControlService
+          .getMissionTapeRecorder()
+          .getTape(String(live.mission.id));
+      }
+      // Drop a response that a newer request has already superseded.
+      if (seq !== requestSeqRef.current || !mountedRef.current) return;
       setSnapshot(live);
+      setTape(nextTape);
       setBridgeAvailable(
         typeof window !== "undefined" &&
           Boolean(window.luca?.missionControl?.getActive),
       );
-      if (live?.mission?.id != null) {
-        const t = await missionControlService
-          .getMissionTapeRecorder()
-          .getTape(String(live.mission.id));
-        setTape(t);
-      } else {
-        setTape(null);
-      }
     } catch {
+      if (seq !== requestSeqRef.current || !mountedRef.current) return;
       setSnapshot(null);
       setTape(null);
       setBridgeAvailable(false);
     } finally {
-      if (!opts?.silent) setLoading(false);
+      if (!opts?.silent && mountedRef.current) setLoading(false);
     }
   }, []);
 
@@ -91,14 +113,25 @@ export const UnifiedMissionCenterPanel: React.FC<
     void refresh();
   }, [refresh]);
 
-  // Light poll while a mission is active so workforce/CU goal progress appears live.
+  // Poll fast while a mission runs so workforce/CU goal progress appears live,
+  // and keep a slower watch while idle — otherwise a mission started elsewhere
+  // (workforce run, computer-use) never appears without a manual refresh.
   useEffect(() => {
-    if (!snapshot?.mission || snapshot.mission.status !== "ACTIVE") return;
-    const id = window.setInterval(() => {
-      void refresh({ silent: true });
-    }, 3000);
+    if (!bridgeAvailable) return;
+    const active = snapshot?.mission?.status === "ACTIVE";
+    const id = window.setInterval(
+      () => {
+        void refresh({ silent: true });
+      },
+      active ? 3000 : 10000,
+    );
     return () => window.clearInterval(id);
-  }, [snapshot?.mission?.id, snapshot?.mission?.status, refresh]);
+  }, [
+    bridgeAvailable,
+    snapshot?.mission?.id,
+    snapshot?.mission?.status,
+    refresh,
+  ]);
 
   const handleStartMission = async () => {
     const title = newMissionTitle.trim();

@@ -7,6 +7,8 @@ import { PROTECTED_FILES } from "../../config/constitution";
 import { thoughtStreamService } from "../../services/thoughtStreamService";
 import { permissionGateService } from "../../services/permissionGateService";
 import { skillIngestionService } from "../../services/skillIngestionService";
+import { requestAgentMemoryWrite } from "../../services/memory/agentMemoryWriteGate";
+import { runtimeAgentMemoryWriteDependencies } from "../../services/memory/agentMemoryWriteGateRuntime";
 import { eventBus } from "../../services/eventBus";
 
 const SERVER_TOOLS = [
@@ -272,12 +274,17 @@ export class ServerToolDispatcher {
     // --- MEMORY TOOLS (LOCAL SERVICE) ---
     if (name === "storeMemory") {
       try {
-        const memory = await memoryService.saveMemory(
-          args.key,
-          args.value,
-          args.category || "FACT",
+        // Routed through the consent gate rather than writing directly, so
+        // that turning on memory.writeApproval actually stages the write.
+        const outcome = await requestAgentMemoryWrite(
+          {
+            key: args.key,
+            value: args.value,
+            category: args.category || "FACT",
+          },
+          runtimeAgentMemoryWriteDependencies(),
         );
-        return `Memory Stored: [${memory.category}] ${memory.key} (ID: ${memory.id})`;
+        return outcome.message;
       } catch (e: any) {
         return `Failed to store memory: ${e.message}`;
       }

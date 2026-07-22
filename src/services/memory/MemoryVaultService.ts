@@ -67,28 +67,22 @@ export interface MemoryVaultDependencies {
   saveMemory?: SaveMemoryFn;
 }
 
-/** Lazy load memoryService so unit tests can inject pure deps without browser globals. */
-function getMemoryServiceModule(): {
-  getAllMemories: () => MemoryNode[];
-  saveMemory: SaveMemoryFn;
-} | null {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require("../memoryService") as {
-      memoryService: {
-        getAllMemories: () => MemoryNode[];
-        saveMemory: SaveMemoryFn;
-      };
-    };
-    return mod.memoryService;
-  } catch {
-    return null;
-  }
-}
-
+/**
+ * Read the archive straight from storage.
+ *
+ * This MUST stay symmetric with defaultPersistNodes. memoryService.getAllMemories()
+ * is itself only a read of ARCHIVE_KEY, and routing through that module used a bare
+ * `require`, which survives ESM transpilation verbatim and is undefined in the
+ * renderer (nodeIntegration: false). The read therefore threw and was swallowed to
+ * `[]` on every call while the write still landed — so any vault write persisted an
+ * archive rebuilt from nothing, destroying every existing memory.
+ */
 function defaultListNodes(): MemoryNode[] {
+  if (typeof localStorage === "undefined") return [];
   try {
-    return getMemoryServiceModule()?.getAllMemories() ?? [];
+    const stored = localStorage.getItem(ARCHIVE_KEY);
+    const parsed: unknown = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? (parsed as MemoryNode[]) : [];
   } catch {
     return [];
   }
@@ -99,7 +93,12 @@ function defaultPersistNodes(nodes: MemoryNode[]): void {
   localStorage.setItem(ARCHIVE_KEY, JSON.stringify(nodes));
 }
 
-function defaultSaveMemory(
+/**
+ * Routed through memoryService so saves still mirror to Core disk and linked
+ * devices. Dynamic import because memoryService installs the vault product
+ * bridge on load, so a static import would close a cycle back into this module.
+ */
+async function defaultSaveMemory(
   key: string,
   value: string,
   category: MemoryNode["category"] = "SEMANTIC",
@@ -107,11 +106,19 @@ function defaultSaveMemory(
   importance?: number,
   tenantId?: string,
 ): Promise<MemoryNode | null> {
-  const svc = getMemoryServiceModule();
-  if (!svc?.saveMemory) {
-    return Promise.resolve(null);
+  try {
+    const mod = await import("../memoryService");
+    return await mod.memoryService.saveMemory(
+      key,
+      value,
+      category,
+      autoConsolidate,
+      importance,
+      tenantId,
+    );
+  } catch {
+    return null;
   }
-  return svc.saveMemory(key, value, category, autoConsolidate, importance, tenantId);
 }
 
 function matchesQuery(item: LucaMemoryItem, query?: LucaMemoryQuery): boolean {

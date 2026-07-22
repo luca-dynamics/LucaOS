@@ -13,6 +13,7 @@ import {
   type LucaExecutionStepKind,
 } from "../execution/LucaDeterministicExecution";
 import { MissionTapeRecorderService } from "./MissionTapeRecorder";
+import { getExecutionVerificationGateSnapshot } from "../execution/LucaExecutionVerificationGate";
 import {
   finalizeMissionTapeWithVerification,
   type FinalizeMissionTapeWithVerificationResult,
@@ -60,10 +61,53 @@ export interface CompleteProductMissionResult
   extends FinalizeMissionTapeWithVerificationResult {
   archived: boolean;
   source: "product_mission_completion";
+  /** Whether the product state said the work was actually finished. */
+  productReadiness: ProductMissionReadiness;
 }
 
-function mapKind(kindOrGoal: string): LucaExecutionStepKind {
-  const g = kindOrGoal.toLowerCase();
+/**
+ * A mission tape step is a record of work that already happened, not a proposal
+ * to act. "I could not classify this description" must therefore not resolve to
+ * `unknown`, which the execution contract treats as critical/blocked — that
+ * would refuse completion for any goal whose wording misses the keyword list.
+ */
+const DEFAULT_MISSION_STEP_KIND: LucaExecutionStepKind = "tool_call";
+
+const KNOWN_STEP_KINDS: readonly LucaExecutionStepKind[] = [
+  "tool_call",
+  "voice_command",
+  "computer_use",
+  "filesystem",
+  "network",
+  "skill",
+  "memory",
+  "device_control",
+  "self_evolution",
+];
+
+const SENSITIVE_STEP_KINDS: readonly LucaExecutionStepKind[] = [
+  "computer_use",
+  "filesystem",
+  "network",
+  "device_control",
+  "self_evolution",
+];
+
+/** Tape rows written by checkpoint/rollback bookkeeping, not mission work. */
+const BOOKKEEPING_STEP_PREFIXES = ["checkpoint:", "rollback:"];
+
+function isBookkeepingStep(stepId: string): boolean {
+  return BOOKKEEPING_STEP_PREFIXES.some((prefix) => stepId.startsWith(prefix));
+}
+
+function normalizeKind(kind?: string): LucaExecutionStepKind | undefined {
+  if (!kind) return undefined;
+  const normalized = kind.trim().toLowerCase() as LucaExecutionStepKind;
+  return KNOWN_STEP_KINDS.includes(normalized) ? normalized : undefined;
+}
+
+function inferKindFromText(text: string): LucaExecutionStepKind {
+  const g = text.toLowerCase();
   if (/computer|browser|click|sandbox/.test(g)) return "computer_use";
   if (/file|write|delete|path/.test(g)) return "filesystem";
   if (/network|http|fetch|api/.test(g)) return "network";
@@ -72,7 +116,68 @@ function mapKind(kindOrGoal: string): LucaExecutionStepKind {
   if (/voice|speak/.test(g)) return "voice_command";
   if (/evolut|promot/.test(g)) return "self_evolution";
   if (/tool/.test(g)) return "tool_call";
-  return "unknown";
+  return DEFAULT_MISSION_STEP_KIND;
+}
+
+/**
+ * Completion describes finished work, so risk stays capped at medium: the
+ * permission contract blocks high-risk sensitive kinds outright for normal
+ * actors, which is right for "may Luca do this?" and wrong for "did this
+ * already happen?".
+ */
+function riskForMissionStep(
+  kind: LucaExecutionStepKind,
+  text: string,
+): "low" | "medium" {
+  if (SENSITIVE_STEP_KINDS.includes(kind)) return "medium";
+  return /file|computer|network|delete|write/i.test(text) ? "medium" : "low";
+}
+
+export interface ProductMissionReadiness {
+  ready: boolean;
+  goalsTotal: number;
+  goalsCompleted: number;
+  goalsFailed: number;
+  stepsFailed: number;
+  reason?: string;
+}
+
+/**
+ * The gate that was missing: a mission is only "done" when the product state
+ * says the work finished. Verification gates check *how* the work was done;
+ * they never asked *whether* it was.
+ */
+function assessProductReadiness(
+  goals: ProductMissionGoalLike[] | undefined,
+  steps: ProductMissionStepLike[] | undefined,
+): ProductMissionReadiness {
+  const goalStatuses = (goals ?? []).map((g) => (g.status || "").toUpperCase());
+  const goalsTotal = goalStatuses.length;
+  const goalsCompleted = goalStatuses.filter((s) => s === "COMPLETED").length;
+  const goalsFailed = goalStatuses.filter((s) => s === "FAILED").length;
+  const stepsFailed = (steps ?? []).filter(
+    (s) => s.status === "failed" || s.status === "inconclusive",
+  ).length;
+
+  const reasons: string[] = [];
+  if (goalsTotal > 0 && goalsCompleted < goalsTotal) {
+    reasons.push(
+      `${goalsCompleted}/${goalsTotal} goals completed` +
+        (goalsFailed > 0 ? ` (${goalsFailed} failed)` : ""),
+    );
+  }
+  if (stepsFailed > 0) {
+    reasons.push(`${stepsFailed} step(s) failed or inconclusive`);
+  }
+
+  return {
+    ready: reasons.length === 0,
+    goalsTotal,
+    goalsCompleted,
+    goalsFailed,
+    stepsFailed,
+    reason: reasons.length ? reasons.join("; ") : undefined,
+  };
 }
 
 function goalStatusToStepStatus(
@@ -100,8 +205,12 @@ export async function completeProductMission(
     tape = await recorder.createTape(missionId, input.intent);
   }
 
-  // Mirror goals into tape steps when provided and tape is still light.
-  if (input.goals?.length && tape.steps.length === 0) {
+  // Mirror goals into tape steps when provided and no mission work is recorded
+  // yet. Checkpoint/rollback rows are bookkeeping and must not suppress this.
+  const recordedWorkSteps = tape.steps.filter(
+    (s) => !isBookkeepingStep(s.stepId),
+  ).length;
+  if (input.goals?.length && recordedWorkSteps === 0) {
     for (const goal of input.goals) {
       const stepId = String(goal.id ?? `goal:${goal.description.slice(0, 24)}`);
       await recorder.appendStep(missionId, {
@@ -149,24 +258,37 @@ export async function completeProductMission(
     }
   }
 
+  // Explicit kinds supplied by the caller beat guessing from goal text.
+  const declaredKinds = new Map<string, LucaExecutionStepKind>();
+  for (const step of input.steps ?? []) {
+    const kind = normalizeKind(step.kind);
+    const stepId = step.stepId || `step:${step.goal.slice(0, 24)}`;
+    if (kind) declaredKinds.set(stepId, kind);
+  }
+
   const refreshed = await recorder.getTape(missionId);
   const planSteps =
-    refreshed?.steps.map((s) =>
-      createExecutionStep({
-        id: s.stepId,
-        summary: s.goal,
-        kind: mapKind(s.goal),
-        riskLevel: /file|computer|network|delete|write/i.test(s.goal)
-          ? "medium"
-          : "low",
-        receiptAvailable:
-          s.status === "verified" ||
-          Boolean(refreshed.verification.some((v) => v.stepId === s.stepId && v.passed)),
-        rollbackAvailable: refreshed.recovery.some(
-          (r) => r.stepId === s.stepId && r.recovered,
-        ),
-      }),
-    ) ?? [];
+    refreshed?.steps
+      .filter((s) => !isBookkeepingStep(s.stepId))
+      .map((s) => {
+        const kind = declaredKinds.get(s.stepId) ?? inferKindFromText(s.goal);
+        return createExecutionStep({
+          id: s.stepId,
+          summary: s.goal,
+          kind,
+          riskLevel: riskForMissionStep(kind, s.goal),
+          receiptAvailable:
+            s.status === "verified" ||
+            Boolean(
+              refreshed.verification.some(
+                (v) => v.stepId === s.stepId && v.passed,
+              ),
+            ),
+          rollbackAvailable: refreshed.recovery.some(
+            (r) => r.stepId === s.stepId && r.recovered,
+          ),
+        });
+      }) ?? [];
 
   const plan = createExecutionPlan({
     id: `plan:product:${missionId}`,
@@ -188,15 +310,36 @@ export async function completeProductMission(
   const success = input.success !== false;
   const desiredStatus = success ? "completed" : "failed";
 
-  const productGoalsDone =
-    Boolean(input.goals?.length) &&
-    input.goals!.every((g) => (g.status || "").toUpperCase() === "COMPLETED");
+  const readiness = assessProductReadiness(input.goals, input.steps);
+  const productGoalsDone = readiness.goalsTotal > 0 && readiness.ready;
   const productStepsOk =
-    Boolean(input.steps?.length) &&
-    input.steps!.every(
-      (s) => s.status === "verified" || s.status === "completed" || s.status === "executed",
-    ) &&
-    !input.steps!.some((s) => s.status === "failed");
+    Boolean(input.steps?.length) && readiness.stepsFailed === 0;
+
+  // Refuse a success completion while the product still reports unfinished or
+  // failed work, unless an operator override is supplied.
+  if (desiredStatus === "completed" && !readiness.ready && !input.verificationOverride) {
+    const reason = `Mission cannot be marked complete: ${readiness.reason}.`;
+    await recorder.appendVerification(missionId, {
+      stepId: "mission-completion-gate",
+      passed: false,
+      details: reason,
+      verificationCommand: "completeProductMission.productReadiness",
+    });
+    const blockedTape = (await recorder.getTape(missionId)) ?? refreshed!;
+    const blockedResult: CompleteProductMissionResult = {
+      ok: false,
+      completed: false,
+      blockedByVerification: true,
+      tape: blockedTape,
+      gateSnapshot: getExecutionVerificationGateSnapshot({ plan }),
+      reason,
+      archived: false,
+      source: "product_mission_completion",
+      productReadiness: readiness,
+    };
+    if (input.onBlocked) await input.onBlocked(missionId, blockedResult);
+    return blockedResult;
+  }
 
   const completion = await finalizeMissionTapeWithVerification(recorder, {
     missionId,
@@ -239,5 +382,6 @@ export async function completeProductMission(
     ...completion,
     archived,
     source: "product_mission_completion",
+    productReadiness: readiness,
   };
 }

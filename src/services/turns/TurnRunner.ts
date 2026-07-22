@@ -5,6 +5,11 @@ import { cognitiveDeliberator } from "../cognitiveDeliberator";
 import { StreamingToolExecutor } from "../streamingToolExecutor";
 import { lucaService } from "../lucaService";
 
+// Ceiling on how many times one turn may hand tool results back to the model.
+// Without it a model that keeps retrying a failing tool never returns, and the
+// only escape is the user aborting — after the API calls have been paid for.
+export const MAX_TOOL_ROUNDS = 10;
+
 export interface RunStreamTurnOptions {
   message: string;
   imageBase64: string | null;
@@ -122,6 +127,7 @@ class TurnRunner {
       );
 
       let keepGenerating = true;
+      let toolRounds = 0;
       while (keepGenerating) {
         keepGenerating = false;
         const turnState = lucaService.getTurnState();
@@ -157,7 +163,21 @@ class TurnRunner {
               res.toolCallId,
             );
           }
-          keepGenerating = true;
+
+          toolRounds++;
+          if (toolRounds >= MAX_TOOL_ROUNDS) {
+            const notice = `\n\n[Stopped: reached the ${MAX_TOOL_ROUNDS}-step tool limit for a single turn. Send another message to continue.]`;
+            console.warn(
+              `[TURN_RUNNER] Tool-round cap (${MAX_TOOL_ROUNDS}) reached; ending turn instead of looping.`,
+            );
+            fullResponseText += notice;
+            onChunk(notice);
+            // Close the turn with a model message so history never ends on a
+            // tool result — the next turn would otherwise resume mid-exchange.
+            lucaService.appendModelMessage(notice.trim());
+          } else {
+            keepGenerating = true;
+          }
         } else {
           lucaService.appendModelMessage(result.text);
         }
@@ -272,7 +292,7 @@ class TurnRunner {
       );
 
       let loopCount = 0;
-      while (loopCount < 10) {
+      while (loopCount < MAX_TOOL_ROUNDS) {
         loopCount++;
         const turnState = lucaService.getTurnState();
         const result = await (activeProvider as any).chat(
