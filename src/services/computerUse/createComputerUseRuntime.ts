@@ -5,15 +5,20 @@ import { ComputerUseMissionStepAdapter } from "./ComputerUseMissionStepAdapter";
 import { ComputerUseMissionTapeAdapter } from "./ComputerUseMissionTapeAdapter";
 import { ComputerUseRuntimeEntrypoint } from "./ComputerUseRuntimeEntrypoint";
 import { createComputerUsePipeline } from "./createComputerUsePipeline";
-import { ComputerUseRuntime, CreateComputerUseRuntimeOptions } from "./types";
+import {
+  ComputerUseMissionRunnerOptions,
+  ComputerUseRuntime,
+  CreateComputerUseRuntimeOptions,
+} from "./types";
 
 /**
  * Product default: always attach mission-tape completion unless caller opts out
  * with `missionTapeCompletion: null` (or completeAfterRun: false).
+ * Returns runner-shaped option (null opt-out maps to undefined).
  */
 export function resolveMissionTapeCompletion(
   options: CreateComputerUseRuntimeOptions,
-): CreateComputerUseRuntimeOptions["missionTapeCompletion"] {
+): ComputerUseMissionRunnerOptions["missionTapeCompletion"] {
   if (options.missionTapeCompletion === null) return undefined;
   if (options.missionTapeCompletion) return options.missionTapeCompletion;
   return {

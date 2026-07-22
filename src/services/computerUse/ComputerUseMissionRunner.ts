@@ -126,8 +126,8 @@ export class ComputerUseMissionRunner {
                 const { missionControlService } = await import(
                   "../agent/MissionControlService"
                 );
-                // completeProductMission already gated; archive if bridge up.
-                if (typeof window !== "undefined" && window.luca?.missionControl?.archive) {
+                // completeProductMission already gated; archiveMission soft-fails if bridge down.
+                if (typeof window !== "undefined" && window.luca?.missionControl) {
                   await missionControlService.archiveMission(numeric);
                 }
               } catch {
