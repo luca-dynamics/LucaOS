@@ -49,12 +49,18 @@ export interface CreateRealSandboxComputerUseStackOptions {
   /** Also build mission runtime entrypoints (default true when enabled). */
   includeRuntime?: boolean;
   /**
-   * When true, create a MissionTapeRecorderService-backed external sink and
-   * forward real-invocation shell events into it.
+   * Mission tape sink + completion.
+   * - Product default when `enabled: true`: on (unless explicitly false).
+   * - Scaffold path (`enabled: false`): off unless explicitly true.
    */
   enableMissionTapeSink?: boolean;
   /** Inject a custom external sink (overrides enableMissionTapeSink factory). */
   missionTapeExternalSink?: ComputerUseMissionTapeExternalSink;
+  /**
+   * When false, do not attach runSteps completion even if a recorder exists.
+   * Default true whenever a recorder is available.
+   */
+  completeMissionAfterRun?: boolean;
 }
 
 export interface RealSandboxComputerUseStack {
@@ -83,12 +89,12 @@ export async function createRealSandboxComputerUseStack(
   options: CreateRealSandboxComputerUseStackOptions = {},
 ): Promise<RealSandboxComputerUseStack> {
   const enabled = options.enabled === true;
-  const tapeBundle = buildMissionTapeBundle(options);
+  const tapeBundle = buildMissionTapeBundle(options, enabled);
 
   const missionTapeCompletion = tapeBundle.recorder
     ? {
         recorder: tapeBundle.recorder,
-        completeAfterRun: true as const,
+        completeAfterRun: options.completeMissionAfterRun !== false,
       }
     : undefined;
 
@@ -189,7 +195,10 @@ export async function createRealSandboxComputerUseStack(
   };
 }
 
-function buildMissionTapeBundle(options: CreateRealSandboxComputerUseStackOptions): {
+function buildMissionTapeBundle(
+  options: CreateRealSandboxComputerUseStackOptions,
+  stackEnabled: boolean,
+): {
   enabled: boolean;
   sink?: ComputerUseMissionTapeExternalSink;
   recorder?: MissionTapeRecorderService;
@@ -205,7 +214,11 @@ function buildMissionTapeBundle(options: CreateRealSandboxComputerUseStackOption
           : undefined,
     };
   }
-  if (options.enableMissionTapeSink === true) {
+  // Product path: real CU stack defaults tape on; opt out with enableMissionTapeSink: false.
+  const wantTape =
+    options.enableMissionTapeSink === true ||
+    (stackEnabled && options.enableMissionTapeSink !== false);
+  if (wantTape) {
     const sink = createMissionTapeRecorderExternalSink();
     return { enabled: true, sink, recorder: sink.recorder };
   }

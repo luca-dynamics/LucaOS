@@ -89,6 +89,7 @@ describe("ComputerUseMissionRunner", () => {
       missionTapeCompletion: {
         recorder,
         completeAfterRun: true,
+        linkMissionControl: false,
       },
     } as any);
 
@@ -103,4 +104,5 @@ describe("ComputerUseMissionRunner", () => {
     expect(tape?.steps.length).toBeGreaterThan(0);
   });
 });
+
 

@@ -830,6 +830,8 @@ export interface ComputerUseMissionRunnerOptions {
     completeAfterRun?: boolean;
     verificationOverride?: boolean;
     overrideReason?: string;
+    /** Link run to MissionControl before steps (default true). */
+    linkMissionControl?: boolean;
   };
 }
 
@@ -842,10 +844,14 @@ export interface CreateComputerUseRuntimeOptions {
     sandboxAdapterOptions?: ComputerUseSandboxExecutorAdapterOptions;
   };
   /**
-   * When set, mission runner finalizes mission tape via product verification
-   * after runSteps (real wiring for absorb completion criteria).
+   * Mission-tape product completion after runSteps.
+   * - omit → default on (new MissionTapeRecorderService, completeAfterRun true)
+   * - null → explicit opt-out
+   * - object → custom recorder / flags
    */
-  missionTapeCompletion?: ComputerUseMissionRunnerOptions["missionTapeCompletion"];
+  missionTapeCompletion?:
+    | ComputerUseMissionRunnerOptions["missionTapeCompletion"]
+    | null;
   missionEngineBridgeOptions?: ComputerUseMissionEngineBridgeOptions;
   missionTapeAdapter?: {
     recordStepResult: (result: ComputerUseMissionStepResult) => ComputerUseMissionTapeStepRecord;

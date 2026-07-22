@@ -1,5 +1,6 @@
 import { completeProductMission } from "../missionTape/completeProductMission";
 import type { CompleteProductMissionResult } from "../missionTape/completeProductMission";
+import { ensureComputerUseMissionControl } from "./computerUseMissionControl";
 import {
   ComputerUseMissionRunnerOptions,
   ComputerUseMissionRunnerResult,
@@ -10,6 +11,7 @@ import {
 export type ComputerUseMissionRunnerResultWithCompletion =
   ComputerUseMissionRunnerResult & {
     productCompletion?: CompleteProductMissionResult;
+    missionControlId?: number;
   };
 
 export class ComputerUseMissionRunner {
@@ -26,6 +28,21 @@ export class ComputerUseMissionRunner {
   }
 
   async runSteps(steps: ComputerUseMissionStepInput[]): Promise<ComputerUseMissionRunnerResultWithCompletion> {
+    const missionId = steps.find((s) => s.missionId)?.missionId;
+    let missionControlId: number | undefined;
+
+    // Link MissionControl before steps so Mission Center can show the run live.
+    if (missionId && this.options.missionTapeCompletion?.linkMissionControl !== false) {
+      try {
+        const linked = await ensureComputerUseMissionControl(missionId, {
+          intent: `computer-use:${missionId}`,
+        });
+        if (linked.linked) missionControlId = linked.missionControlId;
+      } catch {
+        /* soft-fail */
+      }
+    }
+
     const results: ComputerUseMissionRunnerStepRecord[] = [];
     for (let i = 0; i < steps.length; i += 1) results.push(await this.runStep(steps[i], i));
     const summary = this.createRunSummary(results);
@@ -33,18 +50,22 @@ export class ComputerUseMissionRunner {
       results,
       summary,
       metadata: { runnerKind: "scaffold", systemApisCalled: false },
+      missionControlId,
     };
 
     const tapeOpt = this.options.missionTapeCompletion;
     const completeAfter = tapeOpt?.completeAfterRun !== false;
-    const missionId = steps.find((s) => s.missionId)?.missionId;
     if (!tapeOpt?.recorder || !completeAfter || !missionId || steps.length === 0) {
       return base;
     }
 
     const anyFailed = summary.failed > 0 || summary.inconclusive > 0;
+    // Prefer MissionControl numeric id for tape/archive when linked.
+    const completionMissionId =
+      missionControlId != null ? String(missionControlId) : missionId;
+
     const productCompletion = await completeProductMission({
-      missionId,
+      missionId: completionMissionId,
       intent: `computer-use:${missionId}`,
       recorder: tapeOpt.recorder,
       success: !anyFailed,
@@ -57,6 +78,24 @@ export class ComputerUseMissionRunner {
         kind: r.kind,
         notes: r.reason,
       })),
+      onCompletedArchive:
+        missionControlId != null
+          ? async (id) => {
+              const numeric = Number(id);
+              if (!Number.isFinite(numeric)) return;
+              try {
+                const { missionControlService } = await import(
+                  "../agent/MissionControlService"
+                );
+                // completeProductMission already gated; archive if bridge up.
+                if (typeof window !== "undefined" && window.luca?.missionControl?.archive) {
+                  await missionControlService.archiveMission(numeric);
+                }
+              } catch {
+                /* soft-fail */
+              }
+            }
+          : undefined,
     });
 
     return {
