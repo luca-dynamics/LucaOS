@@ -88,10 +88,12 @@ export function mapLucaMemoryItemToLegacyMemory(
     source: item.source,
     confidence: item.confidence,
     timestamp: item.createdAt,
-    userId: item.scope.userId,
-    sessionId: item.scope.sessionId,
-    workflowId: item.scope.workflowId,
-    missionId: item.scope.missionId,
+    // Optional at runtime: vault import consumes user-supplied JSON, where a
+    // hand-written or third-party file can omit scope entirely.
+    userId: item.scope?.userId,
+    sessionId: item.scope?.sessionId,
+    workflowId: item.scope?.workflowId,
+    missionId: item.scope?.missionId,
     metadata: {
       ...(item.metadata || {}),
       lucaTier: item.tier,
