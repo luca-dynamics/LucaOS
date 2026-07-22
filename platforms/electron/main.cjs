@@ -254,6 +254,26 @@ function setServerPort(port) {
     serverPort = port;
     console.log(`[MAIN] Local Core registered on port ${port}`);
     while (serverPortWaiters.length) serverPortWaiters.shift()(port);
+    broadcastRuntimePorts();
+}
+
+/**
+ * Push the live backend ports to every renderer. Called whenever a port is
+ * learned and again on each window load, so a renderer that started before the
+ * backends were up still receives them (and survives a reload / HMR).
+ */
+function broadcastRuntimePorts(targetWebContents) {
+    const ports = { api: serverPort, cortex: cortexPort };
+    const targets = targetWebContents
+        ? [targetWebContents]
+        : BrowserWindow.getAllWindows().map((w) => w.webContents);
+    for (const contents of targets) {
+        try {
+            if (contents && !contents.isDestroyed()) {
+                contents.send('luca-runtime-ports', ports);
+            }
+        } catch { /* window torn down mid-broadcast */ }
+    }
 }
 
 /** Ask the OS for a free port by binding :0 and releasing it immediately. */
@@ -694,6 +714,10 @@ function createWindow() {
 
     mainWindow.webContents.on('dom-ready', () => {
         console.log('DOM Ready');
+        // Re-publish the ephemeral backend ports on every load/reload — a
+        // renderer that mounted before the backends bound would otherwise keep
+        // using the fallback ports forever.
+        broadcastRuntimePorts(mainWindow.webContents);
         // Comfortable default UI scale. The shell uses fixed-px sizing that
         // renders small at 100%, so the app reads "zoomed out". Native zoom
         // reflows the viewport (unlike CSS zoom, which clips the fixed-width
@@ -849,7 +873,13 @@ function startServer() {
         windowsHide: true
     });
 
-    serverProcess.stdout?.on('data', (d) => process.stdout.write(`[SERVER] ${d}`));
+    serverProcess.stdout?.on('data', (d) => {
+        const text = d.toString();
+        // Port handshake — the contract with server.js's listen() callback.
+        const match = text.match(/LISTENING_PORT=(\d+)/);
+        if (match) setServerPort(Number(match[1]));
+        process.stdout.write(`[SERVER] ${text}`);
+    });
     serverProcess.stderr?.on('data', (d) => process.stderr.write(`[SERVER] ${d}`));
 
     serverProcess.on('error', (err) => {
@@ -857,12 +887,29 @@ function startServer() {
     });
 }
 
-let cortexPort = CORTEX_PORT; // Default from env or 8000
+// Resolved to a free port at spawn time (see startCortex). The variable was
+// always plumbed through every consumer — only the selection was missing, so it
+// silently stayed on 8000, one of the most commonly occupied ports on any dev
+// machine.
+let cortexPort = CORTEX_PORT;
 
-// Start the Python Cortex (LightRAG)
 // Start the Python Cortex (LightRAG)
 async function startCortex() {
     const isPackaged = app.isPackaged;
+
+    // Claim a free port unless the operator pinned one explicitly. Cortex takes
+    // its port from the CORTEX_PORT env we pass below, so this is the only
+    // place that needs to choose.
+    if (!process.env.CORTEX_PORT) {
+        try {
+            cortexPort = await findFreePort();
+            console.log(`[CORTEX] Allocated ephemeral port ${cortexPort}`);
+            broadcastRuntimePorts();
+        } catch (error) {
+            console.warn(`[CORTEX] Free-port lookup failed (${error.message}); falling back to ${CORTEX_PORT}.`);
+            cortexPort = CORTEX_PORT;
+        }
+    }
     const cortexBinaryName = process.platform === 'win32' ? 'cortex.exe' : 'cortex';
     
     let cortexPath;
