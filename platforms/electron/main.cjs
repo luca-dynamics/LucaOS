@@ -650,10 +650,27 @@ function createWindow() {
         x: savedBounds.x,
         y: savedBounds.y,
         show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
-        // Light glacier base matching the boot surfaces, so any unpainted
-        // frame during the boot -> onboarding handoff shows light, not black.
-        backgroundColor: '#e2edf2',
-        transparent: false,
+        // The Appearance sliders (background opacity/blur) are meant to turn
+        // LucaOS into liquid glass over the user's desktop. The renderer half
+        // has always been built for it: the desktop-native policy sets the root
+        // background to `transparent` and LiquidBackground fades itself out as
+        // opacity rises (see lucaPlatformBackgroundPolicy.ts, which says in as
+        // many words that it is waiting for "the host window configured for
+        // transparency/glass"). Nobody ever configured the host window, so the
+        // sliders uncovered this opaque backgroundColor instead of the desktop
+        // and the feature looked broken.
+        //
+        // The opaque colour was added to stop an unpainted frame flashing black
+        // during boot. That job now belongs to `show: false` — the window is
+        // revealed only on 'renderer-ready' (see launchInterface) — so it is no
+        // longer paying for itself. A fully transparent backgroundColor is
+        // required as well: a solid one paints over the transparency.
+        //
+        // LUCA_OPAQUE_WINDOW=1 restores the old behaviour if a machine's
+        // compositor misbehaves; transparency is construction-time only in
+        // Electron, so it cannot be toggled at runtime.
+        backgroundColor: process.env.LUCA_OPAQUE_WINDOW === '1' ? '#e2edf2' : '#00000000',
+        transparent: process.env.LUCA_OPAQUE_WINDOW !== '1',
         frame: process.platform === 'win32' ? false : true,
         autoHideMenuBar: true,
         // Premium window chrome: no native titlebar. Per platform:
