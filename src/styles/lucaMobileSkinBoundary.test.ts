@@ -34,20 +34,20 @@ const FORBIDDEN_FLOW_MOTION_STRINGS = [
 ] as const;
 
 describe("lucaMobileSkinBoundary", () => {
-  it("defaults to Carbon material variables", () => {
+  it("defaults to Pearl material variables", () => {
     const boundary = resolveLucaMobileSkinBoundary();
 
     expect(boundary.skinId).toBe(DEFAULT_LUCA_SKIN_ID);
-    expect(boundary.materialVariables["--luca-background-base"]).toBe("#111417");
-    expect(boundary.materialVariables["--luca-accent-primary"]).toBe("#9fb3c2");
+    expect(boundary.materialVariables["--luca-background-base"]).toBe("#e2edf2");
+    expect(boundary.materialVariables["--luca-accent-primary"]).toBe("#3d8fa6");
   });
 
-  it("falls invalid selectedSkinId back to Carbon variables", () => {
+  it("falls invalid selectedSkinId back to Pearl variables", () => {
     const boundary = resolveLucaMobileSkinBoundary({ selectedSkinId: "invalid-skin" });
 
     expect(boundary.skinId).toBe(DEFAULT_LUCA_SKIN_ID);
-    expect(boundary.materialVariables["--luca-background-base"]).toBe("#111417");
-    expect(boundary.safetyNotes.join(" ")).toContain("Carbon");
+    expect(boundary.materialVariables["--luca-background-base"]).toBe("#e2edf2");
+    expect(boundary.safetyNotes.join(" ")).toContain("Luca Light");
   });
 
   it("defaults hostKind to mobile-web", () => {

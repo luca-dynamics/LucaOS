@@ -20,28 +20,28 @@ const STATUS_OR_SAFETY_NAME_PARTS = [
 ] as const;
 
 describe("lucaDashboardSkinBoundary", () => {
-  it("falls back to Carbon when no selected skin is provided", () => {
+  it("falls back to Pearl when no selected skin is provided", () => {
     const boundary = resolveLucaDashboardSkinBoundary();
 
     expect(boundary.skinId).toBe(DEFAULT_LUCA_SKIN_ID);
-    expect(boundary.materialVariables["--luca-background-base"]).toBe("#111417");
+    expect(boundary.materialVariables["--luca-background-base"]).toBe("#e2edf2");
   });
 
   it("returns selected skin material variables for the dashboard boundary", () => {
     const boundary = resolveLucaDashboardSkinBoundary({ selectedSkinId: "carbon" });
 
     expect(boundary.skinId).toBe("carbon");
-    expect(boundary.materialVariables["--luca-background-base"]).toBe("#111417");
+    expect(boundary.materialVariables["--luca-background-base"]).toBe("#10161b");
     expect(Object.keys(boundary.materialVariables).sort()).toEqual(
       [...LUCA_SKIN_MATERIAL_VARIABLE_NAMES].sort(),
     );
   });
 
-  it("falls invalid selectedSkinId back to Carbon variables", () => {
+  it("falls invalid selectedSkinId back to Pearl variables", () => {
     const boundary = resolveLucaDashboardSkinBoundary({ selectedSkinId: "invalid-skin" });
 
     expect(boundary.skinId).toBe(DEFAULT_LUCA_SKIN_ID);
-    expect(boundary.materialVariables["--luca-accent-primary"]).toBe("#9fb3c2");
+    expect(boundary.materialVariables["--luca-accent-primary"]).toBe("#3d8fa6");
   });
 
   it("does not include status or safety variables in the applied map", () => {

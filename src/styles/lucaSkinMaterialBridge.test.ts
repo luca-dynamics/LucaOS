@@ -22,12 +22,12 @@ const STATUS_OR_SAFETY_NAME_PARTS = [
 ] as const;
 
 describe("lucaSkinMaterialBridge", () => {
-  it("resolves Carbon values as the default material bridge", () => {
+  it("resolves Pearl values as the default material bridge", () => {
     const variables = getDefaultLucaSkinMaterialVariables();
 
-    expect(variables["--luca-background-base"]).toBe("#111417");
-    expect(variables["--luca-background-elevated"]).toBe("#1b2025");
-    expect(variables["--luca-accent-primary"]).toBe("#9fb3c2");
+    expect(variables["--luca-background-base"]).toBe("#e2edf2");
+    expect(variables["--luca-background-elevated"]).toBe("#f3f9fc");
+    expect(variables["--luca-accent-primary"]).toBe("#3d8fa6");
   });
 
   it("returns every contracted material bridge variable name", () => {
@@ -45,7 +45,7 @@ describe("lucaSkinMaterialBridge", () => {
   it("maps skin text variables into Luca text targets", () => {
     const variables = getLucaSkinMaterialVariables({ skinId: "carbon" });
 
-    expect(variables["--luca-text-primary"]).toBe("#f2f5f7");
+    expect(variables["--luca-text-primary"]).toBe("#e8edf2");
     expect(variables["--luca-text-secondary"]).toBe("#bac5cc");
     expect(variables["--luca-text-tertiary"]).toBe("#89949c");
   });
@@ -63,7 +63,7 @@ describe("lucaSkinMaterialBridge", () => {
     const adaptiveLight = getLucaSkinMaterialVariables({ skinId: "flow" });
     const dark = getLucaSkinMaterialVariables({ skinId: "carbon" });
 
-    expect(light["--luca-material-glass-highlight"]).toContain("#4f7f96");
+    expect(light["--luca-material-glass-highlight"]).toContain("#3d8fa6");
     expect(light["--luca-material-glass-rim"]).toContain("#4f5e68");
     expect(adaptiveLight["--luca-material-glass-highlight"]).toContain("#5f8fa3");
     expect(adaptiveLight["--luca-material-glass-rim"]).toContain("#4e6270");

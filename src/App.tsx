@@ -35,7 +35,12 @@ import { taskQueue } from "./services/taskQueueService";
 import { soundService } from "./services/soundService";
 import { voiceService } from "./services/voiceService";
 import { settingsService } from "./services/settingsService";
-import { getLucaSkinDefinition } from "./config/lucaSkins";
+import {
+  DEFAULT_LUCA_APPEARANCE_MODE,
+  getLucaSkinDefinition,
+  isLucaAppearanceMode,
+  resolveLucaAppearanceSkinId,
+} from "./config/lucaSkins";
 import { resolveLucaDashboardSkinBoundary } from "./styles/lucaDashboardSkinBoundary";
 import { resolveLucaMobileSkinBoundary } from "./styles/lucaMobileSkinBoundary";
 import { getLucaSkinMaterialVariables } from "./styles/lucaSkinMaterialBridge";
@@ -554,6 +559,41 @@ function AppContent() {
   const [selectedSkinId, setSelectedSkinId] = useState<unknown>(
     () => settingsService.getSettings().general.selectedSkinId,
   );
+
+  // "System" appearance follows the device LIVE — if the OS flips light/dark
+  // while LucaOS is open, the identity flips with it. An explicit Luca Light /
+  // Luca Dark choice (or a specific environment from the catalog) is never
+  // overridden; only `appearanceMode === "system"` is tracked.
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function"
+    ) {
+      return;
+    }
+    const query = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const applySystemAppearance = () => {
+      const general = settingsService.get("general");
+      if (general.appearanceMode !== "system") return;
+      const nextSkinId = resolveLucaAppearanceSkinId("system", query.matches);
+      if (general.selectedSkinId === nextSkinId) return;
+      settingsService.saveSettings({
+        general: { ...general, selectedSkinId: nextSkinId },
+      });
+      setSelectedSkinId(nextSkinId);
+    };
+
+    // Catch an OS change that happened while LucaOS was closed, then track.
+    applySystemAppearance();
+    if (typeof query.addEventListener === "function") {
+      query.addEventListener("change", applySystemAppearance);
+      return () => query.removeEventListener("change", applySystemAppearance);
+    }
+    // Older WebKit fallback.
+    query.addListener(applySystemAppearance);
+    return () => query.removeListener(applySystemAppearance);
+  }, []);
 
   // The being's other bodies: LucaLink-paired devices, live. Display-only.
   const lucaLinkBodyDevices = useLucaLinkDevices();
@@ -2722,14 +2762,30 @@ function AppContent() {
               onComplete={(flow) => {
                 const { setupComplete, preferredMode, premiumPreferences } =
                   mapLucaOnboardingFlowToDesktopCompletion(flow);
+                // Apply the chosen appearance mode (light / dark / system) as
+                // the actual workspace skin — one glacier identity, worn light
+                // (Pearl) or dark (Carbon); "system" follows the OS.
+                const prefersDark =
+                  typeof window !== "undefined" &&
+                  typeof window.matchMedia === "function" &&
+                  window.matchMedia("(prefers-color-scheme: dark)").matches ===
+                    true;
+                const nextSkinId = resolveLucaAppearanceSkinId(
+                  isLucaAppearanceMode(premiumPreferences.environment)
+                    ? premiumPreferences.environment
+                    : DEFAULT_LUCA_APPEARANCE_MODE,
+                  prefersDark,
+                );
                 settingsService.saveSettings({
                   general: {
                     ...settingsService.get("general"),
                     setupComplete,
                     preferredMode,
+                    selectedSkinId: nextSkinId,
                     premiumOnboardingPreferences: premiumPreferences,
                   },
                 });
+                setSelectedSkinId(nextSkinId);
                 const isVoice = preferredMode === "voice";
                 setIsVoiceMode(isVoice);
                 setShowVoiceHud(isVoice);
@@ -2739,10 +2795,11 @@ function AppContent() {
           </div>
         ) : (
           // Redundant in-app boot screen (the "KERNEL ACCESS" face + readiness
-          // cards) is eradicated: boot runs silently behind a calm dark holding
-          // screen. On Electron the native splash covers boot and the window is
-          // only revealed at READY/ONBOARDING, so this is never even seen.
-          <div className="absolute inset-0" style={{ background: "#111417" }} />
+          // cards) is eradicated: boot runs silently behind a calm glacier
+          // holding screen (matching the light boot surfaces — no dark flash).
+          // On Electron the native splash covers boot and the window is only
+          // revealed at READY/ONBOARDING, so this is never even seen.
+          <div className="absolute inset-0" style={{ background: "#e2edf2" }} />
         )}
       </div>
     );

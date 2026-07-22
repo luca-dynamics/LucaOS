@@ -14,8 +14,10 @@ import {
   resolvePersistedExperienceMode,
 } from "../experience/experienceModeSettings";
 import {
+  DEFAULT_LUCA_APPEARANCE_MODE,
   DEFAULT_LUCA_SKIN_ID,
   normalizeLucaSkinId,
+  type LucaAppearanceMode,
   type LucaSkinId,
 } from "../config/lucaSkins";
 import type { LucaAtmosphere } from "../config/lucaAtmospheres";
@@ -71,6 +73,13 @@ export interface LucaSettings {
     customPersona?: CustomPersonaSettings;
     theme: UIThemeId;
     selectedSkinId?: LucaSkinId;
+    /**
+     * Appearance mode — LucaOS wears ONE identity (the glacier) in light
+     * (Luca Light) or dark (Luca Dark); "system" follows the device. This is
+     * the primary appearance control; `selectedSkinId` holds the resolved
+     * skin (and any explicitly chosen environment from the wider catalog).
+     */
+    appearanceMode?: LucaAppearanceMode;
     atmosphere?: LucaAtmosphere;
     opticalMaterial?: LucaOpticalMaterialSettings;
     syncThemeWithPersona: boolean;
@@ -328,6 +337,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     customPersona: DEFAULT_CUSTOM_PERSONA,
     theme: "PROFESSIONAL",
     selectedSkinId: DEFAULT_LUCA_SKIN_ID,
+    appearanceMode: DEFAULT_LUCA_APPEARANCE_MODE,
     opticalMaterial: DEFAULT_LUCA_OPTICAL_MATERIAL,
     preferredMode: "text",
     // Persona no longer drives appearance; the skin system owns visuals.

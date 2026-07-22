@@ -38,18 +38,19 @@ export interface LucaSkinPreviewMetadata {
 export const LUCA_SKIN_PREVIEW_METADATA = {
   pearl: {
     id: "pearl",
-    label: "LucaOS Pearl",
-    shortLabel: "Pearl",
-    tagline: "A quiet bright environment for LucaOS.",
+    label: "Luca Light",
+    shortLabel: "Luca Light",
+    tagline: "The LucaOS glacier light.",
     description:
-      "A calm light operating environment with soft pearl surfaces, restrained material depth, and readable graphite text for everyday work.",
+      "The default LucaOS environment: a luminous ice-blue glacier with frosted glass, ink-graphite text, and the hologram's own palette — one look from boot to workspace.",
     mood: "calm-light",
     capabilities: [
+      "recommended-default",
       "high-readability",
       "low-motion-safe",
       "mobile-safe",
     ],
-    recommendedFor: ["daily work", "calm light-mode use", "reading"],
+    recommendedFor: ["first-time users", "daily work", "calm light-mode use", "reading"],
     previewNotes: [
       "Use soft near-white surfaces with gentle ambient warmth.",
       "Keep the preview spacious, low-noise, and text-forward.",
@@ -66,19 +67,18 @@ export const LUCA_SKIN_PREVIEW_METADATA = {
   },
   carbon: {
     id: "carbon",
-    label: "LucaOS Carbon",
-    shortLabel: "Carbon",
-    tagline: "A professional dark workspace for focused sessions.",
+    label: "Luca Dark",
+    shortLabel: "Luca Dark",
+    tagline: "The LucaOS look, after dark.",
     description:
-      "A focused graphite operating environment with restrained accents, quiet depth, and comfortable dark-mode readability.",
+      "The glacier identity tuned for night: deep ice-slate materials, the same teal light and frosted glass, with comfortable dark-mode readability.",
     mood: "focused-dark",
     capabilities: [
-      "recommended-default",
       "developer-focus",
       "high-readability",
       "low-motion-safe",
     ],
-    recommendedFor: ["first-time users", "developers", "long work sessions", "dark-mode users"],
+    recommendedFor: ["developers", "long work sessions", "dark-mode users"],
     previewNotes: [
       "Use neutral charcoal depth rather than pure black.",
       "Keep accent treatment restrained and professional.",
@@ -96,8 +96,8 @@ export const LUCA_SKIN_PREVIEW_METADATA = {
   },
   flow: {
     id: "flow",
-    label: "LucaOS Flow",
-    shortLabel: "Flow",
+    label: "Luca Flow",
+    shortLabel: "Luca Flow",
     tagline: "The signature living OS identity, kept behind the work.",
     description:
       "A liquid-adaptive operating environment with soft gradients, layered glass, and ambient depth designed to feel alive without competing with content.",
@@ -121,8 +121,8 @@ export const LUCA_SKIN_PREVIEW_METADATA = {
   },
   canvas: {
     id: "canvas",
-    label: "LucaOS Canvas",
-    shortLabel: "Canvas",
+    label: "Luca Canvas",
+    shortLabel: "Luca Canvas",
     tagline: "A warm editorial space for reading, writing, and planning.",
     description:
       "A calm warm operating environment with editorial rhythm, matte separation, and readable cream surfaces for thoughtful work.",
@@ -150,8 +150,8 @@ export const LUCA_SKIN_PREVIEW_METADATA = {
   },
   graphite: {
     id: "graphite",
-    label: "LucaOS Graphite",
-    shortLabel: "Graphite",
+    label: "Luca Graphite",
+    shortLabel: "Luca Graphite",
     tagline: "Neutral grey dark for long sessions.",
     description:
       "A neutral grey dark environment with no color cast — steady contrast and calm materials that stay easy on the eyes across long working sessions.",
@@ -179,8 +179,8 @@ export const LUCA_SKIN_PREVIEW_METADATA = {
   },
   onyx: {
     id: "onyx",
-    label: "LucaOS Onyx",
-    shortLabel: "Onyx",
+    label: "Luca Onyx",
+    shortLabel: "Luca Onyx",
     tagline: "True black, OLED-grade contrast.",
     description:
       "A true-black environment where structure is carried by hairlines and a single cool accent — maximum contrast, zero noise, OLED-friendly.",
@@ -207,8 +207,8 @@ export const LUCA_SKIN_PREVIEW_METADATA = {
   },
   dusk: {
     id: "dusk",
-    label: "LucaOS Dusk",
-    shortLabel: "Dusk",
+    label: "Luca Dusk",
+    shortLabel: "Luca Dusk",
     tagline: "Warm charcoal with an amber undertone.",
     description:
       "A warm charcoal environment with a soft amber undertone — dark mode that reads like evening light rather than machinery.",
@@ -235,8 +235,8 @@ export const LUCA_SKIN_PREVIEW_METADATA = {
   },
   mist: {
     id: "mist",
-    label: "LucaOS Mist",
-    shortLabel: "Mist",
+    label: "Luca Mist",
+    shortLabel: "Luca Mist",
     tagline: "Clean neutral light — the working daylight.",
     description:
       "A clean neutral light environment with quiet grey-white surfaces and no warmth cast — the everyday daylight counterpart to Graphite.",

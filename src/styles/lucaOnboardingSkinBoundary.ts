@@ -87,7 +87,7 @@ function getOnboardingSafetyNotes(options: {
     options.selectedSkinId !== undefined &&
     options.selectedSkinId !== DEFAULT_LUCA_SKIN_ID
   ) {
-    notes.push("Invalid or unsupported skin selection fell back to Carbon.");
+    notes.push("Invalid or unsupported skin selection fell back to Luca Light.");
   }
 
   if (

@@ -6,20 +6,20 @@ import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 import { SkinPreviewCard } from "./SkinPreviewCard";
 
 /**
- * Settings section for the LucaOS Skin System.
+ * Settings section for the wider LucaOS environment catalog.
  *
- * This section renders every registered skin as a local operating environment
- * chooser.
+ * Appearance is chosen ABOVE this section (Luca Light / Luca Dark / System) —
+ * that mode is the product's identity. This section is the optional deeper
+ * shelf: every registered environment, for people who want something other
+ * than the two default modes.
  *
  * - The selected skin ID is persisted through Settings.
  * - App surfaces consume the selected skin at their local boundaries.
  * - No root/global appearance or theme state is mutated.
- *
- * The helper copy presents skins as the app's primary visual environment.
  */
 
 export const SKIN_PREVIEW_HELPER_COPY =
-  "Choose the visual operating environment Luca uses across the app.";
+  "Optional. Go beyond light and dark with a different visual environment.";
 
 export interface SkinPreviewSectionProps {
   accentColor?: string;
@@ -40,7 +40,7 @@ export const SkinPreviewSection: React.FC<SkinPreviewSectionProps> = ({
 
   return (
     <SettingsSection
-      title="LucaOS Skin"
+      title="More environments"
       description={SKIN_PREVIEW_HELPER_COPY}
       icon="Palette"
       accentColor={accentColor}
@@ -52,6 +52,7 @@ export const SkinPreviewSection: React.FC<SkinPreviewSectionProps> = ({
       >
         The selected skin is the active LucaOS visual environment across
         Settings, boot, onboarding, dashboard, and mobile-safe surfaces.
+        Choosing one here overrides the appearance mode above.
       </p>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         {skins.map((metadata) => (

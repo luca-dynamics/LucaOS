@@ -50,27 +50,30 @@ describe("LucaOS skin settings section", () => {
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 
-  it("marks Carbon as the recommended default and current fallback", () => {
+  it("marks Pearl as the recommended default and current fallback", () => {
     const markup = renderToStaticMarkup(
       <SkinPreviewSection selectedSkinId="not-a-skin" />,
     );
     expect(markup).toContain("Recommended");
     expect(markup).toContain("Current");
-    expect(markup).toContain('data-skin-preview-card="carbon"');
+    expect(markup).toContain('data-skin-preview-card="pearl"');
 
     const list = getLucaSkinPreviewMetadataList();
     const recommended = list.filter((skin) =>
       skin.capabilities.includes("recommended-default"),
     );
-    expect(recommended.map((skin) => skin.id)).toEqual(["carbon"]);
+    expect(recommended.map((skin) => skin.id)).toEqual(["pearl"]);
   });
 
-  it("presents skins as the primary visual environment", () => {
+  it("presents the catalog as the optional shelf below appearance mode", () => {
     const markup = renderToStaticMarkup(<SkinPreviewSection />);
     expect(markup).toContain("active LucaOS visual environment");
     expect(markup).not.toContain("applies to the dashboard shell only");
     expect(markup).not.toContain("not skinned yet");
-    expect(SKIN_PREVIEW_HELPER_COPY).toContain("visual operating environment");
+    // Appearance mode leads; this section is explicitly optional.
+    expect(markup).toContain("More environments");
+    expect(SKIN_PREVIEW_HELPER_COPY).toContain("Optional");
+    expect(markup).toContain("overrides the appearance mode above");
   });
 
   it("selecting a card calls the settings update path with that skin ID", () => {

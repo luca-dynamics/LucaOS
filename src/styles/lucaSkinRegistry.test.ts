@@ -6,11 +6,11 @@ import {
 } from "./lucaSkinRegistry";
 
 describe("lucaSkinRegistry", () => {
-  it("resolves Carbon as the default skin", () => {
+  it("resolves Pearl as the default skin", () => {
     const variables = getDefaultLucaSkinCssVariables();
 
-    expect(variables["--luca-skin-bg-base"]).toBe("#111417");
-    expect(variables["--luca-skin-accent-primary"]).toBe("#9fb3c2");
+    expect(variables["--luca-skin-bg-base"]).toBe("#e2edf2");
+    expect(variables["--luca-skin-accent-primary"]).toBe("#3d8fa6");
   });
 
   it("returns every contracted CSS variable name", () => {
@@ -34,8 +34,8 @@ describe("lucaSkinRegistry", () => {
     const adaptiveLight = getLucaSkinCssVariables({ skinId: "flow" });
     const dark = getLucaSkinCssVariables({ skinId: "carbon" });
 
-    expect(light["--luca-skin-glass-rim"]).toContain("#4f5e68");
-    expect(light["--luca-skin-glass-shadow"]).toContain("#17202a");
+    expect(light["--luca-skin-glass-rim"]).toContain("#5b636f");
+    expect(light["--luca-skin-glass-shadow"]).toContain("#2b303a");
     expect(adaptiveLight["--luca-skin-glass-rim"]).toContain("#4e6270");
     expect(adaptiveLight["--luca-skin-glass-shadow"]).toContain("#17232c");
     expect(dark["--luca-skin-glass-rim"]).toBe("rgb(255 255 255 / 0.24)");
@@ -57,9 +57,9 @@ describe("lucaSkinRegistry", () => {
     expect(variables["--luca-skin-motion-glow"]).toBe("none");
   });
 
-  it("falls back to Carbon for invalid skin IDs", () => {
+  it("falls back to Pearl for invalid skin IDs", () => {
     const variables = getLucaSkinCssVariables({ skinId: "not-a-skin" });
 
-    expect(variables["--luca-skin-bg-base"]).toBe("#111417");
+    expect(variables["--luca-skin-bg-base"]).toBe("#e2edf2");
   });
 });

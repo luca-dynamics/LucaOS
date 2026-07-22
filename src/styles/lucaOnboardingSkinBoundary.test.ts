@@ -21,19 +21,19 @@ const STATUS_OR_SAFETY_NAME_PARTS = [
 ] as const;
 
 describe("lucaOnboardingSkinBoundary", () => {
-  it("falls back to Carbon, desktop-web, and the welcome surface by default", () => {
+  it("falls back to Pearl, desktop-web, and the welcome surface by default", () => {
     const boundary = resolveLucaOnboardingSkinBoundary();
     expect(boundary.skinId).toBe(DEFAULT_LUCA_SKIN_ID);
     expect(boundary.hostKind).toBe("desktop-web");
     expect(boundary.surface).toBe("onboarding-welcome");
   });
 
-  it("falls invalid selected skin back to Carbon variables", () => {
+  it("falls invalid selected skin back to Pearl variables", () => {
     const boundary = resolveLucaOnboardingSkinBoundary({
       selectedSkinId: "not-a-skin",
     });
     expect(boundary.skinId).toBe(DEFAULT_LUCA_SKIN_ID);
-    expect(boundary.materialVariables["--luca-accent-primary"]).toBe("#9fb3c2");
+    expect(boundary.materialVariables["--luca-accent-primary"]).toBe("#3d8fa6");
   });
 
   it("returns complete material and presence variable maps", () => {

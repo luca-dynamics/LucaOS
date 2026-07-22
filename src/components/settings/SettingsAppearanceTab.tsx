@@ -1,5 +1,7 @@
 import React from "react";
 import type { LucaSettings } from "../../services/settingsService";
+import { resolveLucaAppearanceModeForSkin } from "../../config/lucaSkins";
+import AppearanceModeSection from "./AppearanceModeSection";
 import SkinPreviewSection from "./SkinPreviewSection";
 import {
   SettingsCard,
@@ -22,9 +24,10 @@ import OpticalMaterialControls from "./OpticalMaterialControls";
  * Appearance — a first-class Settings destination (see
  * docs/mockups/settings-target.html).
  *
- * Hosts the LucaOS skin system: the eight visual operating environments
- * (darks Carbon/Graphite/Onyx/Dusk · lights Pearl/Mist/Canvas · living Flow).
- * Skins change material and mood — never legibility.
+ * Appearance leads with the mode: LucaOS wears ONE identity (the glacier) as
+ * Luca Light or Luca Dark, with System following the device. The wider
+ * environment catalog sits below as an optional deeper shelf. Environments
+ * change material and mood — never legibility.
  *
  * Also hosts Material & Display (font, scale, glass) and the Feel rows —
  * every control here is backed by a real settings key; nothing is invented
@@ -46,13 +49,34 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
 }) => {
   return (
     <div className="flex flex-col gap-6">
+      {/* Appearance mode is the primary control — one identity, light or dark
+          (or follow the system). It writes both the mode and the skin that
+          mode resolves to, so every skin-consuming surface follows along. */}
+      <AppearanceModeSection
+        accentColor={theme.hex}
+        isMobile={isMobile}
+        appearanceMode={settings.general.appearanceMode}
+        onAppearanceModeChange={(mode, resolvedSkinId) => {
+          onUpdate("general", "appearanceMode", mode);
+          onUpdate("general", "selectedSkinId", resolvedSkinId);
+        }}
+      />
+
       <SkinPreviewSection
         accentColor={theme.hex}
         isMobile={isMobile}
         selectedSkinId={settings.general.selectedSkinId}
-        onSelectedSkinChange={(skinId) =>
-          onUpdate("general", "selectedSkinId", skinId)
-        }
+        onSelectedSkinChange={(skinId) => {
+          onUpdate("general", "selectedSkinId", skinId);
+          // Picking an environment here overrides the mode above. Luca Light /
+          // Luca Dark map back to their mode; anything else clears it, so
+          // system-following can't silently undo the choice.
+          onUpdate(
+            "general",
+            "appearanceMode",
+            resolveLucaAppearanceModeForSkin(skinId),
+          );
+        }}
       />
 
       <SettingsSection
