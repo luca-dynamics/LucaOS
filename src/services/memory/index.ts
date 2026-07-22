@@ -4,3 +4,5 @@ export * from "./MemoryAdapters";
 
 export * from "./TraceMemoryMapping";
 export * from "./TraceMemoryAdapter";
+
+export * from "./MemoryVaultService";

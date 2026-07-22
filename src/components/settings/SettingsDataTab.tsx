@@ -31,6 +31,7 @@ import { PersonalIntelligenceMemoryApprovalPilot } from "./PersonalIntelligenceM
 import { PersonalIntelligenceRuntimeTracePanel } from "./PersonalIntelligenceRuntimeTracePanel";
 import { PersonalIntelligenceMissionRuntimePanel } from "./PersonalIntelligenceMissionRuntimePanel";
 import { UnifiedMissionCenterPanel } from "./UnifiedMissionCenterPanel";
+import { UnifiedMemoryVaultPanel } from "./UnifiedMemoryVaultPanel";
 import {
   createLearningEventPreview,
   createPrivacyZonesPreview,
@@ -259,6 +260,17 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
           isMobile={isMobile}
         >
           <UnifiedMissionCenterPanel />
+        </SettingsSection>
+      )}
+
+      {showGovernancePreviews && (
+        <SettingsSection
+          title="Memory Vault"
+          description="Absorb Phase 2: readable and editable local archive with export/import. Complements the archive list below and PI governed write pilots."
+          icon="Database"
+          isMobile={isMobile}
+        >
+          <UnifiedMemoryVaultPanel />
         </SettingsSection>
       )}
 
