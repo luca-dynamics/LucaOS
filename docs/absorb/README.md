@@ -17,7 +17,7 @@ Doctrine remains in `Luca_Absorb_Architecture_v12.md`. This table tracks **shipp
 | Absorb roadmap phase | Status | Evidence in repo |
 | --- | --- | --- |
 | **1 Stability + execution** | **Partial → real wire + UI** | Gates + tape; product complete API; workforce/CU MissionControl loop + **auto start checkpoint**; **Mission Center** readiness, gate detail, tape timeline, **checkpoint/rollback (tape-level pilot)**; PI Mission Profile stays **read-only advisory** |
-| **2 Memory + context** | **Partial → vault pilot** | PI memory / approval pilots; **MemoryVaultService** + UI; ingest/compress/multi-format import; **product bridge** (LucaLink `event:memory:ingest` + eventBus `memory:vault_ingest` + chat helper); deeper host scrape + model summarization open |
+| **2 Memory + context** | **Partial → vault pilot** | PI memory / approval pilots; **MemoryVaultService** + UI; ingest/compress/multi-format import; **product bridge** (LucaLink + eventBus + **auto durable chat turns** via TurnRunner/`extractLifeDirectives`); deeper host scrape + model summarization open |
 | **3 Ecosystem + skills** | Partial | MCP/plugins, skill lifecycle, dry-run; marketplace open |
 | **4 Evolution + self-repair** | Partial | Evolution services + governance; Hermes trajectory productization open |
 | **5 Embodiment** | Strong base | LucaLink, computer-use, host control; robotics open |

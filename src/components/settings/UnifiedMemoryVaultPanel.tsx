@@ -576,8 +576,9 @@ export const UnifiedMemoryVaultPanel: React.FC<
             Export format:{" "}
             <span className="font-mono">luca_memory_vault_v1</span>. Live
             product ingest: LucaLink{" "}
-            <span className="font-mono">event:memory:ingest</span> and eventBus{" "}
-            <span className="font-mono">memory:vault_ingest</span>.
+            <span className="font-mono">event:memory:ingest</span>, eventBus{" "}
+            <span className="font-mono">memory:vault_ingest</span>, and durable
+            chat turns after each successful TurnRunner pass.
           </p>
         )}
       </div>

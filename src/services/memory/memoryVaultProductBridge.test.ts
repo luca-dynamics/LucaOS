@@ -5,9 +5,11 @@ import {
   ingestChatTurn,
   ingestLucaLinkMemoryPayload,
   installMemoryVaultProductBridge,
+  isDurableChatMemoryCandidate,
   mapChatTurnToIngest,
   mapLucaLinkIngestPayload,
   mapRemoteMemoryNodeToIngest,
+  maybeIngestUserChatTurn,
   MEMORY_VAULT_INGEST_BUS_EVENT,
 } from "./memoryVaultProductBridge";
 
@@ -46,6 +48,24 @@ describe("memoryVaultProductBridge mappers", () => {
       })?.sourceKind,
     ).toBe("chat");
   });
+
+  it("durable heuristic accepts prefs and rejects chatter", () => {
+    expect(isDurableChatMemoryCandidate("I prefer dark mode always")).toBe(
+      true,
+    );
+    expect(isDurableChatMemoryCandidate("Remember that I work nights")).toBe(
+      true,
+    );
+    expect(isDurableChatMemoryCandidate("what time is it")).toBe(false);
+    expect(isDurableChatMemoryCandidate("hello there")).toBe(false);
+    expect(
+      mapChatTurnToIngest({
+        text: "what is the weather today please",
+        role: "user",
+        requireDurable: true,
+      }),
+    ).toBeNull();
+  });
 });
 
 describe("memoryVaultProductBridge ingest", () => {
@@ -77,11 +97,36 @@ describe("memoryVaultProductBridge ingest", () => {
       saveMemory: async () => null,
     });
     const result = await ingestChatTurn(
-      { text: "Remember my timezone is PST please", role: "user" },
+      {
+        text: "Remember my timezone is PST please",
+        role: "user",
+        requireDurable: false,
+      },
       { vault },
     );
     expect(result.ok).toBe(true);
     expect(store.length).toBeGreaterThan(0);
+  });
+
+  it("maybeIngestUserChatTurn only writes durable turns", async () => {
+    let store: MemoryNode[] = [];
+    const vault = new MemoryVaultService({
+      listNodes: () => store,
+      persistNodes: (n) => {
+        store = n;
+      },
+      saveMemory: async () => null,
+    });
+
+    const skip = await maybeIngestUserChatTurn("ls -la", { vault });
+    expect(skip.written).toBe(0);
+
+    const ok = await maybeIngestUserChatTurn(
+      "I prefer concise bullet status updates",
+      { vault },
+    );
+    expect(ok.written).toBe(1);
+    expect(store.some((n) => n.value.includes("concise"))).toBe(true);
   });
 
   it("installs hooks on link + bus", async () => {

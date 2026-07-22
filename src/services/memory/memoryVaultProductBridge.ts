@@ -118,6 +118,30 @@ export function mapRemoteMemoryNodeToIngest(
 }
 
 /**
+ * Heuristic: only durable preference/fact language auto-enters the vault.
+ * Avoids ingesting every casual chat turn.
+ */
+export function isDurableChatMemoryCandidate(text: string): boolean {
+  const t = text.trim();
+  if (t.length < 12 || t.length > 2000) return false;
+  // Commands / one-shot ops — not durable memory
+  if (/^(ls|pwd|cd|cat|open|run|search|google)\b/i.test(t)) return false;
+  if (/^(what time|who are you|hello|hi|hey|thanks|thank you)\b/i.test(t)) {
+    return false;
+  }
+
+  const durable =
+    /\b(i prefer|i like|i love|i hate|i always|i never|always use|never use|remember that|remember this|my name is|call me|i am|i'm|i work|timezone|time zone|prefers?|preference|don't forget|do not forget|from now on)\b/i.test(
+      t,
+    ) ||
+    /\b(my (email|phone|address|company|role|title|team|boss|partner|kid|dog|cat))\b/i.test(
+      t,
+    );
+
+  return durable;
+}
+
+/**
  * Map a chat turn (user preference / fact candidate) → vault event.
  */
 export function mapChatTurnToIngest(input: {
@@ -126,21 +150,70 @@ export function mapChatTurnToIngest(input: {
   conversationId?: string;
   title?: string;
   tags?: string[];
+  /** When true (default for auto path), require durable-memory heuristic. */
+  requireDurable?: boolean;
 }): MemoryIngestEvent | null {
   const text = input.text?.trim();
   if (!text) return null;
   // Skip very short or purely system noise
   if (text.length < 8) return null;
   if (input.role === "system") return null;
+  if (input.requireDurable !== false && input.role !== "assistant") {
+    // Auto path: only durable candidates (unless caller opts out).
+    if (input.role === "user" || input.role == null) {
+      if (!isDurableChatMemoryCandidate(text)) return null;
+    }
+  }
 
   return {
     text,
     title: input.title || (input.role === "user" ? "User said" : "Chat note"),
     sourceKind: "chat",
     sourceId: input.conversationId || "chat",
-    tags: ["chat", "product-bridge", ...(input.tags ?? [])],
+    tags: [
+      "chat",
+      "product-bridge",
+      ...(isDurableChatMemoryCandidate(text) ? ["durable"] : []),
+      ...(input.tags ?? []),
+    ],
     occurredAt: Date.now(),
   };
+}
+
+/**
+ * Soft-fail auto-ingest for a user chat turn after a completed turn.
+ * Used by lucaService.extractLifeDirectives / TurnRunner.
+ */
+export async function maybeIngestUserChatTurn(
+  userMsg: string,
+  options?: {
+    conversationId?: string;
+    vault?: MemoryVaultService;
+    bus?: EventBusLike;
+  },
+): Promise<MemoryVaultIngestBatchResult> {
+  const event = mapChatTurnToIngest({
+    text: userMsg,
+    role: "user",
+    conversationId: options?.conversationId || "luca-chat",
+    title: "User preference",
+    tags: ["auto-turn"],
+    requireDurable: true,
+  });
+  if (!event) {
+    return {
+      ok: false,
+      accepted: 0,
+      skipped: 1,
+      written: 0,
+      results: [],
+      reason: "Not a durable chat memory candidate",
+    };
+  }
+  return ingestViaProductBridge([event], {
+    vault: options?.vault,
+    bus: options?.bus,
+  });
 }
 
 export async function ingestViaProductBridge(
