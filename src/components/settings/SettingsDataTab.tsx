@@ -32,6 +32,7 @@ import { PersonalIntelligenceRuntimeTracePanel } from "./PersonalIntelligenceRun
 import { PersonalIntelligenceMissionRuntimePanel } from "./PersonalIntelligenceMissionRuntimePanel";
 import { UnifiedMissionCenterPanel } from "./UnifiedMissionCenterPanel";
 import { UnifiedMemoryVaultPanel } from "./UnifiedMemoryVaultPanel";
+import { UnifiedSkillMarketplacePanel } from "./UnifiedSkillMarketplacePanel";
 import {
   createLearningEventPreview,
   createPrivacyZonesPreview,
@@ -271,6 +272,17 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
           isMobile={isMobile}
         >
           <UnifiedMemoryVaultPanel />
+        </SettingsSection>
+      )}
+
+      {showGovernancePreviews && (
+        <SettingsSection
+          title="Skill Marketplace"
+          description="Absorb Phase 3: import OpenClaw / Claude tools / MCP catalogs, manage skill lifecycle, dry-run gates. Auto-execution remains disabled."
+          icon="Package"
+          isMobile={isMobile}
+        >
+          <UnifiedSkillMarketplacePanel />
         </SettingsSection>
       )}
 
