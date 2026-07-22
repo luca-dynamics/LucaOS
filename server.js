@@ -281,6 +281,11 @@ server.listen(requestedPort, '127.0.0.1', () => {
     } catch (e) {
         console.warn('[LUCA CORE] Could not write port discovery file:', e.message);
     }
+
+    // Begin loading routes only now that the socket is bound, announced, and
+    // able to answer. setImmediate lets this callback return first so the
+    // server can serve requests before the heavy import work begins.
+    setImmediate(() => { void loadCoreRoutes(); });
 });
 
 // A fixed port can be occupied; an ephemeral one cannot. Fail loudly instead of
@@ -388,7 +393,18 @@ const TIER1_LOAD_ORDER = [
     'control', 'vision', 'mcp', 'persona',
 ];
 
-(async () => {
+/**
+ * Load the core route groups. Started ONLY after the server is listening.
+ *
+ * Ordering matters more than it looks: kicking this off at module scope
+ * starved the event loop, because a CJS import tree evaluates in one long
+ * synchronous block. The listen callback sat queued behind ~12s of module
+ * evaluation, so the port was announced — and the first health response
+ * served — 12s late, blowing the app's 10s BIOS window. Starting the work
+ * from inside the listen callback means the port is bound, announced, and
+ * answering before any heavy import begins.
+ */
+const loadCoreRoutes = async () => {
     const byId = new Map(ROUTE_GROUPS.map((g) => [g.id, g]));
     const tier1 = TIER1_LOAD_ORDER.map((id) => byId.get(id)).filter(Boolean);
     // Drift guard: any tier-1 group missing from TIER1_LOAD_ORDER still loads.
@@ -396,12 +412,22 @@ const TIER1_LOAD_ORDER = [
         if (group.tier === 1 && !tier1.includes(group)) tier1.push(group);
     }
 
-    // Loaded in parallel: Node resolves/reads modules concurrently even though
-    // each module BODY evaluates synchronously, so parallel finishes sooner
-    // than one-at-a-time. Tier 2 is not loaded here at all — those groups load
-    // on first request (onDemandResponder), which is what keeps the boot-time
-    // import graph small enough to stop blocking the event loop for minutes.
-    await Promise.all([...tier1.map(loadGroup), loadCoreServices()]);
+    // Batched rather than all-at-once: Node resolves modules concurrently, so
+    // batching keeps most of the parallel speed-up, while the yield between
+    // batches hands the event loop back so queued /api/health and /api/status
+    // requests are actually answered while the rest of the routes load.
+    // (Nothing can interrupt a single module's synchronous evaluation — the
+    // yields buy responsiveness BETWEEN modules, not inside one.)
+    const BATCH_SIZE = 4;
+    const pending = [...tier1];
+    const batches = [];
+    while (pending.length) batches.push(pending.splice(0, BATCH_SIZE));
+
+    for (const batch of batches) {
+        await Promise.all(batch.map(loadGroup));
+        await new Promise((resolve) => setImmediate(resolve));
+    }
+    await loadCoreServices();
     bootState.coreReadyMs = bootMs();
     bootState.readyMs = bootState.coreReadyMs;
     bootState.phase = 'ready';
@@ -417,7 +443,7 @@ const TIER1_LOAD_ORDER = [
     // serving; they just no longer gate readiness.
     await loadIntegrationServices();
     console.log(`[BOOT] Background integration services settled (+${bootMs()}ms).`);
-})();
+};
 
 // EXPORT FOR TESTING
 export { app, server };
