@@ -6,11 +6,13 @@
 
 import type { WorkflowPlan, WorkflowTask } from "./LucaWorkforce";
 import { missionControlService } from "./MissionControlService";
+import { recordMissionCheckpoint } from "../missionTape/missionTapeCheckpoint";
 
 export interface AttachMissionControlResult {
   attached: boolean;
   missionControlId?: number;
   taskGoalIds?: Record<string, number>;
+  checkpointId?: string;
   reason?: string;
 }
 
@@ -65,10 +67,30 @@ export async function attachMissionControlToWorkflowPlan(
   plan.missionControlId = missionId;
   plan.taskGoalIds = taskGoalIds;
 
+  // Tape-level start checkpoint (soft-fail) for rollbackAvailable evidence.
+  let checkpointId: string | undefined;
+  try {
+    const cp = await recordMissionCheckpoint({
+      missionId: String(missionId),
+      intent: plan.goal,
+      label: `workforce start · ${plan.tasks.length} task(s)`,
+      goals: plan.tasks.map((t) => ({
+        id: taskGoalIds[t.id],
+        description: `[${t.persona}] ${t.description}`,
+        status: "PENDING",
+      })),
+      recorder: missionControlService.getMissionTapeRecorder(),
+    });
+    if (cp.ok) checkpointId = cp.checkpointId;
+  } catch {
+    /* soft-fail */
+  }
+
   return {
     attached: true,
     missionControlId: missionId,
     taskGoalIds,
+    checkpointId,
   };
 }
 

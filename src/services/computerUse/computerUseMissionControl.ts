@@ -7,12 +7,14 @@
  */
 
 import { missionControlService } from "../agent/MissionControlService";
+import { recordMissionCheckpoint } from "../missionTape/missionTapeCheckpoint";
 
 export interface EnsureComputerUseMissionControlResult {
   linked: boolean;
   missionControlId?: number;
   /** stepId → MissionControl goal id */
   stepGoalIds?: Record<string, number>;
+  checkpointId?: string;
   reason?: string;
 }
 
@@ -90,10 +92,30 @@ export async function ensureComputerUseMissionControl(
     stepGoalIds[step.stepId] = goalId;
   }
 
+  // Tape-level start checkpoint (soft-fail) for rollbackAvailable evidence.
+  let checkpointId: string | undefined;
+  try {
+    const cp = await recordMissionCheckpoint({
+      missionId: String(missionControlId),
+      intent: options?.intent?.trim() || `computer-use:${missionId}`,
+      label: `computer-use start · ${steps.length} step(s)`,
+      goals: steps.map((s) => ({
+        id: stepGoalIds[s.stepId],
+        description: s.description?.trim() || `computer_use:${s.stepId}`,
+        status: "PENDING",
+      })),
+      recorder: missionControlService.getMissionTapeRecorder(),
+    });
+    if (cp.ok) checkpointId = cp.checkpointId;
+  } catch {
+    /* soft-fail */
+  }
+
   return {
     linked: true,
     missionControlId,
     stepGoalIds: Object.keys(stepGoalIds).length > 0 ? stepGoalIds : undefined,
+    checkpointId,
   };
 }
 

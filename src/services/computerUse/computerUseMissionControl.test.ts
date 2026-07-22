@@ -60,6 +60,7 @@ describe("ensureComputerUseMissionControl", () => {
     expect(result.linked).toBe(true);
     expect(result.missionControlId).toBe(3);
     expect(result.stepGoalIds).toEqual({ s1: 11, s2: 12 });
+    expect(result.checkpointId).toBeTruthy();
     expect(addGoal).toHaveBeenCalledTimes(2);
     expect(addGoal).toHaveBeenNthCalledWith(1, 3, "click button");
     expect(addGoal).toHaveBeenNthCalledWith(2, 3, "computer_use:s2");

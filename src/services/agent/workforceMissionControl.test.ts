@@ -51,6 +51,7 @@ describe("workforceMissionControl", () => {
       task_0: 101,
       task_1: 102,
     });
+    expect(result.checkpointId).toBeTruthy();
     expect(startMission).toHaveBeenCalledWith(
       "Ship the feature",
       expect.objectContaining({
