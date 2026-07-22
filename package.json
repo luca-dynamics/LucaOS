@@ -82,7 +82,6 @@
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
     "active-win": "^8.2.1",
-    "better-sqlite3": "^12.4.5",
     "bonjour-service": "^1.2.1",
     "buffer": "^6.0.3",
     "ccxt": "^4.5.27",

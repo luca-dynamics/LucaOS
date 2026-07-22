@@ -6,9 +6,19 @@ const isNode = typeof process !== 'undefined' && process.versions && !!process.v
 let db;
 
 if (isNode || isElectron) {
-    // Dynamic import to prevent build-time crashes in web environments
+    // Dynamic import to prevent build-time crashes in web environments.
+    //
+    // node:sqlite (built into Node 22.5+/Electron 40) replaces better-sqlite3:
+    // it ships with the runtime, so there is no native binary to compile and no
+    // NODE_MODULE_VERSION mismatch to fall back from. That mismatch was not
+    // theoretical — the native module was built for Electron's ABI while the
+    // core ran under system Node, so EVERY boot silently landed in the mock
+    // store below and threw the writes away.
+    //
+    // FTS5, the FTS sync triggers, WAL, and the {changes,lastInsertRowid}
+    // return shape are all verified equivalent, so callers need no changes.
     try {
-        const Database = (await import('better-sqlite3')).default;
+        const { DatabaseSync } = await import('node:sqlite');
         const path = (await import('path')).default;
         const fs = (await import('fs')).default;
         
@@ -20,8 +30,9 @@ if (isNode || isElectron) {
         }
 
         const DB_PATH = path.join(DATA_DIR, 'luca.db');
-        db = new Database(DB_PATH);
-        db.pragma('journal_mode = WAL');
+        db = new DatabaseSync(DB_PATH);
+        // node:sqlite has no .pragma() helper; PRAGMA goes through exec().
+        db.exec('PRAGMA journal_mode = WAL');
 
         // Initialize Schema logic here
         const initSchema = (database) => {

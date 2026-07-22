@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => {
         "robotjs",
         "playwright",
         "better-sqlite3",
+        "node:sqlite",
         "electron",
         "express",
         "ccxt",
@@ -102,6 +103,12 @@ export default defineConfig(({ mode }) => {
         "node:os": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         url: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         "node:url": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        // The core uses the runtime's built-in node:sqlite; the browser build
+        // has no filesystem, so it gets a stub that throws (callers already
+        // fall back to their in-memory stores). better-sqlite3 stays mapped
+        // while any third-party dep still reaches for it.
+        "node:sqlite": path.resolve(__dirname, "src/mocks/browser_node_sqlite.ts"),
+        sqlite: path.resolve(__dirname, "src/mocks/browser_node_sqlite.ts"),
         "better-sqlite3": path.resolve(
           __dirname,
           "src/mocks/browser_better_sqlite3.ts",

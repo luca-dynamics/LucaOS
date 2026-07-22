@@ -8,6 +8,7 @@ const bootstrapSource = readFileSync("src/index.tsx", "utf8");
 const forbiddenWebBootImports = [
   "electron",
   "better-sqlite3",
+  "node:sqlite",
   "node:fs",
   "node:path",
   "lucaService",

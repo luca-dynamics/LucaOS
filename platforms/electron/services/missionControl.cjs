@@ -2,11 +2,14 @@
 const path = require('path');
 const fs = require('fs');
 
+// node:sqlite ships with the runtime (Node 22.5+/Electron 40), so there is no
+// native binary to compile and no ABI mismatch to fall back from. The memory
+// fallback stays for older runtimes that lack the module entirely.
 let Database;
 try {
-  Database = require('better-sqlite3');
+  Database = require('node:sqlite').DatabaseSync;
 } catch (error) {
-  console.warn(`[MISSION_CONTROL] better-sqlite3 unavailable; using memory fallback. ${error.message}`);
+  console.warn(`[MISSION_CONTROL] node:sqlite unavailable; using memory fallback. ${error.message}`);
 }
 
 class InMemoryMissionControlStore {

@@ -76,6 +76,8 @@ const removedLegacyOnboardingSurfaces = [
 
 const forbidden = [
   "better-sqlite3",
+
+  "node:sqlite",
   "robotjs",
   "eventsource",
   "whatsapp-web.js",
@@ -99,6 +101,8 @@ const unsafeWebRuntimeReferences = [
   "personalityService",
   "soundService",
   "better-sqlite3",
+
+  "node:sqlite",
   "electron",
   "node:fs",
   "node:path",
@@ -403,6 +407,8 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
       "SecurityGate",
       "node:fs",
       "better-sqlite3",
+
+      "node:sqlite",
     ];
     for (const reference of forbiddenChatRuntime) {
       expect(lucaChatSurfaceSource).not.toMatch(
