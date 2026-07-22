@@ -67,9 +67,9 @@ describe("ensureComputerUseMissionControl", () => {
 });
 
 describe("syncComputerUseStepGoalStatus", () => {
-  it("maps completed/failed statuses", async () => {
+  it("maps completed/failed/in_progress statuses", async () => {
     const updateGoalStatus = vi.fn(async () => undefined);
-    const map = { s1: 55, s2: 56 };
+    const map = { s1: 55, s2: 56, s3: 57 };
 
     expect(
       await syncComputerUseStepGoalStatus(map, "s1", "completed", {
@@ -84,6 +84,13 @@ describe("syncComputerUseStepGoalStatus", () => {
       }),
     ).toBe(true);
     expect(updateGoalStatus).toHaveBeenCalledWith(56, "FAILED");
+
+    expect(
+      await syncComputerUseStepGoalStatus(map, "s3", "in_progress", {
+        updateGoalStatus: updateGoalStatus as any,
+      }),
+    ).toBe(true);
+    expect(updateGoalStatus).toHaveBeenCalledWith(57, "IN_PROGRESS");
   });
 
   it("returns false when step has no mapped goal", async () => {

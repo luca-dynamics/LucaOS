@@ -57,11 +57,27 @@ export class ComputerUseMissionRunner {
 
     const results: ComputerUseMissionRunnerStepRecord[] = [];
     for (let i = 0; i < steps.length; i += 1) {
-      const record = await this.runStep(steps[i], i);
+      const step = steps[i];
+      if (stepGoalIds) {
+        try {
+          await syncComputerUseStepGoalStatus(
+            stepGoalIds,
+            step.stepId,
+            "in_progress",
+          );
+        } catch {
+          /* soft-fail */
+        }
+      }
+      const record = await this.runStep(step, i);
       results.push(record);
       if (stepGoalIds) {
         try {
-          await syncComputerUseStepGoalStatus(stepGoalIds, record.stepId, record.status);
+          await syncComputerUseStepGoalStatus(
+            stepGoalIds,
+            record.stepId,
+            record.status,
+          );
         } catch {
           /* soft-fail */
         }

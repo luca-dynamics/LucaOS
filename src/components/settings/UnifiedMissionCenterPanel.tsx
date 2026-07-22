@@ -49,8 +49,8 @@ export const UnifiedMissionCenterPanel: React.FC<
   const [newMissionTitle, setNewMissionTitle] = useState("");
   const [newGoalText, setNewGoalText] = useState("");
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const refresh = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     try {
       const live = await missionControlService.getActiveMission();
       setSnapshot(live);
@@ -71,13 +71,22 @@ export const UnifiedMissionCenterPanel: React.FC<
       setTape(null);
       setBridgeAvailable(false);
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  // Light poll while a mission is active so workforce/CU goal progress appears live.
+  useEffect(() => {
+    if (!snapshot?.mission || snapshot.mission.status !== "ACTIVE") return;
+    const id = window.setInterval(() => {
+      void refresh({ silent: true });
+    }, 3000);
+    return () => window.clearInterval(id);
+  }, [snapshot?.mission?.id, snapshot?.mission?.status, refresh]);
 
   const handleStartMission = async () => {
     const title = newMissionTitle.trim();

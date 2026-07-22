@@ -98,12 +98,13 @@ export async function ensureComputerUseMissionControl(
 }
 
 /**
- * Sync a finished CU step status onto its mapped MissionControl goal.
+ * Sync a CU step status onto its mapped MissionControl goal.
+ * Accepts runner statuses plus IN_PROGRESS for live Mission Center updates.
  */
 export async function syncComputerUseStepGoalStatus(
   stepGoalIds: Record<string, number> | undefined,
   stepId: string,
-  status: "completed" | "failed" | "inconclusive" | string,
+  status: "completed" | "failed" | "inconclusive" | "in_progress" | string,
   options?: {
     updateGoalStatus?: typeof missionControlService.updateGoalStatus;
   },
@@ -119,9 +120,11 @@ export async function syncComputerUseStepGoalStatus(
   const goalStatus =
     status === "completed"
       ? "COMPLETED"
-      : status === "failed"
-        ? "FAILED"
-        : "FAILED"; // inconclusive treated as failed for MC progress
+      : status === "in_progress"
+        ? "IN_PROGRESS"
+        : status === "failed"
+          ? "FAILED"
+          : "FAILED"; // inconclusive treated as failed for MC progress
 
   await update(goalId, goalStatus);
   return true;
