@@ -85,12 +85,22 @@ export async function createRealSandboxComputerUseStack(
   const enabled = options.enabled === true;
   const tapeBundle = buildMissionTapeBundle(options);
 
+  const missionTapeCompletion = tapeBundle.recorder
+    ? {
+        recorder: tapeBundle.recorder,
+        completeAfterRun: true as const,
+      }
+    : undefined;
+
   if (!enabled) {
     const pipeline = createComputerUsePipeline();
     const runtime =
       options.includeRuntime === false
         ? undefined
-        : createComputerUseRuntime({ pipelineOptions: {} });
+        : createComputerUseRuntime({
+            pipelineOptions: {},
+            missionTapeCompletion,
+          });
 
     return {
       enabled: false,
@@ -153,6 +163,8 @@ export async function createRealSandboxComputerUseStack(
             realSandboxExecutionEnabled: true,
             invocationShell,
           },
+          // Real wire: runSteps finalizes mission tape via verification gates.
+          missionTapeCompletion,
         });
 
   return {

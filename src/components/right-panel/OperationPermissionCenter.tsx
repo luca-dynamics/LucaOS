@@ -20,6 +20,7 @@ import {
 } from "../../styles/lucaMaterialSystem";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
+import { UnifiedMissionCenterPanel } from "../settings/UnifiedMissionCenterPanel";
 
 interface OperationPermissionCenterProps {
   creatorMode?: boolean;
@@ -162,6 +163,14 @@ export default function OperationPermissionCenter({
 
   return (
     <div className="space-y-3" aria-label="Personal Intelligence permission center">
+      {/* Unified mission control (mutations allowed) — separate from read-only Operation Center cards. */}
+      <RightPanelSection
+        title="Mission Center"
+        subtitle="Active MissionControl mission — goals, tape, gated complete. Same path as workforce/CU."
+      >
+        <UnifiedMissionCenterPanel variant="compact" />
+      </RightPanelSection>
+
       <RightPanelSection
         title="Permission center"
         subtitle={

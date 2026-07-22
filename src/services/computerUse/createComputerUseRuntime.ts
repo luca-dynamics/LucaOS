@@ -11,7 +11,10 @@ export function createComputerUseRuntime(options: CreateComputerUseRuntimeOption
   const missionEngineBridge = new ComputerUseMissionEngineBridge(options.missionEngineBridgeOptions);
   const missionStepAdapter = new ComputerUseMissionStepAdapter({ pipeline, missionEngineBridge });
   const runtimeEntrypoint = new ComputerUseRuntimeEntrypoint({ pipeline, missionStepAdapter });
-  const missionRunner = new ComputerUseMissionRunner({ runtimeEntrypoint });
+  const missionRunner = new ComputerUseMissionRunner({
+    runtimeEntrypoint,
+    missionTapeCompletion: options.missionTapeCompletion,
+  });
   const missionTapeAdapter = options.missionTapeAdapter ?? new ComputerUseMissionTapeAdapter();
 
   return {

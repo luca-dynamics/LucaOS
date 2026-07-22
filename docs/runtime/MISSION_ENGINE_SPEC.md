@@ -46,6 +46,15 @@ A mission can be marked complete only when:
 2. mission tape is recorded,
 3. result is reported with outcome + evidence.
 
+### Implementation pilots
+- `missionTape/missionTapeCompletionGate.ts` — gated complete
+- `missionEngine/MissionCheckpointStore.ts` — checkpoint/restore
+- `missionEngine/MissionEngineScaffold.ts` — intent→steps→verify→gated complete
+- `missionEngine/AtomicOperationUnit.ts` — strict step contract (spec fields)
+- `missionEngine/preStepVerificationGate.ts` — verify-before-execute representation
+- `missionTape/attachMissionTapeReceipt.ts` — receipt evidence on tape
+- `createMissionTapeRecorderExternalSink.completeMission` — CU completion path
+
 ## Acceptance Scenarios
 1. Failure mid-task restores prior checkpoint and resumes.
 2. Build/test failure triggers autonomous diagnosis + retry.
