@@ -257,8 +257,8 @@ export const UnifiedMissionCenterPanel: React.FC<
               className="text-[11px]"
               style={{ color: settingsSurfaceTokens.textSecondary }}
             >
-              No active mission. Start one here (desktop) or let workforce attach
-              to MissionControl.
+              No active mission. Start one here (desktop), or let workforce /
+              computer-use attach to MissionControl automatically.
             </p>
             <input
               className={inputClass}
@@ -312,6 +312,9 @@ export const UnifiedMissionCenterPanel: React.FC<
                     style={{ color: settingsSurfaceTokens.textTertiary }}
                   >
                     id {snapshot.mission.id} · {snapshot.mission.status}
+                    {typeof snapshot.mission.metadata?.source === "string"
+                      ? ` · ${snapshot.mission.metadata.source}`
+                      : ""}
                   </p>
                 </div>
                 <span
