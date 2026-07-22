@@ -9,3 +9,4 @@ export * from "./MemoryVaultService";
 export * from "./memoryVaultIngest";
 export * from "./memoryVaultCompress";
 export * from "./memoryVaultImportFormats";
+export * from "./memoryVaultProductBridge";

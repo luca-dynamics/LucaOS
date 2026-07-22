@@ -11,6 +11,10 @@ import {
   memoryVaultService,
   type MemoryVaultExport,
 } from "../../services/memory/MemoryVaultService";
+import {
+  MEMORY_VAULT_INGESTED_BUS_EVENT,
+  ingestChatTurn,
+} from "../../services/memory/memoryVaultProductBridge";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 export interface UnifiedMemoryVaultPanelProps {
@@ -52,6 +56,25 @@ export const UnifiedMemoryVaultPanel: React.FC<
 
   useEffect(() => {
     void refresh();
+  }, [refresh]);
+
+  // Live refresh when product bridge writes (LucaLink / chat / bus ingest).
+  useEffect(() => {
+    let mounted = true;
+    let off: (() => void) | undefined;
+    void import("../../services/eventBus")
+      .then(({ eventBus }) => {
+        const handler = () => {
+          if (mounted) void refresh();
+        };
+        eventBus.on?.(MEMORY_VAULT_INGESTED_BUS_EVENT, handler);
+        off = () => eventBus.off?.(MEMORY_VAULT_INGESTED_BUS_EVENT, handler);
+      })
+      .catch(() => undefined);
+    return () => {
+      mounted = false;
+      off?.();
+    };
   }, [refresh]);
 
   const visible = useMemo(
@@ -207,9 +230,16 @@ export const UnifiedMemoryVaultPanel: React.FC<
           tags: ["demo", "lucalink"],
         },
       ]);
+      // Also exercise chat product path.
+      await ingestChatTurn({
+        text: "Demo chat: I like short status updates after meetings.",
+        role: "user",
+        conversationId: "demo-chat",
+        tags: ["demo"],
+      });
       setNote(
         result.ok
-          ? `Ingested ${result.written} demo event(s) (skipped ${result.skipped}).`
+          ? `Ingested ${result.written} demo event(s) (+ chat bridge; skipped ${result.skipped}).`
           : result.reason || "Ingest produced no writes.",
       );
       await refresh();
@@ -544,8 +574,10 @@ export const UnifiedMemoryVaultPanel: React.FC<
             style={{ color: settingsSurfaceTokens.textTertiary }}
           >
             Export format:{" "}
-            <span className="font-mono">luca_memory_vault_v1</span>. Import is
-            local-archive only in this pilot.
+            <span className="font-mono">luca_memory_vault_v1</span>. Live
+            product ingest: LucaLink{" "}
+            <span className="font-mono">event:memory:ingest</span> and eventBus{" "}
+            <span className="font-mono">memory:vault_ingest</span>.
           </p>
         )}
       </div>

@@ -24,8 +24,10 @@ describe("UnifiedMemoryVaultPanel", () => {
     expect(file).toContain("exportVault");
     expect(file).toContain("importLoose");
     expect(file).toContain("ingestEvents");
+    expect(file).toContain("ingestChatTurn");
     expect(file).toContain("compress");
     expect(file).toContain("writeNote");
     expect(file).toContain("Demo ingest");
+    expect(file).toContain("MEMORY_VAULT_INGESTED_BUS_EVENT");
   });
 });
