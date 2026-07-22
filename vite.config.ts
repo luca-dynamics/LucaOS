@@ -56,7 +56,13 @@ export default defineConfig(({ mode }) => {
     ],
     base: isVercelRelease ? "/" : "./",
     server: {
-      port: Number(process.env.VITE_DEV_PORT || 3000),
+      // 5822 spells LUCA on a phone keypad. The point is not the mnemonic but
+      // the vacancy: 3000 is the single most contested port on a dev machine
+      // (CRA, Next, Express, Rails all default to it), and with strictPort the
+      // dev server does not shift when it is taken — it exits, and the app
+      // cannot start. Unlike the backends this port cannot be ephemeral: the
+      // launcher and Electron have to know the address before it exists.
+      port: Number(process.env.VITE_DEV_PORT || 5822),
       strictPort: true,
       host: "127.0.0.1",
       proxy: {

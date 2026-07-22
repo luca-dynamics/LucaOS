@@ -4,7 +4,7 @@ const { spawn } = require('child_process');
 const electron = require('electron');
 
 const host = process.env.VITE_DEV_HOST || '127.0.0.1';
-const port = Number(process.env.VITE_DEV_PORT || 3000);
+const port = Number(process.env.VITE_DEV_PORT || 5822);
 const timeoutAt = Date.now() + 60_000;
 
 // This probes IDENTITY, not just liveness.

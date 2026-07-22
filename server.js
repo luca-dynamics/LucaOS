@@ -152,7 +152,15 @@ const failedResponder = (group, error) => (req, res) => {
 };
 
 // --- MIDDLEWARE (phase 0) ---
-const ALLOWED_ORIGINS = (process.env.LUCA_CORS_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000').split(',');
+// Derived from VITE_DEV_PORT rather than hard-coded, so moving the dev server
+// can never silently blocklist the renderer's own origin. That coupling is easy
+// to miss: the symptom is not a CORS error you go looking for, it is every API
+// call failing at once and the app looking broken for unrelated reasons.
+const DEV_ORIGIN_PORT = process.env.VITE_DEV_PORT || 5822;
+const ALLOWED_ORIGINS = (
+    process.env.LUCA_CORS_ORIGINS ||
+    `http://localhost:${DEV_ORIGIN_PORT},http://127.0.0.1:${DEV_ORIGIN_PORT}`
+).split(',');
 app.use(cors({
     origin: (origin, cb) => {
         if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
@@ -224,7 +232,7 @@ app.get('/', (req, res) => {
                 <h1>LUCA LOCAL CORE :: ONLINE</h1>
                 <p>Status: ${bootState.phase.toUpperCase()}</p>
                 <p>Platform: ${process.platform}</p>
-                <p>Port: ${SERVER_PORT || 3000}</p>
+                <p>Port: ${bootState.port ?? '(binding)'}</p>
                 <p>Gateway: Modular (lazy boot)</p>
             </body>
         </html>

@@ -234,7 +234,7 @@ let sensorState = {
 // so they can simply tell us where they landed. A well-known port would invite
 // collisions with other apps and — worse — let a stale LucaOS process keep
 // answering as though it were the live backend.
-const VITE_DEV_PORT = process.env.VITE_DEV_PORT || 3000;  // Frontend dev server
+const VITE_DEV_PORT = process.env.VITE_DEV_PORT || 5822;  // Frontend dev server
 const SERVER_PORT = process.env.SERVER_PORT || 3002;      // Legacy fallback only
 const CORTEX_PORT = process.env.CORTEX_PORT || 8000;      // Legacy fallback only
 // Note: WS_PORT (3003) is only used by backend server.js, not in this Electron main process
