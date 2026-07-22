@@ -10,7 +10,7 @@
  * Workforce and computer-use use the same completion path.
  */
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   missionControlService,
   type MissionGoal,
@@ -18,6 +18,10 @@ import {
 } from "../../services/agent/MissionControlService";
 import type { MissionTapeRecord } from "../../services/missionTape/types";
 import type { CompleteProductMissionResult } from "../../services/missionTape/completeProductMission";
+import {
+  assessMissionCompletionReadiness,
+  formatGateSnapshotLines,
+} from "../../services/missionTape/missionCompletionReadiness";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 export interface UnifiedMissionCenterPanelProps {
@@ -48,6 +52,8 @@ export const UnifiedMissionCenterPanel: React.FC<
   const [bridgeAvailable, setBridgeAvailable] = useState(true);
   const [newMissionTitle, setNewMissionTitle] = useState("");
   const [newGoalText, setNewGoalText] = useState("");
+  const [lastCompletion, setLastCompletion] =
+    useState<CompleteProductMissionResult | null>(null);
 
   const refresh = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true);
@@ -151,6 +157,7 @@ export const UnifiedMissionCenterPanel: React.FC<
     if (!snapshot?.mission?.id || busy) return;
     setBusy(true);
     setNote(null);
+    setLastCompletion(null);
     try {
       const result: CompleteProductMissionResult =
         await missionControlService.completeMissionWithVerification(
@@ -164,10 +171,16 @@ export const UnifiedMissionCenterPanel: React.FC<
           },
         );
 
+      setLastCompletion(result);
+
       if (result.blockedByVerification) {
+        const gateLines = formatGateSnapshotLines(result.gateSnapshot, 3);
         setNote(
-          result.reason ||
-            "Completion blocked: verification gates did not pass. Enable override only if Origin-approved.",
+          [
+            result.reason ||
+              "Completion blocked: verification gates did not pass. Enable override only if Origin-approved.",
+            ...gateLines,
+          ].join(" "),
         );
       } else if (result.completed) {
         setNote(
@@ -191,6 +204,18 @@ export const UnifiedMissionCenterPanel: React.FC<
   const goals = snapshot?.goals ?? [];
   const completedGoals = goals.filter((g) => g.status === "COMPLETED").length;
   const failedGoals = goals.filter((g) => g.status === "FAILED").length;
+  const readiness = useMemo(
+    () =>
+      assessMissionCompletionReadiness({
+        goals: snapshot?.goals,
+        tape,
+      }),
+    [snapshot?.goals, tape],
+  );
+  const lastGateLines = useMemo(
+    () => formatGateSnapshotLines(lastCompletion?.gateSnapshot, 6),
+    [lastCompletion],
+  );
   const inputClass =
     "w-full rounded-lg border bg-transparent px-2.5 py-1.5 text-[11px] outline-none";
   const inputStyle: React.CSSProperties = {
@@ -465,6 +490,68 @@ export const UnifiedMissionCenterPanel: React.FC<
                 className="text-[11px] font-semibold uppercase tracking-wide"
                 style={{ color: settingsSurfaceTokens.textTertiary }}
               >
+                Completion readiness
+              </p>
+              <p
+                className="mt-2 text-[11px] font-semibold"
+                style={{
+                  color: readiness.likelyCompletable
+                    ? "var(--luca-success, #4fbf7a)"
+                    : "var(--luca-warning, #e6b450)",
+                }}
+              >
+                {readiness.likelyCompletable
+                  ? "Goals look ready for gated complete"
+                  : "Not ready — finish goals or use Origin override carefully"}
+              </p>
+              <p
+                className="mt-1 text-[11px]"
+                style={{ color: settingsSurfaceTokens.textSecondary }}
+              >
+                Goals {readiness.goalsCompleted}/{readiness.goalsTotal} complete
+                {readiness.goalsInProgress > 0
+                  ? ` · ${readiness.goalsInProgress} in progress`
+                  : ""}
+                {readiness.goalsFailed > 0
+                  ? ` · ${readiness.goalsFailed} failed`
+                  : ""}
+              </p>
+              {readiness.blockers.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {readiness.blockers.map((b) => (
+                    <li
+                      key={b}
+                      className="text-[10px] leading-relaxed"
+                      style={{ color: "var(--luca-warning, #e6b450)" }}
+                    >
+                      · {b}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {!compact && readiness.signals.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {readiness.signals.map((s) => (
+                    <li
+                      key={s}
+                      className="text-[10px] leading-relaxed"
+                      style={{ color: settingsSurfaceTokens.textTertiary }}
+                    >
+                      · {s}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div
+              className="rounded-xl border p-3"
+              style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+            >
+              <p
+                className="text-[11px] font-semibold uppercase tracking-wide"
+                style={{ color: settingsSurfaceTokens.textTertiary }}
+              >
                 Verification tape
               </p>
               {tape ? (
@@ -501,6 +588,34 @@ export const UnifiedMissionCenterPanel: React.FC<
               )}
             </div>
 
+            {lastCompletion?.blockedByVerification && lastGateLines.length > 0 && (
+              <div
+                className="rounded-xl border p-3"
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--luca-danger, #f07178) 35%, transparent)",
+                }}
+              >
+                <p
+                  className="text-[11px] font-semibold uppercase tracking-wide"
+                  style={{ color: "var(--luca-danger, #f07178)" }}
+                >
+                  Last complete blocked by gates
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {lastGateLines.map((line) => (
+                    <li
+                      key={line}
+                      className="font-mono text-[10px] leading-relaxed"
+                      style={{ color: settingsSurfaceTokens.textSecondary }}
+                    >
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-2">
               <label
                 className="flex items-center gap-1.5 text-[11px]"
@@ -514,6 +629,14 @@ export const UnifiedMissionCenterPanel: React.FC<
                 />
                 Origin override
               </label>
+              {!readiness.likelyCompletable && !allowOverride && (
+                <span
+                  className="text-[10px]"
+                  style={{ color: settingsSurfaceTokens.textTertiary }}
+                >
+                  Goals incomplete — complete will likely block
+                </span>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2">
