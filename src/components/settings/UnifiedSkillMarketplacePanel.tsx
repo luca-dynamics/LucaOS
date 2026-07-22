@@ -239,11 +239,13 @@ export const UnifiedSkillMarketplacePanel: React.FC<
     setBusy(true);
     setNote(null);
     try {
-      let link: { sendEvent?: (t: string, type: string, p: unknown) => void } | null =
-        null;
+      type LinkLike = {
+        sendEvent?: (t: string, type: string, p: unknown) => void;
+      };
+      let link: LinkLike | null = null;
       try {
         const mod = await import("../../services/lucaLink/manager");
-        link = mod.lucaLinkManager as typeof link;
+        link = mod.lucaLinkManager as unknown as LinkLike;
       } catch {
         link = null;
       }

@@ -150,13 +150,15 @@ function fromClaudeTools(tools: unknown[]): SkillImportCandidate[] {
     const description = String(fn.description ?? rec.description ?? "");
     const version = "0.1.0-import";
     const id = `import.claude.${slug(name)}`;
+    const inputsRaw = fn.input_schema ?? fn.parameters ?? rec.input_schema;
+    const inputs = asRecord(inputsRaw) ?? undefined;
     const manifest = baseManifest({
       id,
       name,
       description,
       version,
       allowedTools: [name],
-      inputs: fn.input_schema ?? fn.parameters ?? rec.input_schema,
+      inputs,
       source: "claude_tools",
       tags: ["import", "claude"],
       category: "IMPORTED",
@@ -317,12 +319,12 @@ export function coerceSkillImport(
       }
     }
     if (rec && Array.isArray(rec.skills) && !rec.format) {
-      // Could be openclaw or luca
+      // Unformatted skills array (often OpenClaw-shaped)
       const openclaw = fromOpenClawSkills(rec.skills);
       if (openclaw.length) {
         return {
           candidates: openclaw,
-          detected: hint === "openclaw" ? "openclaw" : "skills_array",
+          detected: "skills_array",
         };
       }
     }
