@@ -6,6 +6,10 @@ import { BRAIN_CONFIG } from "../config/brain.config";
 import { eventBus } from "./eventBus";
 import { creditService } from "./creditService";
 import { memoryReadinessResolver } from "./memory/MemoryReadinessResolver";
+import {
+  MEMORY_ITEM_CHAR_LIMIT,
+  selectMemoriesForContext,
+} from "./memory/memoryContextSelection";
 
 // API Key sourced from environment variable
 // For Vite/browser: VITE_API_KEY, For Node.js: API_KEY
@@ -1208,23 +1212,26 @@ export const memoryService = {
    * Formatted Memory Output For LLM Context
    * UPDATED: Token Safeguard Applied - Truncates large memory values.
    */
-  getMemoryContext(): string {
+  getMemoryContext(query?: string): string {
     const memories = this.getAllMemories();
     if (memories.length === 0) return "Memory Core Empty.";
 
+    const { selected, omitted } = selectMemoriesForContext(memories, query);
+
     // Mem0 Logic: Separate into distinct state layers
-    const userState = memories.filter((m) => m.category === "USER_STATE");
-    const sessionState = memories.filter((m) => m.category === "SESSION_STATE");
-    const agentState = memories.filter((m) => m.category === "AGENT_STATE");
-    const facts = memories.filter(
+    const userState = selected.filter((m) => m.category === "USER_STATE");
+    const sessionState = selected.filter((m) => m.category === "SESSION_STATE");
+    const agentState = selected.filter((m) => m.category === "AGENT_STATE");
+    const facts = selected.filter(
       (m) =>
         !["USER_STATE", "SESSION_STATE", "AGENT_STATE"].includes(m.category),
     );
 
     // HELPER: Truncate huge memories to prevent 429 Quota errors
     const formatMem = (m: MemoryNode) => {
-      let val = m.value;
-      if (val.length > 300) val = val.substring(0, 300) + "...[TRUNCATED]";
+      let val = m.value || "";
+      if (val.length > MEMORY_ITEM_CHAR_LIMIT)
+        val = val.substring(0, MEMORY_ITEM_CHAR_LIMIT) + "...[TRUNCATED]";
       return `- ${m.key}: ${val}`;
     };
 
@@ -1242,6 +1249,11 @@ export const memoryService = {
         "[AGENT KNOWLEDGE]:\n" + agentState.map(formatMem).join("\n") + "\n\n";
     if (facts.length)
       context += "[SEMANTIC FACTS]:\n" + facts.map(formatMem).join("\n");
+
+    if (omitted > 0) {
+      // State the omission rather than presenting a filtered view as complete.
+      context += `\n\n[${omitted} lower-ranked memor${omitted === 1 ? "y" : "ies"} withheld to stay within the context budget.]`;
+    }
 
     return context;
   },
