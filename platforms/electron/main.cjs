@@ -479,11 +479,14 @@ async function bootSequence(isSilent = false) {
     }
 
     // 2. Start Subsystems
-    log(`Spawning Luca Cortex...`, 'warn', 30);
-    await startCortex();
-    
-    log(`Igniting Node.js Logic Core (Port ${SERVER_PORT})...`, 'info', 40);
+    // The Node core starts FIRST so its ephemeral port is known (or nearly so)
+    // before Cortex is spawned — Python receives that port in its env and has
+    // no other way to learn it once running.
+    log(`Igniting Node.js Logic Core (ephemeral port)...`, 'info', 30);
     startServer();
+
+    log(`Spawning Luca Cortex...`, 'warn', 40);
+    await startCortex();
 
     // 3. Wait Loop
     let serverReady = false;
@@ -500,7 +503,10 @@ async function bootSequence(isSilent = false) {
             return;
         }
 
-        if (!serverReady) serverReady = await checkPort(SERVER_PORT);
+        // serverPort stays null until the core announces itself, so "not yet
+        // reported" is correctly treated as "not ready" rather than probing a
+        // stale fixed port that some other process might be holding.
+        if (!serverReady) serverReady = serverPort ? await checkPort(serverPort) : false;
         if (!cortexReady) cortexReady = await checkPort(cortexPort);
 
         if (serverReady && !cortexReady) {
@@ -941,11 +947,31 @@ async function startCortex() {
     }
 
 
+    // Give the Node core a bounded head start so we can hand Cortex its real
+    // port. Python gets this env once, at spawn, and cannot be told later — so
+    // a short wait here is worth far more than it costs. If the core is slower
+    // than this we still spawn (Cortex has plenty of its own startup to do) and
+    // fall back to the discovery file below.
+    if (!serverPort) {
+        await Promise.race([
+            whenServerPortKnown(),
+            new Promise((resolve) => setTimeout(resolve, 15000)),
+        ]);
+    }
+    const resolvedServerPort = serverPort ?? SERVER_PORT;
+    if (!serverPort) {
+        console.warn(`[CORTEX] Core port not announced yet; passing fallback ${resolvedServerPort} plus the discovery file.`);
+    }
+
     // Initial Env from Process
-    const env = { 
-        ...process.env, 
-        SERVER_PORT: SERVER_PORT.toString(), // Explicitly pass the correct Node port
-        API_URL: `http://localhost:${SERVER_PORT}`, // Helper for Python
+    const env = {
+        ...process.env,
+        SERVER_PORT: resolvedServerPort.toString(), // Real (ephemeral) Node port
+        API_URL: `http://127.0.0.1:${resolvedServerPort}`, // Helper for Python
+        // Authoritative fallback: server.js rewrites this file with its live
+        // port and pid on every boot, so Python can re-resolve if the value
+        // above was a guess.
+        LUCA_CORE_PORT_FILE: path.join(paths.DATA_DIR, 'local-core.json'),
         PYTHONUNBUFFERED: '1',
         CORTEX_PORT: cortexPort.toString()
     };
@@ -2172,11 +2198,12 @@ app.on('before-quit', () => {
 
 // --- SECURE VAULT PROXY (HTTP -> SERVER) ---
 // Decoupled from native DB modules to avoid ABI conflicts
-const SERVER_API = `http://localhost:${SERVER_PORT}/api`;
+// Resolved per call: the core's port is ephemeral and not known at module load.
+const serverApi = () => `http://127.0.0.1:${serverPort ?? SERVER_PORT}/api`;
 
 ipcMain.handle('vault-store', async (event, { site, username, password, metadata }) => {
     try {
-        const response = await fetch(`${SERVER_API}/credentials/store`, {
+        const response = await fetch(`${serverApi()}/credentials/store`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ site, username, password, metadata })
@@ -2190,7 +2217,7 @@ ipcMain.handle('vault-store', async (event, { site, username, password, metadata
 
 ipcMain.handle('vault-retrieve', async (event, { site }) => {
     try {
-        const response = await fetch(`${SERVER_API}/credentials/retrieve?site=${encodeURIComponent(site)}`);
+        const response = await fetch(`${serverApi()}/credentials/retrieve?site=${encodeURIComponent(site)}`);
         return await response.json();
     } catch (error) {
         console.error('[MAIN] Vault Retrieve Proxy Error:', error);
@@ -2200,7 +2227,7 @@ ipcMain.handle('vault-retrieve', async (event, { site }) => {
 
 ipcMain.handle('vault-list', async () => {
     try {
-        const response = await fetch(`${SERVER_API}/credentials/list`);
+        const response = await fetch(`${serverApi()}/credentials/list`);
         return await response.json();
     } catch (error) {
         console.error('[MAIN] Vault List Proxy Error:', error);
@@ -2210,7 +2237,7 @@ ipcMain.handle('vault-list', async () => {
 
 ipcMain.handle('vault-delete', async (event, { site }) => {
     try {
-        const response = await fetch(`${SERVER_API}/credentials/delete`, {
+        const response = await fetch(`${serverApi()}/credentials/delete`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ site })
@@ -2224,7 +2251,7 @@ ipcMain.handle('vault-delete', async (event, { site }) => {
 
 ipcMain.handle('vault-has', async (event, { site }) => {
     try {
-        const response = await fetch(`${SERVER_API}/credentials/has?site=${encodeURIComponent(site)}`);
+        const response = await fetch(`${serverApi()}/credentials/has?site=${encodeURIComponent(site)}`);
         return await response.json();
     } catch {
         return false;

@@ -208,6 +208,34 @@ export const getConnectionTier = (): ConnectionTier => {
 };
 
 /**
+ * The live port for a local backend.
+ *
+ * LucaOS spawns the Local Core and Cortex on EPHEMERAL ports (the OS picks a
+ * free one) rather than fixed 3002/8000, so a collision with another app — or a
+ * stale LucaOS process still holding the old port and answering as though it
+ * were live — is impossible. Electron's preload publishes the real ports via
+ * `window.luca.getRuntimePorts()` as each backend reports in — a function, not
+ * an object, because contextBridge clones objects at expose time and a mutated
+ * object would never reach the renderer.
+ *
+ * Read lazily, at request time: the renderer can paint before the backends have
+ * finished binding, and every call site goes through here, so the first request
+ * after a backend registers already targets the right port. Ollama is a third
+ * party on its own documented port, so it stays fixed.
+ */
+const localPortFor = (type: "API" | "CORTEX" | "OLLAMA"): string => {
+  if (type === "OLLAMA") return "11434";
+  const runtimePorts =
+    typeof window !== "undefined"
+      ? (window as any).luca?.getRuntimePorts?.()
+      : undefined;
+  const livePort = type === "API" ? runtimePorts?.api : runtimePorts?.cortex;
+  if (livePort) return String(livePort);
+  // Fallback for hosts that never publish ports (browser dev, linked mobile).
+  return type === "API" ? SERVER_HTTP_PORT : "8000";
+};
+
+/**
  * Internal helper to resolve base URLs based on platform and connection state
  */
 const resolveBaseUrl = (
@@ -223,16 +251,14 @@ const resolveBaseUrl = (
   // --- TIER 1: LAN (Linked Desktop) ---
   // If we have a linked Desktop LAN IP, prioritize it (Local speed)
   if (linkedHostIp && linkedHostIp !== "127.0.0.1") {
-    const port = type === "API" ? "3002" : type === "CORTEX" ? "8000" : "11434";
-    return `http://${linkedHostIp}:${port}`;
+    return `http://${linkedHostIp}:${localPortFor(type)}`;
   }
 
   // --- TIER 2: LOCAL (Internal Loopback) ---
   // If in Electron, prioritize 127.0.0.1 for local health (Fastest loopback)
   const isElectron = typeof window !== "undefined" && !!(window as any).luca;
   if (isElectron && !linkedHostIp) {
-    const port = type === "API" ? "3002" : type === "CORTEX" ? "8000" : "11434";
-    return `http://127.0.0.1:${port}`;
+    return `http://127.0.0.1:${localPortFor(type)}`;
   }
 
   // --- TIER 3: CLOUD FALLBACK (Light Mode) ---

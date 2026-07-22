@@ -10,7 +10,23 @@ function expose(apiKey, api) {
     }
 }
 
+// --- RUNTIME PORT PUBLICATION -------------------------------------------
+// The Local Core and Cortex bind EPHEMERAL ports (see main.cjs), so the
+// renderer cannot assume 3002/8000. Main pushes the real ports here as each
+// backend reports in; src/config/api.ts reads this object lazily on every
+// request, so calls made before a backend registered simply use the fallback
+// and the next call picks up the live port. Plain data only — no callables,
+// so it stays clonable across contextBridge.
+// Exposed as a FUNCTION, not an object: contextBridge deep-clones values at
+// expose time, so a plain object mutated later in preload would never update in
+// the renderer. Functions are proxied live, so each call returns current ports.
+const runtimePorts = {};
+ipcRenderer.on('luca-runtime-ports', (_event, ports) => {
+    Object.assign(runtimePorts, ports || {});
+});
+
 expose('luca', {
+    getRuntimePorts: () => ({ ...runtimePorts }),
     isIntelMac: process.platform === 'darwin' && process.arch === 'x64',
     isWindows: process.platform === 'win32',
     arch: process.arch,
