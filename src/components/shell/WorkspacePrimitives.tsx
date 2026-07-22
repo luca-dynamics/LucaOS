@@ -1,0 +1,225 @@
+import React from "react";
+import {
+  WORKSPACE_DURATION_MS,
+  WORKSPACE_EASE,
+  workspaceCardStyle,
+  workspaceColor,
+  workspacePanelHeaderStyle,
+  workspaceRadius,
+  workspaceSectionLabelStyle,
+  workspaceType,
+} from "./workspaceShellTokens";
+
+/**
+ * WorkspacePrimitives — the small set every shell panel is built from.
+ *
+ * These exist so "calm" is inherited rather than re-decided in each of the
+ * ~315 components that will eventually sit inside this frame. A panel that
+ * hand-rolls its own card chrome will drift; one that composes PanelCard
+ * cannot. Every primitive is presentational and controlled — no state, no
+ * effects, no data fetching.
+ */
+
+// ── Section label ───────────────────────────────────────────────────────────
+
+export const SectionLabel: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({
+  children,
+  style,
+}) => (
+  <div style={{ ...workspaceSectionLabelStyle, ...style }}>{children}</div>
+);
+
+// ── Panel header ────────────────────────────────────────────────────────────
+
+export const PanelHeader: React.FC<{
+  title: React.ReactNode;
+  /** Trailing control — usually a CollapseToggle. */
+  action?: React.ReactNode;
+}> = ({ title, action }) => (
+  <div style={workspacePanelHeaderStyle}>
+    <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+      {title}
+    </span>
+    {action ? <span style={{ marginLeft: "auto", display: "flex" }}>{action}</span> : null}
+  </div>
+);
+
+// ── Card ────────────────────────────────────────────────────────────────────
+
+export const PanelCard: React.FC<{
+  label?: React.ReactNode;
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+}> = ({ label, children, style }) => (
+  <section style={{ ...workspaceCardStyle, ...style }}>
+    {label ? (
+      <h3
+        style={{
+          margin: "0 0 9px",
+          fontSize: workspaceType.label,
+          fontWeight: 600,
+          letterSpacing: "0.09em",
+          textTransform: "uppercase",
+          color: workspaceColor.ink3,
+        }}
+      >
+        {label}
+      </h3>
+    ) : null}
+    {children}
+  </section>
+);
+
+// ── Count badge ─────────────────────────────────────────────────────────────
+
+export const CountBadge: React.FC<{ value: number; emphasized?: boolean }> = ({
+  value,
+  emphasized = false,
+}) => (
+  <span
+    style={{
+      marginLeft: "auto",
+      minWidth: 19,
+      padding: "1px 7px",
+      borderRadius: workspaceRadius.pill,
+      textAlign: "center",
+      fontSize: "10.5px",
+      fontVariantNumeric: "tabular-nums",
+      color: emphasized ? "#fff" : workspaceColor.ink2,
+      background: emphasized ? workspaceColor.accent : workspaceColor.hover,
+    }}
+  >
+    {value}
+  </span>
+);
+
+// ── Nav row ─────────────────────────────────────────────────────────────────
+
+export const NavRow: React.FC<{
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  active?: boolean;
+  count?: number;
+  /** Rail mode: the label folds away, the mark stays. */
+  collapsed?: boolean;
+  onClick?: () => void;
+  title?: string;
+}> = ({ icon, children, active = false, count, collapsed = false, onClick, title }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-current={active ? "true" : undefined}
+    title={title ?? (collapsed && typeof children === "string" ? children : undefined)}
+    className="luca-workspace-nav"
+    style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: collapsed ? "center" : "flex-start",
+      gap: collapsed ? 0 : 9,
+      width: "calc(100% - 16px)",
+      margin: "1px 8px",
+      padding: "6px 8px",
+      border: 0,
+      borderRadius: workspaceRadius.row,
+      textAlign: "left",
+      font: "inherit",
+      fontSize: workspaceType.body,
+      fontWeight: active ? 500 : 400,
+      cursor: "pointer",
+      color: active ? workspaceColor.ink : workspaceColor.ink2,
+      background: active ? workspaceColor.accentSoft : "transparent",
+      transition: `background ${WORKSPACE_DURATION_MS}ms ${WORKSPACE_EASE}, color 160ms ease`,
+    }}
+  >
+    {icon ? (
+      <span
+        aria-hidden="true"
+        style={{
+          flex: "none",
+          width: 15,
+          display: "grid",
+          placeItems: "center",
+          color: active ? workspaceColor.accent : workspaceColor.ink3,
+        }}
+      >
+        {icon}
+      </span>
+    ) : null}
+    {!collapsed && (
+      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {children}
+      </span>
+    )}
+    {!collapsed && typeof count === "number" ? (
+      <CountBadge value={count} emphasized={active} />
+    ) : null}
+  </button>
+);
+
+// ── Collapse toggle ─────────────────────────────────────────────────────────
+
+export const CollapseToggle: React.FC<{
+  collapsed: boolean;
+  onToggle: () => void;
+  /** Which edge the panel lives on — decides which way the chevron points. */
+  side: "left" | "right";
+  label: string;
+}> = ({ collapsed, onToggle, side, label }) => {
+  const pointsIn = side === "left" ? !collapsed : collapsed;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={!collapsed}
+      aria-label={label}
+      title={label}
+      className="luca-workspace-toggle"
+      style={{
+        flex: "none",
+        width: 24,
+        height: 24,
+        display: "grid",
+        placeItems: "center",
+        border: "1px solid transparent",
+        borderRadius: 6,
+        background: "transparent",
+        color: workspaceColor.ink3,
+        font: "inherit",
+        fontSize: 13,
+        lineHeight: 1,
+        cursor: "pointer",
+        transition: `background 160ms ease, color 160ms ease, transform ${WORKSPACE_DURATION_MS}ms ${WORKSPACE_EASE}`,
+        transform: pointsIn ? "none" : "rotate(180deg)",
+      }}
+    >
+      {side === "left" ? "⟨" : "⟩"}
+    </button>
+  );
+};
+
+// ── Shared interaction styles ───────────────────────────────────────────────
+
+/**
+ * Hover and focus for the primitives. Injected once by WorkspaceShell rather
+ * than repeated inline, because :hover and :focus-visible cannot be expressed
+ * in a style object — and a shell without visible keyboard focus is not
+ * shippable.
+ */
+export const WORKSPACE_INTERACTION_CSS = `
+.luca-workspace-nav:hover { background: ${workspaceColor.hover} !important; color: ${workspaceColor.ink} !important; }
+.luca-workspace-nav:focus-visible,
+.luca-workspace-toggle:focus-visible,
+.luca-workspace-handle:focus-visible {
+  outline: 2px solid ${workspaceColor.accent};
+  outline-offset: 2px;
+}
+.luca-workspace-toggle:hover { background: ${workspaceColor.hover}; color: ${workspaceColor.ink}; }
+.luca-workspace-handle:hover { color: ${workspaceColor.ink}; }
+.luca-workspace-scroll { overflow-y: auto; overflow-x: hidden; }
+.luca-workspace-scroll::-webkit-scrollbar { width: 8px; }
+.luca-workspace-scroll::-webkit-scrollbar-thumb { background: ${workspaceColor.hairline}; border-radius: 99px; }
+.luca-workspace-scroll::-webkit-scrollbar-track { background: transparent; }
+@media (prefers-reduced-motion: reduce) {
+  .luca-workspace-grid, .luca-workspace-toggle, .luca-workspace-nav { transition: none !important; }
+}
+`;
