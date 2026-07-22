@@ -109,6 +109,7 @@ import WindowControls from "./components/layout/WindowControls";
 import SessionsRail from "./components/left-panel/SessionsRail";
 import { useLucaLinkDevices } from "./hooks/useLucaLinkDevices";
 import ChatPanel from "./components/layout/ChatPanel";
+import ShellCommandBar from "./components/shell/ShellCommandBar";
 import OverlayManager from "./components/layout/OverlayManager";
 import PanelResizer from "./components/layout/PanelResizer";
 import {
@@ -3378,11 +3379,12 @@ function AppContent() {
 
           {!isMobile && (
             <>
-              <div className="flex-1 h-full overflow-hidden flex flex-col">
+              <div className="relative flex-1 h-full overflow-hidden flex flex-col">
                 <SafeComponent componentName="ChatPanel">
                   <ChatPanel
                     messages={messages}
                     isMobile={false}
+                    composerExternal={true}
                     activeMobileTab=""
                     theme={theme}
                     isProcessing={isProcessing}
@@ -3423,6 +3425,42 @@ function AppContent() {
                     setMessages={setMessages}
                   />
                 </SafeComponent>
+                {/* The workspace command bar — the composer's shell-level home.
+                    Floats over the center region (the relative wrapper above is
+                    its positioning ancestor): it addresses the workspace, not
+                    the thread. The embedded composer is silenced via
+                    composerExternal on ChatPanel. */}
+                <ShellCommandBar
+                  input={input}
+                  setInput={setInput}
+                  handleSend={() => {
+                    if (handleSendMessageRef.current) {
+                      handleSendMessageRef.current(input, attachedImage);
+                      setInput("");
+                      setAttachedImage(null);
+                    }
+                  }}
+                  isProcessing={isProcessing}
+                  messages={messages}
+                  setMessages={setMessages}
+                  theme={theme}
+                  isMobile={false}
+                  attachedImage={attachedImage}
+                  setAttachedImage={setAttachedImage}
+                  fileInputRef={fileInputRef}
+                  handleFileSelect={handleFileSelect}
+                  isVoiceMode={isVoiceMode}
+                  toggleVoiceMode={toggleVoiceMode}
+                  showCamera={showCamera}
+                  setShowCamera={setShowCamera}
+                  handleScreenShare={() => setIsScreenSharing(!isScreenSharing)}
+                  handleClearChat={handleClearChat}
+                  handleStop={handleStop}
+                  currentCwd={currentCwd}
+                  isKernelLocked={isKernelLocked}
+                  opsecStatus={opsecStatus}
+                  persona={persona as PersonaType}
+                />
               </div>
             </>
           )}

@@ -1,11 +1,9 @@
 import React, { useEffect, useState, useTransition } from "react";
 import { Icon } from "../ui/Icon";
-import ChatWidgetInput from "../ChatWidgetInput";
+import LucaComposer from "../chat/LucaComposer";
 import ChatMessageBubble from "../ChatMessageBubble";
 import { ProWorkforceCanvas } from "../chat/ProWorkforceCanvas";
 import { lucaWorkforce } from "../../services/agent/LucaWorkforce";
-import ChatApprovalStrip from "../chat/ChatApprovalStrip";
-import WhileYouWereAwayStrip from "../chat/WhileYouWereAwayStrip";
 import { MessageScroller } from "../chat/LucaConversationPrimitives";
 import SuggestionChips from "../SuggestionChips";
 import { LucaMotionSheet } from "../ui/luca";
@@ -13,19 +11,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sender } from "../../types";
 import { awarenessService } from "../../services/awarenessService";
 import { settingsService } from "../../services/settingsService";
-import { apiUrl } from "../../config/api";
-import IntentRoutingModeSelector from "../runtime/IntentRoutingModeSelector";
-import { chatIntentRouterBridge } from "../../services/runtime/ChatIntentRouterBridge";
-import { chatIntentProvenanceService } from "../../services/runtime/ChatIntentProvenanceService";
-import type { ChatRoutingResult } from "../../services/runtime/ChatIntentRouterBridge";
-import { getRouteHintText, getRouteLabel, getRouteTone, shouldAppendRouteHint } from "../runtime/intentRoutingLabels";
 import {
   lucaMaterialMobileContentStyle,
   lucaMaterialMobileControlStyle,
   lucaMaterialMobileSheetStyle,
-  lucaMaterialPanelStyle,
   lucaMaterialWorkspaceStyle,
-  resolveLucaSheetMaterial,
 } from "../../styles/lucaMaterialSystem";
 
 interface ChatPanelProps {
@@ -61,6 +51,8 @@ interface ChatPanelProps {
   handleClearChat: () => void;
   handleStop: () => void;
   setMessages: React.Dispatch<React.SetStateAction<any[]>>;
+  /** True when the shell renders the composer externally (ShellCommandBar). */
+  composerExternal?: boolean;
 }
 
 type ViewMode = "CHAT" | "CORTEX";
@@ -274,6 +266,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   handleClearChat,
   handleStop,
   setMessages,
+  composerExternal = false,
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>("CHAT");
   // Entry rule (workforce-target): the Workforce pill exists only while
@@ -310,62 +303,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     theme.themeName?.toLowerCase() === "lucagent" || 
     theme.themeName?.toLowerCase() === "agentic-slate" ||
     theme.themeName?.toLowerCase() === "light";
-
-  // --- Active MCP servers (polled every 10s) ---
-  const [activeMcpServers, setActiveMcpServers] = useState<{ id: string; name: string; status?: string }[]>([]);
-  useEffect(() => {
-    const fetchMcp = async () => {
-      try {
-        const res = await fetch(apiUrl("/api/mcp/list"));
-        const data = await res.json();
-        setActiveMcpServers(data.servers || []);
-      } catch { /* silent */ }
-    };
-    fetchMcp();
-    const interval = setInterval(fetchMcp, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleDisconnectMcp = async (id: string) => {
-    try {
-      await fetch(apiUrl("/api/mcp/disconnect"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      // Refresh list immediately
-      const res = await fetch(apiUrl("/api/mcp/list"));
-      const data = await res.json();
-      setActiveMcpServers(data.servers || []);
-    } catch (e) {
-      console.error("[MCP] Disconnect failed:", e);
-    }
-  };
-
-  const handleConnectMcp = async (id: string) => {
-    // Find the server config so we can send it to /connect
-    const server = activeMcpServers.find(s => s.id === id);
-    if (!server) return;
-
-    try {
-      await fetch(apiUrl("/api/mcp/connect"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...server
-        }),
-      });
-      // Refresh list immediately
-      const res = await fetch(apiUrl("/api/mcp/list"));
-      const data = await res.json();
-      setActiveMcpServers(data.servers || []);
-    } catch (e) {
-      console.error("[MCP] Connect failed:", e);
-    }
-  };
-
-
-
 
   // Show centered layout until the user has sent at least one message.
   // LUCA's own startup/greeting messages don't count — only user-initiated
@@ -488,149 +425,39 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   }, [persona, bootSequence, messages.length, setAmbientSuggestions, setShowSuggestionChips, userName, handleSendMessage]);
 
-  // --- Intent Routing Integration (PR #124 + PR #125 polish) ---
-  const handleRoutedSend = () => {
-    const trimmed = input.trim();
-    if (!trimmed) {
-      handleSend();
-      return;
-    }
-    if (isProcessing) {
-      handleSend();
-      return;
-    }
-    if (
-      !chatIntentProvenanceService.shouldRouteMessage({
-        message: trimmed,
-        senderType: "user",
-        isHidden: false,
-        isAwakening: false,
-      })
-    ) {
-      handleSend();
-      return;
-    }
-
-    let routeResult: ChatRoutingResult | undefined;
-    try {
-      const { provenanceIds } = chatIntentProvenanceService.createChatProvenance({
-        message: trimmed,
-      });
-      routeResult = chatIntentRouterBridge.maybeRouteMessageBeforeResponse({
-        message: trimmed,
-        source: "chat",
-        provenanceIds,
-      });
-    } catch (err) {
-      console.warn("[ChatPanel] Intent routing failed, sending normally:", err);
-    }
-
-    handleSend();
-
-    if (routeResult && routeResult.routed && routeResult.routeType !== "fast_response") {
-      const hintText = getRouteHintText(routeResult.routeType);
-      if (hintText && shouldAppendRouteHint(messages, hintText)) {
-        const tone = getRouteTone(routeResult.routeType);
-        const label = getRouteLabel(routeResult.routeType);
-        startTransition(() => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `route-hint-${Date.now()}`,
-              text: hintText,
-              sender: Sender.SYSTEM,
-              timestamp: Date.now(),
-              isStreaming: false,
-              isRouteHint: true,
-              routeLabel: label,
-              routeTone: tone,
-            },
-          ]);
-        });
-      }
-    }
-  };
-
-  const sharedInputArea = (
-    <div>
-      {/* Attachment preview */}
-      {attachedImage && (
-        <div
-          className="flex items-center gap-2 mb-2 border p-2 w-fit"
-          style={isMobile ? lucaMaterialMobileControlStyle : lucaMaterialPanelStyle}
-        >
-          <Icon name="Gallery" size={14} className={theme.primary} variant="BoldDuotone" />
-          <span className={`text-xs "text-[var(--app-text-muted)]"`}>
-            Visual_Input_Buffer_01.jpg
-          </span>
-          <button
-            onClick={() => setAttachedImage(null)}
-            className="hover:text-[var(--luca-danger,#f87171)]"
-          >
-            <Icon name="Close" size={14} variant="BoldDuotone" />
-          </button>
-        </div>
-      )}
-      <input
-        type="file"
-        ref={fileInputRef}
-        className="hidden"
-        accept="image/*"
-        onChange={handleFileSelect}
-      />
-      {/* Input box — wider in centered mode */}
-      <div
-        className="rounded-2xl transition-all duration-500 glass-blur border"
-        style={{
-          ...resolveLucaSheetMaterial(isMobile),
-          borderColor: showCentered ? "var(--luca-border-subtle, var(--app-border-main))" : undefined,
-          boxShadow: showCentered
-            ? "var(--luca-shadow-soft)"
-            : undefined,
-        }}
-      >
-        {/* The being accounts for itself, then asks. */}
-        <WhileYouWereAwayStrip />
-        {/* Pending approvals live where the user is already looking. */}
-        <ChatApprovalStrip />
-        {/* Routing-mode selector moved into the composer's bottom control row
-            (single mode control), so it no longer sits above the composer. */}
-        <ChatWidgetInput
-          input={input}
-          setInput={setInput}
-          onSubmit={(e: React.FormEvent) => {
-            e.preventDefault();
-            handleRoutedSend();
-          }}
-          isProcessing={isProcessing}
-          primaryColor={theme.hex}
-          themeName={theme.themeName}
-          attachment={attachedImage}
-          onClearAttachment={() => setAttachedImage(null)}
-          onAttachClick={() => fileInputRef.current?.click()}
-          isVoiceActive={isVoiceMode}
-          onToggleVoice={toggleVoiceMode}
-          isEyeActive={showCamera}
-          onToggleEye={() => setShowCamera(!showCamera)}
-          onScreenShare={!isMobile ? handleScreenShare : undefined}
-          onClearChat={handleClearChat}
-          onStop={handleStop}
-          isCompact={false}
-          currentCwd={currentCwd}
-          isKernelLocked={isKernelLocked}
-          opsecStatus={opsecStatus}
-          persona={persona}
-          activeMcpServers={activeMcpServers}
-          onDisconnectMcp={handleDisconnectMcp}
-          onConnectMcp={handleConnectMcp}
-        />
-
-
-      </div>
-    </div>
+  // The composer is ONE component with two homes (see LucaComposer). When the
+  // shell mounts it as the floating workspace command bar, composerExternal
+  // silences every embedded render site at once.
+  const sharedInputArea = composerExternal ? null : (
+    <LucaComposer
+      input={input}
+      setInput={setInput}
+      handleSend={handleSend}
+      isProcessing={isProcessing}
+      messages={messages}
+      setMessages={setMessages}
+      theme={theme}
+      isMobile={isMobile}
+      attachedImage={attachedImage}
+      setAttachedImage={setAttachedImage}
+      fileInputRef={fileInputRef}
+      handleFileSelect={handleFileSelect}
+      isVoiceMode={isVoiceMode}
+      toggleVoiceMode={toggleVoiceMode}
+      showCamera={showCamera}
+      setShowCamera={setShowCamera}
+      handleScreenShare={!isMobile ? handleScreenShare : undefined}
+      handleClearChat={handleClearChat}
+      handleStop={handleStop}
+      currentCwd={currentCwd}
+      isKernelLocked={isKernelLocked}
+      opsecStatus={opsecStatus}
+      persona={persona}
+      emphasized={showCentered}
+    />
   );
 
-  // Shared SuggestionChips renderer
+    // Shared SuggestionChips renderer
 
   const suggestionChips = (
     <SuggestionChips
