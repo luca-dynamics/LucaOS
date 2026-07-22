@@ -16,7 +16,7 @@ Doctrine remains in `Luca_Absorb_Architecture_v12.md`. This table tracks **shipp
 
 | Absorb roadmap phase | Status | Evidence in repo |
 | --- | --- | --- |
-| **1 Stability + execution** | **Partial → real wire** | Gates + tape completion; **completeProductMission**; **MissionControlService.completeMissionWithVerification**; CU **MissionRunner** tape completion; atomic units / pre-step / receipts; scaffold remains pilot-only |
+| **1 Stability + execution** | **Partial → real wire** | Gates + tape; **completeProductMission**; MissionControl complete+archive; **LucaWorkforce** end-of-pipeline finalize; CU stack `missionTapeCompletion` when tape enabled; scaffold pilot-only (PI mission panel stays read-only) |
 | **2 Memory + context** | Partial | PI memory / approval pilots; full readable vault open |
 | **3 Ecosystem + skills** | Partial | MCP/plugins, skill lifecycle, dry-run; marketplace open |
 | **4 Evolution + self-repair** | Partial | Evolution services + governance; Hermes trajectory productization open |

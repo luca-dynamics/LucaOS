@@ -359,6 +359,9 @@ export class LucaWorkforce {
         });
         this.trace.end();
       }
+
+      const allOk = plan.tasks.every((t) => t.status === "complete");
+      await this.finalizeActiveMissionWithVerification(allOk);
     } catch (error) {
       console.error("[LucaWorkforce] Workflow failed:", error);
 
@@ -367,6 +370,7 @@ export class LucaWorkforce {
         this.trace.end();
       }
 
+      await this.finalizeActiveMissionWithVerification(false);
       throw error;
     }
   }
@@ -1189,9 +1193,45 @@ Return only the Python code, no explanations.`;
       }
 
       console.log("[LucaWorkforce] 🏁 Sequential Pipeline Complete.");
+      // 5. Gated product completion (archive only if verification allows).
+      const allOk = plan.tasks.every((t) => t.status === "complete");
+      await this.finalizeActiveMissionWithVerification(allOk);
     } catch (error) {
       console.error("[LucaWorkforce] Pipeline failed:", error);
+      await this.finalizeActiveMissionWithVerification(false);
       throw error;
+    }
+  }
+
+  /**
+   * Real wire: complete active MissionControl mission through verification gates.
+   * No-op when no active mission or Electron bridge is absent.
+   */
+  private async finalizeActiveMissionWithVerification(
+    success: boolean,
+  ): Promise<void> {
+    try {
+      const active = await missionControlService.getActiveMission();
+      if (!active?.mission?.id) return;
+      const result = await missionControlService.completeMissionWithVerification(
+        active.mission.id,
+        { success },
+      );
+      if (result.blockedByVerification) {
+        console.warn(
+          "[LucaWorkforce] Mission completion blocked by verification:",
+          result.reason,
+        );
+      } else if (result.completed) {
+        console.log(
+          "[LucaWorkforce] Mission completed and archived after verification.",
+        );
+      }
+    } catch (error) {
+      console.warn(
+        "[LucaWorkforce] Mission completion verification skipped/failed:",
+        error,
+      );
     }
   }
 
