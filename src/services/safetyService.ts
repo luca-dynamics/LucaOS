@@ -3,6 +3,10 @@ import { PROTECTED_FILES } from "../config/constitution";
 import { eventBus } from "./eventBus";
 import { thoughtStreamService } from "./thoughtStreamService";
 import { sovereignGuard } from "./agent/SovereignGuard";
+import {
+  detectDestructiveCommand,
+  extractCommandText,
+} from "./safety/destructiveCommands";
 
 export interface SafetyViolation {
   lawId: string;
@@ -71,21 +75,34 @@ class SafetyService {
 
     // Law 4: MISSION MODE - High risk actions check
     const highRiskActions = ["NETWORK_EXPLOIT", "FINANCIAL_TX", "DELETE_RECORDS", "RUN_SHELL"];
-    
-    // Check if the action or its target (in params) constitutes a high-risk move
-    const isHighRisk = highRiskActions.includes(actionName.toUpperCase()) || 
-                       (params?.command && highRiskActions.some(hr => params.command.includes(hr)));
+    const isHighRiskByName = highRiskActions.includes(actionName.toUpperCase());
 
-    if (isHighRisk) {
+    // Inspect what the command actually does. The previous check asked whether
+    // the command string contained "RUN_SHELL" — the name of the tool, not
+    // anything a payload would ever contain — so `rm -rf /` matched nothing and
+    // this branch only ever fired on the tool name above.
+    const destructive = detectDestructiveCommand(extractCommandText(params));
+
+    if (isHighRiskByName || destructive.matched) {
        console.log(`[SAFETY_AUDIT] Auditing high-risk action: ${actionName}`, params);
-       
+
+       const detail = destructive.matched
+         ? ` Destructive command detected (${destructive.rule}): ${destructive.reason}`
+         : "";
+
        this.handleViolation({
          lawId: "LAW_4_MISSION_MODE",
          severity: "CRITICAL",
-         message: `High-risk action [${actionName}] detected. Explicit Mission Authorization required for parameters: ${JSON.stringify(params)}`,
+         message: `High-risk action [${actionName}] detected.${detail} Explicit Mission Authorization required for parameters: ${JSON.stringify(params)}`,
          blockedAction: actionName
        });
-       return { allowed: false, reason: "MISSION_MODE_REQUIRED" };
+
+       return {
+         allowed: false,
+         reason: destructive.matched
+           ? `DESTRUCTIVE_COMMAND_BLOCKED: ${destructive.reason}`
+           : "MISSION_MODE_REQUIRED",
+       };
     }
 
     return { allowed: true };
