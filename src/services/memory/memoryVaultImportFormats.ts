@@ -22,6 +22,15 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
+/** Values of a mapping object or array (ChatGPT export uses either). */
+function valuesOf(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === "object") {
+    return Object.values(value as Record<string, unknown>);
+  }
+  return [];
+}
+
 function itemFromParts(
   id: string,
   content: string,
@@ -85,9 +94,7 @@ function fromChatGptLike(raw: Record<string, unknown>): LucaMemoryItem[] {
     const title = String(c.title ?? `conversation-${cIdx}`);
     const messages = Array.isArray(c.messages)
       ? c.messages
-      : Array.isArray(c.mapping)
-        ? Object.values(c.mapping as Record<string, unknown>)
-        : [];
+      : valuesOf(c.mapping);
 
     const lines: string[] = [];
     messages.forEach((msg) => {
