@@ -68,17 +68,17 @@ import {
   buildLucaAppearanceCssVariableState,
 } from "./config/lucaAppearanceTokens";
 
-import LucaBrowser from "./components/LucaBrowser";
+const LucaBrowser = React.lazy(() => import("./components/LucaBrowser"));
 import { watchGateway } from "./services/watchGateway";
 
 import { lucaLinkManager } from "./services/lucaLink/manager";
 
 import type { ScreenShareHandle } from "./components/ScreenShare";
 import conversationService from "./services/conversationService";
-import { SettingsModal } from "./components/SettingsModal";
+const SettingsModal = React.lazy(() => import("./components/SettingsModal").then((m) => ({ default: m.SettingsModal })));
 import SandboxedBrowserShell from "./components/browser/SandboxedBrowserShell";
-import ChatWidgetMode from "./components/ChatWidgetMode";
-import WidgetMode from "./components/WidgetMode";
+const ChatWidgetMode = React.lazy(() => import("./components/ChatWidgetMode"));
+const WidgetMode = React.lazy(() => import("./components/WidgetMode"));
 import HologramMode from "./components/HologramMode";
 import {
   createWidgetPresenceSnapshot,
@@ -90,13 +90,13 @@ import {
 
 // Helper for device capability check removed temporarily as it's unused
 
-import InvestigationReports from "./components/InvestigationReports";
-import DarkWebScanner from "./components/DarkWebScanner";
-import VisualCore from "./components/VisualCore";
+const InvestigationReports = React.lazy(() => import("./components/InvestigationReports"));
+const DarkWebScanner = React.lazy(() => import("./components/DarkWebScanner"));
+const VisualCore = React.lazy(() => import("./components/VisualCore"));
 import { guardService } from "./services/guardService";
 
 // Thought Parser imports removed as they were unused
-import VisionHUD from "./components/VisionHUD";
+const VisionHUD = React.lazy(() => import("./components/VisionHUD"));
 
 // Layout Modularization Phase 2
 import Header from "./components/layout/Header";
@@ -141,10 +141,10 @@ import { normalizeLucaAtmosphere } from "./config/lucaAtmospheres";
 import { EdgePresence } from "./components/presence";
 import { THEME_PALETTE } from "./config/themeColors";
 import { isElectron as checkElectron, isWeb } from "./utils/env";
-import ControlPanel from "./components/right-panel/ControlPanel";
-import ActivityPanel from "./components/right-panel/ActivityPanel";
+const ControlPanel = React.lazy(() => import("./components/right-panel/ControlPanel"));
+const ActivityPanel = React.lazy(() => import("./components/right-panel/ActivityPanel"));
 import MemoryControlPanel from "./components/right-panel/MemoryControlPanel";
-import TraceLogsPanel from "./components/right-panel/TraceLogsPanel";
+const TraceLogsPanel = React.lazy(() => import("./components/right-panel/TraceLogsPanel"));
 import { SkillPermissionGrantProvider } from "./components/SkillPermissionGrantContext";
 import { isRightPanelMode } from "./components/right-panel/rightPanelModel";
 import {
@@ -2627,12 +2627,20 @@ function AppContent() {
 
   if (appMode === "widget") {
     // Start Dictation (Orb Widget)
-    return <WidgetMode />;
+    return (
+      <React.Suspense fallback={null}>
+        <WidgetMode />
+      </React.Suspense>
+    );
   }
 
   if (appMode === "chat") {
     // Mini Chat Widget Mode
-    return <ChatWidgetMode />;
+    return (
+      <React.Suspense fallback={null}>
+        <ChatWidgetMode />
+      </React.Suspense>
+    );
   }
 
   if (appMode === "hologram") {
@@ -2649,6 +2657,7 @@ function AppContent() {
     );
     return (
       <div className="w-full h-full bg-transparent flex flex-col overflow-hidden relative">
+        <React.Suspense fallback={null}>
         <VisualCore
           isVisible={true}
           themeColor={theme.hex}
@@ -2675,6 +2684,7 @@ function AppContent() {
             isActive={false}
           />
         </div>
+        </React.Suspense>
       </div>
     );
   }
@@ -2688,6 +2698,7 @@ function AppContent() {
           borderColor: "var(--luca-border-strong, var(--app-border-main))",
           boxShadow: "var(--luca-shadow-soft)",
         }}>
+        <React.Suspense fallback={null}>
         <LucaBrowser
           url={ghostBrowserUrl}
           onClose={() => {
@@ -2697,6 +2708,7 @@ function AppContent() {
           sessionId={`session_${Date.now()}`}
           mode="STANDALONE"
         />
+        </React.Suspense>
       </div>
     );
   }
@@ -3522,6 +3534,10 @@ function AppContent() {
                     ))}
                   </div>
                   <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
+                    {/* One boundary for the whole body: only one mode renders at
+                        a time, so a switch swaps which chunk is loading and the
+                        panel frame around it stays put. */}
+                    <React.Suspense fallback={null}>
                     {displayedRightPanelMode === "CONTROL" && (
                       <ControlPanel
                         theme={theme}
@@ -3547,6 +3563,7 @@ function AppContent() {
                     {displayedRightPanelMode === "LOGS" && (
                       <TraceLogsPanel theme={theme} toolLogs={toolLogs} />
                     )}
+                    </React.Suspense>
                   </div>
                 </div>
               </section>
@@ -3596,6 +3613,7 @@ function AppContent() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
+                  <React.Suspense fallback={null}>
                   {displayedRightPanelMode === "CONTROL" && (
                     <ControlPanel
                       theme={theme}
@@ -3619,6 +3637,7 @@ function AppContent() {
                   {displayedRightPanelMode === "LOGS" && (
                     <TraceLogsPanel theme={theme} toolLogs={toolLogs} />
                   )}
+                  </React.Suspense>
                 </div>
               </div>
             </section>
@@ -3665,6 +3684,7 @@ function AppContent() {
           </nav>
         )}
         {showSettingsModal && (
+          <React.Suspense fallback={null}>
           <SettingsModal
             theme={theme}
             initialTab={settingsInitialTab}
@@ -3673,18 +3693,23 @@ function AppContent() {
               setSettingsInitialTab(undefined); // reset so normal re-open starts on default tab
             }}
           />
+          </React.Suspense>
         )}
         {showInvestigationReports && (
+          <React.Suspense fallback={null}>
           <InvestigationReports
             onClose={() => setShowInvestigationReports(false)}
             theme={theme}
           />
+          </React.Suspense>
         )}
         {showDarkWebScanner && (
+          <React.Suspense fallback={null}>
           <DarkWebScanner
             onClose={() => setShowDarkWebScanner(false)}
             theme={theme}
           />
+          </React.Suspense>
         )}
         {/* PR #134: gated browser shell. Self-managed; only surfaces after an
             approved open_approved_safe_url governed execution (approval + Run once). */}
