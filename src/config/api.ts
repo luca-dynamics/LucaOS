@@ -41,7 +41,7 @@ export const CORTEX_URL = IS_PUBLIC_WEB_TARGET
 export const AUTH_DOMAIN = IS_PUBLIC_WEB_TARGET
   ? ""
   : getEnvVar("VITE_AUTH_DOMAIN", "http://127.0.0.1:3001");
-export const FRONTEND_PORT = getEnvVar("VITE_FRONTEND_PORT", "3000");
+export const FRONTEND_PORT = getEnvVar("VITE_FRONTEND_PORT", "5822");
 // Cloud Relay Server for Mobile Connectivity (Deployment URL)
 export const RELAY_SERVER_URL = getEnvVar("VITE_RELAY_SERVER_URL", "");
 
