@@ -718,6 +718,19 @@ function createWindow() {
         console.error('Failed to load:', errorCode, errorDescription);
     });
 
+    // Dev-only: forward the main renderer's console to the terminal. The widget
+    // window has done this since it was written (windows/createWidgetWindow.cjs)
+    // but the MAIN window never did — so renderer-side boot failures were
+    // invisible exactly when you most need them, and a boot that stalls before
+    // 'renderer-ready' looked identical to one that crashed. Packaged builds
+    // stay quiet. Both the legacy (event, level, message) and the current
+    // single-event signatures are handled.
+    if (!app.isPackaged) {
+        mainWindow.webContents.on('console-message', (event, level, message) => {
+            console.log('[RENDERER]', message ?? event?.message ?? '');
+        });
+    }
+
     mainWindow.webContents.on('dom-ready', () => {
         console.log('DOM Ready');
         // Re-publish the ephemeral backend ports on every load/reload — a
