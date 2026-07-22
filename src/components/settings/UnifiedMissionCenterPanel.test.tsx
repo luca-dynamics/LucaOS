@@ -15,8 +15,8 @@ describe("UnifiedMissionCenterPanel", () => {
     const markup = renderToStaticMarkup(<UnifiedMissionCenterPanel />);
     expect(markup).toContain("Mission Center");
     expect(markup).toContain("completeMissionWithVerification");
-    expect(markup).toContain("verification tape");
     expect(markup).toContain("Workforce and computer-use");
+    expect(markup).toContain("start mission");
   });
 
   it("uses gated complete, not raw archive-only completion", () => {
@@ -24,6 +24,8 @@ describe("UnifiedMissionCenterPanel", () => {
     expect(file).toContain("completeMissionWithVerification");
     expect(file).toContain("Complete with verification");
     expect(file).toContain("Verification tape");
+    expect(file).toContain("startMission");
+    expect(file).toContain("addGoal");
     expect(file).not.toMatch(/archiveMission\s*\(/);
   });
 });

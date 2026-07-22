@@ -16,8 +16,9 @@ describe("OperationPermissionCenter", () => {
     const markup = renderCenter();
     expect(markup).toContain("Permission center");
     expect(markup).toContain("Review grants");
-    // The detailed governance surfaces are gated behind creator mode
-    // (progressive disclosure) and must not appear in the default panel.
+    // Mission Center is always available (control surface).
+    expect(markup).toContain("Mission Center");
+    // The detailed governance Operation Center is gated behind creator mode.
     expect(markup).not.toContain("Operation Center");
     expect(markup).not.toContain("Right-panel status is informational only.");
   });
@@ -38,11 +39,14 @@ describe("OperationPermissionCenter", () => {
     expect(markup).toContain("Review status only - no action has run.");
   });
 
-  it("shows safety copy and no operational action buttons (creator mode)", () => {
+  it("shows safety copy for Operation Center cards (creator mode)", () => {
     const markup = renderCenter(true);
     expect(markup).toContain("Right-panel status is informational only.");
     expect(markup).toContain("No execution, transport send, memory write, sensor collection, file write, install, or model/tool call is performed.");
     expect(markup).toContain("Approved/review states here do not grant runtime authority.");
-    expect(markup).not.toMatch(/<button[^>]*>[^<]*(execute|send|write|install|approve|live collect)/i);
+    // Mission Center may have control buttons; Operation Center card copy still forbids execute/send/install.
+    expect(markup).not.toMatch(
+      /data-operation-center-item[\s\S]*?<button[^>]*>[^<]*(execute|send|write|install|approve|live collect)/i,
+    );
   });
 });
