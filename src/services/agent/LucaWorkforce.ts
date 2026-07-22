@@ -383,7 +383,7 @@ export class LucaWorkforce {
         }
 
         // Execute all tasks in group IN PARALLEL
-        const promises = group.map((task) => this.executeTask(task));
+        const promises = group.map((task) => this.executeTask(task, plan));
         const results = await Promise.allSettled(promises);
 
         // Check for failures
@@ -449,7 +449,10 @@ export class LucaWorkforce {
   /**
    * Execute a single task with a specific persona
    */
-  private async executeTask(task: WorkflowTask): Promise<void> {
+  private async executeTask(
+    task: WorkflowTask,
+    plan?: WorkflowPlan,
+  ): Promise<void> {
     const startTime = Date.now();
 
     // PHASE 3: Cognitive Lockdown - Ensure mission integrity before launching persona
@@ -463,7 +466,7 @@ export class LucaWorkforce {
 
     task.status = "in-progress";
     // Live Mission Center: mark goal IN_PROGRESS when the task starts.
-    const owningPlan = this.findPlanForTask(task.id);
+    const owningPlan = plan ?? this.findPlanForTask(task);
     if (owningPlan) await this.syncTaskGoalStatus(owningPlan, task);
 
     console.log(`[${task.persona} Luca] Starting: ${task.description}`);
@@ -477,8 +480,12 @@ export class LucaWorkforce {
     }
 
     try {
-      // Acquire resource lock (prevent conflicts)
-      const lockKey = `task_${task.id}`;
+      // Acquire resource lock (prevent conflicts). Scoped per workflow: task
+      // ids repeat across workflows, so a bare id makes concurrent workflows
+      // contend on each other's locks.
+      const lockKey = owningPlan
+        ? `${owningPlan.workflowId}:${task.id}`
+        : `task_${task.id}`;
       const release = await resourceLockManager.acquireLock(
         lockKey,
         `${task.persona}-luca`,
@@ -528,10 +535,18 @@ export class LucaWorkforce {
     }
   }
 
-  /** Locate the active workflow plan that owns a task id (for goal sync). */
-  private findPlanForTask(taskId: string): WorkflowPlan | undefined {
+  /**
+   * Locate the active workflow plan that owns a task (for goal sync).
+   *
+   * Matches on object identity, not task id: ids are only unique *within* a
+   * plan (`task_0`, `task_1`, …), and completed workflows are never pruned
+   * from activeWorkflows, so an id scan resolves every later workflow's
+   * `task_0` to whichever workflow started first — writing its progress onto
+   * the wrong mission's goals. Prefer passing the owning plan explicitly.
+   */
+  private findPlanForTask(task: WorkflowTask): WorkflowPlan | undefined {
     for (const plan of this.activeWorkflows.values()) {
-      if (plan.tasks.some((t) => t.id === taskId)) return plan;
+      if (plan.tasks.some((t) => t === task)) return plan;
     }
     return undefined;
   }
@@ -1267,7 +1282,7 @@ Return only the Python code, no explanations.`;
         }
 
         // 3. Execute Task
-        await this.executeTask(task);
+        await this.executeTask(task, plan);
 
         // 4. Mission Sync (real MissionControl goal ids, not index+1)
         await this.syncTaskGoalStatus(plan, task);
