@@ -965,9 +965,14 @@
         };
 
         // ---- Ready gate -----------------------------------------------------
-        // Once React has mounted, the checks resolve into "LucaOS is ready."
-        // — a settled summary of what's now live — and wait for the user to
-        // press Continue before the loader hands the screen to the app.
+        // FIRST RUN ONLY. Once React has mounted, the checks resolve into
+        // "LucaOS is ready." — a settled summary of what's now live — and wait
+        // for the user to press Continue before handing over the screen.
+        //
+        // A RETURNING user never sees this. Their environment is already theirs,
+        // so a manual Continue on every launch and every refresh is friction
+        // wearing the costume of ceremony: it turns a reload into a click. They
+        // get the same readiness checks, then the loader simply fades away.
         const READY_SUMMARY = [
           ["Core services", "Online"],
           ["Memory systems", "Synchronized"],
@@ -976,11 +981,29 @@
           ["Security & privacy", "Active"],
         ];
 
+        // Fade the loader out and take its window controls with it (React
+        // renders its own once mounted, so leaving these would double them up).
+        const dismissLoader = (loader) => {
+          loader.style.opacity = "0";
+          window.setTimeout(() => {
+            loader.remove();
+            document.querySelector(".root-window-controls")?.remove();
+          }, 520);
+        };
+
         window.__LUCA_BOOT_LOADER_HANDOFF__ = () => {
           const loader = document.getElementById("root-loader");
           if (!loader || loader.dataset.state === "failed") return false;
           window.__LUCA_CLEAR_BOOT_STATUS_LOOP__?.();
           loader.dataset.state = "ready";
+
+          // Returning user: straight into the workspace, no click. Returning
+          // true still tells the caller we own the dismissal, so it must not
+          // rip the loader out from under the fade.
+          if (isReturningUser) {
+            dismissLoader(loader);
+            return true;
+          }
 
           const brandTextEl = loader.querySelector(
             ".loader-brandtag .loader-text",
@@ -1006,15 +1029,7 @@
               '<button type="button" class="loader-continue" id="loader-continue">Continue</button>';
             const btn = document.getElementById("loader-continue");
             if (btn) {
-              btn.addEventListener("click", () => {
-                loader.style.opacity = "0";
-                window.setTimeout(() => {
-                  loader.remove();
-                  document
-                    .querySelector(".root-window-controls")
-                    ?.remove();
-                }, 520);
-              });
+              btn.addEventListener("click", () => dismissLoader(loader));
             }
           }
           return true;
