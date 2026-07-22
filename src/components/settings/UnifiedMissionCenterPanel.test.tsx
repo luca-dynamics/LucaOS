@@ -24,6 +24,13 @@ describe("UnifiedMissionCenterPanel", () => {
     expect(file).toContain("completeMissionWithVerification");
     expect(file).toContain("Complete with verification");
     expect(file).toContain("Verification tape");
+    expect(file).toContain("Step timeline (tape replay)");
+    expect(file).toContain("Completion readiness");
+    expect(file).toContain("assessMissionCompletionReadiness");
+    expect(file).toContain("formatGateSnapshotLines");
+    expect(file).toContain("recordMissionCheckpoint");
+    expect(file).toContain("recordMissionRollback");
+    expect(file).toContain("Record checkpoint");
     expect(file).toContain("startMission");
     expect(file).toContain("addGoal");
     expect(file).not.toMatch(/archiveMission\s*\(/);

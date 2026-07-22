@@ -21,6 +21,10 @@ import { llmToolSelector } from "./tools/LLMToolSelector";
 import { pentestSessionStore } from "./PentestSessionStore";
 import type { PentestPhase } from "./pentestTypes";
 import { missionControlService } from "./MissionControlService";
+import {
+  attachMissionControlToWorkflowPlan,
+  syncWorkflowTaskGoalStatus,
+} from "./workforceMissionControl";
 import { ProviderFactory } from "../llm/ProviderFactory";
 import { thoughtStreamService } from "../thoughtStreamService";
 import { settingsService } from "../settingsService";
@@ -47,6 +51,10 @@ export interface WorkflowPlan {
   goal: string;
   tasks: WorkflowTask[];
   parallelGroups: WorkflowTask[][]; // Tasks grouped by parallel execution
+  /** MissionControl (Electron/SQLite) mission id when bridge available. */
+  missionControlId?: number;
+  /** Maps workflow task id → MissionControl goal id. */
+  taskGoalIds?: Record<string, number>;
 }
 
 /**
@@ -93,11 +101,15 @@ export class LucaWorkforce {
 
     // Step 2: Break down into persona-specific tasks
     const plan = await this.createWorkflowPlan(goal, workspace, workflowId);
+    // Step 2b: Attach MissionControl mission + goals (desktop) so Mission Center
+    // and gated complete share the same mission id as this workflow.
+    await this.attachMissionControlMission(plan);
     this.activeWorkflows.set(workflowId, plan);
 
     this.trace.log("plan_created", {
       totalTasks: plan.tasks.length,
       parallelGroups: plan.parallelGroups.length,
+      missionControlId: plan.missionControlId,
     });
 
     // Step 3: Execute in parallel groups
@@ -177,6 +189,53 @@ export class LucaWorkforce {
       tasks,
       parallelGroups,
     };
+  }
+
+  /**
+   * Create MissionControl mission + one goal per task when Electron bridge is up.
+   * Soft-fails on web / missing bridge so workflows still run.
+   */
+  private async attachMissionControlMission(plan: WorkflowPlan): Promise<void> {
+    try {
+      const result = await attachMissionControlToWorkflowPlan(plan);
+      if (!result.attached) {
+        console.log(
+          `[LucaWorkforce] MissionControl attach skipped: ${result.reason || "unavailable"}`,
+        );
+        return;
+      }
+      console.log(
+        `[LucaWorkforce] MissionControl mission ${result.missionControlId} attached (${plan.tasks.length} goals).`,
+      );
+      if (this.trace) {
+        this.trace.log("mission_control_attached", {
+          missionControlId: result.missionControlId,
+          goalCount: plan.tasks.length,
+        });
+      }
+    } catch (error) {
+      console.warn(
+        "[LucaWorkforce] MissionControl attach failed (workflow continues):",
+        error,
+      );
+    }
+  }
+
+  /**
+   * Sync a single task outcome to its MissionControl goal id.
+   */
+  private async syncTaskGoalStatus(
+    plan: WorkflowPlan,
+    task: WorkflowTask,
+  ): Promise<void> {
+    try {
+      await syncWorkflowTaskGoalStatus(plan, task);
+    } catch (error) {
+      console.warn(
+        `[LucaWorkforce] Goal status sync failed for task ${task.id}:`,
+        error,
+      );
+    }
   }
 
   /**
@@ -349,6 +408,11 @@ export class LucaWorkforce {
         console.log(`[LucaWorkforce] ✅ Group ${groupIndex + 1} complete`);
       }
 
+      // Sync goal statuses for parallel path after all groups finish
+      for (const task of plan.tasks) {
+        await this.syncTaskGoalStatus(plan, task);
+      }
+
       console.log("[LucaWorkforce] === WORKFLOW COMPLETE ===");
 
       if (this.trace) {
@@ -356,12 +420,16 @@ export class LucaWorkforce {
           totalTasks: plan.tasks.length,
           successfulTasks: plan.tasks.filter((t) => t.status === "complete")
             .length,
+          missionControlId: plan.missionControlId,
         });
         this.trace.end();
       }
 
       const allOk = plan.tasks.every((t) => t.status === "complete");
-      await this.finalizeActiveMissionWithVerification(allOk);
+      await this.finalizeActiveMissionWithVerification(
+        allOk,
+        plan.missionControlId,
+      );
     } catch (error) {
       console.error("[LucaWorkforce] Workflow failed:", error);
 
@@ -370,7 +438,10 @@ export class LucaWorkforce {
         this.trace.end();
       }
 
-      await this.finalizeActiveMissionWithVerification(false);
+      await this.finalizeActiveMissionWithVerification(
+        false,
+        plan.missionControlId,
+      );
       throw error;
     }
   }
@@ -391,6 +462,9 @@ export class LucaWorkforce {
     }
 
     task.status = "in-progress";
+    // Live Mission Center: mark goal IN_PROGRESS when the task starts.
+    const owningPlan = this.findPlanForTask(task.id);
+    if (owningPlan) await this.syncTaskGoalStatus(owningPlan, task);
 
     console.log(`[${task.persona} Luca] Starting: ${task.description}`);
 
@@ -416,6 +490,7 @@ export class LucaWorkforce {
         await this.executePersonaWork(task);
 
         task.status = "complete";
+        if (owningPlan) await this.syncTaskGoalStatus(owningPlan, task);
 
         const duration = Date.now() - startTime;
         console.log(
@@ -438,6 +513,7 @@ export class LucaWorkforce {
     } catch (error) {
       task.status = "failed";
       task.error = error instanceof Error ? error.message : "Unknown error";
+      if (owningPlan) await this.syncTaskGoalStatus(owningPlan, task);
 
       console.error(
         `[${task.persona} Luca] ❌ Failed: ${task.description}`,
@@ -450,6 +526,14 @@ export class LucaWorkforce {
 
       throw error;
     }
+  }
+
+  /** Locate the active workflow plan that owns a task id (for goal sync). */
+  private findPlanForTask(taskId: string): WorkflowPlan | undefined {
+    for (const plan of this.activeWorkflows.values()) {
+      if (plan.tasks.some((t) => t.id === taskId)) return plan;
+    }
+    return undefined;
   }
 
   /**
@@ -1185,36 +1269,45 @@ Return only the Python code, no explanations.`;
         // 3. Execute Task
         await this.executeTask(task);
 
-        // 4. Mission Sync
-        await missionControlService.updateGoalStatus(
-          i + 1,
-          task.status === "complete" ? "COMPLETED" : "FAILED",
-        );
+        // 4. Mission Sync (real MissionControl goal ids, not index+1)
+        await this.syncTaskGoalStatus(plan, task);
       }
 
       console.log("[LucaWorkforce] 🏁 Sequential Pipeline Complete.");
       // 5. Gated product completion (archive only if verification allows).
       const allOk = plan.tasks.every((t) => t.status === "complete");
-      await this.finalizeActiveMissionWithVerification(allOk);
+      await this.finalizeActiveMissionWithVerification(
+        allOk,
+        plan.missionControlId,
+      );
     } catch (error) {
       console.error("[LucaWorkforce] Pipeline failed:", error);
-      await this.finalizeActiveMissionWithVerification(false);
+      await this.finalizeActiveMissionWithVerification(
+        false,
+        plan.missionControlId,
+      );
       throw error;
     }
   }
 
   /**
-   * Real wire: complete active MissionControl mission through verification gates.
-   * No-op when no active mission or Electron bridge is absent.
+   * Real wire: complete MissionControl mission through verification gates.
+   * Prefers the workflow-attached mission id; falls back to active mission.
    */
   private async finalizeActiveMissionWithVerification(
     success: boolean,
+    missionControlId?: number,
   ): Promise<void> {
     try {
-      const active = await missionControlService.getActiveMission();
-      if (!active?.mission?.id) return;
+      let missionId = missionControlId;
+      if (missionId == null) {
+        const active = await missionControlService.getActiveMission();
+        missionId = active?.mission?.id;
+      }
+      if (missionId == null) return;
+
       const result = await missionControlService.completeMissionWithVerification(
-        active.mission.id,
+        missionId,
         { success },
       );
       if (result.blockedByVerification) {
@@ -1224,7 +1317,7 @@ Return only the Python code, no explanations.`;
         );
       } else if (result.completed) {
         console.log(
-          "[LucaWorkforce] Mission completed and archived after verification.",
+          `[LucaWorkforce] Mission ${missionId} completed and archived after verification.`,
         );
       }
     } catch (error) {

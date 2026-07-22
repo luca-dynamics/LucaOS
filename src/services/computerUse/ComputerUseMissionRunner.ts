@@ -1,6 +1,10 @@
 import { completeProductMission } from "../missionTape/completeProductMission";
 import type { CompleteProductMissionResult } from "../missionTape/completeProductMission";
 import {
+  ensureComputerUseMissionControl,
+  syncComputerUseStepGoalStatus,
+} from "./computerUseMissionControl";
+import {
   ComputerUseMissionRunnerOptions,
   ComputerUseMissionRunnerResult,
   ComputerUseMissionRunnerStepRecord,
@@ -10,6 +14,8 @@ import {
 export type ComputerUseMissionRunnerResultWithCompletion =
   ComputerUseMissionRunnerResult & {
     productCompletion?: CompleteProductMissionResult;
+    missionControlId?: number;
+    stepGoalIds?: Record<string, number>;
   };
 
 export class ComputerUseMissionRunner {
@@ -26,25 +32,79 @@ export class ComputerUseMissionRunner {
   }
 
   async runSteps(steps: ComputerUseMissionStepInput[]): Promise<ComputerUseMissionRunnerResultWithCompletion> {
+    const missionId = steps.find((s) => s.missionId)?.missionId;
+    let missionControlId: number | undefined;
+    let stepGoalIds: Record<string, number> | undefined;
+
+    // Link MissionControl + step goals before steps so Mission Center shows live progress.
+    if (missionId && this.options.missionTapeCompletion?.linkMissionControl !== false) {
+      try {
+        const linked = await ensureComputerUseMissionControl(missionId, {
+          intent: `computer-use:${missionId}`,
+          steps: steps.map((s) => ({
+            stepId: s.stepId,
+            description: `computer_use:${s.stepId}`,
+          })),
+        });
+        if (linked.linked) {
+          missionControlId = linked.missionControlId;
+          stepGoalIds = linked.stepGoalIds;
+        }
+      } catch {
+        /* soft-fail */
+      }
+    }
+
     const results: ComputerUseMissionRunnerStepRecord[] = [];
-    for (let i = 0; i < steps.length; i += 1) results.push(await this.runStep(steps[i], i));
+    for (let i = 0; i < steps.length; i += 1) {
+      const step = steps[i];
+      if (stepGoalIds) {
+        try {
+          await syncComputerUseStepGoalStatus(
+            stepGoalIds,
+            step.stepId,
+            "in_progress",
+          );
+        } catch {
+          /* soft-fail */
+        }
+      }
+      const record = await this.runStep(step, i);
+      results.push(record);
+      if (stepGoalIds) {
+        try {
+          await syncComputerUseStepGoalStatus(
+            stepGoalIds,
+            record.stepId,
+            record.status,
+          );
+        } catch {
+          /* soft-fail */
+        }
+      }
+    }
     const summary = this.createRunSummary(results);
     const base: ComputerUseMissionRunnerResultWithCompletion = {
       results,
       summary,
       metadata: { runnerKind: "scaffold", systemApisCalled: false },
+      missionControlId,
+      stepGoalIds,
     };
 
     const tapeOpt = this.options.missionTapeCompletion;
     const completeAfter = tapeOpt?.completeAfterRun !== false;
-    const missionId = steps.find((s) => s.missionId)?.missionId;
     if (!tapeOpt?.recorder || !completeAfter || !missionId || steps.length === 0) {
       return base;
     }
 
     const anyFailed = summary.failed > 0 || summary.inconclusive > 0;
+    // Prefer MissionControl numeric id for tape/archive when linked.
+    const completionMissionId =
+      missionControlId != null ? String(missionControlId) : missionId;
+
     const productCompletion = await completeProductMission({
-      missionId,
+      missionId: completionMissionId,
       intent: `computer-use:${missionId}`,
       recorder: tapeOpt.recorder,
       success: !anyFailed,
@@ -57,6 +117,24 @@ export class ComputerUseMissionRunner {
         kind: r.kind,
         notes: r.reason,
       })),
+      onCompletedArchive:
+        missionControlId != null
+          ? async (id) => {
+              const numeric = Number(id);
+              if (!Number.isFinite(numeric)) return;
+              try {
+                const { missionControlService } = await import(
+                  "../agent/MissionControlService"
+                );
+                // completeProductMission already gated; archive if bridge up.
+                if (typeof window !== "undefined" && window.luca?.missionControl?.archive) {
+                  await missionControlService.archiveMission(numeric);
+                }
+              } catch {
+                /* soft-fail */
+              }
+            }
+          : undefined,
     });
 
     return {
