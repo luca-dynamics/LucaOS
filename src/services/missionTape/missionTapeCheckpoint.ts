@@ -6,7 +6,8 @@
  * filesystem or reverse live side-effects.
  */
 
-import { MissionTapeRecorderService } from "./MissionTapeRecorder";
+import type { MissionTapeRecorderService } from "./MissionTapeRecorder";
+import { sharedMissionTapeRecorder } from "./sharedMissionTapeRecorder";
 import type { MissionTapeRecord } from "./types";
 
 export interface MissionCheckpointGoalSnapshot {
@@ -111,7 +112,7 @@ export function getLatestMissionCheckpoint(
 export async function recordMissionCheckpoint(
   input: RecordMissionCheckpointInput,
 ): Promise<RecordMissionCheckpointResult> {
-  const recorder = input.recorder ?? new MissionTapeRecorderService();
+  const recorder = input.recorder ?? sharedMissionTapeRecorder;
   const missionId = input.missionId.trim();
   if (!missionId) throw new Error("recordMissionCheckpoint requires missionId");
 
@@ -170,7 +171,7 @@ export async function recordMissionCheckpoint(
 export async function recordMissionRollback(
   input: RecordMissionRollbackInput,
 ): Promise<RecordMissionRollbackResult> {
-  const recorder = input.recorder ?? new MissionTapeRecorderService();
+  const recorder = input.recorder ?? sharedMissionTapeRecorder;
   const missionId = input.missionId.trim();
   if (!missionId) throw new Error("recordMissionRollback requires missionId");
 
