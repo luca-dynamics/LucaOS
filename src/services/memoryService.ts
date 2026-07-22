@@ -10,6 +10,11 @@ import {
   MEMORY_ITEM_CHAR_LIMIT,
   selectMemoriesForContext,
 } from "./memory/memoryContextSelection";
+import { evaluateMemoryWrite } from "./memory/memoryWriteCapacity";
+
+// Why the most recent write was refused, so the tool layer can tell the model
+// how to recover instead of surfacing a bare null.
+let _lastWriteRejection: string | null = null;
 
 // API Key sourced from environment variable
 // For Vite/browser: VITE_API_KEY, For Node.js: API_KEY
@@ -488,6 +493,14 @@ export const memoryService = {
    * Supports automatic expiry for SESSION_STATE memories
    * @param autoConsolidate - If true, check for and merge duplicates after saving (default: false)
    */
+  /**
+   * Why the last saveMemory call refused to write, if it did. Cleared by the
+   * next admitted write.
+   */
+  getLastWriteRejection(): string | null {
+    return _lastWriteRejection;
+  },
+
   async saveMemory(
     key: string,
     value: string,
@@ -511,6 +524,16 @@ export const memoryService = {
     }
 
     const memories = this.getAllMemories();
+
+    // 0. Capacity gate. Checked before the embedding call so a refused write
+    // costs nothing, and before any mutation so the archive is left untouched.
+    const capacity = evaluateMemoryWrite(memories, { key, value, category });
+    if (!capacity.admitted) {
+      _lastWriteRejection = capacity.reason || "Memory tier is full.";
+      console.warn(`[MEMORY] Write refused (${capacity.tier} tier): ${key}`);
+      return null;
+    }
+    _lastWriteRejection = null;
 
     // 1. Generate Embedding
     const contentToEmbed = `${key}: ${value}`;

@@ -277,6 +277,15 @@ export class ServerToolDispatcher {
           args.value,
           args.category || "FACT",
         );
+        if (!memory) {
+          // Refused rather than thrown — the capacity gate or the
+          // system-prompt filter declined it. Return the reason so the model
+          // consolidates instead of retrying the identical write.
+          return (
+            memoryService.getLastWriteRejection?.() ||
+            "Memory not stored: the content was filtered as a system-level prompt rather than a durable fact."
+          );
+        }
         return `Memory Stored: [${memory.category}] ${memory.key} (ID: ${memory.id})`;
       } catch (e: any) {
         return `Failed to store memory: ${e.message}`;

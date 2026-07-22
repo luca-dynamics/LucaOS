@@ -186,6 +186,15 @@ export const IntelligenceProvider = {
             false, // no auto-consolidate here, save it for the background synapse
             args.importance,
           );
+          if (!memory) {
+            // Refused rather than thrown — the capacity gate or the
+            // system-prompt filter declined it. Return the reason so the model
+            // consolidates instead of retrying the identical write.
+            return (
+              memoryService.getLastWriteRejection?.() ||
+              "Memory not stored: the content was filtered as a system-level prompt rather than a durable fact."
+            );
+          }
           return `✓ Memory Synapsed: [${memory.category}] ${memory.key} (ID: ${memory.id})`;
         } catch (e: any) {
           return `Synapse Failure: ${e.message}`;
