@@ -15,8 +15,23 @@ import RemoteAccessModal from "../RemoteAccessModal";
 import { DesktopStreamModal } from "../DesktopStreamModal";
 import { LucaRecorder } from "../LucaRecorder";
 import HumanInputModal from "../HumanInputModal";
-import OriginOverlayPanels from "../../surfaces/origin/OriginOverlayPanels";
-import SharedOverlayPanels from "../../surfaces/shared/SharedOverlayPanels";
+// Lazy: these two barrels are the heaviest subtrees in the app. Origin pulls
+// HackingTerminal, the whole trading tree (BacktestPage, DebateArena, the
+// crypto/forex/prediction terminals) and the OSINT surfaces; Shared pulls
+// CodeEditor, LucaLinkModal and the six social managers. Together they dominate
+// the eager import graph, yet every panel inside them renders only behind a
+// show* flag — so someone who just wants to chat was paying to parse all of it
+// before React could mount at all.
+//
+// Splitting HERE rather than at App's `import OverlayManager` is what actually
+// helps: OverlayManager itself always mounts, so making it lazy would defer
+// nothing. Its heavy children are the payload.
+const OriginOverlayPanels = React.lazy(
+  () => import("../../surfaces/origin/OriginOverlayPanels"),
+);
+const SharedOverlayPanels = React.lazy(
+  () => import("../../surfaces/shared/SharedOverlayPanels"),
+);
 import { useRealtimeVoiceHudState } from "../../services/voice/useRealtimeVoiceHudState";
 import { realtimeVoiceUiBridge } from "../../services/voice/realtimeVoiceUiBridge";
 import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
@@ -530,6 +545,10 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         />
       )}
 
+      {/* No fallback UI: every panel inside is already gated by its own show*
+          flag, so while the chunk loads there is nothing on screen to hold a
+          place for. A spinner here would flash on first open of any overlay. */}
+      <React.Suspense fallback={null}>
       <SharedOverlayPanels
         theme={theme}
         showWhatsAppManager={showWhatsAppManager}
@@ -571,6 +590,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         setShowMobileManager={setShowMobileManager}
         activeMobileDevice={activeMobileDevice}
       />
+      </React.Suspense>
 
       <VoiceHud
         isActive={isVoiceMode}
@@ -783,6 +803,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         />
       )}
 
+      <React.Suspense fallback={null}>
       <OriginOverlayPanels
         theme={theme}
         showAdminGrantModal={showAdminGrantModal}
@@ -883,6 +904,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         showSubsystemDashboard={showSubsystemDashboard}
         setShowSubsystemDashboard={setShowSubsystemDashboard}
       />
+      </React.Suspense>
 
       {humanInputModal && (
         <HumanInputModal
