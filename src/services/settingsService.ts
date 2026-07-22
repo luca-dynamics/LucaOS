@@ -149,6 +149,12 @@ export interface LucaSettings {
     provider: "local-luca" | "gemini-genai" | "openai";
     model: string;
     sovereignFacts: SovereignFact[];
+    /**
+     * When true, memory the agent proposes to store about you is staged for
+     * review instead of written straight to the archive. Off by default so
+     * existing behaviour is unchanged until it is opted into.
+     */
+    writeApproval?: boolean;
   };
   voice: {
     provider:
@@ -397,6 +403,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     provider: "local-luca",
     model: BRAIN_CONFIG.defaults.memory,
     sovereignFacts: [],
+    writeApproval: false,
   },
   voice: {
     provider: "local-luca", // Default to Local Luca
