@@ -665,32 +665,74 @@
           animation: none;
         }
       }
-      @media (max-width: 640px) {
-        .loader-presence {
-          position: static;
-          height: 52vh;
-          width: fit-content; /* shrink-wrap so the glow copy stays on the silhouette */
-          max-width: 84vw;
-          margin: 2vh auto 0;
-          transform: none;
-        }
-        .loader-brand {
-          position: static;
-          transform: none;
+      /* ---- Responsive -----------------------------------------------------
+         The side-by-side arrangement (face right, panel left) needs roughly
+         1024px. The panel is min(46vw, 420px), so below ~913px it starts
+         shrinking: the nowrap heading and lead overflow their box and the
+         checklist titles wrap to three and four lines. That is the state a
+         RESTORED (non-maximized) window lands in, which is how most people
+         first meet this screen — not an edge case.
+
+         Below 1024 the layout stacks: the face stops being a column and
+         becomes ambient backdrop behind the panel, and the panel centers at
+         full width. The failed state already used exactly this shape, so the
+         narrow layout is the same idea applied to the normal path. */
+      @media (max-width: 1023px) {
+        #root-loader {
           display: flex;
-          width: fit-content;
-          margin: 3.5vh auto 0;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 24px 16px;
         }
-        .loader-text {
-          font-size: 32px;
-          text-align: center;
-        }
-        .loader-awaken {
+        .loader-presence {
+          position: absolute;
           left: 50%;
-          transform: translateX(-50%);
-          bottom: 8%;
-          width: 74vw;
-          text-align: center;
+          right: auto;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          height: min(72vh, 540px);
+          max-width: 88vw;
+          /* Atmosphere rather than a collider — the panel now sits over it. */
+          opacity: 0.45;
+          z-index: 0;
+        }
+        .loader-panel {
+          position: static;
+          transform: none;
+          width: min(94vw, 440px);
+          z-index: 2;
+        }
+        /* nowrap is what pushed the title and lead outside the panel; with a
+           narrower column they are allowed to wrap. */
+        .loader-brandtag,
+        .loader-lead {
+          white-space: normal;
+        }
+        .loader-brandtag {
+          font-size: clamp(24px, 5vw, 34px);
+        }
+      }
+
+      @media (max-width: 640px) {
+        .loader-panel {
+          width: 100%;
+        }
+        .loader-presence {
+          height: 56vh;
+          opacity: 0.32;
+        }
+        .loader-check {
+          gap: 11px;
+          padding: 10px 11px;
+        }
+        /* Keep the spinner and tick — they carry the state — but drop the
+           word beside them; at this width it competes with the row's title. */
+        .loader-check-status span {
+          display: none;
+        }
+        .loader-card-foot {
+          font-size: 11px;
         }
       }
     </style>
