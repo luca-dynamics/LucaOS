@@ -110,6 +110,11 @@ import SessionsRail from "./components/left-panel/SessionsRail";
 import { useLucaLinkDevices } from "./hooks/useLucaLinkDevices";
 import ChatPanel from "./components/layout/ChatPanel";
 import ShellCommandBar from "./components/shell/ShellCommandBar";
+import WorkspaceShell from "./components/shell/WorkspaceShell";
+import WorkspaceSidebar from "./components/shell/WorkspaceSidebar";
+import OperationCenter from "./components/shell/OperationCenter";
+import WorkspaceWindowControls from "./components/shell/WorkspaceWindowControls";
+import { usePendingApprovalCount } from "./components/shell/usePendingApprovals";
 import OverlayManager from "./components/layout/OverlayManager";
 import PanelResizer from "./components/layout/PanelResizer";
 import {
@@ -490,6 +495,22 @@ function AppContent() {
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState<boolean>(() =>
     readCollapsedPreference(LEFT_PANEL_COLLAPSED_KEY),
   );
+  // Preview flag for the three-panel workspace frame. Off by default;
+  // enable with localStorage.setItem("LUCA_WORKSPACE_SHELL", "1") and
+  // reload. Non-destructive: when off, the legacy shell renders untouched,
+  // and every overlay stays mounted either way (OverlayManager sits outside
+  // <main>), so nothing the old sidebar reaches is ever orphaned.
+  const [workspaceShellEnabled] = useState<boolean>(() => {
+    try {
+      return (
+        typeof localStorage !== "undefined" &&
+        localStorage.getItem("LUCA_WORKSPACE_SHELL") === "1"
+      );
+    } catch {
+      return false;
+    }
+  });
+  const workspacePendingCount = usePendingApprovalCount();
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(() =>
     readCollapsedPreference(RIGHT_PANEL_COLLAPSED_KEY),
   );
@@ -3093,12 +3114,129 @@ function AppContent() {
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-hidden relative z-10 flex flex-col h-full gap-0 p-0">
+          {/* ── The three-panel workspace frame (preview). The frame is the
+              constant: sidebar · centre · operation centre, seams painted by
+              the grid itself. Sidebar rows hold to ONE word each — the legacy
+              panels drowned in wording, and the fix starts at the frame. */}
+          {workspaceShellEnabled && !isMobile && (
+            <WorkspaceShell
+              style={{ flex: 1, minHeight: 0 }}
+              pendingCount={workspacePendingCount}
+              windowControls={<WorkspaceWindowControls />}
+              sidebar={
+                <WorkspaceSidebar
+                  contextLabel="Personal"
+                  onNewTask={() => {
+                    const field = document.querySelector("textarea");
+                    if (field) (field as HTMLTextAreaElement).focus();
+                  }}
+                  onOpenSettings={() => setShowSettingsModal(true)}
+                  tools={[
+                    { id: "browser", label: "Browser", glyph: "◎", hint: "Open the ghost browser", onOpen: () => setShowGhostBrowser(true) },
+                    { id: "files", label: "Files", glyph: "▤", hint: "Browse apps and files", onOpen: () => setShowAppExplorer(true) },
+                    { id: "code", label: "Code", glyph: "⌗", hint: "Open the code editor", onOpen: () => setShowCodeEditor(true) },
+                    { id: "skills", label: "Skills", glyph: "◇", hint: "Skills matrix", onOpen: () => setShowSkillsMatrix(true) },
+                  ]}
+                />
+              }
+              centre={
+                <div style={{ position: "relative", display: "flex", flexDirection: "column", minHeight: 0, height: "100%" }}>
+                  <SafeComponent componentName="ChatPanel">
+                    <ChatPanel
+                    messages={messages}
+                    isMobile={false}
+                    composerExternal={true}
+                    activeMobileTab=""
+                    theme={theme}
+                    isProcessing={isProcessing}
+                    persona={persona as PersonaType}
+                    chatEndRef={chatEndRef}
+                    handleSendMessage={handleSendMessage}
+                    setAmbientSuggestions={setAmbientSuggestions}
+                    ambientSuggestions={ambientSuggestions}
+                    showSuggestionChips={showSuggestionChips}
+                    setShowSuggestionChips={setShowSuggestionChips}
+                    showVoiceHud={showVoiceHud}
+                    bootSequence={bootSequence}
+                    currentCwd={currentCwd}
+                    isKernelLocked={isKernelLocked}
+                    opsecStatus={opsecStatus}
+                    attachedImage={attachedImage}
+                    setAttachedImage={setAttachedImage}
+                    fileInputRef={fileInputRef}
+                    handleFileSelect={handleFileSelect}
+                    input={input}
+                    setInput={setInput}
+                    handleSend={() => {
+                      if (handleSendMessageRef.current) {
+                        handleSendMessageRef.current(input, attachedImage);
+                        setInput("");
+                        setAttachedImage(null);
+                      }
+                    }}
+                    isVoiceMode={isVoiceMode}
+                    toggleVoiceMode={toggleVoiceMode}
+                    showCamera={showCamera}
+                    setShowCamera={setShowCamera}
+                    handleScreenShare={() =>
+                      setIsScreenSharing(!isScreenSharing)
+                    }
+                    handleClearChat={handleClearChat}
+                    handleStop={handleStop}
+                    setMessages={setMessages}
+                  />
+                  </SafeComponent>
+                  <ShellCommandBar
+                  input={input}
+                  setInput={setInput}
+                  handleSend={() => {
+                    if (handleSendMessageRef.current) {
+                      handleSendMessageRef.current(input, attachedImage);
+                      setInput("");
+                      setAttachedImage(null);
+                    }
+                  }}
+                  isProcessing={isProcessing}
+                  messages={messages}
+                  setMessages={setMessages}
+                  theme={theme}
+                  isMobile={false}
+                  attachedImage={attachedImage}
+                  setAttachedImage={setAttachedImage}
+                  fileInputRef={fileInputRef}
+                  handleFileSelect={handleFileSelect}
+                  isVoiceMode={isVoiceMode}
+                  toggleVoiceMode={toggleVoiceMode}
+                  showCamera={showCamera}
+                  setShowCamera={setShowCamera}
+                  handleScreenShare={() => setIsScreenSharing(!isScreenSharing)}
+                  handleClearChat={handleClearChat}
+                  handleStop={handleStop}
+                  currentCwd={currentCwd}
+                  isKernelLocked={isKernelLocked}
+                  opsecStatus={opsecStatus}
+                  persona={persona as PersonaType}
+                />
+                </div>
+              }
+              operationCenter={
+                <OperationCenter
+                  systemStatus={{
+                    label: isLocalCoreConnected
+                      ? "All systems operational"
+                      : "Local core offline — cloud mode",
+                    healthy: Boolean(isLocalCoreConnected),
+                  }}
+                />
+              }
+            />
+          )}
           {/* ── The HEADER: full-width, owned by the middle — header + canvas
               are ONE environment spanning the window. It carries only
               environment things: the panel toggles at its edges, status, and
               the window-controls zone (html.luca-wco). The side panels are
               sheets docked BELOW it and never touch it. ── */}
-          {!isMobile && (
+          {!isMobile && !workspaceShellEnabled && (
             <div
               className="luca-window-drag flex flex-none h-14 items-stretch"
               style={{
@@ -3233,7 +3371,7 @@ function AppContent() {
           >
           {/* Drawer scrim: when a side panel is opened as an overlay on a
               compact window, a backdrop dims the content and closes it. */}
-          {!isMobile && (leftDrawer || rightDrawer) && (
+          {!isMobile && !workspaceShellEnabled && (leftDrawer || rightDrawer) && (
             <div
               className="absolute inset-0 z-30 bg-black/40"
               onClick={() => {
@@ -3243,7 +3381,7 @@ function AppContent() {
               aria-hidden="true"
             />
           )}
-          {!isMobile && (leftDocked || leftDrawer) && (
+          {!isMobile && !workspaceShellEnabled && (leftDocked || leftDrawer) && (
             <>
               <div
                 className={`h-full overflow-hidden flex flex-col relative border-r ${lucaShellClassNames.panel} ${leftDrawer ? "absolute left-0 top-0 z-40" : "flex-none"}`}
@@ -3365,7 +3503,7 @@ function AppContent() {
             </div>
           )}
 
-          {!isMobile && (
+          {!isMobile && !workspaceShellEnabled && (
             <>
               <div className="relative flex-1 h-full overflow-hidden flex flex-col">
                 <SafeComponent componentName="ChatPanel">
@@ -3502,7 +3640,7 @@ function AppContent() {
           )}
 
           {/* Right Panel or Data Panel */}
-          {!isMobile && (rightDocked || rightDrawer) && (
+          {!isMobile && !workspaceShellEnabled && (rightDocked || rightDrawer) && (
             <>
               {rightDocked && (
                 <PanelResizer
