@@ -185,11 +185,11 @@ export class SandboxArtifactBridge {
   }
 
   private normalizeRelativePath(relativePath: string): string {
-    const normalized = relativePath.replaceAll("\\", "/").trim();
+    const normalized = relativePath.replace(/\\/g, "/").trim();
     if (!normalized || normalized.startsWith("/") || /^[a-zA-Z]:/.test(normalized)) {
       throw new Error("Artifact path must be relative.");
     }
-    if (normalized.split("/").some((part) => part === ".." || part === "")) {
+    if (normalized.split("/").some((part: string) => part === ".." || part === "")) {
       throw new Error("Artifact path must stay inside the sandbox workspace.");
     }
     return normalized;

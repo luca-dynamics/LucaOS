@@ -123,6 +123,14 @@ export interface LucaSettings {
     customOpenAiCompatibleModel?: string;
     ollamaBaseUrl?: string;
     lmStudioBaseUrl?: string;
+    credentialPools?: {
+      gemini?: string[];
+      anthropic?: string[];
+      openai?: string[];
+      deepseek?: string[];
+      groq?: string[];
+      xai?: string[];
+    };
     model: string;
     provider: "local-luca" | "cloud-managed" | "byok";
     voiceModel: string;

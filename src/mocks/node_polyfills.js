@@ -120,13 +120,34 @@ export const fileURLToPath = (url) => {
 };
 
 // fs mock
-export const existsSync = () => false;
-export const mkdirSync = () => {};
-export const readFileSync = () => '';
-export const writeFileSync = () => {};
-export const unlinkSync = () => {};
-export const readdirSync = () => [];
-export const statSync = () => ({ mtime: { getTime: () => 0 } });
+const _mockFS = new Set();
+const _mockContents = new Map();
+export const existsSync = (p) => _mockFS.has(String(p));
+export const mkdirSync = (p) => { _mockFS.add(String(p)); };
+export const readFileSync = (p) => _mockContents.get(String(p)) || '';
+export const writeFileSync = (p, content) => {
+  _mockFS.add(String(p));
+  _mockContents.set(String(p), String(content));
+};
+export const unlinkSync = (p) => {
+  _mockFS.delete(String(p));
+  _mockContents.delete(String(p));
+};
+export const readdirSync = (dirPath) => {
+  const dirStr = String(dirPath);
+  const results = new Set();
+  for (const item of _mockFS) {
+    if (item.startsWith(dirStr) && item !== dirStr) {
+      const rel = item.substring(dirStr.length).replace(/^[/\\]/, '');
+      const firstSegment = rel.split(/[/\\]/)[0];
+      if (firstSegment) results.add(firstSegment);
+    }
+  }
+  return Array.from(results);
+};
+export const statSync = () => ({ isDirectory: () => true, mtime: { getTime: () => 0 } });
+export const mkdtempSync = (prefix) => { const p = prefix + 'mock_tmp'; _mockFS.add(p); return p; };
+export const rmSync = (p) => { _mockFS.delete(String(p)); _mockContents.delete(String(p)); };
 
 // path mock
 export const join = (...args) => args.join('/');

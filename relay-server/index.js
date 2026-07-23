@@ -5,6 +5,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { channelSessionRouter } from './channelSessionRouter.js';
+import { telegramBotGateway } from './telegramBot.js';
+import { discordBotGateway } from './discordBot.js';
 
 dotenv.config();
 
@@ -67,8 +70,48 @@ app.get('/health', (req, res) => {
     activeDevices: stats.activeDevices,
     activeGuests: stats.activeGuests,
     totalConnections: stats.totalConnections,
-    messagesRelayed: stats.messagesRelayed
+    messagesRelayed: stats.messagesRelayed,
+    gateways: {
+      telegram: telegramBotGateway.isInitialized,
+      discord: discordBotGateway.isInitialized,
+      activeChannelSessions: channelSessionRouter.listSessions().length,
+    }
   });
+});
+
+// Gateway Status Endpoint
+app.get('/api/gateway/status', (req, res) => {
+  res.json({
+    telegram: { enabled: telegramBotGateway.isInitialized },
+    discord: { enabled: discordBotGateway.isInitialized },
+    sessions: channelSessionRouter.listSessions(),
+  });
+});
+
+// Telegram Webhook Handler
+app.post('/api/gateway/telegram', async (req, res) => {
+  const result = await telegramBotGateway.handleUpdate(req.body);
+  if (result) {
+    stats.messagesRelayed++;
+    if (result.targetDeviceId && devices.has(result.targetDeviceId)) {
+      const dev = devices.get(result.targetDeviceId);
+      dev.socket.emit('gateway-prompt', result);
+    }
+  }
+  res.json({ ok: true });
+});
+
+// Discord Webhook Handler
+app.post('/api/gateway/discord', async (req, res) => {
+  const result = await discordBotGateway.handleInteraction(req.body);
+  if (result) {
+    stats.messagesRelayed++;
+    if (result.targetDeviceId && devices.has(result.targetDeviceId)) {
+      const dev = devices.get(result.targetDeviceId);
+      dev.socket.emit('gateway-prompt', result);
+    }
+  }
+  res.json({ ok: true });
 });
 
 // Generate pairing token endpoint (for Luca app pairing)

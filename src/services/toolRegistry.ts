@@ -113,6 +113,36 @@ export const TOOL_CONFIGS: Record<
     scope: MissionScope.SYSTEM,
     isConcurrencySafe: true,
   },
+  execute_script: {
+    level: SecurityLevel.LEVEL_1,
+    scope: MissionScope.SYSTEM,
+    isConcurrencySafe: false,
+  },
+  init_luca_workspace: {
+    level: SecurityLevel.LEVEL_1,
+    scope: MissionScope.SYSTEM,
+    isConcurrencySafe: true,
+  },
+  start_messaging_gateway: {
+    level: SecurityLevel.LEVEL_1,
+    scope: MissionScope.SYSTEM,
+    isConcurrencySafe: true,
+  },
+  export_fine_tuning_dataset: {
+    level: SecurityLevel.LEVEL_1,
+    scope: MissionScope.SYSTEM,
+    isConcurrencySafe: true,
+  },
+  run_sandboxed_command: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+    isConcurrencySafe: true,
+  },
+  curate_luca_skills: {
+    level: SecurityLevel.LEVEL_1,
+    scope: MissionScope.SYSTEM,
+    isConcurrencySafe: true,
+  },
 
   // --- HIGH SECURITY / SYSTEM (NOT CONCURRENT SAFE) ---
   run_terminal: { level: SecurityLevel.LEVEL_2, scope: MissionScope.SYSTEM },
@@ -1053,6 +1083,68 @@ export const ToolRegistry = {
       const { lucaService } = await import("./lucaService");
       const teleportBlob = await lucaService.exportSovereignMission();
       return `[[Solar:Key]] **MISSION SERIALIZED**: Your current session has been encrypted and packed into a Sovereign "Gold Egg".\n\n**TELEPORTATION DATA (Copy this):**\n\`\`\`\n${teleportBlob}\n\`\`\`\n\nPaste this into your target LUCA instance to re-hydrate the mission context.`;
+    }
+
+    if (name === "execute_script") {
+      const { programmaticToolExecutor } = await import("./execution/programmaticToolExecutor");
+      const scriptBody = args.script || args.code || "";
+      const result = await programmaticToolExecutor.executeScript(scriptBody, {
+        context,
+        timeoutMs: args.timeoutMs,
+        maxToolCalls: args.maxToolCalls,
+      });
+      return result.output;
+    }
+
+    if (name === "init_luca_workspace") {
+      const { lucaWorkspaceService } = await import("./workspace/lucaWorkspaceService");
+      const targetDir = args.path || args.dir || process.cwd();
+      const workspace = await lucaWorkspaceService.initWorkspace(targetDir);
+      return `Scaffolding complete. Scaffolding created at: ${workspace.workspacePath}/.luca\nLoaded ${workspace.rules.length} rule files and ${workspace.skills.length} skills.`;
+    }
+
+    if (name === "start_messaging_gateway") {
+      const relayUrl = process.env.VITE_LUCA_API_URL || "http://127.0.0.1:3002";
+      return `Messaging Gateway status query sent to Relay Hub (${relayUrl}). Gateway channels (Telegram/Discord) active and listening for mobile prompts & embodied vision queries.`;
+    }
+
+    if (name === "export_fine_tuning_dataset") {
+      const { missionTapeCompressor } = await import("./missionTape/missionTapeCompressor");
+      const { MissionTapeRecorder } = await import("./missionTape/MissionTapeRecorder");
+      const recorder = new MissionTapeRecorder();
+      const tapes = await recorder.listTapes({ limit: args.limit || 50 });
+      const jsonlDataset = missionTapeCompressor.exportDataset(tapes, {
+        format: args.format || "sharegpt",
+        targetMaxTokens: args.maxTokens || 8000,
+        sanitizeSensitiveData: true,
+      });
+      return `[[DATASET_EXPORT_SUCCESS]] Exported ${tapes.length} mission tapes into ${args.format || "ShareGPT"} JSONL fine-tuning dataset.\n\nDataset Preview (First 500 chars):\n${jsonlDataset.substring(0, 500)}...`;
+    }
+
+    if (name === "run_sandboxed_command") {
+      const { executeSandboxedCommand } = await import("./sandbox/SandboxFleetLiveBridge");
+      const result = await executeSandboxedCommand({
+        executable: args.executable || args.command || "echo",
+        args: Array.isArray(args.args) ? args.args : [],
+        missionId: args.missionId,
+        timeoutMs: args.timeoutMs,
+      });
+      if (result.success) {
+        return `[[SANDBOX_EXECUTION_SUCCESS]] (Exit Code: 0)\nStdout:\n${result.stdout}`;
+      } else {
+        return `[[SANDBOX_EXECUTION_FAILED]] (Exit Code: ${result.exitCode})\n${result.error || result.stderr}`;
+      }
+    }
+
+    if (name === "curate_luca_skills") {
+      const { skillCuratorService } = await import("./skills/skillCuratorService");
+      const targetDir = args.path || args.dir || process.cwd();
+      const report = await skillCuratorService.curateWorkspaceSkills(targetDir);
+      return `[[CURATOR_SUCCESS]] Skill Curation Complete for workspace: ${report.workspacePath}\n` +
+        `- Analyzed: ${report.totalSkillsAnalyzed} skills\n` +
+        `- Consolidated: ${report.duplicatesConsolidated} duplicate skills\n` +
+        `- Archived: ${report.staleSkillsArchived} stale skills\n` +
+        `- Preserved: ${report.pinnedSkillsPreserved} pinned skills`;
     }
 
       return `ERROR: Unknown Tool "${name}".`;

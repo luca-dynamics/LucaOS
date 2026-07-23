@@ -132,3 +132,5 @@ export class MissionTapeRecorderService implements MissionTapeRecorderServiceCon
     return tape;
   }
 }
+
+export { MissionTapeRecorderService as MissionTapeRecorder };
