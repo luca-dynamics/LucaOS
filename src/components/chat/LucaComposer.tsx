@@ -1,19 +1,10 @@
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "../ui/Icon";
 import ChatWidgetInput from "../ChatWidgetInput";
 import ChatApprovalStrip from "./ChatApprovalStrip";
 import WhileYouWereAwayStrip from "./WhileYouWereAwayStrip";
-import { Sender } from "../../types";
 import { apiUrl } from "../../config/api";
-import { chatIntentRouterBridge } from "../../services/runtime/ChatIntentRouterBridge";
-import { chatIntentProvenanceService } from "../../services/runtime/ChatIntentProvenanceService";
-import type { ChatRoutingResult } from "../../services/runtime/ChatIntentRouterBridge";
-import {
-  getRouteHintText,
-  getRouteLabel,
-  getRouteTone,
-  shouldAppendRouteHint,
-} from "../runtime/intentRoutingLabels";
+import { useRoutedSend } from "./useRoutedSend";
 import {
   lucaMaterialMobileControlStyle,
   lucaMaterialPanelStyle,
@@ -92,8 +83,6 @@ export const LucaComposer: React.FC<LucaComposerProps> = ({
   persona,
   emphasized = false,
 }) => {
-  const [, startTransition] = useTransition();
-
   // --- Active MCP servers (polled every 10s) ---
   const [activeMcpServers, setActiveMcpServers] = useState<
     { id: string; name: string; status?: string }[]
@@ -151,68 +140,15 @@ export const LucaComposer: React.FC<LucaComposerProps> = ({
     }
   };
 
-  // --- Intent Routing Integration (PR #124 + PR #125 polish) ---
-  const handleRoutedSend = () => {
-    const trimmed = input.trim();
-    if (!trimmed) {
-      handleSend();
-      return;
-    }
-    if (isProcessing) {
-      handleSend();
-      return;
-    }
-    if (
-      !chatIntentProvenanceService.shouldRouteMessage({
-        message: trimmed,
-        senderType: "user",
-        isHidden: false,
-        isAwakening: false,
-      })
-    ) {
-      handleSend();
-      return;
-    }
-
-    let routeResult: ChatRoutingResult | undefined;
-    try {
-      const { provenanceIds } = chatIntentProvenanceService.createChatProvenance({
-        message: trimmed,
-      });
-      routeResult = chatIntentRouterBridge.maybeRouteMessageBeforeResponse({
-        message: trimmed,
-        source: "chat",
-        provenanceIds,
-      });
-    } catch (err) {
-      console.warn("[LucaComposer] Intent routing failed, sending normally:", err);
-    }
-
-    handleSend();
-
-    if (routeResult && routeResult.routed && routeResult.routeType !== "fast_response") {
-      const hintText = getRouteHintText(routeResult.routeType);
-      if (hintText && shouldAppendRouteHint(messages, hintText)) {
-        const tone = getRouteTone(routeResult.routeType);
-        const label = getRouteLabel(routeResult.routeType);
-        startTransition(() => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `route-hint-${Date.now()}`,
-              text: hintText,
-              sender: Sender.SYSTEM,
-              timestamp: Date.now(),
-              isStreaming: false,
-              isRouteHint: true,
-              routeLabel: label,
-              routeTone: tone,
-            },
-          ]);
-        });
-      }
-    }
-  };
+  // Routed send lives in one hook shared with the workspace command bar, so
+  // the two composer surfaces cannot drift into different sending behaviour.
+  const handleRoutedSend = useRoutedSend({
+    input,
+    isProcessing,
+    handleSend,
+    messages,
+    setMessages,
+  });
 
   return (
     <div data-luca-composer>
