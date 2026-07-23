@@ -161,22 +161,34 @@ export async function getProviderApiKey(
   settings: any,
   options: { allowEnvironmentFallback?: boolean } = {},
 ): Promise<string> {
-  const settingsValue = getPlainSettingsKey(settings, provider);
-  if (hasUsableSecret(settingsValue)) return settingsValue;
+  const { credentialPoolService } = await import("../credentialPoolService");
 
-  try {
-    const secured = await secureVault.retrieve(getVaultKey(provider));
-    if (secured?.success && hasUsableSecret(secured.password))
-      return secured.password;
-  } catch (error) {
-    console.warn(
-      `[ProviderKeyService] Vault key retrieval failed for ${provider}`,
-      error,
-    );
+  // Sync pool from settings if present
+  const poolKeys = settings?.brain?.credentialPools?.[provider as string];
+  if (Array.isArray(poolKeys) && poolKeys.length > 0) {
+    credentialPoolService.registerPool(provider, poolKeys);
   }
 
-  if (options.allowEnvironmentFallback) return readEnv(ENV_NAMES[provider]);
-  return "";
+  let rawKey = getPlainSettingsKey(settings, provider);
+  if (!hasUsableSecret(rawKey)) {
+    try {
+      const secured = await secureVault.retrieve(getVaultKey(provider));
+      if (secured?.success && hasUsableSecret(secured.password)) {
+        rawKey = secured.password;
+      }
+    } catch (error) {
+      console.warn(
+        `[ProviderKeyService] Vault key retrieval failed for ${provider}`,
+        error,
+      );
+    }
+  }
+
+  if (!hasUsableSecret(rawKey) && options.allowEnvironmentFallback) {
+    rawKey = readEnv(ENV_NAMES[provider]);
+  }
+
+  return credentialPoolService.getActiveKey(provider, rawKey) || rawKey || "";
 }
 
 export function redactSecret(value: string): string {

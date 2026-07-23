@@ -46,12 +46,52 @@ export interface LiveSandboxSnapshotRecord {
   expiresAt?: string;
 }
 
+export interface LiveSandboxCreateRequest {
+  missionId: string;
+  capabilities?: string[];
+  ttlMs?: number;
+}
+
+export interface LiveSandboxCommandRequest {
+  executable: string;
+  args?: string[];
+  timeoutMs?: number;
+}
+
+export interface LiveSandboxExecuteResult {
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  durationMs: number;
+}
+
+export interface SandboxedCommandInput {
+  executable: string;
+  args?: string[];
+  missionId?: string;
+  timeoutMs?: number;
+  backend?: string;
+}
+
+export interface SandboxedExecutionOutput {
+  success: boolean;
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  sessionId?: string;
+  error?: string;
+}
+
 export interface LiveSandboxBridge {
   probe(): Promise<SandboxBackendProbe>;
+  create?(request: LiveSandboxCreateRequest): Promise<LiveSandboxSessionRecord>;
   list(): Promise<LiveSandboxSessionRecord[]>;
   listSnapshots(sessionId?: string): Promise<LiveSandboxSnapshotRecord[]>;
   snapshot(sessionId: string): Promise<unknown>;
   cleanupExpired(): Promise<unknown[]>;
+  execute?(sessionId: string, command: LiveSandboxCommandRequest): Promise<LiveSandboxExecuteResult>;
+  exportArtifact?(sessionId: string, request: unknown): Promise<unknown>;
+  importArtifact?(sessionId: string, artifact: unknown): Promise<unknown>;
   destroy(sessionId: string): Promise<unknown>;
 }
 
@@ -251,4 +291,56 @@ export async function loadLiveFleetView(
     bridge.listSnapshots(),
   ]);
   return buildLiveFleetView({ probe, sessions, snapshots, missionId });
+}
+
+/**
+ * Executes a command safely inside a sandboxed container/VM session
+ */
+export async function executeSandboxedCommand(
+  input: SandboxedCommandInput
+): Promise<SandboxedExecutionOutput> {
+  const bridge = getLiveSandboxBridge();
+  if (!bridge || !bridge.create || !bridge.execute) {
+    return {
+      success: false,
+      exitCode: -1,
+      stdout: "",
+      stderr: "",
+      error: "Desktop sandbox broker IPC unavailable on current platform.",
+    };
+  }
+
+  const missionId = input.missionId || `sandboxed-task-${Date.now()}`;
+  try {
+    const session = await bridge.create({
+      missionId,
+      capabilities: ["terminal", "workspace_read", "workspace_write"],
+      ttlMs: input.timeoutMs ? input.timeoutMs + 60000 : 300000,
+    });
+
+    const result = await bridge.execute(session.sessionId, {
+      executable: input.executable,
+      args: input.args || [],
+      timeoutMs: input.timeoutMs || 30000,
+    });
+
+    // Clean up ephemeral session asynchronously
+    bridge.destroy(session.sessionId).catch(() => {});
+
+    return {
+      success: result.exitCode === 0,
+      exitCode: result.exitCode,
+      stdout: result.stdout,
+      stderr: result.stderr,
+      sessionId: session.sessionId,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      exitCode: -1,
+      stdout: "",
+      stderr: err.message || String(err),
+      error: `Sandboxed execution failed: ${err.message || err}`,
+    };
+  }
 }

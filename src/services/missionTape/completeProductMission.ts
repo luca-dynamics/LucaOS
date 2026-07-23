@@ -371,9 +371,27 @@ export async function completeProductMission(
   });
 
   let archived = false;
-  if (completion.completed && input.onCompletedArchive) {
-    await input.onCompletedArchive(missionId);
-    archived = true;
+  if (completion.completed) {
+    if (input.onCompletedArchive) {
+      await input.onCompletedArchive(missionId);
+      archived = true;
+    }
+    // Phase 2: Autonomous Skill Synthesis from completed mission trajectory
+    try {
+      const { autonomousSkillSynthesizer } = await import("../skills/autonomousSkillSynthesizer");
+      const steps = (input.steps || []).map((s) => ({
+        kind: s.kind || "tool_call",
+        description: s.goal,
+        resultSummary: s.notes,
+      }));
+      await autonomousSkillSynthesizer.synthesizeSkill({
+        missionTitle: input.intent || missionId,
+        description: `Autonomous skill generated from completed mission: ${input.intent}`,
+        steps: steps.length > 0 ? steps : [{ kind: "mission", description: input.intent }],
+      });
+    } catch (err) {
+      console.warn("[completeProductMission] Autonomous skill synthesis failed silently:", err);
+    }
   } else if (completion.blockedByVerification && input.onBlocked) {
     await input.onBlocked(missionId, completion);
   }

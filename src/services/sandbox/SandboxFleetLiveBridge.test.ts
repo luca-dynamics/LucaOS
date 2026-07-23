@@ -103,6 +103,53 @@ describe("buildLiveFleetView", () => {
   });
 });
 
+describe("executeSandboxedCommand", () => {
+  it("returns error when desktop sandbox bridge IPC is unavailable", async () => {
+
+    const { executeSandboxedCommand } = await import("./SandboxFleetLiveBridge");
+    const result = await executeSandboxedCommand({ executable: "whoami" });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Desktop sandbox broker IPC unavailable");
+  });
+
+  it("dispatches creation and execution when bridge IPC is present", async () => {
+    let created = false;
+    let executed = false;
+
+    (globalThis as any).window = {
+      luca: {
+        sandbox: {
+          probe: async () => readyProbe,
+          list: async () => [],
+          listSnapshots: async () => [],
+          snapshot: async () => ({}),
+          cleanupExpired: async () => [],
+          destroy: async () => ({}),
+          create: async (req: any) => {
+            created = true;
+            return { sessionId: "test-sbx-123", missionId: req.missionId, backend: "docker" };
+          },
+          execute: async (_sessionId: string, cmd: any) => {
+            executed = true;
+            return { exitCode: 0, stdout: `Executed ${cmd.executable}`, stderr: "", durationMs: 15 };
+          },
+        },
+      },
+    };
+
+    const { executeSandboxedCommand } = await import("./SandboxFleetLiveBridge");
+    const result = await executeSandboxedCommand({ executable: "echo", args: ["hello"] });
+
+    expect(created).toBe(true);
+    expect(executed).toBe(true);
+    expect(result.success).toBe(true);
+    expect(result.stdout).toContain("Executed echo");
+
+    delete (globalThis as any).window;
+  });
+});
+
 describe("SandboxFleetLiveBridge source safety", () => {
   it("uses only the narrow desktop sandbox bridge", () => {
     expect(bridgeSource).toContain("luca?.sandbox");
