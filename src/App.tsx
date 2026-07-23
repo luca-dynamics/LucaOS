@@ -3187,6 +3187,8 @@ function AppContent() {
                   />
                   </SafeComponent>
                   <ShellCommandBar
+                  variant="workspace"
+                  onOpenModelSettings={() => setShowSettingsModal(true)}
                   input={input}
                   setInput={setInput}
                   handleSend={() => {
