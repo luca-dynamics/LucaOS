@@ -94,22 +94,27 @@ export const os = {
 };
 
 // url mock
-export const url = {
-  URL: globalThis.URL,
-  URLSearchParams: globalThis.URLSearchParams,
-  parse: (u) => new URL(u),
-  format: (u) => u.toString(),
-  fileURLToPath: (url) => {
-    if (typeof url === 'string') {
-      if (url.startsWith('file://')) {
-        return url.substring(7);
-      }
-      return url;
+//
+// Under Node (vitest, electron main) fileURLToPath delegates to the real module.
+// The naive string version below cannot handle a Windows `file:///C:/...` URL —
+// it strips "file://" and leaves "/C:/...", which real readFileSync then
+// resolves to "C:\C:\...". Real fileURLToPath gets the platform right. In the
+// browser realUrl is null and the original string fallback is used.
+const realUrl = (() => {
+  try {
+    if (
+      typeof process !== 'undefined' &&
+      typeof process.getBuiltinModule === 'function'
+    ) {
+      return process.getBuiltinModule('node:url');
     }
-    return url.pathname || url.toString();
-  },
-};
-export const fileURLToPath = (url) => {
+  } catch {
+    // fall through to the string fallback
+  }
+  return null;
+})();
+
+const fileURLToPathFallback = (url) => {
   if (typeof url === 'string') {
     if (url.startsWith('file://')) {
       return url.substring(7);
@@ -119,14 +124,58 @@ export const fileURLToPath = (url) => {
   return url.pathname || url.toString();
 };
 
+export const fileURLToPath = (value) =>
+  realUrl ? realUrl.fileURLToPath(value) : fileURLToPathFallback(value);
+
+export const url = {
+  URL: globalThis.URL,
+  URLSearchParams: globalThis.URLSearchParams,
+  parse: (u) => new URL(u),
+  format: (u) => u.toString(),
+  fileURLToPath,
+};
+
 // fs mock
-export const existsSync = () => false;
+//
+// The read side delegates to the real module WHEN one is reachable, which is
+// true under Node (vitest, electron main) and false in the browser. This is
+// what makes source-assertion tests work: with a pure `() => ''` stub every
+// readFileSync returned an empty string, so `toContain` assertions failed and,
+// worse, `not.toContain` assertions passed vacuously — reporting a safety
+// property that was never actually checked.
+//
+// `process.getBuiltinModule` returns the genuine builtin regardless of Vite's
+// `fs` alias, so there is no circular resolution back to this file. In the
+// browser there is no such function, so `realFs` is null and every function
+// keeps its original inert behavior — browser bundles are unchanged.
+//
+// Writes stay no-ops even under Node: browser-oriented code exercised in a test
+// must never be able to mutate the real filesystem through this shim.
+const realFs = (() => {
+  try {
+    if (
+      typeof process !== 'undefined' &&
+      typeof process.getBuiltinModule === 'function'
+    ) {
+      return process.getBuiltinModule('node:fs');
+    }
+  } catch {
+    // fall through to the inert stubs
+  }
+  return null;
+})();
+
+export const existsSync = (...args) =>
+  realFs ? realFs.existsSync(...args) : false;
 export const mkdirSync = () => {};
-export const readFileSync = () => '';
+export const readFileSync = (...args) =>
+  realFs ? realFs.readFileSync(...args) : '';
 export const writeFileSync = () => {};
 export const unlinkSync = () => {};
-export const readdirSync = () => [];
-export const statSync = () => ({ mtime: { getTime: () => 0 } });
+export const readdirSync = (...args) =>
+  realFs ? realFs.readdirSync(...args) : [];
+export const statSync = (...args) =>
+  realFs ? realFs.statSync(...args) : { mtime: { getTime: () => 0 } };
 
 // path mock
 export const join = (...args) => args.join('/');
