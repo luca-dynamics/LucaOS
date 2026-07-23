@@ -55,14 +55,8 @@ export class ProgrammaticToolExecutor {
             toolCallCount++;
 
             try {
-              // Execute tool via ToolRegistry or provided context handler
-              const handler = ToolRegistry.getToolHandler(toolName);
-              let resultStr: string;
-              if (handler) {
-                resultStr = await handler(args, options.context);
-              } else {
-                resultStr = await ToolRegistry.executeTool(toolName, args, options.context);
-              }
+              // Execute tool via ToolRegistry
+              const resultStr = await ToolRegistry.execute(toolName, args, options.context);
 
               // Try parsing JSON if result is formatted JSON string for easy script manipulation
               try {
