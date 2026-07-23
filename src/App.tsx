@@ -114,6 +114,8 @@ import WorkspaceShell from "./components/shell/WorkspaceShell";
 import WorkspaceSidebar from "./components/shell/WorkspaceSidebar";
 import OperationCenter from "./components/shell/OperationCenter";
 import WorkspaceWindowControls from "./components/shell/WorkspaceWindowControls";
+import CanvasHost from "./components/shell/canvas/CanvasHost";
+import { useCanvas } from "./components/shell/canvas/useCanvas";
 import { usePendingApprovalCount } from "./components/shell/usePendingApprovals";
 import OverlayManager from "./components/layout/OverlayManager";
 import PanelResizer from "./components/layout/PanelResizer";
@@ -511,6 +513,9 @@ function AppContent() {
     }
   });
   const workspacePendingCount = usePendingApprovalCount();
+  // The canvas drives the frame's third column: present only when Luca has
+  // put something there, so an empty workspace stays two panels, not three.
+  const workspaceCanvas = useCanvas();
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(() =>
     readCollapsedPreference(RIGHT_PANEL_COLLAPSED_KEY),
   );
@@ -3200,6 +3205,7 @@ function AppContent() {
                   </SafeComponent>
                   <ShellCommandBar
                   variant="workspace"
+                  editingScope={workspaceCanvas.editingScope}
                   onOpenModelSettings={() => setShowSettingsModal(true)}
                   input={input}
                   setInput={setInput}
@@ -3232,6 +3238,9 @@ function AppContent() {
                   persona={persona as PersonaType}
                 />
                 </div>
+              }
+              canvas={
+                workspaceCanvas.items.length > 0 ? <CanvasHost /> : undefined
               }
               operationCenter={
                 <OperationCenter
