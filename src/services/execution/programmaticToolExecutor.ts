@@ -1,10 +1,40 @@
-import { ToolRegistry } from "../toolRegistry";
+import { ToolRegistry, TOOL_CONFIGS, SecurityLevel } from "../toolRegistry";
 
 export interface PTCExecutionOptions {
   timeoutMs?: number;
   maxToolCalls?: number;
   context?: any;
   customArgs?: Record<string, any>;
+}
+
+/**
+ * Highest security level a script may invoke without a fresh authorization
+ * challenge. `execute_script` is itself LEVEL_1, so a script inherits at most
+ * LEVEL_1 — it can never escalate to LEVEL_2 (biometric) or LEVEL_3 (dual)
+ * tools, which the executor has no UI to gate. `ToolRegistry.execute` performs
+ * no security-level check of its own (the gate lives in the UI orchestrator,
+ * keyed on the top-level tool name), so this proxy re-applies it here.
+ */
+const MAX_SCRIPT_TOOL_LEVEL = SecurityLevel.LEVEL_1;
+
+/**
+ * Tools a script may never invoke regardless of level — they either re-enter
+ * this executor (recursion / nesting) or launder a call past the gate.
+ */
+const SCRIPT_TOOL_DENYLIST = new Set<string>([
+  "execute_script",
+  "invokeAnyTool",
+]);
+
+/**
+ * Decide whether a script is permitted to call `toolName`. Deny by default:
+ * a tool with no entry in TOOL_CONFIGS has not been vetted for script use.
+ */
+function isScriptCallableTool(toolName: string): boolean {
+  if (SCRIPT_TOOL_DENYLIST.has(toolName)) return false;
+  const config = TOOL_CONFIGS[toolName];
+  if (!config) return false; // unknown / unvetted → denied
+  return config.level <= MAX_SCRIPT_TOOL_LEVEL;
 }
 
 export interface PTCExecutionResult {
@@ -52,6 +82,15 @@ export class ProgrammaticToolExecutor {
             if (toolCallCount >= maxToolCalls) {
               throw new Error(`[PTC] Maximum tool calls limit reached (${maxToolCalls})`);
             }
+
+            // Re-apply the authorization gate that ToolRegistry.execute skips:
+            // a script may only call vetted tools at or below LEVEL_1.
+            if (!isScriptCallableTool(toolName)) {
+              throw new Error(
+                `[PTC] Tool '${toolName}' is not permitted from a script: it is unknown, above the script authorization level (LEVEL_1), or explicitly blocked. Call it directly so the security gate can prompt the user.`,
+              );
+            }
+
             toolCallCount++;
 
             try {
@@ -79,17 +118,61 @@ export class ProgrammaticToolExecutor {
       env: options.customArgs || {},
     };
 
-    // Construct execution sandbox function
+    // Construct execution sandbox function.
+    //
+    // NOTE: `new Function` is NOT a true security boundary — its body runs in
+    // the global realm and a determined script can still reach ambient objects
+    // via constructor chains (e.g. `([]).constructor.constructor`). The real
+    // containment is (a) the LEVEL_1 tool gate above and (b) never letting an
+    // untrusted caller (remote delegation, relay bots) reach this executor.
+    // Shadowing the common ambient globals as `undefined` parameters is
+    // defense-in-depth: it blocks the direct, obvious escapes (`window`,
+    // `fetch`, `process`, `require`, `eval`, `Function`, …) so a script cannot
+    // trivially exfiltrate or spawn without going through the gated tool proxy.
+    // NB: `eval` and `arguments` are illegal parameter names under "use strict",
+    // so they cannot be shadowed this way — `Function` (the more useful escape
+    // primitive) still is, and the tool gate remains the real boundary.
+    const shadowedGlobals = [
+      "window",
+      "globalThis",
+      "self",
+      "document",
+      "fetch",
+      "XMLHttpRequest",
+      "WebSocket",
+      "process",
+      "require",
+      "module",
+      "exports",
+      "global",
+      "Function",
+      "__dirname",
+      "__filename",
+    ];
+
     const wrappedScript = `
+      "use strict";
       return (async () => {
         ${scriptBody}
       })();
     `;
 
     try {
-      const scriptFn = new Function("luca", "console", "args", wrappedScript);
+      const scriptFn = new Function(
+        "luca",
+        "console",
+        "args",
+        ...shadowedGlobals,
+        wrappedScript,
+      );
 
-      const executionPromise = scriptFn(lucaEnvironment, customConsole, options.customArgs || {});
+      const executionPromise = scriptFn(
+        lucaEnvironment,
+        customConsole,
+        options.customArgs || {},
+        // one `undefined` per shadowed global name
+        ...shadowedGlobals.map(() => undefined),
+      );
 
       let timeoutHandler: any;
       const timeoutPromise = new Promise<never>((_, reject) => {
