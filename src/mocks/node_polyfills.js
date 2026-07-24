@@ -137,20 +137,22 @@ export const url = {
 
 // fs mock
 //
-// The read side delegates to the real module WHEN one is reachable, which is
-// true under Node (vitest, electron main) and false in the browser. This is
-// what makes source-assertion tests work: with a pure `() => ''` stub every
-// readFileSync returned an empty string, so `toContain` assertions failed and,
-// worse, `not.toContain` assertions passed vacuously — reporting a safety
-// property that was never actually checked.
+// Two behaviours combined:
+//   1. An in-memory virtual filesystem (_mockFS / _mockContents) so browser
+//      code that writes a path and reads it back within a session stays
+//      consistent.
+//   2. Real-module delegation for READS when one is reachable — true under Node
+//      (vitest, electron main) via process.getBuiltinModule, false in the
+//      browser. This is what makes source-assertion tests work: with a pure
+//      `() => ''` stub every readFileSync returned an empty string, so
+//      `toContain` failed and, worse, `not.toContain` passed vacuously,
+//      reporting a safety property that was never actually checked.
+//      getBuiltinModule returns the genuine builtin regardless of Vite's `fs`
+//      alias, so there is no circular resolution back to this file.
 //
-// `process.getBuiltinModule` returns the genuine builtin regardless of Vite's
-// `fs` alias, so there is no circular resolution back to this file. In the
-// browser there is no such function, so `realFs` is null and every function
-// keeps its original inert behavior — browser bundles are unchanged.
-//
-// Writes stay no-ops even under Node: browser-oriented code exercised in a test
-// must never be able to mutate the real filesystem through this shim.
+// Writes only ever touch the in-memory store — never the real disk — so browser
+// code exercised in a test can never mutate real files. Reads prefer an
+// in-memory write from this session, then fall back to the real file, then ''.
 const realFs = (() => {
   try {
     if (
@@ -160,22 +162,68 @@ const realFs = (() => {
       return process.getBuiltinModule('node:fs');
     }
   } catch {
-    // fall through to the inert stubs
+    // fall through to the in-memory / inert store
   }
   return null;
 })();
 
-export const existsSync = (...args) =>
-  realFs ? realFs.existsSync(...args) : false;
-export const mkdirSync = () => {};
-export const readFileSync = (...args) =>
-  realFs ? realFs.readFileSync(...args) : '';
-export const writeFileSync = () => {};
-export const unlinkSync = () => {};
-export const readdirSync = (...args) =>
-  realFs ? realFs.readdirSync(...args) : [];
-export const statSync = (...args) =>
-  realFs ? realFs.statSync(...args) : { mtime: { getTime: () => 0 } };
+const _mockFS = new Set();
+const _mockContents = new Map();
+
+export const existsSync = (p) => {
+  const key = String(p);
+  if (_mockContents.has(key) || _mockFS.has(key)) return true;
+  if (realFs) {
+    try { return realFs.existsSync(p); } catch { return false; }
+  }
+  return false;
+};
+export const mkdirSync = (p) => { _mockFS.add(String(p)); };
+export const readFileSync = (p, ...rest) => {
+  const key = String(p);
+  if (_mockContents.has(key)) return _mockContents.get(key);
+  if (realFs) return realFs.readFileSync(p, ...rest);
+  return '';
+};
+export const writeFileSync = (p, content) => {
+  _mockFS.add(String(p));
+  _mockContents.set(String(p), String(content));
+};
+export const unlinkSync = (p) => {
+  _mockFS.delete(String(p));
+  _mockContents.delete(String(p));
+};
+export const readdirSync = (dirPath) => {
+  if (realFs) {
+    try {
+      if (realFs.existsSync(dirPath)) return realFs.readdirSync(dirPath);
+    } catch {
+      // fall back to the in-memory listing
+    }
+  }
+  const dirStr = String(dirPath);
+  const results = new Set();
+  for (const item of _mockFS) {
+    if (item.startsWith(dirStr) && item !== dirStr) {
+      const rel = item.substring(dirStr.length).replace(/^[/\\]/, '');
+      const firstSegment = rel.split(/[/\\]/)[0];
+      if (firstSegment) results.add(firstSegment);
+    }
+  }
+  return Array.from(results);
+};
+export const statSync = (p) => {
+  if (realFs) {
+    try {
+      if (realFs.existsSync(p)) return realFs.statSync(p);
+    } catch {
+      // fall back to the mock stat
+    }
+  }
+  return { isDirectory: () => true, mtime: { getTime: () => 0 } };
+};
+export const mkdtempSync = (prefix) => { const p = prefix + 'mock_tmp'; _mockFS.add(p); return p; };
+export const rmSync = (p) => { _mockFS.delete(String(p)); _mockContents.delete(String(p)); };
 
 // path mock
 export const join = (...args) => args.join('/');

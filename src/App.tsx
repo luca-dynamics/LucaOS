@@ -68,17 +68,17 @@ import {
   buildLucaAppearanceCssVariableState,
 } from "./config/lucaAppearanceTokens";
 
-import LucaBrowser from "./components/LucaBrowser";
+const LucaBrowser = React.lazy(() => import("./components/LucaBrowser"));
 import { watchGateway } from "./services/watchGateway";
 
 import { lucaLinkManager } from "./services/lucaLink/manager";
 
 import type { ScreenShareHandle } from "./components/ScreenShare";
 import conversationService from "./services/conversationService";
-import { SettingsModal } from "./components/SettingsModal";
+const SettingsModal = React.lazy(() => import("./components/SettingsModal").then((m) => ({ default: m.SettingsModal })));
 import SandboxedBrowserShell from "./components/browser/SandboxedBrowserShell";
-import ChatWidgetMode from "./components/ChatWidgetMode";
-import WidgetMode from "./components/WidgetMode";
+const ChatWidgetMode = React.lazy(() => import("./components/ChatWidgetMode"));
+const WidgetMode = React.lazy(() => import("./components/WidgetMode"));
 import HologramMode from "./components/HologramMode";
 import {
   createWidgetPresenceSnapshot,
@@ -90,13 +90,13 @@ import {
 
 // Helper for device capability check removed temporarily as it's unused
 
-import InvestigationReports from "./components/InvestigationReports";
-import DarkWebScanner from "./components/DarkWebScanner";
-import VisualCore from "./components/VisualCore";
+const InvestigationReports = React.lazy(() => import("./components/InvestigationReports"));
+const DarkWebScanner = React.lazy(() => import("./components/DarkWebScanner"));
+const VisualCore = React.lazy(() => import("./components/VisualCore"));
 import { guardService } from "./services/guardService";
 
 // Thought Parser imports removed as they were unused
-import VisionHUD from "./components/VisionHUD";
+const VisionHUD = React.lazy(() => import("./components/VisionHUD"));
 
 // Layout Modularization Phase 2
 import Header from "./components/layout/Header";
@@ -109,6 +109,14 @@ import WindowControls from "./components/layout/WindowControls";
 import SessionsRail from "./components/left-panel/SessionsRail";
 import { useLucaLinkDevices } from "./hooks/useLucaLinkDevices";
 import ChatPanel from "./components/layout/ChatPanel";
+import ShellCommandBar from "./components/shell/ShellCommandBar";
+import WorkspaceShell from "./components/shell/WorkspaceShell";
+import WorkspaceSidebar from "./components/shell/WorkspaceSidebar";
+import OperationCenter from "./components/shell/OperationCenter";
+import WorkspaceWindowControls from "./components/shell/WorkspaceWindowControls";
+import CanvasHost from "./components/shell/canvas/CanvasHost";
+import { useCanvas } from "./components/shell/canvas/useCanvas";
+import { usePendingApprovalCount } from "./components/shell/usePendingApprovals";
 import OverlayManager from "./components/layout/OverlayManager";
 import PanelResizer from "./components/layout/PanelResizer";
 import {
@@ -141,10 +149,10 @@ import { normalizeLucaAtmosphere } from "./config/lucaAtmospheres";
 import { EdgePresence } from "./components/presence";
 import { THEME_PALETTE } from "./config/themeColors";
 import { isElectron as checkElectron, isWeb } from "./utils/env";
-import ControlPanel from "./components/right-panel/ControlPanel";
-import ActivityPanel from "./components/right-panel/ActivityPanel";
+const ControlPanel = React.lazy(() => import("./components/right-panel/ControlPanel"));
+const ActivityPanel = React.lazy(() => import("./components/right-panel/ActivityPanel"));
 import MemoryControlPanel from "./components/right-panel/MemoryControlPanel";
-import TraceLogsPanel from "./components/right-panel/TraceLogsPanel";
+const TraceLogsPanel = React.lazy(() => import("./components/right-panel/TraceLogsPanel"));
 import { SkillPermissionGrantProvider } from "./components/SkillPermissionGrantContext";
 import { isRightPanelMode } from "./components/right-panel/rightPanelModel";
 import {
@@ -489,6 +497,25 @@ function AppContent() {
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState<boolean>(() =>
     readCollapsedPreference(LEFT_PANEL_COLLAPSED_KEY),
   );
+  // Preview flag for the three-panel workspace frame. Off by default;
+  // enable with localStorage.setItem("LUCA_WORKSPACE_SHELL", "1") and
+  // reload. Non-destructive: when off, the legacy shell renders untouched,
+  // and every overlay stays mounted either way (OverlayManager sits outside
+  // <main>), so nothing the old sidebar reaches is ever orphaned.
+  const [workspaceShellEnabled] = useState<boolean>(() => {
+    try {
+      return (
+        typeof localStorage !== "undefined" &&
+        localStorage.getItem("LUCA_WORKSPACE_SHELL") === "1"
+      );
+    } catch {
+      return false;
+    }
+  });
+  const workspacePendingCount = usePendingApprovalCount();
+  // The canvas drives the frame's third column: present only when Luca has
+  // put something there, so an empty workspace stays two panels, not three.
+  const workspaceCanvas = useCanvas();
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(() =>
     readCollapsedPreference(RIGHT_PANEL_COLLAPSED_KEY),
   );
@@ -2627,12 +2654,20 @@ function AppContent() {
 
   if (appMode === "widget") {
     // Start Dictation (Orb Widget)
-    return <WidgetMode />;
+    return (
+      <React.Suspense fallback={null}>
+        <WidgetMode />
+      </React.Suspense>
+    );
   }
 
   if (appMode === "chat") {
     // Mini Chat Widget Mode
-    return <ChatWidgetMode />;
+    return (
+      <React.Suspense fallback={null}>
+        <ChatWidgetMode />
+      </React.Suspense>
+    );
   }
 
   if (appMode === "hologram") {
@@ -2649,6 +2684,7 @@ function AppContent() {
     );
     return (
       <div className="w-full h-full bg-transparent flex flex-col overflow-hidden relative">
+        <React.Suspense fallback={null}>
         <VisualCore
           isVisible={true}
           themeColor={theme.hex}
@@ -2675,6 +2711,7 @@ function AppContent() {
             isActive={false}
           />
         </div>
+        </React.Suspense>
       </div>
     );
   }
@@ -2688,6 +2725,7 @@ function AppContent() {
           borderColor: "var(--luca-border-strong, var(--app-border-main))",
           boxShadow: "var(--luca-shadow-soft)",
         }}>
+        <React.Suspense fallback={null}>
         <LucaBrowser
           url={ghostBrowserUrl}
           onClose={() => {
@@ -2697,6 +2735,7 @@ function AppContent() {
           sessionId={`session_${Date.now()}`}
           mode="STANDALONE"
         />
+        </React.Suspense>
       </div>
     );
   }
@@ -3092,12 +3131,135 @@ function AppContent() {
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-hidden relative z-10 flex flex-col h-full gap-0 p-0">
+          {/* ── The three-panel workspace frame (preview). The frame is the
+              constant: sidebar · centre · operation centre, seams painted by
+              the grid itself. Sidebar rows hold to ONE word each — the legacy
+              panels drowned in wording, and the fix starts at the frame. */}
+          {workspaceShellEnabled && !isMobile && (
+            <WorkspaceShell
+              style={{ flex: 1, minHeight: 0 }}
+              pendingCount={workspacePendingCount}
+              windowControls={<WorkspaceWindowControls />}
+              sidebar={
+                <WorkspaceSidebar
+                  contextLabel="Personal"
+                  onNewTask={() => {
+                    const field = document.querySelector("textarea");
+                    if (field) (field as HTMLTextAreaElement).focus();
+                  }}
+                  onOpenSettings={() => setShowSettingsModal(true)}
+                  tools={[
+                    { id: "browser", label: "Browser", glyph: "◎", hint: "Open the ghost browser", onOpen: () => setShowGhostBrowser(true) },
+                    { id: "files", label: "Files", glyph: "▤", hint: "Browse apps and files", onOpen: () => setShowAppExplorer(true) },
+                    { id: "code", label: "Code", glyph: "⌗", hint: "Open the code editor", onOpen: () => setShowCodeEditor(true) },
+                    { id: "skills", label: "Skills", glyph: "◇", hint: "Skills matrix", onOpen: () => setShowSkillsMatrix(true) },
+                  ]}
+                />
+              }
+              centre={
+                <div style={{ position: "relative", display: "flex", flexDirection: "column", minHeight: 0, height: "100%" }}>
+                  <SafeComponent componentName="ChatPanel">
+                    <ChatPanel
+                    messages={messages}
+                    isMobile={false}
+                    composerExternal={true}
+                    activeMobileTab=""
+                    theme={theme}
+                    isProcessing={isProcessing}
+                    persona={persona as PersonaType}
+                    chatEndRef={chatEndRef}
+                    handleSendMessage={handleSendMessage}
+                    setAmbientSuggestions={setAmbientSuggestions}
+                    ambientSuggestions={ambientSuggestions}
+                    showSuggestionChips={showSuggestionChips}
+                    setShowSuggestionChips={setShowSuggestionChips}
+                    showVoiceHud={showVoiceHud}
+                    bootSequence={bootSequence}
+                    currentCwd={currentCwd}
+                    isKernelLocked={isKernelLocked}
+                    opsecStatus={opsecStatus}
+                    attachedImage={attachedImage}
+                    setAttachedImage={setAttachedImage}
+                    fileInputRef={fileInputRef}
+                    handleFileSelect={handleFileSelect}
+                    input={input}
+                    setInput={setInput}
+                    handleSend={() => {
+                      if (handleSendMessageRef.current) {
+                        handleSendMessageRef.current(input, attachedImage);
+                        setInput("");
+                        setAttachedImage(null);
+                      }
+                    }}
+                    isVoiceMode={isVoiceMode}
+                    toggleVoiceMode={toggleVoiceMode}
+                    showCamera={showCamera}
+                    setShowCamera={setShowCamera}
+                    handleScreenShare={() =>
+                      setIsScreenSharing(!isScreenSharing)
+                    }
+                    handleClearChat={handleClearChat}
+                    handleStop={handleStop}
+                    setMessages={setMessages}
+                  />
+                  </SafeComponent>
+                  <ShellCommandBar
+                  variant="workspace"
+                  editingScope={workspaceCanvas.editingScope}
+                  onOpenModelSettings={() => setShowSettingsModal(true)}
+                  input={input}
+                  setInput={setInput}
+                  handleSend={() => {
+                    if (handleSendMessageRef.current) {
+                      handleSendMessageRef.current(input, attachedImage);
+                      setInput("");
+                      setAttachedImage(null);
+                    }
+                  }}
+                  isProcessing={isProcessing}
+                  messages={messages}
+                  setMessages={setMessages}
+                  theme={theme}
+                  isMobile={false}
+                  attachedImage={attachedImage}
+                  setAttachedImage={setAttachedImage}
+                  fileInputRef={fileInputRef}
+                  handleFileSelect={handleFileSelect}
+                  isVoiceMode={isVoiceMode}
+                  toggleVoiceMode={toggleVoiceMode}
+                  showCamera={showCamera}
+                  setShowCamera={setShowCamera}
+                  handleScreenShare={() => setIsScreenSharing(!isScreenSharing)}
+                  handleClearChat={handleClearChat}
+                  handleStop={handleStop}
+                  currentCwd={currentCwd}
+                  isKernelLocked={isKernelLocked}
+                  opsecStatus={opsecStatus}
+                  persona={persona as PersonaType}
+                />
+                </div>
+              }
+              canvas={
+                workspaceCanvas.items.length > 0 ? <CanvasHost /> : undefined
+              }
+              operationCenter={
+                <OperationCenter
+                  systemStatus={{
+                    label: isLocalCoreConnected
+                      ? "All systems operational"
+                      : "Local core offline — cloud mode",
+                    healthy: Boolean(isLocalCoreConnected),
+                  }}
+                />
+              }
+            />
+          )}
           {/* ── The HEADER: full-width, owned by the middle — header + canvas
               are ONE environment spanning the window. It carries only
               environment things: the panel toggles at its edges, status, and
               the window-controls zone (html.luca-wco). The side panels are
               sheets docked BELOW it and never touch it. ── */}
-          {!isMobile && (
+          {!isMobile && !workspaceShellEnabled && (
             <div
               className="luca-window-drag flex flex-none h-14 items-stretch"
               style={{
@@ -3232,7 +3394,7 @@ function AppContent() {
           >
           {/* Drawer scrim: when a side panel is opened as an overlay on a
               compact window, a backdrop dims the content and closes it. */}
-          {!isMobile && (leftDrawer || rightDrawer) && (
+          {!isMobile && !workspaceShellEnabled && (leftDrawer || rightDrawer) && (
             <div
               className="absolute inset-0 z-30 bg-black/40"
               onClick={() => {
@@ -3242,7 +3404,7 @@ function AppContent() {
               aria-hidden="true"
             />
           )}
-          {!isMobile && (leftDocked || leftDrawer) && (
+          {!isMobile && !workspaceShellEnabled && (leftDocked || leftDrawer) && (
             <>
               <div
                 className={`h-full overflow-hidden flex flex-col relative border-r ${lucaShellClassNames.panel} ${leftDrawer ? "absolute left-0 top-0 z-40" : "flex-none"}`}
@@ -3364,13 +3526,14 @@ function AppContent() {
             </div>
           )}
 
-          {!isMobile && (
+          {!isMobile && !workspaceShellEnabled && (
             <>
-              <div className="flex-1 h-full overflow-hidden flex flex-col">
+              <div className="relative flex-1 h-full overflow-hidden flex flex-col">
                 <SafeComponent componentName="ChatPanel">
                   <ChatPanel
                     messages={messages}
                     isMobile={false}
+                    composerExternal={true}
                     activeMobileTab=""
                     theme={theme}
                     isProcessing={isProcessing}
@@ -3411,6 +3574,42 @@ function AppContent() {
                     setMessages={setMessages}
                   />
                 </SafeComponent>
+                {/* The workspace command bar — the composer's shell-level home.
+                    Floats over the center region (the relative wrapper above is
+                    its positioning ancestor): it addresses the workspace, not
+                    the thread. The embedded composer is silenced via
+                    composerExternal on ChatPanel. */}
+                <ShellCommandBar
+                  input={input}
+                  setInput={setInput}
+                  handleSend={() => {
+                    if (handleSendMessageRef.current) {
+                      handleSendMessageRef.current(input, attachedImage);
+                      setInput("");
+                      setAttachedImage(null);
+                    }
+                  }}
+                  isProcessing={isProcessing}
+                  messages={messages}
+                  setMessages={setMessages}
+                  theme={theme}
+                  isMobile={false}
+                  attachedImage={attachedImage}
+                  setAttachedImage={setAttachedImage}
+                  fileInputRef={fileInputRef}
+                  handleFileSelect={handleFileSelect}
+                  isVoiceMode={isVoiceMode}
+                  toggleVoiceMode={toggleVoiceMode}
+                  showCamera={showCamera}
+                  setShowCamera={setShowCamera}
+                  handleScreenShare={() => setIsScreenSharing(!isScreenSharing)}
+                  handleClearChat={handleClearChat}
+                  handleStop={handleStop}
+                  currentCwd={currentCwd}
+                  isKernelLocked={isKernelLocked}
+                  opsecStatus={opsecStatus}
+                  persona={persona as PersonaType}
+                />
               </div>
             </>
           )}
@@ -3464,7 +3663,7 @@ function AppContent() {
           )}
 
           {/* Right Panel or Data Panel */}
-          {!isMobile && (rightDocked || rightDrawer) && (
+          {!isMobile && !workspaceShellEnabled && (rightDocked || rightDrawer) && (
             <>
               {rightDocked && (
                 <PanelResizer
@@ -3522,6 +3721,10 @@ function AppContent() {
                     ))}
                   </div>
                   <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
+                    {/* One boundary for the whole body: only one mode renders at
+                        a time, so a switch swaps which chunk is loading and the
+                        panel frame around it stays put. */}
+                    <React.Suspense fallback={null}>
                     {displayedRightPanelMode === "CONTROL" && (
                       <ControlPanel
                         theme={theme}
@@ -3547,6 +3750,7 @@ function AppContent() {
                     {displayedRightPanelMode === "LOGS" && (
                       <TraceLogsPanel theme={theme} toolLogs={toolLogs} />
                     )}
+                    </React.Suspense>
                   </div>
                 </div>
               </section>
@@ -3596,6 +3800,7 @@ function AppContent() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
+                  <React.Suspense fallback={null}>
                   {displayedRightPanelMode === "CONTROL" && (
                     <ControlPanel
                       theme={theme}
@@ -3619,6 +3824,7 @@ function AppContent() {
                   {displayedRightPanelMode === "LOGS" && (
                     <TraceLogsPanel theme={theme} toolLogs={toolLogs} />
                   )}
+                  </React.Suspense>
                 </div>
               </div>
             </section>
@@ -3665,6 +3871,7 @@ function AppContent() {
           </nav>
         )}
         {showSettingsModal && (
+          <React.Suspense fallback={null}>
           <SettingsModal
             theme={theme}
             initialTab={settingsInitialTab}
@@ -3673,18 +3880,23 @@ function AppContent() {
               setSettingsInitialTab(undefined); // reset so normal re-open starts on default tab
             }}
           />
+          </React.Suspense>
         )}
         {showInvestigationReports && (
+          <React.Suspense fallback={null}>
           <InvestigationReports
             onClose={() => setShowInvestigationReports(false)}
             theme={theme}
           />
+          </React.Suspense>
         )}
         {showDarkWebScanner && (
+          <React.Suspense fallback={null}>
           <DarkWebScanner
             onClose={() => setShowDarkWebScanner(false)}
             theme={theme}
           />
+          </React.Suspense>
         )}
         {/* PR #134: gated browser shell. Self-managed; only surfaces after an
             approved open_approved_safe_url governed execution (approval + Run once). */}
