@@ -57,7 +57,8 @@ plugins:
 # design → proposals → decisions → path. Keep this in sync when adding documents.
 nav:
   - Home: README.md
-  - For Agents (CLAUDE.md): CLAUDE.md
+  - For Coding Agents (CLAUDE.md): CLAUDE.md
+  - The Charter of Luca (LUCA.md): LUCA.md
   - Glossary: GLOSSARY.md
   - Contributing: CONTRIBUTING.md
   - Style Guide: STYLE-GUIDE.md

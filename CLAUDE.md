@@ -18,6 +18,11 @@ code:
 - **[foundation/01-constitution/02-the-four-questions.md](foundation/01-constitution/02-the-four-questions.md)**
   — the four questions every pull request must answer.
 
+Two charters, do not confuse them: **this `CLAUDE.md`** instructs the agents that
+_build_ LucaOS; **[foundation/LUCA.md](foundation/LUCA.md)** — the Charter of Luca —
+constitutes _Luca itself_, the agentic system the OS hosts and loads at runtime.
+When you implement Luca's own behavior, `LUCA.md` is the specification to satisfy.
+
 ### The non-negotiables, in one screen
 
 **There is exactly one Luca.** Not one per session, per device, or per provider.

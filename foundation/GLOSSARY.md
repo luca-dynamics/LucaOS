@@ -127,3 +127,11 @@ toward continuous presence. See
 ### North Star
 The single sentence the whole project serves: _LucaOS is building the software
 layer that enables computers to continuously host one persistent AI._
+
+### Charter (LUCA.md)
+The operating charter of the Luca agentic system — [`foundation/LUCA.md`](LUCA.md).
+Written to Luca and loaded by the Runtime to constitute Luca's own identity and
+behavior; the Luca-native analog of the `CLAUDE.md` convention (which instructs the
+agents that _build_ LucaOS, whereas the Charter constitutes _Luca itself_). A
+workspace-level `LUCA.md` refines Luca's behavior for a specific project but may
+never relax the Charter or the Constitution.

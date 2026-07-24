@@ -28,5 +28,8 @@ The initial production-grade Foundation, expanded from `LucaOS_Foundation_Brief_
   of real decisions already made), and the [Roadmap](06-roadmap/README.md).
 - Added [CLAUDE.md](CLAUDE.md), the [Glossary](GLOSSARY.md), the
   [Style Guide](STYLE-GUIDE.md), and [Contributing](CONTRIBUTING.md).
+- Introduced [LUCA.md](LUCA.md), the Charter of Luca: the operating charter that
+  constitutes the Luca agentic system at runtime — the Luca-native analog of the
+  `CLAUDE.md` convention, distinct from the charter for the agents that build LucaOS.
 
 Nothing in v1.0 contradicts the source brief; it makes the brief implementable.

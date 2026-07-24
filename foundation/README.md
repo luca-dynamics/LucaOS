@@ -45,7 +45,11 @@ window. **The product is presence.**
 Supporting documents at the root:
 
 - **[CLAUDE.md](CLAUDE.md)** — operating instructions for AI coding agents (Claude
-  Code, Codex, and any successor). **If you are an agent, read this first.**
+  Code, Codex, and any successor) that _build_ LucaOS. **If you are a coding agent,
+  read this first.**
+- **[LUCA.md](LUCA.md)** — the Charter of Luca: the operating charter that
+  constitutes _Luca itself_, the agentic system the OS hosts. The Runtime loads it;
+  it is the Luca-native analog of `CLAUDE.md`.
 - **[GLOSSARY.md](GLOSSARY.md)** — the canonical vocabulary. Terms are capitalized
   in prose when used in their defined sense (e.g. Presence, Host, Surface).
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — engineering standards and the

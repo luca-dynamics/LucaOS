@@ -8,6 +8,12 @@ LucaOS is unusual: a large fraction of its code is written by agents like you.
 That is deliberate. But it means the coherence of the system depends on every
 agent sharing the same mental model. This file is that shared model.
 
+> **`CLAUDE.md` vs `LUCA.md`.** This file instructs the agents that _build_ LucaOS.
+> Its companion, [`LUCA.md`](LUCA.md) — the Charter of Luca — constitutes _Luca
+> itself_, the agentic system the OS hosts. When you implement Luca's runtime
+> behavior (identity, memory, permissions, voice), the Charter is the specification
+> of how Luca must act; keep your code faithful to it.
+
 ---
 
 ## 1. The one thing you must never forget
