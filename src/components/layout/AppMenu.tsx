@@ -1,9 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../ui/Icon";
-import {
-  lucaShellClassNames,
-  lucaShellHeaderGhostControlStyle,
-} from "../../styles/lucaShellStyles";
 import { isElectronShell, sendWindowControl } from "../../windowControlsOverlay";
 
 /**
@@ -149,8 +145,18 @@ export const AppMenu: React.FC<AppMenuProps> = ({
           setOpen((v) => !v);
           setSection(null);
         }}
-        className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-        style={lucaShellHeaderGhostControlStyle}
+        className="luca-workspace-toggle"
+        style={{
+          width: 26,
+          height: 26,
+          display: "grid",
+          placeItems: "center",
+          border: 0,
+          borderRadius: 7,
+          background: "transparent",
+          color: "var(--luca-text-tertiary, var(--app-text-muted))",
+          cursor: "pointer",
+        }}
       >
         <Icon name="HamburgerMenu" size={16} />
       </button>

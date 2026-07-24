@@ -2,9 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import LucaComposer, { type LucaComposerProps } from "../chat/LucaComposer";
 import { useRoutedSend } from "../chat/useRoutedSend";
 import { LucaPresence } from "../presence/LucaPresence";
-import { intentRoutingModeService } from "../../services/runtime/IntentRoutingModeService";
-import type { LucaRoutingMode } from "../../types/intentRouting";
-import { settingsService } from "../../services/settingsService";
+import { WorkspaceModelPicker, WorkspaceModeSelector } from "./WorkspaceCommandControls";
 import {
   WORKSPACE_DURATION_MS,
   WORKSPACE_EASE,
@@ -22,17 +20,17 @@ import {
  * - "classic": wraps the full LucaComposer (every legacy control). The
  *   default, so the current desktop shell keeps camera / screen share / MCP
  *   chips exactly as they are today.
- * - "workspace": the target design's bar, exactly. Two quiet rows in one
- *   glass card — the field with the editing chip, then attach · voice ·
- *   model chip · Fast|Planning · send — with the presence orb hugging the
- *   bar's left corner and a "Luca is thinking" line beneath. Nothing else.
- *   The legacy controls are deliberately absent here; they live on in the
- *   embedded composer and the classic variant, one flag-flip away.
+ * - "workspace": the target design's bar. Two quiet rows in one glass card —
+ *   the field with the editing chip, then attach · voice · model · mode ·
+ *   send — with the presence orb hugging the bar's left corner and a "Luca is
+ *   thinking" line beneath.
  *
- * Fast|Planning writes through intentRoutingModeService — the same service
- * the four-mode selector uses — so the two surfaces can never disagree. The
- * bar shows the two modes the design leads with; auto/agent stay reachable
- * through the classic selector and render here as neither-pressed.
+ * The model and mode controls are the SAME real components the rest of the app
+ * uses — ChatModelSwitcher (the actual intelligence-model picker, cloud +
+ * local + advanced, writing settings.brain.model) and IntentRoutingModeSelector
+ * (the full Auto · Fast · Plan · Agent selector). The bar carries the real
+ * details, not stand-ins: picking a model here picks it everywhere, and every
+ * routing mode is reachable — no detour through Settings.
  */
 
 const COMPACT_QUERY = "(max-width: 900px)";
@@ -53,23 +51,6 @@ const useCompactViewport = (): boolean => {
   return compact;
 };
 
-/** The onboarding intelligence-route ids, worn as chip labels. */
-const MODEL_LABELS: Record<string, string> = {
-  luca_prime: "Luca Prime",
-  cloud_provider: "Cloud",
-  local_model: "Local",
-  bring_your_own_key: "Own key",
-};
-
-const readModelLabel = (): string => {
-  try {
-    const route = (settingsService.get("general") as any)?.intelligenceRoute;
-    return MODEL_LABELS[route] ?? "Luca Prime";
-  } catch {
-    return "Luca Prime";
-  }
-};
-
 export interface ShellCommandBarProps extends LucaComposerProps {
   variant?: "classic" | "workspace";
   /** Skin/presence resolution for the docked orb (inherited from the shell). */
@@ -77,8 +58,6 @@ export interface ShellCommandBarProps extends LucaComposerProps {
   reducedMotion?: boolean;
   /** When the document canvas grants edit scope, its name appears here. */
   editingScope?: string | null;
-  /** Where the model chip takes you (usually Settings → Intelligence). */
-  onOpenModelSettings?: () => void;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -88,7 +67,6 @@ export const ShellCommandBar: React.FC<ShellCommandBarProps> = ({
   skinId,
   reducedMotion,
   editingScope = null,
-  onOpenModelSettings,
   className,
   style,
   ...composerProps
@@ -150,7 +128,6 @@ export const ShellCommandBar: React.FC<ShellCommandBarProps> = ({
             {...composerProps}
             compact={compact}
             editingScope={editingScope}
-            onOpenModelSettings={onOpenModelSettings}
           />
         ) : (
           <>
@@ -192,7 +169,6 @@ const WorkspaceBar: React.FC<
   LucaComposerProps & {
     compact: boolean;
     editingScope: string | null;
-    onOpenModelSettings?: () => void;
   }
 > = ({
   input,
@@ -208,23 +184,14 @@ const WorkspaceBar: React.FC<
   isVoiceMode,
   toggleVoiceMode,
   handleStop,
+  showCamera,
+  setShowCamera,
+  handleScreenShare,
+  handleClearChat,
   editingScope,
-  onOpenModelSettings,
 }) => {
   const routedSend = useRoutedSend({ input, isProcessing, handleSend, messages, setMessages });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Same routing service the four-mode selector writes — one source of truth.
-  const [mode, setMode] = useState<LucaRoutingMode>(() => {
-    try {
-      return intentRoutingModeService.getMode();
-    } catch {
-      return "auto";
-    }
-  });
-  useEffect(() => intentRoutingModeService.subscribe(setMode), []);
-
-  const [modelLabel] = useState<string>(readModelLabel);
 
   // Auto-grow, capped — mirrors the embedded composer so the two homes feel
   // like one instrument.
@@ -247,12 +214,16 @@ const WorkspaceBar: React.FC<
   return (
     <div>
       <div
+        className="luca-command-glow"
         style={{
           borderRadius: 16,
           border: `1px solid ${workspaceColor.hairline}`,
           background:
             "color-mix(in srgb, var(--luca-surface-glass, var(--luca-background-elevated, #161d27)) 84%, transparent)",
-          boxShadow: "0 16px 44px rgba(0, 0, 0, 0.35)",
+          // The lift shadow + the breathing accent outline both live in the
+          // luca-command-glow keyframes (an inline box-shadow would outrank the
+          // animation and freeze it), so the box owns only its non-animated
+          // surface here.
           backdropFilter: "blur(18px) saturate(1.2)",
           WebkitBackdropFilter: "blur(18px) saturate(1.2)",
           padding: "11px 13px 9px",
@@ -341,7 +312,7 @@ const WorkspaceBar: React.FC<
           )}
         </div>
 
-        {/* Row 2 — attach · voice · model · mode · send. Nothing else. */}
+        {/* Row 2 — attach · voice · screen · share · clear · model · mode · send. */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
           <input
             type="file"
@@ -365,67 +336,40 @@ const WorkspaceBar: React.FC<
             <path d="M18.5 11a6.5 6.5 0 01-13 0" />
             <path d="M12 17.5V21" />
           </BarIconButton>
-
-          <button
-            type="button"
-            data-luca-command-bar-model
-            onClick={onOpenModelSettings}
-            title="Intelligence route — change in Settings"
-            className="luca-workspace-toggle"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "4px 10px",
-              borderRadius: 999,
-              border: `1px solid ${workspaceColor.hairline}`,
-              background: workspaceColor.hover,
-              color: workspaceColor.ink2,
-              font: "inherit",
-              fontSize: workspaceType.meta,
-              cursor: onOpenModelSettings ? "pointer" : "default",
-            }}
+          {/* Show Luca my screen (vision) — toggles the camera/eye. */}
+          <BarIconButton
+            label={showCamera ? "Stop showing screen" : "Show Luca my screen"}
+            active={showCamera}
+            onClick={() => setShowCamera(!showCamera)}
           >
-            <span
-              aria-hidden="true"
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: 999,
-                background: workspaceColor.accent,
-              }}
-            />
-            {modelLabel}
-            <span aria-hidden="true" style={{ fontSize: 9, opacity: 0.7 }}>
-              ⌄
-            </span>
-          </button>
+            <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" />
+            <circle cx="12" cy="12" r="3" />
+          </BarIconButton>
+          {/* Share screen. */}
+          {handleScreenShare && (
+            <BarIconButton label="Share screen" onClick={handleScreenShare}>
+              <rect x="3" y="4" width="18" height="13" rx="2" />
+              <path d="M8 21h8M12 17.5V21" />
+            </BarIconButton>
+          )}
+          {/* Clear the conversation. */}
+          {handleClearChat && (
+            <BarIconButton label="Clear conversation" onClick={handleClearChat}>
+              <path d="M4 7h16M9 7V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V7M6.5 7l.9 12a1.5 1.5 0 001.5 1.4h6.2a1.5 1.5 0 001.5-1.4l.9-12" />
+            </BarIconButton>
+          )}
 
-          <div
-            role="group"
-            aria-label="Response mode"
-            style={{
-              display: "inline-flex",
-              gap: 2,
-              padding: 2,
-              borderRadius: 999,
-              background: workspaceColor.hover,
-              marginLeft: "auto",
-            }}
-          >
-            <ModeButton
-              pressed={mode === "fast"}
-              onClick={() => intentRoutingModeService.setMode("fast")}
-            >
-              Fast
-            </ModeButton>
-            <ModeButton
-              pressed={mode === "plan"}
-              onClick={() => intentRoutingModeService.setMode("plan")}
-            >
-              Planning
-            </ModeButton>
-          </div>
+          {/* The real intelligence-model picker — cloud, local, and advanced
+              models, writing settings.brain.model. Picking here picks
+              everywhere; no detour through Settings. Workspace-native styling. */}
+          <WorkspaceModelPicker />
+
+          {/* The full Auto · Fast · Plan · Agent selector, workspace-native, on
+              the same service the rest of the app writes — every mode reachable,
+              never in disagreement. */}
+          <span style={{ marginLeft: "auto", display: "inline-flex" }}>
+            <WorkspaceModeSelector />
+          </span>
 
           <button
             type="button"
@@ -518,33 +462,6 @@ const BarIconButton: React.FC<{
     >
       {children}
     </svg>
-  </button>
-);
-
-const ModeButton: React.FC<{
-  pressed: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}> = ({ pressed, onClick, children }) => (
-  <button
-    type="button"
-    aria-pressed={pressed}
-    onClick={onClick}
-    className="luca-workspace-toggle"
-    style={{
-      padding: "3px 11px",
-      border: 0,
-      borderRadius: 999,
-      font: "inherit",
-      fontSize: workspaceType.meta,
-      fontWeight: 600,
-      background: pressed ? workspaceColor.accent : "transparent",
-      color: pressed ? "#fff" : workspaceColor.ink3,
-      cursor: "pointer",
-      transition: `background 160ms ease, color 160ms ease`,
-    }}
-  >
-    {children}
   </button>
 );
 

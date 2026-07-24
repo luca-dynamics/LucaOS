@@ -111,9 +111,11 @@ import { useLucaLinkDevices } from "./hooks/useLucaLinkDevices";
 import ChatPanel from "./components/layout/ChatPanel";
 import ShellCommandBar from "./components/shell/ShellCommandBar";
 import WorkspaceShell from "./components/shell/WorkspaceShell";
+import WorkspaceArrival from "./components/shell/WorkspaceArrival";
 import WorkspaceSidebar from "./components/shell/WorkspaceSidebar";
 import OperationCenter from "./components/shell/OperationCenter";
 import WorkspaceWindowControls from "./components/shell/WorkspaceWindowControls";
+import WorkspaceEnvironmentControls from "./components/shell/WorkspaceEnvironmentControls";
 import CanvasHost from "./components/shell/canvas/CanvasHost";
 import { useCanvas } from "./components/shell/canvas/useCanvas";
 import { usePendingApprovalCount } from "./components/shell/usePendingApprovals";
@@ -3146,6 +3148,25 @@ function AppContent() {
               style={{ flex: 1, minHeight: 0 }}
               pendingCount={workspacePendingCount}
               windowControls={<WorkspaceWindowControls />}
+              centreHeader={
+                <SafeComponent componentName="WorkspaceEnvironmentControls">
+                  <WorkspaceEnvironmentControls
+                    theme={theme}
+                    persona={persona}
+                    isProcessing={isProcessing}
+                    isAdminMode={isAdminMode}
+                    showVoiceHud={showVoiceHud}
+                    setShowVoiceHud={setShowVoiceHud}
+                    ambientVisionActive={ambientVisionActive}
+                    setAmbientVisionActive={setAmbientVisionActive}
+                    setAmbientSuggestions={setAmbientSuggestions}
+                    setShowSuggestionChips={setShowSuggestionChips}
+                    setAudioMonitoringActive={setAudioMonitoringActive}
+                    setVisionMonitoringActive={setVisionMonitoringActive}
+                    isWakeWordActive={isWakeWordActive}
+                  />
+                </SafeComponent>
+              }
               sidebar={
                 <WorkspaceSidebar
                   contextLabel="Personal"
@@ -3153,17 +3174,74 @@ function AppContent() {
                     const field = document.querySelector("textarea");
                     if (field) (field as HTMLTextAreaElement).focus();
                   }}
+                  onNewSession={handleClearChat}
                   onOpenSettings={() => setShowSettingsModal(true)}
-                  tools={[
-                    { id: "browser", label: "Browser", glyph: "◎", hint: "Open the ghost browser", onOpen: () => setShowGhostBrowser(true) },
-                    { id: "files", label: "Files", glyph: "▤", hint: "Browse apps and files", onOpen: () => setShowAppExplorer(true) },
-                    { id: "code", label: "Code", glyph: "⌗", hint: "Open the code editor", onOpen: () => setShowCodeEditor(true) },
-                    { id: "skills", label: "Skills", glyph: "◇", hint: "Skills matrix", onOpen: () => setShowSkillsMatrix(true) },
+                  groups={[
+                    {
+                      id: "intelligence",
+                      label: "Intelligence",
+                      items: [
+                        { id: "cognitive", label: "Cognitive", glyph: "❋", hint: "Watch Luca's cognitive engine think", onOpen: () => setShowThoughtProcess(true) },
+                        { id: "reports", label: "Reports", glyph: "❑", hint: "Investigation reports", onOpen: () => setShowInvestigationReports(true) },
+                        { id: "autonomy", label: "Autonomy", glyph: "◈", hint: "Autonomy dashboard", onOpen: () => setShowAutonomyDashboard(true) },
+                      ],
+                    },
+                    {
+                      id: "connections",
+                      label: "Connections",
+                      items: [
+                        { id: "lucalink", label: "LucaLink", glyph: "⇄", hint: "Link and hand off to other devices", onOpen: () => setShowLucaLinkModal(true) },
+                      ],
+                    },
+                    {
+                      id: "tools",
+                      label: "Tools",
+                      items: [
+                        { id: "browser", label: "Browser", glyph: "◎", hint: "Open the ghost browser", onOpen: () => setShowGhostBrowser(true) },
+                        { id: "files", label: "Files", glyph: "▤", hint: "Browse apps and files", onOpen: () => setShowAppExplorer(true) },
+                        { id: "code", label: "Code", glyph: "⌗", hint: "Open the code editor", onOpen: () => setShowCodeEditor(true) },
+                        { id: "skills", label: "Skills", glyph: "◇", hint: "Skills matrix", onOpen: () => setShowSkillsMatrix(true) },
+                      ],
+                    },
+                    {
+                      id: "advanced",
+                      label: "Advanced",
+                      advanced: true,
+                      items: [
+                        { id: "agent", label: "Agent", glyph: "⬡", hint: "Autonomous agent mode", onOpen: () => setShowAgentMode(true) },
+                        { id: "hacking", label: "Hacking", glyph: "⌁", hint: "Offensive security terminal", onOpen: () => setShowHackingTerminal(true) },
+                        { id: "osint", label: "OSINT", glyph: "◉", hint: "Open-source intelligence", onOpen: () => setShowOsintDossier(true) },
+                        { id: "darkweb", label: "Dark web", glyph: "◍", hint: "Dark web scanner", onOpen: () => setShowDarkWebScanner(true) },
+                        { id: "network", label: "Network", glyph: "⌘", hint: "Network map", onOpen: () => setShowNetworkMap(true) },
+                        { id: "geo", label: "Geo", glyph: "⊕", hint: "Geo-tactical view", onOpen: () => setShowGeoTactical(true) },
+                        { id: "stock", label: "Stocks", glyph: "▦", hint: "Stock terminal", onOpen: () => setShowStockTerminal(true) },
+                        { id: "crypto", label: "Crypto", glyph: "◊", hint: "Crypto / DeFi terminal", onOpen: () => setShowCryptoTerminal(true) },
+                        { id: "fx", label: "FX", glyph: "⇋", hint: "Forex terminal", onOpen: () => setShowForexTerminal(true) },
+                        { id: "prediction", label: "Prediction", glyph: "◔", hint: "Prediction markets", onOpen: () => setShowPredictionTerminal(true) },
+                        { id: "aitrading", label: "AI traders", glyph: "◧", hint: "AI trading desk", onOpen: () => setShowAITradersPage(true) },
+                        { id: "screen", label: "Screen", glyph: "▷", hint: "Screen recorder", onOpen: () => setShowLucaRecorder(true) },
+                        { id: "subsystems", label: "Systems", glyph: "▤", hint: "Subsystem dashboard", onOpen: () => setShowSubsystemDashboard(true) },
+                      ],
+                    },
                   ]}
                 />
               }
               centre={
                 <div style={{ position: "relative", display: "flex", flexDirection: "column", minHeight: 0, height: "100%" }}>
+                  {/* While the thread is empty, the centre is a calm arrival —
+                      a quiet greeting, no legacy "Operator" jargon or boot
+                      chatter. The first user message swaps it for the real
+                      conversation. */}
+                  {!messages.some((m) => m.sender === Sender.USER) ? (
+                    <WorkspaceArrival
+                      contextLabel="Personal"
+                      skinId={
+                        typeof selectedSkinId === "string"
+                          ? selectedSkinId
+                          : undefined
+                      }
+                    />
+                  ) : (
                   <SafeComponent componentName="ChatPanel">
                     <ChatPanel
                     messages={messages}
@@ -3209,10 +3287,10 @@ function AppContent() {
                     setMessages={setMessages}
                   />
                   </SafeComponent>
+                  )}
                   <ShellCommandBar
                   variant="workspace"
                   editingScope={workspaceCanvas.editingScope}
-                  onOpenModelSettings={() => setShowSettingsModal(true)}
                   input={input}
                   setInput={setInput}
                   handleSend={() => {
@@ -3396,7 +3474,18 @@ function AppContent() {
               side panels are chrome surfaces sitting ON TOP of it. */}
           <div
             className={`relative flex-1 min-h-0 flex ${lucaShellClassNames.workspace}`}
-            style={lucaShellWorkspaceSurfaceStyle}
+            style={{
+              ...lucaShellWorkspaceSurfaceStyle,
+              // When the workspace shell owns the desktop, this legacy canvas
+              // wrapper still mounts (it carries the mobile panels), but its
+              // flex-1 stole half of main's height — the WorkspaceShell got the
+              // other half, so the app rendered in a top band with black below.
+              // Remove it from the desktop layout entirely; it still renders on
+              // mobile, where the workspace shell does not.
+              ...(workspaceShellEnabled && !isMobile
+                ? { display: "none" }
+                : {}),
+            }}
           >
           {/* Drawer scrim: when a side panel is opened as an overlay on a
               compact window, a backdrop dims the content and closes it. */}

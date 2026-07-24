@@ -165,7 +165,6 @@ export const CollapseToggle: React.FC<{
   side: "left" | "right";
   label: string;
 }> = ({ collapsed, onToggle, side, label }) => {
-  const pointsIn = side === "left" ? !collapsed : collapsed;
   return (
     <button
       type="button"
@@ -185,15 +184,44 @@ export const CollapseToggle: React.FC<{
         background: "transparent",
         color: workspaceColor.ink3,
         font: "inherit",
-        fontSize: 13,
         lineHeight: 1,
         cursor: "pointer",
-        transition: `background 160ms ease, color 160ms ease, transform ${WORKSPACE_DURATION_MS}ms ${WORKSPACE_EASE}`,
-        transform: pointsIn ? "none" : "rotate(180deg)",
+        transition: `background 160ms ease, color 160ms ease`,
       }}
     >
-      {side === "left" ? "⟨" : "⟩"}
+      <SidebarGlyph side={side} collapsed={collapsed} />
     </button>
+  );
+};
+
+/**
+ * The real toggle-panel mark: a rounded frame with the panel's own column
+ * shaded on the side it lives — the standard "show/hide sidebar" icon, not a
+ * bare chevron. The shaded strip empties when the panel is collapsed, so the
+ * icon reads its own state.
+ */
+const SidebarGlyph: React.FC<{ side: "left" | "right"; collapsed: boolean }> = ({
+  side,
+  collapsed,
+}) => {
+  const stripX = side === "left" ? 3.5 : 14.5;
+  const lineX = side === "left" ? 9.5 : 14.5;
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect
+        x="3.5"
+        y="4.5"
+        width="17"
+        height="15"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+      {!collapsed && (
+        <rect x={stripX} y="4.5" width="6" height="15" fill="currentColor" opacity="0.35" />
+      )}
+      <line x1={lineX} y1="4.5" x2={lineX} y2="19.5" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
   );
 };
 
@@ -215,11 +243,53 @@ export const WORKSPACE_INTERACTION_CSS = `
 }
 .luca-workspace-toggle:hover { background: ${workspaceColor.hover}; color: ${workspaceColor.ink}; }
 .luca-workspace-handle:hover { color: ${workspaceColor.ink}; }
+/* Seam grips: invisible until hovered/dragged, then a centred accent line
+   marks the edge you're pulling. */
+.luca-workspace-resizer { background: transparent; }
+.luca-workspace-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: transparent;
+  transition: background 160ms ease;
+}
+.luca-workspace-resizer:hover::after,
+.luca-workspace-resizer:active::after { background: ${workspaceColor.accent}; }
 .luca-workspace-scroll { overflow-y: auto; overflow-x: hidden; }
 .luca-workspace-scroll::-webkit-scrollbar { width: 8px; }
 .luca-workspace-scroll::-webkit-scrollbar-thumb { background: ${workspaceColor.hairline}; border-radius: 99px; }
 .luca-workspace-scroll::-webkit-scrollbar-track { background: transparent; }
+/* Theme-aware Luca mark. html.light-mode follows the Settings light/dark/system
+   choice (App applies it live), so the mark flips with the theme, no JS. CSS
+   owns display here — the imgs must NOT set an inline display, or it would beat
+   these rules and both would show. Dark mode shows /icon.png, light mode shows
+   /icon_dark.png (see the classes' src in WorkspaceSidebar). */
+.luca-brand-icon-dark { display: block; }
+.luca-brand-icon-light { display: none; }
+:root.light-mode .luca-brand-icon-dark { display: none; }
+:root.light-mode .luca-brand-icon-light { display: block; }
 @media (prefers-reduced-motion: reduce) {
   .luca-workspace-grid, .luca-workspace-toggle, .luca-workspace-nav { transition: none !important; }
 }
+/* The command bar's living outline: the accent hairline brightens and dims on a
+   slow breath, so the box you speak into feels awake. The lift shadow is folded
+   into every keyframe so the animation owns box-shadow outright (an inline one
+   would outrank it and freeze the glow). */
+.luca-command-glow { animation: luca-command-glow 3.6s ease-in-out infinite; }
+@keyframes luca-command-glow {
+  0%, 100% {
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.35),
+                0 0 0 1px color-mix(in srgb, ${workspaceColor.accent} 8%, transparent);
+  }
+  50% {
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.35),
+                0 0 0 1px color-mix(in srgb, ${workspaceColor.accent} 52%, transparent),
+                0 0 20px color-mix(in srgb, ${workspaceColor.accent} 22%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) { .luca-command-glow { animation: none; } }
 `;
