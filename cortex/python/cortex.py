@@ -1555,7 +1555,11 @@ from routers.deps import verify_session
 
 # Input control (mouse/keyboard/applescript) extracted to routers/input_control.py
 from routers.input_control import router as input_router
-app.include_router(input_router)
+# Privileged: synthesizes system input (mouse/keyboard) and runs AppleScript.
+# Loopback (the local desktop app) passes require_privileged; remote callers must
+# present the master token. Without the gate these routes were fail-open whenever
+# remote access (0.0.0.0) was enabled.
+app.include_router(input_router, dependencies=[Depends(require_privileged)])
 
 # --- VOICE HUB INTEGRATION (Gemini Ear + Cloud Voice) ---
 from fastapi import WebSocket, WebSocketDisconnect
@@ -3207,14 +3211,18 @@ from routers.deps import lazy_import_automation
 
 # ============ UNIVERSAL AUTOMATION + SYSTEM ENDPOINTS (extracted to routers/execute.py) ============
 from routers.execute import router as execute_router
-app.include_router(execute_router)
+# Privileged: opens URLs, messages contacts, captures the screen, controls media.
+# Loopback passes; remote callers need the master token (fail closed).
+app.include_router(execute_router, dependencies=[Depends(require_privileged)])
 
 # ============ MODEL MANAGER ENDPOINTS (extracted to routers/models.py) ============
 # Unified management of local AI models (Gemma, SmolVLM, UI-TARS, Piper).
 # Shared metadata (MODEL_PATHS, PLATFORM_INFO, is_model_supported,
 # embedding_logic) is published to the `state` module above.
 from routers.models import router as models_router
-app.include_router(models_router)
+# Privileged: downloads and deletes local model weights. Loopback passes; remote
+# callers need the master token (fail closed).
+app.include_router(models_router, dependencies=[Depends(require_privileged)])
 
 
 if __name__ == "__main__":
