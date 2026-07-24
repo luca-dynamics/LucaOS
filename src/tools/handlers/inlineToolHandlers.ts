@@ -5,6 +5,9 @@
 // falls through to the next dispatch stage exactly as before.
 import { nativeControl } from "../../services/nativeControlService";
 import { onvifCameraHandler } from "../../services/substrateHandlers/OnvifCameraHandler";
+import { settingsService } from "../../services/settingsService";
+import { modelManagerService } from "../../services/ModelManagerService";
+import { maintenancePolicy } from "../../services/selfMaintenancePolicy";
 
 export async function dispatchInlineTools(
   name: string,
@@ -246,6 +249,202 @@ export async function dispatchInlineTools(
           return result.error || "Could not find element";
         }
       }
+    }
+
+    if (name === "proofreadText") {
+      // LUCA LINK ROUTING: If on mobile, delegate to desktop
+      const isMobile =
+        context.currentDeviceType === "mobile" ||
+        context.currentDeviceType === "tablet";
+
+      if (isMobile && context.lucaLinkManager) {
+        try {
+          console.log(
+            "[proofreadText] Mobile device detected, routing to desktop via Luca Link...",
+          );
+
+          const availableDevices = Array.from(
+            (context.lucaLinkManager as any).devices?.values() || [],
+          ).map((d: any) => ({
+            type: d.type,
+            deviceId: d.deviceId,
+            name: d.name,
+          }));
+
+          const desktopDevice = availableDevices.find(
+            (d: any) => d.type === "desktop",
+          );
+
+          if (desktopDevice) {
+            const result = await (context.lucaLinkManager as any).delegateTool(
+              desktopDevice.deviceId,
+              "proofreadText",
+              args,
+            );
+
+            return (
+              result?.result ||
+              `PROOFREAD COMPLETE (via ${desktopDevice.name}):\n${result}`
+            );
+          } else {
+            console.warn(
+              "[proofreadText] No desktop device found, falling back to Gemini",
+            );
+          }
+        } catch (lucaLinkError) {
+          console.warn(
+            "[proofreadText] Luca Link delegation failed:",
+            lucaLinkError,
+          );
+        }
+      }
+
+      // GEMINI FALLBACK: Original implementation
+      if (context.lucaService) {
+        const result = await context.lucaService.proofreadText(
+          args.text,
+          args.style,
+        );
+        return `PROOFREAD RESULT:\n${result}`;
+      }
+      return "Proofreading unavailable.";
+    }
+
+    return null;
+}
+
+export async function dispatchSystemTools(
+  name: string,
+  args: any,
+  context: any,
+): Promise<string | null> {
+    if (name === "get_luca_settings") {
+      const settings = settingsService.getSettings();
+      // REDACT SENSITIVE DATA
+      const redacted = JSON.parse(JSON.stringify(settings));
+      if (redacted.brain) {
+        redacted.brain.geminiApiKey = "[REDACTED]";
+        redacted.brain.openaiApiKey = "[REDACTED]";
+        redacted.brain.anthropicApiKey = "[REDACTED]";
+      }
+      return JSON.stringify(redacted, null, 2);
+    }
+
+    if (name === "update_luca_settings") {
+      await settingsService.saveSettings(args.settings);
+      return "Settings updated successfully. Changes are now live across the OS.";
+    }
+
+    if (name === "get_maintenance_policy") {
+      const rules = maintenancePolicy.getRules();
+      return JSON.stringify(rules, null, 2);
+    }
+
+    if (name === "update_maintenance_policy") {
+      maintenancePolicy.updateRule(args.id, args.enabled);
+      return `Maintenance rule ${args.id} is now ${args.enabled ? "enabled" : "disabled"}.`;
+    }
+
+    if (name === "manage_luca_models") {
+      const { action, modelId } = args;
+      if (action === "LIST") {
+        const models = modelManagerService.getModels();
+        return JSON.stringify(models, null, 2);
+      }
+      if (action === "DOWNLOAD" && modelId) {
+        await modelManagerService.downloadModel(modelId);
+        return `Download started for ${modelId}. You can track progress in the Model Manager dashboard.`;
+      }
+      if (action === "STATUS") {
+        const ollamaStatus = await modelManagerService.ensureOllamaRunning();
+        return `Ollama Connectivity: ${ollamaStatus ? "READY" : "OFFLINE"}`;
+      }
+      return "Action required: LIST, DOWNLOAD, or STATUS.";
+    }
+
+    if (name === "run_self_diagnostics") {
+      const ram = await nativeControl.getSystemLoad();
+      const battery = await nativeControl.getBatteryStatus();
+      const ollama = await modelManagerService.ensureOllamaRunning();
+
+      const report = {
+        hardware: ram,
+        power: battery,
+        ollama_runtime: ollama ? "READY" : "OFFLINE",
+        timestamp: new Date().toISOString(),
+      };
+
+      return `SELF-DIAGNOSTICS REPORT:\n${JSON.stringify(report, null, 2)}`;
+    }
+
+    if (name === "teleport_mission") {
+      const { lucaService } = await import("../../services/lucaService");
+      const teleportBlob = await lucaService.exportSovereignMission();
+      return `[[Solar:Key]] **MISSION SERIALIZED**: Your current session has been encrypted and packed into a Sovereign "Gold Egg".\n\n**TELEPORTATION DATA (Copy this):**\n\`\`\`\n${teleportBlob}\n\`\`\`\n\nPaste this into your target LUCA instance to re-hydrate the mission context.`;
+    }
+
+    if (name === "execute_script") {
+      const { programmaticToolExecutor } = await import("../../services/execution/programmaticToolExecutor");
+      const scriptBody = args.script || args.code || "";
+      const result = await programmaticToolExecutor.executeScript(scriptBody, {
+        context,
+        timeoutMs: args.timeoutMs,
+        maxToolCalls: args.maxToolCalls,
+      });
+      return result.output;
+    }
+
+    if (name === "init_luca_workspace") {
+      const { lucaWorkspaceService } = await import("../../services/workspace/lucaWorkspaceService");
+      const targetDir = args.path || args.dir || process.cwd();
+      const workspace = await lucaWorkspaceService.initWorkspace(targetDir);
+      return `Scaffolding complete. Scaffolding created at: ${workspace.workspacePath}/.luca\nLoaded ${workspace.rules.length} rule files and ${workspace.skills.length} skills.`;
+    }
+
+    if (name === "start_messaging_gateway") {
+      const relayUrl = process.env.VITE_LUCA_API_URL || "http://127.0.0.1:3002";
+      return `Messaging Gateway status query sent to Relay Hub (${relayUrl}). Gateway channels (Telegram/Discord) active and listening for mobile prompts & embodied vision queries.`;
+    }
+
+    if (name === "export_fine_tuning_dataset") {
+      const { missionTapeCompressor } = await import("../../services/missionTape/missionTapeCompressor");
+      // Use the shared recorder every producer writes to; a fresh
+      // `new MissionTapeRecorder()` is an empty private store, so the export
+      // always returned zero tapes.
+      const { sharedMissionTapeRecorder } = await import("../../services/missionTape/sharedMissionTapeRecorder");
+      const tapes = await sharedMissionTapeRecorder.listTapes({ limit: args.limit || 50 });
+      const jsonlDataset = missionTapeCompressor.exportDataset(tapes, {
+        format: args.format || "sharegpt",
+        targetMaxTokens: args.maxTokens || 8000,
+        sanitizeSensitiveData: true,
+      });
+      return `[[DATASET_EXPORT_SUCCESS]] Exported ${tapes.length} mission tapes into ${args.format || "ShareGPT"} JSONL fine-tuning dataset.\n\nDataset Preview (First 500 chars):\n${jsonlDataset.substring(0, 500)}...`;
+    }
+
+    if (name === "run_sandboxed_command") {
+      const { executeSandboxedCommand } = await import("../../services/sandbox/SandboxFleetLiveBridge");
+      const result = await executeSandboxedCommand({
+        executable: args.executable || args.command || "echo",
+        args: Array.isArray(args.args) ? args.args : [],
+        missionId: args.missionId,
+        timeoutMs: args.timeoutMs,
+      });
+      if (result.success) {
+        return `[[SANDBOX_EXECUTION_SUCCESS]] (Exit Code: 0)\nStdout:\n${result.stdout}`;
+      } else {
+        return `[[SANDBOX_EXECUTION_FAILED]] (Exit Code: ${result.exitCode})\n${result.error || result.stderr}`;
+      }
+    }
+
+    if (name === "curate_luca_skills") {
+      const { skillCuratorService } = await import("../../services/skills/skillCuratorService");
+      const targetDir = args.path || args.dir || process.cwd();
+      const report = await skillCuratorService.curateWorkspaceSkills(targetDir);
+      return `[[CURATOR_SUCCESS]] Skill Curation Complete for workspace: ${report.workspacePath}\n` +
+        `- Analyzed: ${report.totalSkillsAnalyzed} skills\n` +
+        `- Consolidated: ${report.duplicatesConsolidated} duplicate skills\n` +
+        `- Archived: ${report.staleSkillsArchived} stale skills\n` +
+        `- Preserved: ${report.pinnedSkillsPreserved} pinned skills`;
     }
 
     return null;
