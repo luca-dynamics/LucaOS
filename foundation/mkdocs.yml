@@ -1,0 +1,138 @@
+site_name: LucaOS Foundation
+site_description: >-
+  The canonical source of truth for LucaOS — its philosophy, constitution,
+  architecture, design language, and engineering standards.
+docs_dir: .
+site_dir: site
+
+theme:
+  name: material
+  palette:
+    # Calm, premium, honest — light and dark, per the Design System.
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+
+plugins:
+  - search
+
+# The navigation mirrors the repository's directory order: why → law → how →
+# design → proposals → decisions → path. Keep this in sync when adding documents.
+nav:
+  - Home: README.md
+  - For Agents (CLAUDE.md): CLAUDE.md
+  - Glossary: GLOSSARY.md
+  - Contributing: CONTRIBUTING.md
+  - Style Guide: STYLE-GUIDE.md
+  - Changelog: CHANGELOG.md
+
+  - 00 · Manifesto:
+      - Overview: 00-manifesto/README.md
+      - The Thesis: 00-manifesto/00-the-thesis.md
+      - The Computing Shift: 00-manifesto/01-the-computing-shift.md
+      - What Luca Is and Is Not: 00-manifesto/02-what-luca-is-and-is-not.md
+      - Presence Is the Product: 00-manifesto/03-presence-is-the-product.md
+      - The One Identity Principle: 00-manifesto/04-the-one-identity-principle.md
+      - The North Star: 00-manifesto/05-north-star.md
+
+  - 01 · Constitution:
+      - Overview: 01-constitution/README.md
+      - Preamble: 01-constitution/00-preamble.md
+      - The Eight Invariants: 01-constitution/01-the-eight-invariants.md
+      - The Four Questions: 01-constitution/02-the-four-questions.md
+      - Governance and Amendments: 01-constitution/03-governance-and-amendments.md
+      - Trust and Permissions: 01-constitution/04-trust-and-permissions.md
+
+  - 02 · Specification:
+      - Overview: 02-specification/README.md
+      - System Overview: 02-specification/00-system-overview.md
+      - Persistent Runtime: 02-specification/01-persistent-runtime.md
+      - Identity and Embodiment: 02-specification/02-identity-and-embodiment.md
+      - Memory Architecture: 02-specification/03-memory-architecture.md
+      - Provider Abstraction: 02-specification/04-provider-abstraction.md
+      - Capability and Tool Layer: 02-specification/05-capability-and-tool-layer.md
+      - Surface Layer: 02-specification/06-surface-layer.md
+      - Safety and Permissions: 02-specification/07-safety-and-permissions.md
+      - Cortex and Local Intelligence: 02-specification/08-cortex-and-local-intelligence.md
+      - Continuity and Sync: 02-specification/09-continuity-and-sync.md
+      - Data and Storage: 02-specification/10-data-and-storage.md
+      - Observability and Provenance: 02-specification/11-observability-and-provenance.md
+
+  - 03 · Design System:
+      - Overview: 03-design-system/README.md
+      - Design Philosophy: 03-design-system/00-design-philosophy.md
+      - Presence and Embodiment: 03-design-system/01-presence-and-embodiment.md
+      - Design Tokens: 03-design-system/02-design-tokens.md
+      - Motion and Timing: 03-design-system/03-motion-and-timing.md
+      - Voice and Tone: 03-design-system/04-voice-and-tone.md
+      - Surface Guidelines: 03-design-system/05-surface-guidelines.md
+      - Accessibility: 03-design-system/06-accessibility.md
+
+  - 04 · RFCs:
+      - Overview: 04-rfcs/README.md
+      - Template: 04-rfcs/0000-template.md
+      - "0001 · Persistent Runtime Model": 04-rfcs/0001-persistent-runtime-model.md
+      - "0002 · Unified Memory Substrate": 04-rfcs/0002-unified-memory-substrate.md
+      - "0003 · Provider Abstraction Layer": 04-rfcs/0003-provider-abstraction-layer.md
+      - "0004 · Cross-Surface Continuity Protocol": 04-rfcs/0004-cross-surface-continuity-protocol.md
+      - "0005 · Permissioned Computer-Use": 04-rfcs/0005-permissioned-computer-use.md
+
+  - 05 · ADRs:
+      - Overview: 05-adrs/README.md
+      - Template: 05-adrs/0000-template.md
+      - "0001 · One Identity, Not Per-Session Agents": 05-adrs/0001-one-identity-not-per-session-agents.md
+      - "0002 · Memory Belongs to Luca": 05-adrs/0002-memory-belongs-to-luca.md
+      - "0003 · Provider Abstraction over Vendor Lock-in": 05-adrs/0003-provider-abstraction-over-vendor-lockin.md
+      - "0004 · node:sqlite over better-sqlite3": 05-adrs/0004-node-sqlite-over-better-sqlite3.md
+      - "0005 · Ephemeral Ports and Single Instance": 05-adrs/0005-ephemeral-ports-and-single-instance.md
+      - "0006 · Fast-Listen Boot": 05-adrs/0006-fast-listen-boot.md
+      - "0007 · Write-Time Memory Capacity": 05-adrs/0007-write-time-memory-capacity.md
+      - "0008 · Category Security Floor": 05-adrs/0008-category-security-floor.md
+      - "0009 · Unconditional Permission Gate": 05-adrs/0009-unconditional-permission-gate.md
+      - "0010 · Budgeted, Ranked Memory Injection": 05-adrs/0010-budgeted-ranked-memory-injection.md
+
+  - 06 · Roadmap:
+      - Overview: 06-roadmap/README.md
+      - Phasing Model: 06-roadmap/00-phasing-model.md
+      - "Phase 0 · Foundation": 06-roadmap/01-phase-0-foundation.md
+      - "Phase 1 · Presence": 06-roadmap/02-phase-1-presence.md
+      - "Phase 2 · Continuity": 06-roadmap/03-phase-2-continuity.md
+      - "Phase 3 · Embodiment": 06-roadmap/04-phase-3-embodiment.md
+      - Milestones and Metrics: 06-roadmap/05-milestones-and-metrics.md

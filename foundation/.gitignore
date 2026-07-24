@@ -1,0 +1,18 @@
+# MkDocs build output
+/site/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node (if a docs toolchain is added later)
+node_modules/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
