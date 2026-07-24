@@ -440,7 +440,9 @@ const Header: React.FC<HeaderProps> = ({
           />
         </div>
 
-        {/* Connection status */}
+        {/* Connection status — hidden in the embedded shell header; the
+            Operation Center already reports connection/offline state. */}
+        {!embedded && (
         <div
           className="hidden md:flex items-center gap-1.5 text-[11px] font-medium"
           style={{ color: connectionColor }}
@@ -474,8 +476,11 @@ const Header: React.FC<HeaderProps> = ({
           )}
           <span>{connectionLabel(connectionTier)}</span>
         </div>
+        )}
 
-        {/* Settings */}
+        {/* Settings — hidden in the embedded shell header; it already lives in
+            the sidebar footer and the app menu, so it isn't repeated here. */}
+        {!embedded && (
         <button
           type="button"
           onClick={() => setIsSettingsOpen(true)}
@@ -494,6 +499,7 @@ const Header: React.FC<HeaderProps> = ({
             className="group-hover:rotate-90 transition-transform duration-300"
           />
         </button>
+        )}
       </div>
     </header>
   );

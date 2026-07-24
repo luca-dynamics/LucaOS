@@ -194,8 +194,10 @@
         top: 50%;
         transform: translateY(-50%);
         width: auto;
-        height: min(84vh, 620px);
-        max-width: 46vw;
+        /* Scales continuously with the window height; the cap only keeps it
+           from becoming cartoonish on very tall displays. */
+        height: min(88vh, 820px);
+        max-width: 48vw;
         display: grid;
         place-items: center;
         z-index: 1;
@@ -573,6 +575,37 @@
         font-size: 11.5px;
         color: #99a1ab;
       }
+      /* Collapsed ready summary (option 3): one confirming line + the five
+         service names beneath, instead of five full-width rows. */
+      .loader-ready-headline {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #2b303a;
+      }
+      .loader-ready-headline .loader-check-tick {
+        width: 17px;
+        height: 17px;
+        flex: none;
+      }
+      .loader-ready-names {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 9px;
+        /* Sit under the headline text, clear of the tick. */
+        padding-left: 27px;
+        font-size: 12px;
+        letter-spacing: 0.01em;
+        color: #8b929d;
+      }
+      .loader-ready-names i {
+        font-style: normal;
+        color: #bcc3cb;
+      }
       /* Continue — a frosted aqua pill, full width of the card. */
       .loader-continue {
         display: block;
@@ -623,26 +656,16 @@
       #root-loader[data-variant="returning"] .loader-spinner {
         margin-top: 4px;
       }
-      /* Awaken cluster: status label + progress bar + phase, lower-left. */
-      .loader-awaken {
-        position: absolute;
-        left: 8%;
-        bottom: 15%;
-        width: min(38vw, 340px);
-        z-index: 2;
-      }
+      /* The progress cluster (track + phase) rides in the panel's own flow,
+         directly under the subtitle — see the in-flow .loader-awaken above. An
+         earlier build pinned it absolutely to the lower-left, which detached it
+         from the panel and collided with the subtitle on wide windows; it now
+         simply follows the copy. */
       .loader-status {
         color: #8b929d;
         font-size: 13px;
         letter-spacing: 0.01em;
         margin-bottom: 10px;
-      }
-      .loader-phase {
-        min-height: 14px;
-        color: #8b929d;
-        font-size: 11px;
-        letter-spacing: 0.01em;
-        margin-top: 8px;
       }
       .loader-failure-details {
         position: absolute;
@@ -757,13 +780,22 @@
         .loader-presence {
           display: none; /* the inline face carries the stacked layout */
         }
+        /* Face first and BIG: it leads the stacked column, the wordmark and
+           readiness copy fall beneath it. order:-1 lifts it above the brand row
+           without moving it in the DOM (the ready/failed hooks still find it).
+           Height tracks the viewport so the presence grows and shrinks with the
+           window instead of snapping to a fixed icon size. */
         .loader-presence-inline {
           display: flex;
+          order: -1;
+          width: 100%;
+          height: min(46vh, 440px);
+          margin: 0 0 22px;
         }
         .loader-panel {
           position: static;
           transform: none;
-          width: min(94vw, 440px);
+          width: min(94vw, 460px);
           display: flex;
           flex-direction: column;
           z-index: 2;
@@ -779,6 +811,18 @@
           justify-content: center;
           font-size: clamp(24px, 5vw, 34px);
         }
+        /* The progress track + phase centre under the copy in the stacked view. */
+        .loader-awaken {
+          text-align: center;
+        }
+        /* Ready summary centres too, and its names drop the tick offset. */
+        .loader-ready-headline {
+          justify-content: center;
+        }
+        .loader-ready-names {
+          justify-content: center;
+          padding-left: 0;
+        }
       }
 
       @media (max-width: 640px) {
@@ -786,8 +830,8 @@
           width: 100%;
         }
         .loader-presence-inline {
-          height: min(38vh, 320px);
-          margin: 4px 0 18px;
+          height: min(44vh, 380px);
+          margin: 0 0 18px;
         }
         .loader-check {
           gap: 11px;
@@ -803,16 +847,19 @@
         }
       }
 
-      /* Short windows: face + tall checklist can exceed the viewport. Let the
-         column scroll rather than clip Continue, and trim the face first. */
+      /* Short windows (e.g. an 800×600 restored window): the big face + copy can
+         exceed the viewport. Let the column scroll from the top rather than
+         clip, and keep the face substantial — it stays viewport-proportional
+         (min(40vh, …)) instead of collapsing to an icon, which is what the
+         800×600 boot was doing. */
       @media (max-width: 1023px) and (max-height: 640px) {
         #root-loader {
           justify-content: flex-start;
           overflow-y: auto;
         }
         .loader-presence-inline {
-          height: min(18vh, 130px);
-          margin: 4px 0 10px;
+          height: min(40vh, 300px);
+          margin: 0 0 14px;
         }
       }
     </style>
@@ -1070,12 +1117,16 @@
         // so a manual Continue on every launch and every refresh is friction
         // wearing the costume of ceremony: it turns a reload into a click. They
         // get the same readiness checks, then the loader simply fades away.
+        // [full name, status value, short chip label]. All five resolve green
+        // at ready, so the summary collapses to one "All systems ready" line
+        // with the short names beneath — the per-service status rides in each
+        // name's hover title, so nothing is lost, only the height.
         const READY_SUMMARY = [
-          ["Core services", "Online"],
-          ["Memory systems", "Synchronized"],
-          ["Models & tools", "Loaded"],
-          ["Personal context", "Ready"],
-          ["Security & privacy", "Active"],
+          ["Core services", "Online", "Core"],
+          ["Memory systems", "Synchronized", "Memory"],
+          ["Models & tools", "Loaded", "Models"],
+          ["Personal context", "Ready", "Context"],
+          ["Security & privacy", "Active", "Security"],
         ];
 
         // Fade the loader out and take its window controls with it (React
@@ -1112,23 +1163,22 @@
 
           const host = document.getElementById("loader-checklist");
           if (host) {
-            host.innerHTML = READY_SUMMARY.map(
-              (item) =>
-                '<div class="loader-check loader-check--ready" data-state="done">' +
-                `<span class="loader-check-status">${CHECK_TICK}</span>` +
-                `<div class="loader-check-title">${item[0]}</div>` +
-                `<span class="loader-ready-value">${item[1]}</span></div>`,
-            ).join("");
+            // One calm line — everything's green, so the honest signal is
+            // "ready" — with the five services named beneath (hover each for its
+            // status). Replaces the five full-width rows that only added height.
+            const names = READY_SUMMARY.map(
+              (item) => `<span title="${item[0]} — ${item[1]}">${item[2]}</span>`,
+            ).join('<i aria-hidden="true">·</i>');
+            host.innerHTML =
+              '<div class="loader-ready-headline">' +
+              CHECK_TICK +
+              "<span>All systems ready</span></div>" +
+              `<div class="loader-ready-names">${names}</div>`;
           }
-          const pillHost = document.getElementById("loader-healthpill");
-          if (pillHost) {
-            pillHost.innerHTML =
-              '<button type="button" class="loader-continue" id="loader-continue">Continue</button>';
-            const btn = document.getElementById("loader-continue");
-            if (btn) {
-              btn.addEventListener("click", () => dismissLoader(loader));
-            }
-          }
+          // No manual gate: hold the "ready" confirmation for one calm beat so
+          // it registers, then fade straight into the workspace — the same
+          // hands-off handoff returning users already get, no Continue click.
+          window.setTimeout(() => dismissLoader(loader), 1000);
           return true;
         };
 
