@@ -1,0 +1,43 @@
+/*
+ * Codex-clean Settings skin — component-shape overrides.
+ * ------------------------------------------------------
+ * Scoped to `.luca-settings-codex` (the Settings overlay root). Color, surface,
+ * border, and elevation are handled token-side by settingsCodexSkin.ts; this
+ * file only reshapes the two things tokens can't reach: pill radius and the
+ * remaining heavy button chrome.
+ *
+ * Pills → squared chips. A "pill" here is specifically a text chip: `rounded-full`
+ * co-occurring with a horizontal-padding utility (`px-*`). Fixed-size circular
+ * indicators (status dots `w-2 h-2 rounded-full`, avatars `w-14 h-14 …`, icon
+ * circles `p-2 rounded-full`) have no `px-*`, so they stay round by design.
+ * Specificity: two classes here beats Tailwind's single `.rounded-full`, so no
+ * !important is needed.
+ */
+
+.luca-settings-codex .rounded-full.px-1\.5,
+.luca-settings-codex .rounded-full.px-2,
+.luca-settings-codex .rounded-full.px-2\.5,
+.luca-settings-codex .rounded-full.px-3,
+.luca-settings-codex .rounded-full.px-3\.5,
+.luca-settings-codex .rounded-full.px-4 {
+  border-radius: 6px;
+}
+
+/*
+ * Buttons → quiet, flat, consistent. The button surface itself is already
+ * flattened by the control tokens (faint wash, no shadow); this squares any
+ * capsule-shaped action buttons to the same 6px and drops gradient/tinted
+ * fills that individual tabs applied inline over the token surface, so every
+ * control reads as one calm family. The primary Save CTA keeps its accent
+ * (it is control-active, addressed by the accent token, not matched here).
+ */
+.luca-settings-codex button.rounded-full {
+  border-radius: 6px;
+}
+
+/* Kill leftover per-tab gradient/glass fills on non-primary controls so the
+ * codex matte surface shows through uniformly. */
+.luca-settings-codex button[data-variant="secondary"],
+.luca-settings-codex button[data-variant="ghost"] {
+  background-image: none;
+}

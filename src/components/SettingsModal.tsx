@@ -24,6 +24,8 @@ import {
 } from "../styles/lucaMaterialSystem";
 
 // Import Refactored Tabs
+import { settingsCodexSkinVariables } from "./settings/settingsCodexSkin";
+import "./settings/settingsCodexSkin.css";
 import SettingsGeneralTab from "./settings/SettingsGeneralTab";
 import SettingsAppearanceTab from "./settings/SettingsAppearanceTab";
 import SettingsBrainTab from "./settings/SettingsBrainTab";
@@ -319,8 +321,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       data-luca-material-role="overlay"
       className={`fixed inset-0 flex items-center justify-center bg-black/60 ${
         isMobile ? "p-0" : "p-4"
-      } ${isLightSkin ? "luca-skin-light" : ""} font-sans select-none`}
-      style={{ ...skinMaterialVariables, ...lucaLayerStyle("modal") } as React.CSSProperties}
+      } ${isLightSkin ? "luca-skin-light" : ""} luca-settings-codex font-sans select-none`}
+      style={{ ...skinMaterialVariables, ...settingsCodexSkinVariables, ...lucaLayerStyle("modal") } as React.CSSProperties}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
