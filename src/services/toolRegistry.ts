@@ -250,6 +250,33 @@ export const TOOL_CONFIGS: Record<
   },
 };
 
+/**
+ * Per-category security FLOOR for tools that have no explicit TOOL_CONFIGS
+ * entry. An explicit entry always wins (in both directions); this only sets a
+ * minimum for tools that would otherwise silently register at LEVEL_0.
+ *
+ * Deliberately narrow. Only categories that are unambiguously sensitive AND are
+ * never the fallthrough default get a floor — a tool lands in one of these
+ * because its name or provider actually says "hacking / crypto / messaging",
+ * not by omission. SYSTEM is intentionally absent: the bulk registrar defaults
+ * every unmatched tool to SYSTEM (toolInitialization.ts), so it is a dumping
+ * ground rather than a danger signal, and its genuinely dangerous members
+ * (run_terminal, wipeMemory, update_luca_settings, ...) are already listed
+ * explicitly above. Flooring SYSTEM would train the operator to wave prompts
+ * through — the opposite of protection.
+ *
+ * The point is defense in depth: a new offensive-security, financial, or
+ * messaging tool can never reach the model ungated just because nobody
+ * remembered to add a TOOL_CONFIGS row for it.
+ */
+export const CATEGORY_SECURITY_FLOOR: Partial<
+  Record<ToolCategory, { level: SecurityLevel; scope: MissionScope }>
+> = {
+  HACKING: { level: SecurityLevel.LEVEL_2, scope: MissionScope.SYSTEM },
+  CRYPTO: { level: SecurityLevel.LEVEL_1, scope: MissionScope.FINANCE },
+  WHATSAPP: { level: SecurityLevel.LEVEL_1, scope: MissionScope.SOCIAL },
+};
+
 export const ToolRegistry = {
   register: (
     tool: FunctionDeclaration,
@@ -258,17 +285,18 @@ export const ToolRegistry = {
     handler?: (args: any, context: any) => Promise<string>,
   ) => {
     // 🏷️ DEFINE SECURITY LEVELS & MISSION SCOPES BY TOOL NAME
-    const securityConfig = tool.name
-      ? TOOL_CONFIGS[tool.name]
-      : {
-          level: SecurityLevel.LEVEL_0,
-          scope: MissionScope.NONE,
-          isConcurrencySafe: false,
-        };
+    // Precedence: explicit per-tool TOOL_CONFIGS wins; otherwise a dangerous
+    // category applies a floor (CATEGORY_SECURITY_FLOOR); otherwise LEVEL_0.
+    // `??` not `||` so an explicit LEVEL_0 (0) is honoured rather than falling
+    // through as falsy.
+    const securityConfig = tool.name ? TOOL_CONFIGS[tool.name] : undefined;
+    const categoryFloor = CATEGORY_SECURITY_FLOOR[category];
 
-    const securityLevel = securityConfig?.level || SecurityLevel.LEVEL_0;
-    const missionScope = securityConfig?.scope || MissionScope.NONE;
-    const isConcurrencySafe = securityConfig?.isConcurrencySafe || false;
+    const securityLevel =
+      securityConfig?.level ?? categoryFloor?.level ?? SecurityLevel.LEVEL_0;
+    const missionScope =
+      securityConfig?.scope ?? categoryFloor?.scope ?? MissionScope.NONE;
+    const isConcurrencySafe = securityConfig?.isConcurrencySafe ?? false;
     const skillSets = inferSkillSets(tool, category);
 
     const existing = registry.findIndex((t) => t.tool.name === tool.name);
