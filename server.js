@@ -179,7 +179,11 @@ app.use('/api', authMiddleware);
 // gate on the body keep honest semantics; callers that gate on HTTP 200 see
 // the server as reachable immediately (which it is).
 app.get('/api/health', (req, res) => {
-    const status = bootState.failed.length > 0
+    // Database health is published import-free by src/services/db.js so reading it
+    // here never pulls DB initialization onto this fast-listen path. A degraded
+    // database (writes being silently lost) must not report as fully healthy.
+    const database = globalThis.__LUCA_DB_STATUS || { ok: null, degraded: false, mock: null };
+    const status = (bootState.failed.length > 0 || database.degraded)
         ? 'degraded'
         : bootState.phase === 'ready'
             ? 'ok'
@@ -191,6 +195,7 @@ app.get('/api/health', (req, res) => {
         // Identity, not just liveness: a caller can confirm it reached THIS
         // core (pid + port) rather than a leftover process on the same address.
         instance: { pid: process.pid, port: bootState.port },
+        database,
         boot: {
             phase: bootState.phase,
             coreGroupsMounted: bootState.coreGroupsMounted,

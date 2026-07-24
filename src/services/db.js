@@ -97,6 +97,10 @@ if (isNode || isElectron) {
             database.exec(`CREATE TABLE IF NOT EXISTS pentest_findings (id TEXT PRIMARY KEY, session_id TEXT NOT NULL, vulnerability_type TEXT, severity TEXT, confidence REAL, sink_path TEXT, proof_of_concept TEXT, evidence_json TEXT, status TEXT DEFAULT 'potential', created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000), FOREIGN KEY(session_id) REFERENCES pentest_sessions(id))`);
         };
         initSchema(db);
+        // Publish a cheap, import-free status signal so /api/health can report
+        // database health without importing (and thereby initializing) this
+        // module on the fast-listen boot path.
+        globalThis.__LUCA_DB_STATUS = { ok: true, degraded: false, mock: false, error: null };
     } catch (e) {
         dbDegraded = true;
         dbInitError = e;
@@ -148,6 +152,16 @@ if (!db) {
             all: () => []
         }),
         pragma: () => {}
+    };
+
+    // Import-free status signal for /api/health. `degraded: true` means a real
+    // database was expected and is missing (writes are being lost); a quiet
+    // browser mock reports degraded: false.
+    globalThis.__LUCA_DB_STATUS = {
+        ok: !dbDegraded,
+        degraded: dbDegraded,
+        mock: true,
+        error: db.__initError,
     };
 }
 
