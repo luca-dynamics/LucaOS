@@ -4,6 +4,7 @@
  */
 
 import { channelSessionRouter } from "./channelSessionRouter.js";
+import { isDiscordUserAllowed } from "./auth.js";
 
 export class DiscordBotGateway {
   constructor() {
@@ -34,9 +35,16 @@ export class DiscordBotGateway {
 
     const channelId = String(event.channel_id || event.channelId || "default");
     const command = event.data?.name || event.command || "";
-    const user = event.member?.user?.username || event.user || "DiscordUser";
+    const user = event.member?.user?.username || event.user?.username || event.user || "DiscordUser";
+    const userId = event.member?.user?.id || event.user?.id || null;
 
-    console.log(`[DISCORD_GATEWAY] Interaction received from ${user} (${channelId}): command="${command}"`);
+    // Only act on interactions from allowlisted users. Empty allowlist => deny all.
+    if (!isDiscordUserAllowed(userId)) {
+      console.warn(`[DISCORD_GATEWAY] Dropped interaction from non-allowlisted user ${userId}`);
+      return null;
+    }
+
+    console.log(`[DISCORD_GATEWAY] Interaction received from ${user} (${channelId})`);
 
     let targetDeviceId = null;
     if (this.devicesMap) {
