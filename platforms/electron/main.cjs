@@ -107,8 +107,8 @@ function loadWindowState() {
             // Invalid restore: open as a medium window, centered in the work
             // area of the display the user last used (not necessarily primary).
             console.log('[MAIN] Saved window bounds are off-screen or oversized. Recentering at medium size.');
-            const mw = Math.min(1152, wa.width - 40);
-            const mh = Math.min(760, wa.height - 40);
+            const mw = Math.min(800, wa.width - 40);
+            const mh = Math.min(600, wa.height - 40);
             return {
                 width: mw,
                 height: mh,
@@ -123,8 +123,8 @@ function loadWindowState() {
     // but be explicit so the first reveal is deterministic).
     try {
         const wa = screen.getPrimaryDisplay().workArea;
-        const mw = Math.min(1152, wa.width - 40);
-        const mh = Math.min(760, wa.height - 40);
+        const mw = Math.min(800, wa.width - 40);
+        const mh = Math.min(600, wa.height - 40);
         return {
             width: mw,
             height: mh,
@@ -644,33 +644,33 @@ function createWindow() {
     // Load saved bounds
     const savedBounds = loadWindowState();
 
+    // Glass (a transparent host window, so the Appearance opacity/blur sliders
+    // can dissolve LucaOS over the desktop) only where it composites correctly.
+    //
+    // On WINDOWS a transparent frameless window is broken: under fractional
+    // display scaling (125/150/200%) the compositor renders the web contents
+    // into only a FRACTION of the frame — the "half-screen / compressed" window
+    // — and such windows also fail to maximize. So Windows stays OPAQUE by
+    // default (correct sizing guaranteed) and glass is strictly opt-in via
+    // LUCA_GLASS=1 for anyone who wants to try it on a machine where it behaves.
+    // macOS composites transparency correctly, so it keeps glass by default.
+    // LUCA_OPAQUE_WINDOW=1 forces opaque everywhere. Transparency is fixed at
+    // construction in Electron, so this cannot be toggled at runtime.
+    const wantGlass =
+        process.env.LUCA_OPAQUE_WINDOW !== '1' &&
+        (process.platform === 'darwin' || process.env.LUCA_GLASS === '1');
+
     mainWindow = new BrowserWindow({
         width: savedBounds.width,
         height: savedBounds.height,
         x: savedBounds.x,
         y: savedBounds.y,
         show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
-        // The Appearance sliders (background opacity/blur) are meant to turn
-        // LucaOS into liquid glass over the user's desktop. The renderer half
-        // has always been built for it: the desktop-native policy sets the root
-        // background to `transparent` and LiquidBackground fades itself out as
-        // opacity rises (see lucaPlatformBackgroundPolicy.ts, which says in as
-        // many words that it is waiting for "the host window configured for
-        // transparency/glass"). Nobody ever configured the host window, so the
-        // sliders uncovered this opaque backgroundColor instead of the desktop
-        // and the feature looked broken.
-        //
-        // The opaque colour was added to stop an unpainted frame flashing black
-        // during boot. That job now belongs to `show: false` — the window is
-        // revealed only on 'renderer-ready' (see launchInterface) — so it is no
-        // longer paying for itself. A fully transparent backgroundColor is
-        // required as well: a solid one paints over the transparency.
-        //
-        // LUCA_OPAQUE_WINDOW=1 restores the old behaviour if a machine's
-        // compositor misbehaves; transparency is construction-time only in
-        // Electron, so it cannot be toggled at runtime.
-        backgroundColor: process.env.LUCA_OPAQUE_WINDOW === '1' ? '#e2edf2' : '#00000000',
-        transparent: process.env.LUCA_OPAQUE_WINDOW !== '1',
+        // Opaque glacier base (matching the boot surfaces) when not glass, so any
+        // unpainted frame during boot shows light, not black; fully transparent
+        // when glass, since a solid colour would paint over the transparency.
+        backgroundColor: wantGlass ? '#00000000' : '#e2edf2',
+        transparent: wantGlass,
         frame: process.platform === 'win32' ? false : true,
         autoHideMenuBar: true,
         // Premium window chrome: no native titlebar. Per platform:
@@ -728,8 +728,23 @@ function createWindow() {
     console.log(`[MAIN] Loading Window URL: ${startUrl}`);
     mainWindow.loadURL(startUrl);
 
-    // Open the DevTools (Commented - Use Cmd+Option+I to open manually)
-    // mainWindow.webContents.openDevTools();
+    // DevTools toggle for development. autoHideMenuBar hides the menu that
+    // normally carries the default accelerator, and no global shortcut was
+    // registered, so DevTools had no way to open despite being enabled. F12
+    // (and Ctrl/Cmd+Shift+I) toggle it. Dev only — packaged builds stay closed.
+    if (!app.isPackaged) {
+        mainWindow.webContents.on('before-input-event', (event, input) => {
+            if (input.type !== 'keyDown') return;
+            const key = (input.key || '').toLowerCase();
+            const isToggle =
+                key === 'f12' ||
+                ((input.control || input.meta) && input.shift && key === 'i');
+            if (isToggle) {
+                mainWindow.webContents.toggleDevTools();
+                event.preventDefault();
+            }
+        });
+    }
 
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
         console.error('Failed to load:', errorCode, errorDescription);
