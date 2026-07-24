@@ -7,6 +7,15 @@ English.
 
 If you introduce a new load-bearing term, define it here in the same PR.
 
+> **Naming policy.** The Foundation uses generic, code-portable terms as primary
+> (Runtime, Router, Memory, the permission gate, Surface). LucaOS's product and
+> source use native names for the same subsystems (Luca Guard, Mission Engine,
+> Memory Vault, LucaLink, Skills Runtime). The [Crosswalk](CROSSWALK.md) maps
+> every generic term to its native name and the real code, and resolves the four
+> terms that collide across the two doc sets (Cortex, Embodiment, Skill, Surface).
+> Consult it whenever a term here differs from what the code or the older `docs/`
+> call the same thing.
+
 ---
 
 ### Luca

@@ -33,3 +33,22 @@ The initial production-grade Foundation, expanded from `LucaOS_Foundation_Brief_
   `CLAUDE.md` convention, distinct from the charter for the agents that build LucaOS.
 
 Nothing in v1.0 contradicts the source brief; it makes the brief implementable.
+
+## Unreleased — reconciliation with the established docs
+
+The v1.0 Foundation was authored from the source brief without reconciling against
+the ~213 pre-existing LucaOS documents (`docs/`, `ops/docs/`, `research/docs/`) or
+the codebase, which already carried a terser foundation and the product's native
+vocabulary. A four-way audit produced [RECONCILIATION.md](RECONCILIATION.md).
+
+- **Phase 1 (this change): map + crosswalk.** Added [RECONCILIATION.md](RECONCILIATION.md)
+  (the plan of record) and [CROSSWALK.md](CROSSWALK.md), which keeps the
+  Foundation's generic terms as primary and bridges them to the native subsystem
+  names (Luca Guard, Mission Engine, Mission Tape, Memory Vault, LucaLink, Skills
+  Runtime, Embodiment Layer) and the real code, and resolves the four colliding
+  terms (Cortex, Embodiment, Skill, Surface).
+- Later phases (planned): absorb the missed doctrine (Mission Doctrine, operating
+  modes Creator/Pro/Basic, guarded self-evolution, the fuller Luca Guard and
+  LucaLink models); reconcile the design system to the shipped design language
+  (real `--luca-*` tokens, the skin system, liquid-glass, the presence orb/face);
+  correct the current-state claims flagged in the map; and record the pruning ADRs.
