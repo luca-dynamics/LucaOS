@@ -251,6 +251,65 @@ export async function dispatchInlineTools(
       }
     }
 
+    if (name === "proofreadText") {
+      // LUCA LINK ROUTING: If on mobile, delegate to desktop
+      const isMobile =
+        context.currentDeviceType === "mobile" ||
+        context.currentDeviceType === "tablet";
+
+      if (isMobile && context.lucaLinkManager) {
+        try {
+          console.log(
+            "[proofreadText] Mobile device detected, routing to desktop via Luca Link...",
+          );
+
+          const availableDevices = Array.from(
+            (context.lucaLinkManager as any).devices?.values() || [],
+          ).map((d: any) => ({
+            type: d.type,
+            deviceId: d.deviceId,
+            name: d.name,
+          }));
+
+          const desktopDevice = availableDevices.find(
+            (d: any) => d.type === "desktop",
+          );
+
+          if (desktopDevice) {
+            const result = await (context.lucaLinkManager as any).delegateTool(
+              desktopDevice.deviceId,
+              "proofreadText",
+              args,
+            );
+
+            return (
+              result?.result ||
+              `PROOFREAD COMPLETE (via ${desktopDevice.name}):\n${result}`
+            );
+          } else {
+            console.warn(
+              "[proofreadText] No desktop device found, falling back to Gemini",
+            );
+          }
+        } catch (lucaLinkError) {
+          console.warn(
+            "[proofreadText] Luca Link delegation failed:",
+            lucaLinkError,
+          );
+        }
+      }
+
+      // GEMINI FALLBACK: Original implementation
+      if (context.lucaService) {
+        const result = await context.lucaService.proofreadText(
+          args.text,
+          args.style,
+        );
+        return `PROOFREAD RESULT:\n${result}`;
+      }
+      return "Proofreading unavailable.";
+    }
+
     return null;
 }
 
