@@ -101,7 +101,14 @@ cannot see. Those two rules are [Invariant 4](../01-constitution/01-the-eight-in
 and [Invariant 1](../01-constitution/01-the-eight-invariants.md#invariant-1--one-luca-identity)
 drawn as arrows.
 
-## The twelve chapters
+> **Naming note.** This section uses generic, code-portable terms as primary
+> (Runtime, Router, the permission gate, Surface) and bridges them to LucaOS's
+> native subsystem names via the [Crosswalk](../CROSSWALK.md) — e.g. the permission
+> gate is **Luca Guard**, mission orchestration is the **Mission Engine**, the
+> Archive's editable face is the **Memory Vault**. Consult the Crosswalk when a
+> term here differs from what the code or the older `docs/` call the same thing.
+
+## The chapters
 
 | # | Chapter | In one line |
 |---|---|---|
@@ -117,12 +124,19 @@ drawn as arrows.
 | 09 | [Continuity and Sync](09-continuity-and-sync.md) | Keeping identity, memory, and in-flight work coherent across devices and restarts (Luca Link). |
 | 10 | [Data and Storage](10-data-and-storage.md) | Persistence: `node:sqlite`, schema evolution, migrations, and backward compatibility. |
 | 11 | [Observability and Provenance](11-observability-and-provenance.md) | Making Luca's actions auditable: provenance lineage, logging, and inspection. |
+| 12 | [Mission Engine](12-mission-engine.md) | The deterministic mission discipline above the turn loop: plan → execute → verify → recover → record, and the Mission Tape. |
+| 13 | [Operating Modes](13-operating-modes.md) | Experience tiers Creator / Pro / Basic: density, disclosure, and the source-authority tier that gates elevated actions. |
+| 14 | [Guarded Evolution](14-guarded-evolution.md) | Self-improvement bounded to Creator/Origin workflows — sandboxed, verified, reversible; no autonomous public mutation. |
+| 15 | [Embodiment Layer](15-embodiment-layer.md) | The actuation tier (distinct from display Surfaces): Direct Host / Sandbox Body / Ghost Browser / Remote Delegation, sandbox-by-default for risk. |
 
 Start with [System Overview](00-system-overview.md); it frames every chapter that
 follows. Chapters 01–03 describe the persistent core (Runtime, Identity, Memory)
 and are the ones most PRs touch. Chapters 04–08 describe the layers around the core.
 Chapters 09–11 describe the cross-cutting concerns — continuity, storage, and
-provenance — that every subsystem participates in.
+provenance. Chapters 12–15 add the mission discipline, the operating-mode tiers,
+the guarded-evolution boundary, and the actuation Embodiment Layer — subsystems
+carried over from LucaOS's established doctrine during reconciliation (see the
+[Reconciliation Map](../RECONCILIATION.md)).
 
 ## Reading the honesty markers
 

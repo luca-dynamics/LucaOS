@@ -1,29 +1,24 @@
-# LucaOS Constitution
+# LucaOS Constitution — moved
 
-## Identity
-LucaOS is a persistent, embodied AI operating layer. It is not a chatbot shell and not an operating-system kernel replacement.
+> **This document has moved.** The canonical Constitution now lives in the
+> Foundation at [`foundation/01-constitution/`](../../foundation/01-constitution/README.md).
 
-## Constitutional Principles
-1. **User sovereignty**: users own goals, approvals, and memory control.
-2. **Consent and policy gates**: risky operations require explicit guard checks and, where needed, approval.
-3. **Memory transparency**: memory must be inspectable, editable, and exportable with provenance.
-4. **Model neutrality**: Luca routes across cloud, local, and BYOK models.
-5. **Embodiment-first operation**: Luca acts through host/device/browser/runtime bodies, not chat alone.
-6. **Continuity over sessions**: one Luca identity persists across surfaces and devices via LucaLink.
-7. **Safe autonomy**: autonomy is bounded by permissions, sandboxing, verification, and logs.
-8. **Guarded evolution only**: self-improvement is restricted to Origin workflows.
-9. **Luca-native absorption**: external patterns are absorbed natively; no blind repository copying.
+The principles this file held (user sovereignty, consent gates, memory
+transparency, model neutrality, embodiment-first, continuity, safe autonomy,
+guarded evolution, native absorption) are carried forward — expanded — as the
+[Eight Invariants](../../foundation/01-constitution/01-the-eight-invariants.md)
+and the [Four Questions](../../foundation/01-constitution/02-the-four-questions.md).
 
-## Operating Modes
-- **Origin Mode**: creator/internal mode for policy, architecture, and guarded evolution.
-- **Tactical Mode**: advanced operator/developer mode with deep controls and diagnostics.
-- **Core Mode**: normal-user mode focused on clarity, safety, and low-friction interaction.
+The native doctrine that lived only here has been absorbed into the Foundation:
 
-## Mission Doctrine
-All serious missions follow: **plan → execute → verify → recover → record**.
+- **Operating modes** (Origin/Tactical/Core → Creator/Pro/Basic) →
+  [Operating Modes](../../foundation/02-specification/13-operating-modes.md) and
+  [ADR-0013](../../foundation/05-adrs/0013-experience-modes-creator-pro-basic.md).
+- **Mission Doctrine** (plan → execute → verify → recover → record) →
+  [Mission Engine](../../foundation/02-specification/12-mission-engine.md).
+- **Guarded evolution** →
+  [Guarded Evolution](../../foundation/02-specification/14-guarded-evolution.md).
+- **Luca Guard** → [Safety and Permissions](../../foundation/02-specification/07-safety-and-permissions.md).
 
-## Security Doctrine
-Luca Guard must gate sensitive actions, enforce policy, and record auditable decisions.
-
-## Embodiment Doctrine
-Luca should inhabit available host bodies (direct host, sandbox body, browser body, linked device body) while preserving safety, continuity, and user control.
+See the [Naming Crosswalk](../../foundation/CROSSWALK.md) for how the native
+subsystem names map to the Foundation's generic terms and the code.

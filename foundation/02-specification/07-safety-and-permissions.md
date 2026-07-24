@@ -15,6 +15,35 @@ principle is simple and absolute — **a present, capable AI that can act in you
 world is only acceptable if every such action is authorized, attributable, and
 reversible.**
 
+## The subsystem: Luca Guard
+
+In the product and the source, the generic "permission gate" this chapter
+specifies is one part of a named subsystem: **Luca Guard** (crosswalk: generic
+[permission gate / safety layer](../CROSSWALK.md#subsystem-crosswalk) ↔ Luca
+Guard, code `src/services/lucaGuard/`). Luca Guard is the policy-enforcement layer
+that governs risky embodied actions, permissions, and trust across local and
+[linked](09-continuity-and-sync.md) devices. The operator-resolved gate, the
+category floors, and the destructive-command backstop described below are the
+Foundation's account of its core; this section names the fuller model the code and
+the Guard spec carry so the two vocabularies line up.
+
+Luca Guard reasons along three dimensions that the rest of this chapter then makes
+concrete:
+
+- **Intrinsic risk classes** — how dangerous the action _is_, independent of who
+  asks: `safe`, `sensitive`, `dangerous`.
+- **Asset trust tiers** — how trusted the _thing being run_ is (a skill, an MCP
+  server, an adapter): Trusted, Verified, Untrusted.
+- **Three enforcement phases** — pre-execution policy and risk scoring,
+  in-execution sandbox boundaries and anomaly detection, and post-execution audit
+  persistence.
+
+The Foundation's existing strengths — transcript-is-never-authority, the
+unconditional gate, category security floors, and behavior-inspecting destructive
+detection — are not a different model. They **strengthen** this one: they close the
+specific holes (an injectable bypass, coverage-by-omission, a name-matching
+"check") that a policy layer is most likely to leak through.
+
 ## Consent is a decision, not a string
 
 The single most important rule in this chapter is where authorization comes from.
@@ -221,6 +250,99 @@ authority can be traced is an action whose authority can be _withdrawn_; the
 [Observability and Provenance](11-observability-and-provenance.md) chapter details
 how the lineage is recorded and surfaced.
 
+## Risk classes and asset trust tiers
+
+The `SecurityLevel × MissionScope` model above answers "how hard to check, within
+what authority." Luca Guard adds two orthogonal axes that the fuller model needs.
+
+**Risk classes** are intrinsic to the action. Independent of who requests it or
+what invokes it, an action carries a risk class:
+
+| Risk class | Meaning | Consequence |
+|---|---|---|
+| `safe` | No side effect of concern; read-only or trivially reversible. | Runs freely, like `LEVEL_0`. |
+| `sensitive` | A real side effect the user should approve — a message send, a memory write, a settings change. | Requires an approval gate. |
+| `dangerous` | Catastrophic if wrong — shell execution, code modification, fund movement, mass deletion. | Requires strong approval _and_ sandbox/behavioral scrutiny. |
+
+Risk class and SecurityLevel are complementary, not redundant: SecurityLevel says
+how strong the operator's confirmation must be; risk class says how much of the
+_rest_ of the machinery (sandboxing, anomaly detection, behavioral inspection)
+must engage. A `dangerous` action is exactly where the destructive-command
+backstop and sandbox enforcement earn their place.
+
+**Asset trust tiers** are intrinsic to the _thing being run_ — a
+[Skill](05-capability-and-tool-layer.md#the-skills-runtime), an MCP server, an
+imported plugin, an external adapter — not to the action:
+
+| Trust tier | What it is | Default posture |
+|---|---|---|
+| **Trusted** | Creator/internal assets, first-party code. | Elevated policy allowances. |
+| **Verified** | Signed, policy-compliant external assets. | Normal gated execution. |
+| **Untrusted** | Unsigned or unknown assets. | Sandbox-only, constrained permissions. |
+
+The two axes multiply: a `dangerous` action requested by an Untrusted asset is the
+most heavily constrained combination in the system, and an Untrusted asset can
+never reach a Trusted asset's allowances by asking. Least privilege is the
+default in both directions.
+
+## Signature and trust verification for skills, MCP, and adapters
+
+Because an [external MCP server or an imported Skill](05-capability-and-tool-layer.md#sandboxing-and-trust-tier-gating-for-third-party-skills-and-mcp)
+can contribute capabilities into Luca's registry, Luca Guard verifies the
+_provenance of the asset itself_ before those capabilities are trusted. A skill,
+plugin, or adapter is placed into an asset trust tier by a **signature/trust
+check**: a signed, policy-compliant asset can reach Verified; an unsigned or
+unknown one stays Untrusted and therefore sandbox-only. This is what stops a
+third-party source from smuggling in an ungated capability — the gate is applied
+by contract, signature, and trust tier at registration, not by trusting the
+source's word about what it does.
+
+## Sandbox enforcement
+
+For `dangerous` actions and Untrusted assets, an approval gate is necessary but
+not sufficient: the operator can authorize an action whose _behavior_ still needs
+to be bounded. Luca Guard enforces a **sandbox boundary** for high-risk or
+untrusted execution — constrained filesystem, network, and device access — so that
+even an authorized-but-untrusted skill runs against a bounded environment rather
+than the live Host. This is the safety counterpart of the
+[Embodiment Layer's](../CROSSWALK.md#term-collision-resolutions) rule that risky
+work defaults to a Sandbox Body rather than Direct Host, and it is why the Skills
+Runtime sandboxes sensitive and untrusted skills by default.
+
+## The three phases of the gate
+
+The pieces above compose into a **three-phase** enforcement model. The
+operator-resolved gate is the pre-execution phase; two further phases bracket the
+execution itself.
+
+| Phase | When | What Luca Guard does |
+|---|---|---|
+| **Pre-execution** | Before the handler runs | Policy check + **risk scoring**: resolve SecurityLevel/MissionScope, risk class, and asset trust tier; run the permission gate; verify signatures. |
+| **In-execution** | While the handler runs | **Sandbox boundaries** for high-risk/untrusted work + **anomaly detection** — watch for behavior that diverges from what was authorized. |
+| **Post-execution** | After the handler returns | **Audit persistence** — record the decision and the action's [Provenance](11-observability-and-provenance.md) durably, plus optional memory classification of the outcome. |
+
+```mermaid
+flowchart LR
+  subgraph Pre["Pre-execution"]
+    P1["Policy check + risk scoring<br/>(level · scope · risk class · trust tier)"]
+    P2["Permission gate<br/>+ signature verification"]
+  end
+  subgraph In["In-execution"]
+    I1["Sandbox boundaries<br/>(high-risk / untrusted)"]
+    I2["Anomaly detection"]
+  end
+  subgraph Post["Post-execution"]
+    O1["Audit persistence<br/>+ provenance"]
+  end
+  P1 --> P2 --> I1 --> I2 --> O1
+```
+
+The Foundation's fail-closed rule governs every arrow: a phase that cannot run its
+check — an unreachable gate, a sandbox that will not start, an audit sink that will
+not persist — refuses rather than proceeds. The permission gate is only the
+pre-execution decision; Luca Guard's guarantee is that the two phases around it
+hold as well.
+
 ## The complete gated call
 
 Putting the pieces in order, a side-effecting Tool call passes through this path,
@@ -249,7 +371,8 @@ refusal, not in a silent yes.
 
 - [Invariant 8 — Security and Explicit Permissions](../01-constitution/01-the-eight-invariants.md#invariant-8--security-and-explicit-permissions)
 - [Trust and Permissions](../01-constitution/04-trust-and-permissions.md) — the constitutional basis
-- [Capability and Tool Layer](05-capability-and-tool-layer.md) — what registers the SecurityLevel and MissionScope
+- [Capability and Tool Layer](05-capability-and-tool-layer.md) — what registers the SecurityLevel and MissionScope, and the Skills Runtime this Guard model gates
+- [Crosswalk — Luca Guard](../CROSSWALK.md#subsystem-crosswalk) — the generic permission gate ↔ Luca Guard mapping and code path
 - [Observability and Provenance](11-observability-and-provenance.md) — how lineage is recorded and surfaced
 - [Memory Architecture](03-memory-architecture.md) — why transcript text is never an authorization channel
 - [CLAUDE.md — Safety and permissions](../CLAUDE.md) — the operating rules for contributors

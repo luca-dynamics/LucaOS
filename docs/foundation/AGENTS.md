@@ -1,27 +1,15 @@
-# LucaOS Agent Engineering Doctrine
+# LucaOS Agent Doctrine — moved
 
-## Mandatory Read Order Before Major Changes
-1. `docs/foundation/AGENTS.md`
-2. `docs/foundation/CONSTITUTION.md`
-3. `docs/foundation/ARCHITECTURE.md`
-4. `docs/absorb/Luca_Absorb_Architecture_v12.md`
+> **This document has moved.** Agent instructions are now canonical in the
+> Foundation:
+>
+> - Claude Code agents → [`foundation/CLAUDE.md`](../../foundation/CLAUDE.md)
+>   (and the repository-root `CLAUDE.md`).
+> - Codex and other agents → [`foundation/AGENTS.md`](../../foundation/AGENTS.md).
 
-## Core Instructions
-- LucaOS is a persistent embodied AI operating layer, not a chatbot.
-- Do not refactor runtime behavior unless explicitly requested.
-- Use existing LucaOS code patterns as source of truth.
-- Do not blindly copy external repos; absorb patterns natively.
-
-## Runtime Safety Rules
-- Route risky actions through Luca Guard policy checks.
-- Respect mode boundaries (Origin/Tactical/Core).
-- Keep self-evolution in guarded Origin workflows only.
-
-## Implementation Standards
-- Mission workflow standard: plan → execute → verify → recover → record.
-- Add/maintain testable acceptance criteria when defining specs.
-- Preserve backward-compatible terminology and clear subsystem boundaries.
-
-## Documentation Standards
-- When adding/changing architecture behavior, update the relevant spec under `docs/`.
-- Keep glossary terms canonical and consistent across docs/UI/code.
+The mandatory read order this file defined is superseded by the Foundation's:
+[CLAUDE.md](../../foundation/CLAUDE.md) → the
+[Eight Invariants](../../foundation/01-constitution/01-the-eight-invariants.md) →
+the [Four Questions](../../foundation/01-constitution/02-the-four-questions.md).
+When working on Luca's own runtime behavior, read the
+[Charter of Luca](../../foundation/LUCA.md).

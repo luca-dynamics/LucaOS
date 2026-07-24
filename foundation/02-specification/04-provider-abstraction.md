@@ -167,7 +167,19 @@ lives in the Router, not scattered through feature code.
 ## The Router
 
 The [Router](../GLOSSARY.md) decides which Provider and model perform a given
-task. In LucaOS today it has two layers, and honesty about the split matters.
+task. In native terms this is the **Model Router**; the [Crosswalk](../CROSSWALK.md)
+maps the generic "Router" to it. In LucaOS today it has two layers, and honesty about
+the split matters.
+
+> **Current-state honesty.** "Model Router," singular, is the target, not the shipped
+> shape. Routing is fragmented across three modules of unequal standing:
+> `ModelManagerService` is the real hub (roughly 25 importers across the codebase),
+> while `ModelRouterService` and `CapabilityRouter` are near-orphans that carry
+> hardcoded placeholder model IDs and are wired into little. The single, authoritative
+> Model Router this chapter describes is the direction of travel; consolidating the
+> three onto one is [Roadmap](../06-roadmap/README.md) work. The two-layer split below
+> (operative prefix router vs. shadow planner) is orthogonal to this fragmentation and
+> both are true at once.
 
 ### The operative router: model-name-prefix routing
 

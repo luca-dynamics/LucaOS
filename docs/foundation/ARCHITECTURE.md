@@ -1,42 +1,17 @@
-# LucaOS Architecture (Foundational)
+# LucaOS Architecture — moved
 
-## System Thesis
-Frontier/local/BYOK models are intelligence engines; LucaOS is the persistent operating runtime embodied across host devices.
+> **This document has moved.** The canonical architecture now lives in the
+> Foundation Specification at
+> [`foundation/02-specification/`](../../foundation/02-specification/README.md).
 
-## Layer Map
-```text
-User
-↓
-Interface Layer (Dashboard, VoiceHUD, Hologram, Mini Chat, Luca Screen, Widgets)
-↓
-Cortex (intent, planning, reasoning, routing)
-↓
-Mission Engine (plan → execute → verify → recover → record)
-↓
-Memory / Skills / Model Router / Luca Guard
-↓
-Embodiment Layer (host controls, browser body, mobile/desktop bridges, sandbox bodies)
-↓
-Host Systems (macOS, Linux, Windows, Mobile, future robotics)
-↓
-LucaLink Continuity (sync, delegation, handoff)
-```
+The layer map and subsystems this file sketched are expanded across the
+Specification's chapters. The native subsystem names map to the Foundation's
+generic terms through the [Naming Crosswalk](../../foundation/CROSSWALK.md):
 
-## Boot and Runtime Initialization
-1. Boot/startup initializes runtime subsystems.
-2. Onboarding gathers identity + mode + model/runtime preferences.
-3. Model path chosen (Luca Prime, Local, BYOK), with provisioning checks.
-4. Persistent surfaces come online with shared state.
-
-## Major Subsystems
-- **Mission Engine**: deterministic execution discipline with checkpoints and recovery.
-- **Memory**: readable + structured memory with sync and attribution.
-- **Model Router**: task/privacy/cost/latency-aware routing.
-- **Skills Runtime**: MCP/plugins/imported skills with policy-gated execution.
-- **Luca Guard**: permissions, risk classification, approvals, and audit trail.
-- **LucaLink**: multi-device continuity and mission handoff.
-
-## Architectural Rules
-- Do not treat Luca as a chat-only assistant.
-- Prefer guarded composition over direct mutation.
-- External patterns are absorbed into Luca-native modules and naming.
+- **Cortex** → [System Overview](../../foundation/02-specification/00-system-overview.md) and [Cortex and Local Intelligence](../../foundation/02-specification/08-cortex-and-local-intelligence.md)
+- **Mission Engine** → [Mission Engine](../../foundation/02-specification/12-mission-engine.md)
+- **Model Router** → [Provider Abstraction](../../foundation/02-specification/04-provider-abstraction.md)
+- **Luca Guard** → [Safety and Permissions](../../foundation/02-specification/07-safety-and-permissions.md)
+- **Skills Runtime** → [Capability and Tool Layer](../../foundation/02-specification/05-capability-and-tool-layer.md)
+- **Embodiment Layer** → [Embodiment Layer](../../foundation/02-specification/15-embodiment-layer.md)
+- **LucaLink** → [Continuity and Sync](../../foundation/02-specification/09-continuity-and-sync.md)

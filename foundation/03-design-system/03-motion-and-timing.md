@@ -78,20 +78,69 @@ Concretely:
 
 ---
 
+## The Fluid Interaction Standard
+
+Settling character governs how autonomous motion _looks_. It does not by itself say
+how motion should behave under the user's hand. The shipped
+**[Luca Fluid Interaction Standard](../../docs/design/LUCA_FLUID_INTERACTION_STANDARD.md)**
+supplies that, and this chapter defers to it for interactive motion. Three of its
+principles are load-bearing and were under-specified here:
+
+- **Direct manipulation.** When the user drags a surface, it tracks the pointer
+  continuously — the content stays under the finger or cursor, not lagging behind a
+  scripted tween. Visual feedback begins **on press**, not after the click resolves.
+- **Interruptibility.** User input can redirect motion _mid-animation_. A panel still
+  settling can be grabbed and thrown the other way; the user never has to wait for a
+  previous animation to finish before acting. This is the interactive form of
+  deference — the user's intent outranks the animation's completion.
+- **Spatial continuity.** Surfaces arrive from, and return toward, their source or an
+  established edge. A sheet enters and leaves through the same edge; a popover scales
+  from the control that opened it. Motion answers "where did this come from and where
+  did it go," reinforcing orientation rather than teleporting.
+
+These extend, not replace, the settling character: default physics is critically
+damped, and **bounce is reserved for momentum the user created** — never for
+autonomous UI. Under reduced motion, spatial travel and scaling are removed while
+state feedback is preserved (see [the reduce-motion commitment](#the-reduce-motion-commitment)).
+
+### Two motion modules
+
+The shipped system splits motion into two contracts, and components consume these
+shared contracts rather than inventing local springs:
+
+| Module | Owns | Character |
+|---|---|---|
+| `lucaPresenceMotion.ts` | Luca's **ambient, embodied cadence** — the presence orb and attending state | Slow, low-amplitude, autonomous; never bounces |
+| `lucaFluidMotion.ts` | Physics for **user-manipulated** surfaces and controls | Direct, interruptible, spatially continuous; may carry user-created momentum |
+
+The split matters for honesty: presence motion is Luca's own quiet cadence and must
+stay calm and non-performative, while fluid motion answers the user's hand and may be
+more physical because the energy came from the user, not from Luca performing
+aliveness. `lucaMaterialSystem.ts` owns the material appearance and host policies both
+consume. (`FloatingPanel` is the first migrated surface; the Chat composer Add menu
+and the mobile composer sheet are the first production popover/sheet migrations.)
+
+---
+
 ## Duration and easing guidance
 
 Calm motion is **short**. Long animations make the user wait and call attention to
 themselves; the goal is motion the user feels but does not have to sit through. The
-durations below are illustrative (the canonical values live in the
-[token package](02-design-tokens.md#motion-tokens)) and express the intended
-character.
+durations below are the **real shipped values** — micro 120ms, standard 200ms, panel
+280ms — from [`docs/design/lucaos-visual-design-system.md`](../../docs/design/lucaos-visual-design-system.md),
+carried as the [motion tokens](02-design-tokens.md#motion-tokens). This chapter uses
+that one set rather than minting a second.
 
-| Purpose | Illustrative duration | Easing | Notes |
+| Purpose | Duration | Easing | Notes |
 |---|---|---|---|
-| Feedback (press, toggle) | `80–140ms` | decelerate | Must feel instant; the user should not perceive lag |
-| Standard transition (panel, dialog, view) | `220ms` | decelerate (`0.2, 0, 0, 1`) | The default; enters settle into place |
-| Larger surface change | `320ms` | gentle both-ends | Slower because more is moving; still brisk |
+| Feedback (press, toggle) | `micro` — 120ms | decelerate | Must feel instant; the user should not perceive lag |
+| Standard transition (control, dialog, view) | `standard` — 200ms | decelerate (`0.2, 0, 0, 1`) | The default; enters settle into place |
+| Larger surface change (panel) | `panel` — 280ms | gentle both-ends | Slower because more is moving; still brisk |
 | Presence "attending" | slow, low-amplitude, looping | gentle | Calm and subtle — communicates working, never anxiety |
+
+(A pressable-shell/Voice press response of ~140ms `scale(0.97)` is documented in the
+[liquid-glass material](../../docs/design/luca-liquid-glass-material.md) as the tuned
+control-press value; it collapses under reduced motion like everything else.)
 
 Guidance:
 
@@ -185,3 +234,4 @@ non-motion means.
 - [Design Tokens](02-design-tokens.md#motion-tokens) — the duration and easing tokens
 - [Presence and Embodiment](01-presence-and-embodiment.md) — motion as an identity constant
 - [Accessibility](06-accessibility.md) — the reduce-motion commitment in full
+- Shipped source of truth: [Luca Fluid Interaction Standard](../../docs/design/LUCA_FLUID_INTERACTION_STANDARD.md) (`lucaPresenceMotion` / `lucaFluidMotion`) · [LucaOS Visual Design System](../../docs/design/lucaos-visual-design-system.md) (motion durations)

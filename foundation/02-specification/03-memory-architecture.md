@@ -51,6 +51,20 @@ The tiers are a single logical Memory, not separate stores with separate owners.
 They differ in _policy_ — how long entries live and how much room each is given — not
 in _ownership_. All three belong to the one Luca.
 
+These tiers match the code exactly (`src/services/memory/memoryWriteCapacity.ts`),
+and they map onto older native vocabulary that some `docs/` and UI surfaces still
+use. The [Crosswalk](../CROSSWALK.md#subsystem-crosswalk) records the mapping:
+
+| Foundation tier | Older native name | Note |
+|---|---|---|
+| Identity | **Soul Layer** | Long-lived persona/identity alignment. Superseded vocabulary. |
+| Transient | **Now Layer** | Active, operational, task-scoped state. Superseded vocabulary. |
+
+Soul Layer ≈ the identity tier and Now Layer ≈ the transient tier; both names are
+**superseded** — prefer the tier names here — but a contributor reading the older
+docs or the code should know they name the same things. (The durable tier has no
+distinct legacy name.)
+
 ## The Archive
 
 The [Archive](../GLOSSARY.md) is the persisted store backing Memory. It is
@@ -74,6 +88,52 @@ The Archive schema and its FTS5 and graph structures live in `src/services/db.js
 Their evolution is additive and migrated, per
 [Invariant 7](../01-constitution/01-the-eight-invariants.md#invariant-7--backward-compatibility-where-practical);
 see [Data and Storage](10-data-and-storage.md).
+
+## The Memory Vault
+
+The Archive is the machine-facing store; the **Memory Vault** is its
+human-facing counterpart (crosswalk: generic
+[Archive](../CROSSWALK.md#subsystem-crosswalk) ↔ Memory Vault, code
+`src/services/memory/MemoryVaultService.ts` and the `UnifiedMemoryVaultPanel`).
+Where the Archive is `node:sqlite` rows, an FTS5 index, and a knowledge graph, the
+Memory Vault is the **human-readable, user-editable, exportable face** of the same
+Memory: markdown vault folders a user can open, read, correct, and take with them.
+
+The Vault is not a second store competing with the Archive; it is a presentation
+and ingestion layer over the one Memory. It matters for three reasons the Archive
+alone does not deliver:
+
+- **Human-readable and editable.** Memory about the user should not be a black box.
+  The Vault renders Memory as markdown the user can read and edit directly — a
+  correction the user makes is a correction to what Luca knows, not a support
+  ticket. This is the trust posture of the [consent gate](#the-consent-gate) made
+  visible: the user can see and revise the accumulation, not just approve additions
+  to it.
+- **Exportable.** Because Memory belongs to Luca on the user's behalf and not to a
+  Provider or an app, the user can export the Vault. Portability is the concrete
+  form of the ownership claim this chapter opens with.
+- **Connected-app ingestion and compression.** The Vault is where memory from
+  **connected apps** is ingested into the one Memory, and where accumulated context
+  is **compressed** — summarized and consolidated — so the Vault stays legible and
+  the tiers stay within budget. Ingestion feeds the same
+  [write path](#write-time-capacity-enforcement); compression is the human-facing
+  side of the same consolidation the write-time capacity model triggers when a
+  tier fills.
+
+```mermaid
+flowchart LR
+  Apps[Connected apps] -->|ingest| Vault
+  User[User edits] <-->|read / correct| Vault[Memory Vault<br/>markdown vault folders]
+  Vault <-->|same one Memory| Archive[(Archive<br/>node:sqlite · FTS5 · graph)]
+  Vault -->|export| Out[Portable export]
+  Vault -->|compress| Vault
+```
+
+The Vault is a live subsystem (`MemoryVaultService.ts`,
+`UnifiedMemoryVaultPanel.tsx`), distinct from and additive to the tier/capacity
+model below — which it does not replace. The tiers govern retention and budget;
+the Vault governs how a human reads, edits, ingests into, and exports that same
+Memory.
 
 ## Write time versus read time
 
@@ -226,6 +286,7 @@ you did not persist.
 - [System Overview](00-system-overview.md) — where Memory sits in the request flow
 - [Identity and Embodiment](02-identity-and-embodiment.md) — why Memory must not fragment across Surfaces
 - [Data and Storage](10-data-and-storage.md) — `node:sqlite`, schema, and migrations
+- [Crosswalk — Memory Vault](../CROSSWALK.md#subsystem-crosswalk) — the Archive's human-readable face, and the Soul/Now Layer ↔ tier mapping
 - [Cortex and Local Intelligence](08-cortex-and-local-intelligence.md) — LightRAG recall and graceful degradation
 - [Safety and Permissions](07-safety-and-permissions.md) — the gate the consent model mirrors
 - [Trust and Permissions](../01-constitution/04-trust-and-permissions.md) — consent lives in the user's decision

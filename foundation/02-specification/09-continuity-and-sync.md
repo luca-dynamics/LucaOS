@@ -127,6 +127,107 @@ delta is data to apply, not a command to obey — the same discipline the Consti
 applies to transcript text
 ([Invariant 8](../01-constitution/01-the-eight-invariants.md#invariant-8--security-and-explicit-permissions)).
 
+## The LucaLink mesh model
+
+"Luca Link" as sketched above — two Hosts, one delta stream — is the minimal case.
+The fuller product and target model is **LucaLink** (crosswalk: generic
+[continuity and sync](../CROSSWALK.md#subsystem-crosswalk) ↔ LucaLink), a secure
+multi-host mesh for one Luca distributed across many trusted host bodies. This
+section names the model's structure; the honest current-state caveats follow it and
+in [The honest status](#the-honest-status). Much of the mesh model is a **target**:
+the trust ladder, per-device permissions, host roles, and routing engine are
+defined statically (in `lucaLink/lucaLinkArchitectureMap.ts`) but are **not wired
+into runtime** yet.
+
+### Primary Host vs Origin
+
+Two authorities are easy to conflate and must be kept distinct:
+
+- **Origin** is reserved for LucaOS Creator / source-code authority and root system
+  blueprint control — the authority that gates
+  [guarded self-evolution](../CROSSWALK.md#subsystem-crosswalk) and mesh ownership.
+- **Primary Host** is the user's main trusted device inside the mesh. It can
+  approve mesh and device actions — pairing, grants, revocation — but it is **not**
+  Creator/Origin authority.
+
+Approving a new device on your phone is a Primary Host action; changing what Luca
+_is_ is an Origin one. The mesh never lets the former escalate into the latter.
+
+### The trust ladder
+
+Each host holds a trust level on an ascending ladder; authority increases with
+rank, and high-risk capability requires the upper rungs:
+
+| Level | Rank | Meaning |
+|---|---|---|
+| `guest` | 0 | Temporary, least-privilege, time-limited. No memory write, no tools. |
+| `paired` | 1 | Completed pairing; basic chat/presence only. |
+| `trusted` | 2 | Primary-Host-approved for memory read, settings sync, sensor input. |
+| `admin` | 3 | Explicitly granted high-risk capabilities (tool/code/shell) under policy. |
+| `owner` | 4 | Owner-level mesh authority; approves/revokes hosts — but not Creator/Origin. |
+
+### Permission categories
+
+Trust is not a single scalar in the target model; a host's trust level maps to a set
+of roughly **twenty permission categories**, each with a risk band, so a grant is
+capability-scoped rather than all-or-nothing:
+
+`chat.send`, `chat.receive`, `voice.capture`, `voice.playback`, `camera.capture`,
+`screen.capture`, `location.read`, `notification.send`, `memory.read`,
+`memory.write`, `settings.sync`, `files.read`, `files.write`, `browser.control`,
+`shell.execute`, `code.modify`, `git.create_pr`, `smart_home.control`,
+`robotics.motion`, `payment.spend`.
+
+The five high-risk categories — `shell.execute`, `code.modify`, `git.create_pr`,
+`robotics.motion`, `payment.spend` — are classified `critical` and require
+`admin`/`owner` trust plus an explicit grant. This is the mesh-side counterpart of
+[Luca Guard's](07-safety-and-permissions.md) risk classes and asset trust tiers:
+the same "a present AI that can act in your world needs per-capability, revocable
+authority" principle, applied across devices.
+
+### Sync lanes and per-lane conflict policy
+
+LucaLink does not carry all traffic over one undifferentiated channel. The target
+protocol models **twelve typed, permissioned sync lanes**, each with required
+permissions, an encryption requirement, and — the point for conflict handling — its
+**own conflict policy**:
+
+| Lane | Purpose | Conflict policy |
+|---|---|---|
+| `identity` | Host manifests, public keys, role/trust grants, revocation | primary-host-wins |
+| `presence` | Online/away, battery/network status | last-write-wins |
+| `conversation` | Hand off chat/voice turns, thread state | append-only |
+| `memory` | Replicate Memory + sovereign facts | merge |
+| `settings` | Sync settings/appearance/runtime | primary-host-wins |
+| `mission` | Mission/state hydration and handoff | primary-host-wins |
+| `sensor` | Perception pulses (camera/mic/location/motion) | append-only |
+| `tool` | Tool invoke/result routing | no-conflict |
+| `artifact` | File/blob/build-artifact transfer | last-write-wins |
+| `notification` | Fan-out notifications, approval prompts | append-only |
+| `model` | Local-model advertise/route availability | no-conflict |
+| `safety` | Revocation, kill-switch, key rotation, alerts | primary-host-wins |
+
+The five conflict policies — primary-host-wins, last-write-wins, append-only,
+merge, no-conflict — are chosen per lane to fit the data: identity and safety defer
+to the Primary Host; presence and artifacts take the latest; conversation, sensor,
+and notification only ever accumulate; Memory merges; tool and model routing are
+request/response with nothing to reconcile. This is why the
+[conflict-handling](#conflict-handling-when-two-hosts-diverge) section below insists
+that "additive merge" describes the memory lane, not the whole protocol.
+
+### Host roles and routing
+
+Hosts also carry a **role** — `primary`, `companion`, `execution`, `sensor`,
+`display`, `guest`, `embodied` — describing what part they play in the mesh, and a
+**host router** answers the placement question: _should Luca route this task through
+this host?_ The routing model (design-only today, seeded by
+`deviceRegistry.selectBestDevice()`) scores candidate hosts on capability match and
+trust level as hard gates, then on privacy fit, latency, compute, battery, and which
+host the user is actively on — biasing high-risk work toward `execution`/`primary`
+hosts. It is the cross-device analog of just-in-time
+[capability selection](05-capability-and-tool-layer.md): pick the host best suited to
+the task, under the trust the task's risk band demands.
+
 ## Conflict handling when two Hosts diverge
 
 Cross-device sync must assume divergence. Two Hosts can be edited while offline, a
@@ -134,15 +235,23 @@ delta can arrive late, or two Surfaces on two devices can act "at the same time.
 system that pretends this never happens will silently lose one side's work — which,
 for durable Memory, is a correctness bug, not a cosmetic one.
 
-The reconciliation stance follows from the invariants rather than from convenience:
+The reconciliation stance follows from the invariants rather than from convenience.
+One clarification first, because it is easy to over-generalize: **additive merge is
+the _memory_ lane's conflict policy, not a universal one.** LucaLink assigns a
+conflict policy **per sync lane** (detailed in
+[The LucaLink mesh model](#the-lucalink-mesh-model) above) — presence is
+last-write-wins, conversation and sensor are append-only, identity and settings are
+primary-host-wins, memory is merge. The bullets here describe the memory and
+in-flight-work cases specifically; they are not the whole protocol's model.
 
-- **Memory is additive; merges, not overwrites.** Durable Memory and the
-  [Archive](../GLOSSARY.md) evolve by accumulation. When two Hosts both wrote, the
-  target is to merge both contributions, not to let a last-writer-wins clock discard
-  one. Additive evolution is also what
+- **Memory merges; it does not overwrite.** Durable Memory and the
+  [Archive](../GLOSSARY.md) evolve by accumulation, so the memory lane's policy is
+  `merge`: when two Hosts both wrote, the target is to merge both contributions,
+  not to let a last-writer-wins clock discard one. Additive evolution is also what
   [Invariant 7](../01-constitution/01-the-eight-invariants.md#invariant-7--backward-compatibility-where-practical)
   asks of persisted shapes; the same instinct — never silently drop the user's data
-  — governs conflict handling.
+  — governs conflict handling. Other lanes carry other policies; what does _not_
+  vary is the refusal to silently discard the user's durable data.
 - **In-flight work resumes from one checkpoint at a time.** A unit of work should be
   active on one Host at a time; the checkpoint is the handoff token. If two Hosts
   both believe they hold a task, that is the same _singularity hazard_ as two writers
@@ -197,11 +306,16 @@ Here the vision and the implementation diverge, and the honest statement matters
 `luca-link/v1` module is at present a **pure, typed model that is deliberately not yet
 wired into the live transport** — its own header records that it does not connect to
 the live relay, guest, WebRTC, session, or mission runtime paths. The operative
-cross-device path today runs through a legacy relay singleton behind
-`lucaLink/manager.ts`. So the _shape_ of a versioned, additively-evolvable protocol is
-defined and typed; making it the live wire format is a follow-up step tracked on the
-[Roadmap](../06-roadmap/README.md). Documenting the target here is not a claim that
-the target is met; it is the contract the follow-up adapter must satisfy.
+cross-device path today runs through the live relay singleton in
+`lucaLinkService.ts` — a Socket.IO client to a relay server, with QR pairing,
+mDNS rediscovery, WebRTC guest audio, and mission sync. A second, more structured
+stack (`lucaLink/manager.ts`, built on a `SecureSocket` X25519/AES-GCM handshake,
+device registry, and session manager) coexists but is _not_ the operative relay;
+the two do not share a transport, registry, or trust model today. So the _shape_ of
+a versioned, additively-evolvable protocol is defined and typed; making it the live
+wire format is a follow-up step tracked on the [Roadmap](../06-roadmap/README.md).
+Documenting the target here is not a claim that the target is met; it is the
+contract the follow-up adapter must satisfy.
 
 ```typescript
 // Illustrative — a versioned envelope for cross-device state.
@@ -256,14 +370,22 @@ so that no two Hosts fork the one Luca.
 To state the gap plainly, as the Constitution's honesty clause requires:
 
 - **Exists today:** continuity/checkpoint services, a `node:sqlite`-backed cognitive
-  checkpoint store, a cross-device sync subsystem (Luca Link) with an extensive
-  device-trust and approval governance layer, and a typed `luca-link/v1` versioned
-  envelope.
-- **Partially realized:** a single durable home for all resumable state (some lives in
-  `localStorage` or memory today); the `luca-link/v1` envelope as the _live_ wire
-  format (it is a typed model; the live path is still the legacy relay singleton);
-  seamless mid-task resume across devices; and fully general conflict convergence
-  across arbitrary offline divergence.
+  checkpoint store, a cross-device sync subsystem (LucaLink) with pairing, a live
+  relay path, guest sessions with PIN gating, and per-packet encryption primitives
+  (X25519 + AES-256-GCM in the structured stack), and a typed `luca-link/v1`
+  versioned envelope.
+- **Partially realized / target:** the mesh's device-trust _governance_ is not yet
+  the "extensive" layer an earlier draft implied. The trust ladder
+  (`guest`…`owner`), per-device permission categories, sync-lane gating, host roles,
+  and the routing engine are **defined statically but not wired into runtime**; the
+  PR #182 audit lists **device revocation, per-device permissions, and key rotation
+  as missing or type-level only** (there is a hardcoded session master key, no
+  runtime rotation loop, and no way to revoke a paired device). Also partial: a
+  single durable home for all resumable state (some lives in `localStorage` or memory
+  today); the `luca-link/v1` envelope as the _live_ wire format (it is a typed model;
+  the live path is still the `lucaLinkService.ts` relay singleton); seamless mid-task
+  resume across devices; and fully general conflict convergence across arbitrary
+  offline divergence.
 - **The invariant that does not move:** capability and polish may lag, but continuity
   is never satisfied by silently dropping a Surface's or a Host's durable state. A
   device switch that starts a fresh context, or a merge that quietly deletes one
@@ -281,3 +403,5 @@ The path from partial to seamless is tracked in the [Roadmap](../06-roadmap/READ
 - [Observability and Provenance](11-observability-and-provenance.md)
 - [Invariant 5 — Cross-Surface Continuity](../01-constitution/01-the-eight-invariants.md#invariant-5--cross-surface-continuity)
 - [Invariant 7 — Backward Compatibility Where Practical](../01-constitution/01-the-eight-invariants.md#invariant-7--backward-compatibility-where-practical)
+- [Safety and Permissions](07-safety-and-permissions.md) — Luca Guard, whose trust tiers the mesh trust ladder mirrors
+- [Crosswalk — LucaLink](../CROSSWALK.md#subsystem-crosswalk) — the generic continuity/sync ↔ LucaLink mapping and code path

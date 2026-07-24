@@ -1,31 +1,17 @@
-# LucaOS Glossary
+# LucaOS Glossary — moved
 
-- **LucaOS**: The product/runtime that hosts persistent Luca cognition and embodiment.
-- **LUCA**: Large Universal Control Agents; the operating intelligence identity.
-- **Cortex**: Core reasoning/orchestration and memory-processing subsystem.
-- **LucaLink**: Cross-device continuity protocol for state, memory, and command handoff.
-- **Luca Prime**: Managed cloud model/runtime path.
-- **Local Models**: On-device models (privacy/latency oriented).
-- **BYOK**: Bring-your-own-key/provider configuration.
-- **Host Embodiment**: Luca acting through host capabilities (filesystem, apps, browser, voice, vision).
-- **Host Body**: A concrete device/runtime where Luca is active.
-- **Luca Screen**: Dedicated interaction surface for active missions.
-- **Ghost Browser**: Browser body/runtime for embodied web operations.
-- **Hologram Face**: Persistent visual persona/presence surface.
-- **VoiceHUD**: Voice-first runtime surface for hands-free operation.
-- **Mini Chat**: Lightweight chat surface for fast access.
-- **Luca Cast**: Cross-surface projection/continuity surface.
-- **Mission Tape**: Structured record of mission inputs, steps, outcomes, recovery, and lessons.
-- **Mission Engine**: Structured execution pipeline enforcing planning, verification, and recovery.
-- **Evolution Core**: Guarded self-improvement subsystem from mission outcomes and trajectories.
-- **Neural Self-Repair**: Runtime recovery loop for faults/degradation.
-- **Memory Vault**: Human-readable + structured memory store.
-- **Soul Layer**: Long-lived behavioral/persona alignment layer.
-- **Now Layer**: Active operational state layer.
-- **Skills Runtime**: Execution substrate for MCP, plugins, and imported skills.
-- **MCP**: Model Context Protocol integrations/tool endpoints.
-- **Embodiment Layer**: Execution bridge to host/sandbox/browser/device bodies.
-- **Operational Cognition**: Planning/execution/verification behavior under mission constraints.
-- **Cross-Device Continuity**: Same identity, memory, and mission flow across devices.
-- **Runtime Presence**: Always-available Luca surfaces beyond one app window.
-- **Origin Mode / Tactical Mode / Core Mode**: Creator, advanced operator, and normal-user operating profiles.
+> **This document has moved.** The canonical Glossary now lives in the Foundation
+> at [`foundation/GLOSSARY.md`](../../foundation/GLOSSARY.md).
+
+The native subsystem vocabulary this file defined (Cortex, LucaLink, Mission
+Engine, Mission Tape, Memory Vault, Soul/Now Layer, Skills Runtime, Embodiment
+Layer, Evolution Core, and the branded Surfaces) is preserved through the
+[Naming Crosswalk](../../foundation/CROSSWALK.md), which maps each native name to
+the Foundation's generic term and the real code.
+
+Two definitions changed deliberately and are recorded as ADRs:
+
+- **Cortex** now means the local-intelligence sidecar, not the reasoning brain —
+  [ADR-0011](../../foundation/05-adrs/0011-cortex-is-the-local-intelligence-sidecar.md).
+- **"LUCA = Large Universal Control Agents"** is retired; "Luca" is a singular name
+  — [ADR-0012](../../foundation/05-adrs/0012-retire-the-luca-acronym.md).

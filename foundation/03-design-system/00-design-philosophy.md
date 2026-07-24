@@ -17,6 +17,20 @@ This document states the principles. The chapters that follow —
 media. When one of them makes a concrete choice, it should be traceable back to a
 principle here.
 
+> **Deference to the shipped design source of truth.** This Design System owns the
+> _philosophy_ — the calm, premium, honest ethos — and it is correct. It does **not**
+> own the concrete design constants. For real tokens, skins, material, motion, and
+> named surfaces, the following chapters defer to the shipped, code-grounded documents:
+> the [Visual Design System](../../docs/design/lucaos-visual-design-system.md) and the
+> `--luca-*` resolver [`src/config/lucaAppearanceTokens.ts`](../../src/config/lucaAppearanceTokens.ts),
+> the [Interface Principles](../../docs/design/lucaos-interface-principles.md), the
+> [Liquid Glass Material](../../docs/design/luca-liquid-glass-material.md), the
+> [Fluid Interaction Standard](../../docs/design/LUCA_FLUID_INTERACTION_STANDARD.md),
+> and the [Skin System](../../docs/luca-skin-system.md) /
+> [token architecture](../../docs/luca-skin-token-architecture-plan.md). Where an
+> earlier draft minted its own constants, treat this ethos as canonical and those
+> documents as the source of the numbers.
+
 ---
 
 ## Principle 1 — Calm: present, not intrusive
@@ -92,6 +106,22 @@ considered dark theme; saturated neon accents; glow and bloom used as ambience;
 glitch, scanline, and CRT effects; monospace as a personality choice rather than a
 data-display choice; animated "scanning"/"analyzing" theatrics; and any HUD element
 whose purpose is to look futuristic rather than to inform.
+
+This principle is not only the Foundation's position — **the shipped LucaOS design
+direction already agrees**, and this chapter aligns with it rather than restating it
+in isolation. The established
+[interface principles](../../docs/design/lucaos-interface-principles.md) name the same
+failure modes in their **anti-patterns** list ("a hacker dashboard with green text on
+black," "a feature demo with every capability visible at once") and set the same north
+star ("calm, capable, always there," never "cyber"). The
+[visual design system](../../docs/design/lucaos-visual-design-system.md) enforces it in
+tokens: cyber effects off by default, monospace minimized, neon banned on default
+surfaces, and the cyber/expressive layer opt-in for Creator/Origin only. One caution
+this reconciliation adds: rejecting the _pulsing sci-fi orb_ is correct, but it does
+**not** mean Luca has no orb or face — the calm liquid-plasma presence orb and the
+plasma face are the real, allowed identity marks (see
+[Presence and Embodiment](01-presence-and-embodiment.md#the-shipped-presence-marks)).
+The line is personification and spectacle, not the existence of a visible mark.
 
 ---
 
@@ -195,3 +225,4 @@ dramatic, or more certain than it truly is.**
 - [What Luca Is and Is Not](../00-manifesto/02-what-luca-is-and-is-not.md) — the humility clause
 - [Trust and Permissions](../01-constitution/04-trust-and-permissions.md)
 - [Presence and Embodiment](01-presence-and-embodiment.md) · [Motion and Timing](03-motion-and-timing.md) · [Voice and Tone](04-voice-and-tone.md)
+- Shipped source of truth: [LucaOS Interface Principles](../../docs/design/lucaos-interface-principles.md) (anti-patterns) · [LucaOS Visual Design System](../../docs/design/lucaos-visual-design-system.md) · [Skin System](../../docs/luca-skin-system.md) · [Liquid Glass Material](../../docs/design/luca-liquid-glass-material.md) · [Fluid Interaction Standard](../../docs/design/LUCA_FLUID_INTERACTION_STANDARD.md)

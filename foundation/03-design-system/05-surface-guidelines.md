@@ -13,6 +13,15 @@ The resolution is the division established in [Presence and Embodiment](01-prese
 **identity constants are fixed; presentation adapts.** This chapter is the per-Surface
 statement of what may adapt and what may not.
 
+> **A word on "Surface" — two senses, kept distinct.** This chapter uses _Surface_ in
+> its Foundation sense: a **device modality / Host** (desktop, web, voice, widget,
+> mobile, XR). The shipped product also uses "surface" in a second, narrower sense: a
+> **named product surface** — a concrete UI instance like the Composer or VoiceHUD
+> that lives _inside_ a modality. Per the [Crosswalk](../CROSSWALK.md), these are not
+> rivals: the modalities are the axes this chapter organizes by, and the named product
+> surfaces are the concrete instances that render within them, enumerated in
+> [The named product surfaces](#the-named-product-surfaces-and-the-zone-model) below.
+
 ---
 
 ## What adapts, and what never does
@@ -179,6 +188,73 @@ specified here so the language is ready and consistent when the Surface arrives.
 
 ---
 
+## The named product surfaces and the zone model
+
+The modalities above are the axes; the shipped product fills them with a specific set
+of **named surfaces**, and the design system defers to those names rather than leaving
+them abstract. On graphical Hosts they are arranged by the **three-panel zone model**
+from [`docs/design/lucaos-interface-principles.md`](../../docs/design/lucaos-interface-principles.md):
+
+- **Left — Capability Access.** What Luca can do: tools organized by function, device
+  linking, advanced groups disclosed by tier. Nothing launches on hover.
+- **Center — Workspace.** The primary human–agent space, not merely a chat log. It
+  hosts conversation, voice, browser, canvas, code, and display sessions; the
+  **Composer** is dominant and mode-switching is state-preserving.
+- **Right — Operational Truth.** Luca's honest self-report: current state, pending
+  approvals, activity timeline, memory, and (by tier) logs. It never hides problems
+  and never requires action to reveal truth.
+
+The concrete named surfaces, each an instance living in one of those zones or as an
+overlay across them:
+
+| Named surface | Where it lives | What it is |
+|---|---|---|
+| **Composer** | Center | The dominant input/workspace surface; owns send/stop |
+| **MiniChat** | Overlay | A lighter-than-dashboard quick-chat surface |
+| **VoiceHUD** | Overlay (full-screen) | The voice experience; active-listening state always visible |
+| **VisionHUD** | Overlay | Screen/vision context; active-vision state always visible |
+| **Luca Screen / VisualCore** | Center / overlay | The visual display/canvas session surface |
+| **Luca Cast** | Overlay | Casting Luca's presence/output to another display |
+| **Ghost Browser** | Center | Luca's browsing surface (the actuation Ghost Browser is the [Embodiment Layer](../CROSSWALK.md) sense; here it is the surface that renders it) |
+| **Presence / Luca Widget** | Overlay / widget | The ambient presence mark (the [orb](01-presence-and-embodiment.md#the-shipped-presence-marks)) |
+
+These are presentation instances; they never override runtime, approval, or safety
+behavior. Whatever the skin or tier, the Composer stays dominant, the right panel
+stays honest, and safety-state visibility is preserved (see
+[Accessibility](06-accessibility.md)).
+
+---
+
+## Tier disclosure: density, not loudness
+
+Orthogonal to modality is the user's **experience tier** — **Basic**, **Pro**, and
+**Creator** (the code tiers Normal / Tactical / Origin). Tiers are a real axis of
+adaptation, and the rule is exact and easy to get wrong: **tiers change density and
+disclosure, never visual loudness.** All three share one calm visual language; a
+higher tier does not get brighter, louder, or more "cyber" — it gets _more shown_ and
+_more tightly packed_.
+
+- **Basic** — comfortable density, plain warm language, core tools only, friendly
+  summaries in the right panel. The default.
+- **Pro** — standard density, operator/diagnostic language allowed, advanced tool
+  groups, activity/health detail and an approval trail.
+- **Creator** — dense, technical/candid language allowed, all tool groups, raw
+  logs/traces and the raw memory graph.
+
+Two hard constraints:
+
+- **Loudness never changes with tier.** Density and disclosure go up; saturation,
+  glow, and spectacle do not. A Creator surface is Xcode-Instruments dense, not neon.
+- **The cyber/expressive layer is opt-in and Creator/Origin only** — off by default
+  even there, and still fully motion- and transparency-reducible. It is never
+  available in Basic or Pro. (See
+  [`docs/design/lucaos-visual-design-system.md`](../../docs/design/lucaos-visual-design-system.md) §12.)
+
+This is the same premium restraint the [Design Philosophy](00-design-philosophy.md)
+demands, applied to the tier axis: capability grows with the user; loudness never does.
+
+---
+
 ## Cross-Surface continuity in practice
 
 The Surfaces are not islands. A user moves between them mid-task, and the experience
@@ -217,3 +293,5 @@ must be _continuing_, not _restarting_ — the design-visible form of
 - [Voice and Tone](04-voice-and-tone.md) — the voice that carries the voice Surface
 - [Accessibility](06-accessibility.md) — per-Surface access obligations
 - [Surface Layer (Specification)](../02-specification/06-surface-layer.md) · [Continuity and Sync](../02-specification/09-continuity-and-sync.md)
+- [Naming Crosswalk](../CROSSWALK.md) — the modality-vs-named-surface disambiguation
+- Shipped source of truth: [LucaOS Interface Principles](../../docs/design/lucaos-interface-principles.md) (3-panel zones) · [LucaOS Visual Design System](../../docs/design/lucaos-visual-design-system.md) §12 (tier density)
