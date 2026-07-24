@@ -39,6 +39,7 @@ import {
   PERSONA_SPECIALIZED_TOOLS,
 } from "../config/personaConfig";
 import { applyCustomPersonaLayer } from "../config/customPersona";
+import { LUCA_CHARTER } from "../config/lucaCharter";
 import { PERSONA_UI_CONFIG } from "../config/themeColors";
 import { apiUrl, cortexUrl } from "../config/api";
 import {
@@ -387,13 +388,16 @@ class LucaService {
     const managementContext = taskService.getManagementContext();
     const missionContext = await missionControlService.getActiveMissionContext();
 
-    // 2. Resolve base system instruction for the current persona
+    // 2. Resolve base system instruction for the current persona, grounded in the
+    //    Charter of Luca (foundation/LUCA.md) — the canonical operating charter that
+    //    constitutes Luca's identity and behaviour. The Charter comes first so
+    //    Luca's core identity is primary and the persona is a tone layer on top;
+    //    editing foundation/LUCA.md changes this prompt, so the charter is
+    //    load-bearing rather than merely descriptive.
     const config = PERSONA_CONFIG[this.persona] || PERSONA_CONFIG.ASSISTANT;
-    let systemInstruction = config.instruction(
-      memoryContext,
-      managementContext,
-      this.platform,
-    );
+    let systemInstruction =
+      `${LUCA_CHARTER}\n\n---\n\n` +
+      config.instruction(memoryContext, managementContext, this.platform);
 
     // Optional user-defined persona layer (tone only — boundaries and tool
     // loadout stay the base persona's). No-op when disabled.
