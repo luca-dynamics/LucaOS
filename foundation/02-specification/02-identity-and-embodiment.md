@@ -46,6 +46,13 @@ The [Runtime](01-persistent-runtime.md) is where the one identity lives. Surface
 attach to it; it does not live inside any of them. That is why closing every window
 leaves Luca intact — the identity was never in a window to begin with.
 
+> **A note on the word.** "Embodiment" in this chapter means _presence_ — the bodies
+> the one identity is expressed through. There is a second, distinct sense of the word:
+> _actuation_ — how Luca acts on an environment (Direct Host, Sandbox Body, Ghost
+> Browser, Remote Delegation). That is the **Embodiment Layer**, a separate subsystem
+> (planned spec chapter `15-embodiment-layer.md`) bridged in the
+> [Crosswalk](../CROSSWALK.md). Keep the two senses apart: presence here, actuation there.
+
 ## The dividing rule: Luca-state versus Surface-state
 
 The single most useful rule in this chapter, and the one most PRs get tested
@@ -147,6 +154,15 @@ locus of understanding. The discipline in review is to check that an agent's out
 is merged into Luca's Memory and intention, and that nothing about the agent
 persists as an independent self. A worker that quietly kept its own long-lived memory
 would be a second Luca wearing the word "agent."
+
+> **Current-state honesty.** Governed multi-agent orchestration does not exist yet.
+> Today's Runtime drives a single-agent turn loop; the only multi-agent code is an
+> ungoverned `LucaWorkforce` scaffold that does not enforce the fold-back discipline
+> described here. So this section states the **target** — the rule spawned agents must
+> obey once orchestration is built — not a mechanism that already runs. Read the
+> fold-back discipline as the invariant the future orchestrator must uphold, and treat
+> the gap as information to surface rather than paper over, per
+> [CLAUDE.md](../CLAUDE.md).
 
 ## The failure modes
 

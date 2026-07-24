@@ -56,6 +56,10 @@ Supporting documents at the root:
   contribution workflow.
 - **[STYLE-GUIDE.md](STYLE-GUIDE.md)** — how documents in this repository are
   written and cross-referenced.
+- **[RECONCILIATION.md](RECONCILIATION.md)** — the map reconciling this Foundation
+  with the pre-existing LucaOS documentation, and the phased plan to close the gaps.
+- **[CROSSWALK.md](CROSSWALK.md)** — the bridge from the Foundation's generic terms
+  to the native subsystem names used in the product and the code.
 
 ---
 

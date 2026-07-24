@@ -104,6 +104,10 @@ the index below in the same change.
 | [0008](0008-category-security-floor.md) | Category security floor | Accepted | [8 — Security and Explicit Permissions](../01-constitution/01-the-eight-invariants.md#invariant-8--security-and-explicit-permissions) |
 | [0009](0009-unconditional-permission-gate.md) | Unconditional permission gate | Accepted | [8 — Security and Explicit Permissions](../01-constitution/01-the-eight-invariants.md#invariant-8--security-and-explicit-permissions) |
 | [0010](0010-budgeted-ranked-memory-injection.md) | Budgeted, ranked memory injection | Accepted | [3 — Shared Memory](../01-constitution/01-the-eight-invariants.md#invariant-3--shared-memory) |
+| [0011](0011-cortex-is-the-local-intelligence-sidecar.md) | "Cortex" names the local-intelligence sidecar, not the reasoning brain | Accepted | [1 — One Luca Identity](../01-constitution/01-the-eight-invariants.md#invariant-1--one-luca-identity) |
+| [0012](0012-retire-the-luca-acronym.md) | Retire the "LUCA" acronym | Accepted | [1 — One Luca Identity](../01-constitution/01-the-eight-invariants.md#invariant-1--one-luca-identity) |
+| [0013](0013-experience-modes-creator-pro-basic.md) | Experience modes are Creator / Pro / Basic | Accepted | [8 — Security and Explicit Permissions](../01-constitution/01-the-eight-invariants.md#invariant-8--security-and-explicit-permissions) |
+| [0014](0014-generic-names-with-crosswalk.md) | Generic names bridged by a crosswalk | Accepted | Naming policy — reconciliation ([Crosswalk](../CROSSWALK.md)) |
 
 ## See also
 

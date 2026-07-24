@@ -68,6 +68,12 @@ simple and deliberately bounded: stream from the active Provider, execute any to
 calls the model makes in concurrency-safe batches, feed the results back to the
 model, and repeat until the model stops calling tools.
 
+> The turn loop is the mechanism for one interaction. The deterministic mission
+> discipline that sits _above_ it — `plan → execute → verify → recover → record`,
+> with verification gates and checkpoint/rollback — is the **Mission Engine** (planned
+> spec chapter `12-mission-engine.md`), bridged in the [Crosswalk](../CROSSWALK.md).
+> This chapter specifies the turn loop, not that orchestration tier.
+
 ```mermaid
 flowchart TD
   A[Receive intent] --> B[Assemble prompt:<br/>system + BDI state + ranked memory + input]
@@ -161,6 +167,13 @@ The design goal is that the user never sees Luca "booting." The
 [Roadmap](../06-roadmap/README.md) tracks the measured boot budget; this chapter
 does not assert a benchmark number, because the target is bounded time-to-presence,
 not a specific millisecond count.
+
+> **Current-state honesty.** "The user never sees Luca boot" describes the target,
+> not the shipped surface. Today's boot _surface_ is a diagnostic terminal in the
+> `LUCA BIOS` idiom — a `MOUNTING LOCAL_CORE`-style startup sequence rendered to the
+> user — rather than the premium, calm time-to-presence the target calls for. The
+> fast-listen mechanism above is real; what is not yet built is hiding it behind a
+> quiet startup. Closing that gap is [Roadmap](../06-roadmap/README.md) work.
 
 ## The single-instance guarantee
 

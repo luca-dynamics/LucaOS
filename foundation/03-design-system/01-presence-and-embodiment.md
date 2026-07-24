@@ -25,16 +25,27 @@ render that identity in the form its medium allows.
 
 The Manifesto frames every device as a [Host](../GLOSSARY.md) that gives Luca a
 body. That word — body — is deliberate and it is also a trap. It invites designers
-to build a _character_: a face, a mascot, a creature with moods. LucaOS does not do
-that, for the reason stated in the [Design Philosophy](00-design-philosophy.md): a
-character overclaims. A face implies feelings; a creature implies aliveness; both
-violate the [honesty commitment](../01-constitution/04-trust-and-permissions.md).
+to build a _character_: a mascot, a creature with moods, an emotive face that
+performs feeling. LucaOS does not do that, for the reason stated in the
+[Design Philosophy](00-design-philosophy.md): a character overclaims. A performed
+mood implies feelings; a creature implies aliveness; both violate the
+[honesty commitment](../01-constitution/04-trust-and-permissions.md).
 
-Embodiment in LucaOS means something quieter. Luca's presence is an **abstract,
-calm mark and a consistent behavior**, not a personified being. Think of it as the
-identity of an instrument — recognizable, coherent, and honest about being an
-object — rather than the face of a companion. The presence indicates state
-(present, attending, listening, acting) without performing an inner life.
+The rejection is of _personification_, not of a visible form. This is the precise
+distinction the shipped product already draws, and it is worth stating plainly so the
+principle is not misread as "Luca has no orb and no face": Luca **does** have a
+presence orb and a face, and they are the real, allowed identity marks (named in
+[The shipped presence marks](#the-shipped-presence-marks) below). What is rejected is
+the _pulsing sci-fi orb_ and the _emotive avatar_ — a mark that performs energy or
+feeling. What is kept is a calm, state-honest, reduce-motion-safe presence that shows
+what Luca is doing and nothing more.
+
+Embodiment in LucaOS therefore means something quieter than a companion. Luca's
+presence is a **calm, coherent mark and a consistent behavior**, not a personified
+being. Think of it as the identity of an instrument — recognizable, coherent, and
+honest about being an object — rather than the face of a companion. The presence
+indicates state (present, attending, listening, acting) without performing an inner
+life.
 
 ```mermaid
 flowchart TD
@@ -58,7 +69,7 @@ slowly and deliberately, never per-Surface for convenience.
 
 | Constant | What it is | Why it must be shared |
 |---|---|---|
-| **The mark** | Luca's abstract visual signature — a simple, restrained form used as presence indicator and identity anchor | It is the fastest signal that this is the same Luca |
+| **The mark** | Luca's presence signature — the calm liquid-plasma orb and the plasma face (see [The shipped presence marks](#the-shipped-presence-marks)), used as presence indicator and identity anchor | It is the fastest signal that this is the same Luca |
 | **Palette** | The calm, restrained color system (see [Design Tokens](02-design-tokens.md)) | Color is recognized pre-consciously; a shifted palette reads as a different app |
 | **Typography** | The type family and scale | Type carries the premium, calm register everywhere text appears |
 | **Voice** | How Luca speaks — its verbal identity (see [Voice and Tone](04-voice-and-tone.md)) | On voice-only Surfaces this _is_ the identity; it must match the words on screen |
@@ -68,6 +79,39 @@ slowly and deliberately, never per-Surface for convenience.
 A Surface may vary **density, layout, input modality, and fidelity**. It may not
 vary the identity constants. That division — constants fixed, presentation adapted
 — is the whole discipline of this chapter.
+
+---
+
+## The shipped presence marks
+
+This chapter describes the _discipline_ of Luca's presence; the shipped LucaOS
+codebase already provides the concrete marks that satisfy it, and the design system
+defers to them rather than inventing a parallel one. There are two, and both are the
+real, allowed embodiments of the one Luca — not the rejected sci-fi cliché.
+
+- **The presence orb** — a calm **liquid-plasma orb** rendered on an HTML canvas.
+  Two sibling implementations of the same visual are live: `WidgetVisualizer`
+  (the compact Dictation-widget orb) and `VoiceVisualizer` (the larger VoiceHUD
+  "core"). Both draw honest states directly from operational signals — standby,
+  listening/VAD-active, and speaking/amplitude-reactive — and both collapse their
+  motion under reduced motion. `LucaPresenceOrb` is a newer generic CSS placeholder
+  slated to be replaced by a browser-safe extraction of the canvas orb; treat the
+  canvas orb as the source of truth. (Source audit:
+  [`docs/foundation/LUCA_ORB_AND_POST_BOOT_VISUAL_SOURCE_AUDIT.md`](../../docs/foundation/LUCA_ORB_AND_POST_BOOT_VISUAL_SOURCE_AUDIT.md).)
+- **The face** — `HologramFace`, a 3D avatar (`public/models/avatar.glb`) shaded by
+  `lucaFacePlasmaMaterial` on its own mesh, with a low-performance 2D fallback. This
+  is a **calm plasma presence, not an emotive avatar**: it carries identity, not
+  moods. The obsolete scanline/grid/glitch hologram material has been **retired** —
+  that glitch treatment was the pulsing sci-fi failure mode this chapter rejects, and
+  removing it is exactly the correction the chapter argues for. (Material:
+  [`docs/design/luca-liquid-glass-material.md`](../../docs/design/luca-liquid-glass-material.md).)
+
+Both marks are composed over Luca's [liquid-glass material](../../docs/design/luca-liquid-glass-material.md):
+the substrate owns colour, identity, and state; the optics add a disciplined rim and
+glint; safety, status, and listening meaning stay on their governed tokens, never on
+the glass. Neither mark is decoration and neither performs an inner life. The line the
+shipped system draws is the same one this chapter draws: **calm and state-honest is
+allowed; pulsing, glowing, glitching, or emoting is not.**
 
 ---
 
@@ -93,9 +137,12 @@ performs beyond them.
   [permission](../01-constitution/04-trust-and-permissions.md) moment is distinct
   and honest, never disguised as ambient decoration.
 
-What the presence indicator is **not**: a mood ring, an emotive orb, a face, or a
-loading show. It reflects operational state truthfully and calmly. It never implies
-Luca feels anything about that state.
+What the presence indicator is **not**: a mood ring, an _emotive_ orb, a
+performing face, or a loading show. The distinction is between form and behavior —
+the calm liquid-plasma orb and the plasma face are allowed marks; what is forbidden is
+making either of them pulse, glow, or emote to perform an inner life. The indicator
+reflects operational state truthfully and calmly. It never implies Luca feels anything
+about that state.
 
 ---
 
@@ -174,11 +221,13 @@ treatment. Both are governed by the same rules:
 
 - **Per-Surface characters.** A playful mobile Luca and a serious desktop Luca are
   two Lucas. The identity constants must hold.
-- **Personification creep.** A mark that gains eyes, a "breathing" idle animation, an
-  emotive color that implies mood — each is a step toward the character LucaOS
-  refuses.
-- **Cyberpunk presence.** A glowing orb, a scanning HUD, neon "AI energy." This is
-  the [rejected aesthetic](00-design-philosophy.md) and it also overclaims.
+- **Personification creep.** The face gaining eyes or expressions, a "breathing" idle
+  animation, an emotive color that implies mood — each is a step from the allowed calm
+  plasma face toward the emotive avatar LucaOS refuses.
+- **Cyberpunk presence.** A _pulsing sci-fi_ orb, a scanning HUD, neon "AI energy,"
+  the retired scanline/glitch hologram treatment. This is the
+  [rejected aesthetic](00-design-philosophy.md) and it also overclaims — distinct from
+  the calm liquid-plasma orb, which is the allowed mark.
 - **Continuity theater.** Showing a "synced across your devices" flourish that
   implies more continuity than the system actually delivers. Show continuity only
   where it is [real](../02-specification/09-continuity-and-sync.md); where it is a
@@ -197,3 +246,4 @@ treatment. Both are governed by the same rules:
 - [Voice and Tone](04-voice-and-tone.md) — the verbal half of the identity
 - [Surface Guidelines](05-surface-guidelines.md) — per-Surface adaptation in detail
 - [Identity and Embodiment (Specification)](../02-specification/02-identity-and-embodiment.md)
+- Shipped source of truth: [Luca Orb & Post-Boot Visual Source Audit](../../docs/foundation/LUCA_ORB_AND_POST_BOOT_VISUAL_SOURCE_AUDIT.md) (the real orb + `HologramFace`) · [Luca Liquid Glass Material](../../docs/design/luca-liquid-glass-material.md) (`lucaFacePlasmaMaterial`, retired glitch material)

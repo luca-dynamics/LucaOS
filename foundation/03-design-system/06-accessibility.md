@@ -101,6 +101,58 @@ unsafe.
 
 ---
 
+## Reduced transparency
+
+The [liquid-glass material](../../docs/design/luca-liquid-glass-material.md) is
+premium polish, never structure — content must be fully legible without it. LucaOS
+therefore honors a **reduced-transparency** control (host/OS or user setting) as a
+first-class accessibility path, distinct from reduced motion:
+
+- When reduced transparency is set, **glass collapses to a solid surface** — blur is
+  removed and translucent surfaces resolve to their solid skin equivalent (the shipped
+  resolver raises `glassAlpha` toward opaque). The interface stays complete; only the
+  optical finish is dropped.
+- Reduced motion additionally **freezes the material's glint** and removes spatial
+  travel; the two settings are independent and both are respected everywhere,
+  including in the Flow skin.
+- High contrast is a third independent axis: it preserves text, control, border, and
+  focus visibility regardless of skin.
+
+No skin may weaken these controls, and no surface may depend on translucency to be
+readable. This is the material half of "glass/blur are premium polish, not
+structural."
+
+---
+
+## Safety-state visibility invariants
+
+LucaOS carries safety-critical states that a skin, a tier, or a decorative treatment
+must **never** be allowed to soften. These are hard invariants shared with the
+[skin system](../../docs/luca-skin-system.md) and
+[interface principles](../../docs/design/lucaos-interface-principles.md), and they sit
+at the same constitutional level as contrast and keyboard operability:
+
+- **Active listening is always visible.** Whenever Luca is capturing audio, the state
+  is unmistakable on every surface that can show it (VoiceHUD, presence mark, system
+  indicator). It is never hidden, never faked, never skin-dimmed. Because listening
+  touches privacy, an ambiguous listening state is a trust _and_ accessibility defect.
+- **Active vision / screen context is always visible.** The same rule for VisionHUD
+  and any screen-capture context: the user always knows when Luca can see.
+- **Stop-generation is always clear and reachable.** The control that halts Luca is
+  never buried, never ambiguous, never removed by a dense tier or a quiet skin.
+- **Approval, permission, and danger surfaces are never skin-dimmed or recolored into
+  ambiguity.** A skin may style the surrounding surface; it may not touch the
+  visibility, prominence, or colour-meaning of approve / deny / danger / warning. These
+  keep their meaning and distinction in every skin, tier, appearance mode, and
+  reduced-transparency state.
+
+These invariants are why safety and status colours live **outside** skin and accent
+control (see [Design Tokens](02-design-tokens.md#the-skin-system-the-top-level-identity-layer)):
+the one thing a visual environment must never be able to do is make a safety-relevant
+state harder to perceive.
+
+---
+
 ## Keyboard and pointer-independent operation
 
 Everything a user can do with a pointer, they can do without one.
@@ -177,6 +229,11 @@ Because accessibility is a floor, it is checked like any other correctness prope
 - Contrast is validated at the semantic token layer, in both themes.
 - Type scales to at least 200% without loss; layouts reflow.
 - Reduced motion is honored system-wide with no information lost.
+- Reduced transparency collapses glass to a solid, readable surface; nothing depends
+  on translucency to be legible.
+- Safety-state visibility invariants hold in every skin and tier: active listening and
+  vision are always visible, stop-generation is always clear, and approval/danger
+  surfaces are never skin-dimmed or recolored into ambiguity.
 - Everything is keyboard-operable with visible focus and no traps.
 - The accessibility tree exposes accurate names, roles, states — including Luca's
   honest presence states.
@@ -196,3 +253,4 @@ regressing Presence and Trust for the users it affects.
 - [Surface Guidelines](05-surface-guidelines.md) — per-Surface access paths
 - [Trust and Permissions](../01-constitution/04-trust-and-permissions.md) — why perceivable consent is constitutional
 - [Presence Is the Product](../00-manifesto/03-presence-is-the-product.md) — why an unreachable Presence is no Presence
+- Shipped source of truth: [Skin System](../../docs/luca-skin-system.md) §8 (safety/accessibility rules) · [Liquid Glass Material](../../docs/design/luca-liquid-glass-material.md) (reduced-transparency behavior) · [LucaOS Interface Principles](../../docs/design/lucaos-interface-principles.md)

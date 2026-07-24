@@ -192,6 +192,19 @@ in the core's Tool registry and permission gate, which resolve authorization thr
 an operator decision, never through transcript text
 ([Invariant 8](../01-constitution/01-the-eight-invariants.md#invariant-8--security-and-explicit-permissions)).
 
+> **⚠ Unresolved security question — verify against the running Cortex.** The
+> `require_privileged` gating described above is what this chapter asserts, but it is
+> contradicted by another document and must not be trusted until checked.
+> `docs/luca-cortex-backend-architecture-plan.md` reports the opposite: **no auth on
+> the Cortex endpoints, a wildcard CORS policy, and an optional `0.0.0.0` bind** — a
+> combination that, if accurate, exposes the privileged routers (OSINT, pentest) to
+> any local — or, with a `0.0.0.0` bind, networked — caller. These two accounts cannot
+> both be true. This document does not assert either way; it flags the conflict as an
+> open current-state security item to be resolved by inspecting the running Cortex's
+> actual router wiring, CORS configuration, and bind address, not by trusting either
+> doc. Until verified, treat the Cortex HTTP surface as **unproven**, and rely on the
+> core's gate as the authoritative control.
+
 ## Graceful degradation — and its hard limit
 
 The Cortex can be absent: not installed, not yet started, crashed, or intentionally

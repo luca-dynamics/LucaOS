@@ -160,6 +160,90 @@ the full Skill lifecycle (acquire, evaluate, improve) is a target the
 describe it as finished. What is real today is the registry, the categories, and
 the skill-set tagging that groups Tools into competencies.
 
+### Two senses of "Skill" — disambiguated
+
+The word **Skill** carries two distinct meanings across LucaOS, and conflating
+them causes real confusion (see the [Crosswalk](../CROSSWALK.md#term-collision-resolutions)).
+This chapter uses the first sense as primary and names the second where it applies:
+
+| Sense | Meaning | Where it lives |
+|---|---|---|
+| **Skill** (learned competency) | An emergent, higher-level competence Luca acquires and improves — the Glossary sense above, contrasted with a primitive Tool. | This chapter; the `skillSets` bundles. |
+| **Skill** (contracted unit) | An installable/imported unit with a **contract + sandbox** — a packaged capability with declared permissions, tools, prompts, and a risk level, governed by the [Skills Runtime](../CROSSWALK.md#subsystem-crosswalk). | `docs/skills/SKILLS_RUNTIME_SPEC.md`; code `src/services/skills/`. |
+
+The rest of this section is about the second sense: the runtime that governs how a
+packaged, contracted Skill is imported, sandboxed, and gated.
+
+## The Skills Runtime
+
+The generic "capability / tool layer" this chapter describes maps, in the product
+and code, to the **Skills Runtime** (crosswalk: generic Tool/capability layer ↔
+[Skills Runtime](../CROSSWALK.md#subsystem-crosswalk), code `toolRegistry` +
+`src/services/skills/`). Its job is to give Luca-native skills, MCP tools,
+plugins, and imported third-party skill formats **one execution and policy
+substrate** rather than a separate trust story per source. Everything an external
+source contributes normalizes into the same contract and passes the same gates.
+
+### The normalized Skill Contract
+
+Whatever the source — a native skill, an MCP server, an imported plugin — the
+Skills Runtime normalizes it to a single **Skill Contract** so the registry, the
+dispatch loop, and [Luca Guard](07-safety-and-permissions.md#the-subsystem-luca-guard)
+can reason about all skills uniformly:
+
+```typescript
+// Illustrative — the normalized shape; see docs/skills/SKILLS_RUNTIME_SPEC.md
+interface SkillContract {
+  id: string;                 // stable identifier
+  source: SkillSource;        // native | mcp | plugin | imported
+  permissions: string[];      // the permission scopes it requests
+  tools: string[];            // the Tools it may invoke
+  prompts?: string[];         // prompt fragments it contributes
+  memory_policy: MemoryPolicy;// how it may read/write Memory
+  risk_level: RiskClass;      // safe | sensitive | dangerous (see chapter 07)
+  sandbox: SandboxPolicy;     // where and how tightly it executes
+  version: string;            // versioned; updates support rollback
+}
+```
+
+The contract is what makes an imported capability governable: it declares, up
+front and in one shape, what the skill wants (`permissions`, `tools`), how risky
+it is (`risk_level`), and where it is allowed to run (`sandbox`). A source that
+declines to declare does not thereby escape the model — an undeclared or
+untrusted skill falls to the most constrained defaults, not the least.
+
+### Sandboxing and trust-tier gating for third-party skills and MCP
+
+Imported skills and plugins are **untrusted by default**. The Skills Runtime's
+rules follow directly from that stance and tie into
+[Luca Guard](07-safety-and-permissions.md#the-subsystem-luca-guard):
+
+- **All skill execution is permission-scoped.** A skill runs with exactly the
+  scopes its contract declares and Luca Guard grants — least privilege, not
+  ambient authority.
+- **Sensitive and untrusted skills run sandboxed.** A skill whose `risk_level` is
+  sensitive or dangerous, or whose asset trust tier is Untrusted, executes inside
+  a sandbox boundary rather than against the live Host.
+- **Signature and trust-tier gating decides what a skill is allowed before it
+  runs.** Third-party skills and MCP servers are checked against Luca Guard's
+  **signature/trust verification** and placed in an
+  [asset trust tier](07-safety-and-permissions.md#risk-classes-and-asset-trust-tiers)
+  (Trusted / Verified / Untrusted). A signed, policy-compliant external asset can
+  reach Verified; an unsigned or unknown one stays Untrusted and sandbox-only.
+- **Invocations are logged.** Skill invocations are recorded into the mission/audit
+  channels (see [Observability and Provenance](11-observability-and-provenance.md)),
+  so a third-party skill's actions are as auditable as a built-in Tool's.
+- **Updates are versioned and rollback-capable.** The contract's `version` lets a
+  skill update be rolled back rather than trusted blindly.
+
+This is the same principle the [MCP client integration](#mcp-client-integration)
+section states — an external source cannot smuggle in an ungated capability —
+made explicit as a trust model: gating is applied by contract, signature, and
+trust tier at registration, never by trusting the source. Refinements to a
+skill's own behavior, where they touch Luca's code, are further bounded by the
+guarded-evolution boundary (Origin-only, sandboxed, rollback-required), which the
+Skills Runtime spec and Luca Guard share.
+
 ## MCP client integration
 
 LucaOS is a functional **Model Context Protocol client**
@@ -209,7 +293,8 @@ transcript.
 
 ## See also
 
-- [Safety and Permissions](07-safety-and-permissions.md) — the gate every side-effecting Tool passes
+- [Safety and Permissions](07-safety-and-permissions.md) — Luca Guard: the gate, risk classes, asset trust tiers, and signature verification every Skill and Tool passes
+- [Crosswalk — Skills Runtime](../CROSSWALK.md#subsystem-crosswalk) — the generic capability layer ↔ Skills Runtime mapping, and the two senses of "Skill"
 - [Provider Abstraction](04-provider-abstraction.md) — where `ToolCall`s come from and go back
 - [Persistent Runtime](01-persistent-runtime.md) — the turn loop that hosts the dispatch loop
 - [What Luca Is and Is Not](../00-manifesto/02-what-luca-is-and-is-not.md) — tools, not destinations
