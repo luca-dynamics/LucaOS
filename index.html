@@ -185,22 +185,24 @@
         color: #d5504a;
         background: rgba(213, 80, 74, 0.1);
       }
-      /* Face: large, center-right. */
+      /* Face: clear, on the right half — content sits on the left, the two
+         side by side without overlap, exactly as the desktop mockup. Held to
+         the right ~46vw so the panel's left column never sits under it. */
       .loader-presence {
         position: absolute;
-        right: 6%;
+        right: 4%;
         top: 50%;
         transform: translateY(-50%);
         width: auto;
-        height: min(86vh, 640px);
-        max-width: 52vw;
+        height: min(84vh, 620px);
+        max-width: 46vw;
         display: grid;
         place-items: center;
         z-index: 1;
       }
-      /* High-key blend: lightened + desaturated into the pale environment,
-         a gentle silhouette glow, and a mask pair (bottom fade ∩ soft
-         ellipse) so shoulders and hair edges soften into the background. */
+      /* The face is a CLEAR presence, per the mockup — bright, fully itself,
+         not a ghost dimmed behind the content. Only a soft bottom fade keeps
+         the shoulders from ending as a hard cut; the centre stays crisp. */
       .loader-hologram-face {
         position: relative;
         z-index: 1;
@@ -208,17 +210,76 @@
         height: 100%;
         max-width: 100%;
         object-fit: contain;
-        opacity: 0.85;
-        filter: brightness(1.32) saturate(0.62) contrast(0.94)
-          drop-shadow(0 0 18px rgba(216, 243, 248, 0.55));
+        opacity: 0.95;
+        filter: brightness(1.18) saturate(0.72) contrast(0.98)
+          drop-shadow(0 0 20px rgba(216, 243, 248, 0.55));
         -webkit-mask-image:
-          linear-gradient(to bottom, black 54%, rgba(0, 0, 0, 0.55) 75%, transparent 94%),
-          radial-gradient(ellipse 70% 66% at 50% 42%, black 50%, rgba(0, 0, 0, 0.55) 76%, transparent 96%);
-        -webkit-mask-composite: source-in;
+          linear-gradient(to bottom, black 68%, rgba(0, 0, 0, 0.6) 84%, transparent 98%);
         mask-image:
-          linear-gradient(to bottom, black 54%, rgba(0, 0, 0, 0.55) 75%, transparent 94%),
-          radial-gradient(ellipse 70% 66% at 50% 42%, black 50%, rgba(0, 0, 0, 0.55) 76%, transparent 96%);
-        mask-composite: intersect;
+          linear-gradient(to bottom, black 68%, rgba(0, 0, 0, 0.6) 84%, transparent 98%);
+      }
+      /* Inline face — the stacked layout's presence, between subtitle and
+         checklist. Hidden on wide windows (the absolute face carries it there).
+         Given an explicit height so the shared .loader-hologram-face (height:
+         100%) has something to fill. */
+      .loader-presence-inline {
+        display: none;
+        justify-content: center;
+        height: min(42vh, 360px);
+        margin: 6px 0 20px;
+      }
+
+      /* ── Second boot, unified with the native splash ──────────────────────
+         Loading shows a hairline track + one status line (no heavy card), the
+         same calm the native boot.html uses. The card only returns — light —
+         at the ready moment. */
+      .loader-awaken {
+        margin-top: 4px;
+      }
+      .loader-track {
+        position: relative;
+        width: 100%;
+        height: 3px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(43, 48, 58, 0.09);
+      }
+      .loader-fill {
+        height: 100%;
+        width: 18%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #a6c6e8 0%, #cfe0f2 100%);
+        box-shadow: 0 0 10px rgba(127, 169, 216, 0.5);
+        transition: width 520ms ease;
+      }
+      .loader-phase {
+        min-height: 15px;
+        margin-top: 11px;
+        font-size: 13px;
+        letter-spacing: 0.01em;
+        color: #6b7480;
+      }
+      /* Ready summary — clean ticked rows, no frosted box. */
+      .loader-summary {
+        display: none;
+        margin-top: 2px;
+      }
+      .loader-summary .loader-check--ready {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 2px;
+        border-bottom: 1px solid rgba(43, 48, 58, 0.06);
+      }
+      .loader-summary .loader-check--ready:last-child {
+        border-bottom: 0;
+      }
+      /* Ready state: retire the progress cluster, reveal the summary. */
+      #root-loader[data-state="ready"] .loader-awaken {
+        display: none;
+      }
+      #root-loader[data-state="ready"] .loader-summary {
+        display: block;
       }
       /* Brand: spinner + wordmark + subtitle, center-left. */
       .loader-brand {
@@ -630,7 +691,9 @@
         gap: 14px;
       }
       #root-loader[data-state="failed"] .loader-presence,
-      #root-loader[data-state="failed"] .loader-progress,
+      #root-loader[data-state="failed"] .loader-presence-inline,
+      #root-loader[data-state="failed"] .loader-awaken,
+      #root-loader[data-state="failed"] .loader-summary,
       #root-loader[data-state="failed"] .loader-spinner {
         display: none;
       }
@@ -677,6 +740,12 @@
          becomes ambient backdrop behind the panel, and the panel centers at
          full width. The failed state already used exactly this shape, so the
          narrow layout is the same idea applied to the normal path. */
+      /* ── Stacked layout (narrow windows / the mobile mockup) ──────────────
+         The two-column hero can't breathe below ~1024px, so the loader becomes
+         a single centred column: heading → subtitle → CLEAR face → checklist →
+         Continue, exactly as the phone mockup. The absolute right-hand face is
+         retired here and the inline face (which lives between subtitle and
+         checklist in the DOM) takes over, so the face and card never overlap. */
       @media (max-width: 1023px) {
         #root-loader {
           display: flex;
@@ -686,30 +755,28 @@
           padding: 24px 16px;
         }
         .loader-presence {
-          position: absolute;
-          left: 50%;
-          right: auto;
-          top: 50%;
-          transform: translate(-50%, -50%);
-          height: min(72vh, 540px);
-          max-width: 88vw;
-          /* Atmosphere rather than a collider — the panel now sits over it. */
-          opacity: 0.45;
-          z-index: 0;
+          display: none; /* the inline face carries the stacked layout */
+        }
+        .loader-presence-inline {
+          display: flex;
         }
         .loader-panel {
           position: static;
           transform: none;
           width: min(94vw, 440px);
+          display: flex;
+          flex-direction: column;
           z-index: 2;
         }
         /* nowrap is what pushed the title and lead outside the panel; with a
-           narrower column they are allowed to wrap. */
+           narrower column they are allowed to wrap, and centre like the mockup. */
         .loader-brandtag,
         .loader-lead {
           white-space: normal;
+          text-align: center;
         }
         .loader-brandtag {
+          justify-content: center;
           font-size: clamp(24px, 5vw, 34px);
         }
       }
@@ -718,9 +785,9 @@
         .loader-panel {
           width: 100%;
         }
-        .loader-presence {
-          height: 56vh;
-          opacity: 0.32;
+        .loader-presence-inline {
+          height: min(38vh, 320px);
+          margin: 4px 0 18px;
         }
         .loader-check {
           gap: 11px;
@@ -733,6 +800,19 @@
         }
         .loader-card-foot {
           font-size: 11px;
+        }
+      }
+
+      /* Short windows: face + tall checklist can exceed the viewport. Let the
+         column scroll rather than clip Continue, and trim the face first. */
+      @media (max-width: 1023px) and (max-height: 640px) {
+        #root-loader {
+          justify-content: flex-start;
+          overflow-y: auto;
+        }
+        .loader-presence-inline {
+          height: min(18vh, 130px);
+          margin: 4px 0 10px;
         }
       }
     </style>
@@ -777,7 +857,24 @@
         <p class="loader-lead loader-status">
           Performing readiness checks. This will only take a moment.
         </p>
-        <div class="loader-card" id="loader-checklist"></div>
+        <!-- Inline face for the stacked (narrow / mobile) layout: it sits
+             between the subtitle and the checklist, exactly as the mobile
+             mockup does, and is hidden on wide windows where the absolute
+             .loader-presence carries the face on the right instead. -->
+        <div class="loader-presence-inline" aria-hidden="true">
+          <img class="loader-hologram-face" src="/hologram.png" alt="" />
+        </div>
+        <!-- Loading: a hairline progress bar + one status line, borrowed from
+             the native boot splash so the two boots read as one calm, continuous
+             moment instead of two different-looking screens. -->
+        <div class="loader-awaken" id="loader-awaken">
+          <div class="loader-track"><div class="loader-fill" id="loader-fill"></div></div>
+          <div class="loader-phase" id="loader-phase"></div>
+        </div>
+        <!-- Ready: a clean, light summary of what is now live — no frosted box.
+             The loading state already carried the weight; arrival should feel
+             light. (id kept as loader-checklist for the boot hooks.) -->
+        <div class="loader-summary" id="loader-checklist"></div>
         <div id="loader-healthpill"></div>
         <div class="loader-failure-details" aria-live="polite"></div>
       </div>
@@ -931,61 +1028,22 @@
         let readinessProgress = 0.18;
         let readinessStatusTimer = 0;
 
-        const renderChecklist = () => {
-          const host = document.getElementById("loader-checklist");
-          if (!host || host.childElementCount) return;
-          host.innerHTML =
-            readinessChecks
-              .map(
-                (c, i) =>
-                  `<div class="loader-check" data-check="${i}" data-state="pending">` +
-                  `<span class="loader-check-icon">${c.icon}</span>` +
-                  `<div class="loader-check-body">` +
-                  `<div class="loader-check-title">${c.title}</div>` +
-                  `<div class="loader-check-detail">${c.detail}</div>` +
-                  `</div><span class="loader-check-status"></span></div>`,
-              )
-              .join("") +
-            (readinessCopy.footer === "details"
-              ? // Returning user: a quiet "Details" disclosure row.
-                '<div class="loader-card-foot loader-card-foot--details">' +
-                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"/></svg>' +
-                "Details</div>"
-              : '<div class="loader-card-foot">System integrity verified ' +
-                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 10V8a5 5 0 0110 0v2" stroke-linecap="round"/><rect x="4.5" y="10" width="15" height="10" rx="2.4"/></svg></div>');
-
-          // Returning user also gets the standalone health pill under the card.
-          const pillHost = document.getElementById("loader-healthpill");
-          if (pillHost && readinessCopy.healthPill) {
-            pillHost.innerHTML =
-              '<span class="loader-health"><span class="loader-health-dot"></span>' +
-              readinessCopy.healthPill +
-              "</span>";
-          }
-        };
-
-        const paintChecklist = () => {
-          renderChecklist();
-          const host = document.getElementById("loader-checklist");
-          if (!host) return;
-          const activeIndex = readinessChecks.findIndex(
-            (c) => readinessProgress < c.at,
-          );
-          readinessChecks.forEach((_, i) => {
-            const row = host.querySelector(`[data-check="${i}"]`);
-            if (!row) return;
-            const status = row.querySelector(".loader-check-status");
-            if (activeIndex === -1 || i < activeIndex) {
-              row.dataset.state = "done";
-              status.innerHTML = CHECK_TICK;
-            } else if (i === activeIndex) {
-              row.dataset.state = "active";
-              status.innerHTML = CHECK_SPIN + "<span>Resolving…</span>";
-            } else {
-              row.dataset.state = "pending";
-              status.innerHTML = "";
+        // Loading: advance the hairline bar and name the current check on one
+        // status line — the native splash's calm, no per-row card. The phase
+        // is derived from progress against each check's `at` threshold, so the
+        // words stay in step with the bar.
+        const paintProgress = () => {
+          const fill = document.getElementById("loader-fill");
+          const phase = document.getElementById("loader-phase");
+          if (fill) fill.style.width = Math.round(readinessProgress * 100) + "%";
+          if (phase) {
+            const active =
+              readinessChecks.find((c) => readinessProgress < c.at) ||
+              readinessChecks[readinessChecks.length - 1];
+            if (active && phase.textContent !== active.title) {
+              phase.textContent = active.title;
             }
-          });
+          }
         };
 
         // React's boot entry pings progress through this hook; real progress
@@ -1000,7 +1058,7 @@
               Math.min(progress, 1),
             );
           }
-          paintChecklist();
+          paintProgress();
         };
 
         // ---- Ready gate -----------------------------------------------------
@@ -1081,10 +1139,9 @@
           }
         };
 
-        paintChecklist();
-        // Gentle auto-advance so the checks visibly resolve even before the
-        // real boot pings arrive; capped just under complete until the app
-        // actually opens.
+        paintProgress();
+        // Gentle auto-advance so the bar visibly climbs even before the real
+        // boot pings arrive; capped just under complete until the app opens.
         readinessStatusTimer = window.setInterval(() => {
           const loader = document.getElementById("root-loader");
           if (!loader || loader.dataset.state === "failed") {
@@ -1092,7 +1149,7 @@
             return;
           }
           readinessProgress = Math.min(readinessProgress + 0.12, 0.9);
-          paintChecklist();
+          paintProgress();
         }, 900);
 
         window.__LUCA_SHOW_BOOT_FAILURE__ = (message, error) => {
@@ -1111,8 +1168,8 @@
           const title = loader.querySelector(".loader-text");
           const status = loader.querySelector(".loader-status");
           const details = loader.querySelector(".loader-failure-details");
-          const checklist = loader.querySelector(".loader-card");
-          if (checklist) checklist.style.display = "none";
+          const awaken = loader.querySelector("#loader-awaken");
+          if (awaken) awaken.style.display = "none";
           if (title)
             title.textContent = message || "LucaOS web app failed to start";
           if (status) {

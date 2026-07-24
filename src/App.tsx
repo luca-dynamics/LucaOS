@@ -504,12 +504,18 @@ function AppContent() {
   // <main>), so nothing the old sidebar reaches is ever orphaned.
   const [workspaceShellEnabled] = useState<boolean>(() => {
     try {
+      // The three-panel workspace is now the default shell. It stays ON unless
+      // explicitly turned off (LUCA_WORKSPACE_SHELL="0"), so the legacy shell is
+      // still reachable for anyone who needs the full tactical nav while the new
+      // sidebar grows those surfaces back in. With the small default window
+      // (800x600) the shell lands in its compact, chat-only mode; widening the
+      // window brings the sidebar and Operation Center in.
       return (
-        typeof localStorage !== "undefined" &&
-        localStorage.getItem("LUCA_WORKSPACE_SHELL") === "1"
+        typeof localStorage === "undefined" ||
+        localStorage.getItem("LUCA_WORKSPACE_SHELL") !== "0"
       );
     } catch {
-      return false;
+      return true;
     }
   });
   const workspacePendingCount = usePendingApprovalCount();
