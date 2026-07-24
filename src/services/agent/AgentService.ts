@@ -30,7 +30,6 @@ import { shutdownManager, AgentServiceShutdownHandler } from "./LucaShutdown";
 import { AgentTrace } from "./LucaTracing";
 
 // PHASE 10: Cognitive Services (ALL ACTIVE)
-import { CheckpointManager } from "./cognitive/CheckpointManager";
 import { WorkflowMemory } from "./cognitive/WorkflowMemory";
 import { LearningEngine } from "./cognitive/LearningEngine";
 import { HumanInputOrchestrator } from "./cognitive/HumanInputOrchestrator";
@@ -62,7 +61,6 @@ export class AgentService {
   private isShuttingDown: boolean = false;
 
   // PHASE 10: Cognitive Services (ACTIVE)
-  private checkpointManager: CheckpointManager;
   private workflowMemory: WorkflowMemory;
   private learningEngine: LearningEngine;
   private humanInput: HumanInputOrchestrator;
@@ -76,7 +74,12 @@ export class AgentService {
     shutdownManager.registerHandler(shutdownHandler);
 
     // PHASE 10: Initialize cognitive services
-    this.checkpointManager = new CheckpointManager();
+    // NOTE: durable checkpointing (CheckpointManager, node:sqlite-backed) is not
+    // wired in — AgentService checkpoints to localStorage via saveTaskCheckpoint.
+    // The previously-constructed-but-unused CheckpointManager was removed because
+    // its constructor created a stray checkpoints.db (with an unreliable renderer
+    // path) that nothing ever read or wrote. Wire it deliberately if durable
+    // checkpointing is needed.
     this.workflowMemory = new WorkflowMemory();
     this.learningEngine = new LearningEngine();
     this.humanInput = new HumanInputOrchestrator();

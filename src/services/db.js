@@ -4,6 +4,13 @@ const isElectron = typeof process !== 'undefined' && process.versions && !!proce
 const isNode = typeof process !== 'undefined' && process.versions && !!process.versions.node;
 
 let db;
+// True only when a real, persistent database was expected and failed to open —
+// i.e. we tried node:sqlite and the catch ran. The browser has no filesystem, so
+// its mock store is intentional and must stay quiet; a Node/Electron process that
+// silently drops to a non-persistent mock and discards every write is a
+// correctness bug, not graceful degradation. This flag keeps the two apart.
+let dbDegraded = false;
+let dbInitError = null;
 
 if (isNode || isElectron) {
     // Dynamic import to prevent build-time crashes in web environments.
@@ -90,22 +97,71 @@ if (isNode || isElectron) {
             database.exec(`CREATE TABLE IF NOT EXISTS pentest_findings (id TEXT PRIMARY KEY, session_id TEXT NOT NULL, vulnerability_type TEXT, severity TEXT, confidence REAL, sink_path TEXT, proof_of_concept TEXT, evidence_json TEXT, status TEXT DEFAULT 'potential', created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000), FOREIGN KEY(session_id) REFERENCES pentest_sessions(id))`);
         };
         initSchema(db);
+        // Publish a cheap, import-free status signal so /api/health can report
+        // database health without importing (and thereby initializing) this
+        // module on the fast-listen boot path.
+        globalThis.__LUCA_DB_STATUS = { ok: true, degraded: false, mock: false, error: null };
     } catch (e) {
-        console.warn('[DB] Native database initialization failed, falling back to mock.', e);
+        dbDegraded = true;
+        dbInitError = e;
+        console.error(
+            '[DB] CRITICAL: the persistent database failed to open. Running on a ' +
+            'NON-PERSISTENT in-memory fallback — memory and other writes WILL BE ' +
+            'LOST until this is fixed. This is a data-integrity failure, not a ' +
+            'graceful degradation.',
+            e,
+        );
     }
 }
 
-// Fallback / Web implementation
+// Fallback implementation.
+//
+// Two very different situations reach this point:
+//   1. The browser build, which has no filesystem — the mock is intentional and
+//      quiet.
+//   2. A Node/Electron process whose real database failed to open (dbDegraded) —
+//      here the mock is a last resort that MUST NOT pretend writes succeeded.
 if (!db) {
-    console.log('[DB] Using Web Mock Database (InMemory/LocalStorage)');
+    if (!dbDegraded) {
+        console.log('[DB] Using browser mock database (no filesystem available).');
+    }
+
+    // In the degraded case, surface each discarded write once so silent data loss
+    // becomes visible in the logs instead of looking like success.
+    let warnedWriteLoss = false;
+    const noteDiscardedWrite = () => {
+        if (dbDegraded && !warnedWriteLoss) {
+            warnedWriteLoss = true;
+            console.error(
+                '[DB] A write was discarded because the database is not persistent ' +
+                '(see the CRITICAL startup error above). Further discards are silenced.',
+            );
+        }
+    };
+
     db = {
-        exec: () => {},
+        // Detectable by callers and health checks (e.g. /api/health) so the
+        // degraded state can be reported rather than hidden.
+        __isMockStore: true,
+        __degraded: dbDegraded,
+        __initError: dbInitError ? String(dbInitError && dbInitError.message || dbInitError) : null,
+        exec: () => { noteDiscardedWrite(); },
         prepare: () => ({
-            run: () => ({ changes: 0, lastInsertRowid: 0 }),
+            run: () => { noteDiscardedWrite(); return { changes: 0, lastInsertRowid: 0 }; },
             get: () => null,
             all: () => []
         }),
         pragma: () => {}
+    };
+
+    // Import-free status signal for /api/health. `degraded: true` means a real
+    // database was expected and is missing (writes are being lost); a quiet
+    // browser mock reports degraded: false.
+    globalThis.__LUCA_DB_STATUS = {
+        ok: !dbDegraded,
+        degraded: dbDegraded,
+        mock: true,
+        error: db.__initError,
     };
 }
 

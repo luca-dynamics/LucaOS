@@ -8,6 +8,10 @@ import type {
   ProvenanceSourceType,
   ProvenanceTrustLevel,
 } from "../../types/provenance";
+// Synchronous, cross-platform SHA-256 (works in the renderer and in Node, unlike
+// WebCrypto's async-only subtle.digest). Used so the security-critical action
+// digest is collision-resistant without changing every caller to be async.
+import sha256 from "crypto-js/sha256";
 
 interface StorageLike {
   getItem(key: string): string | null;
@@ -53,13 +57,18 @@ function fnv1aFallback(input: string): string {
 
 export function deterministicDigest(value: unknown): string {
   const input = stableStringify(value);
-  if (typeof globalThis.crypto?.subtle?.digest === "function") {
-    // Prefer SHA-256 when WebCrypto is available (sync wrapper returns
-    // a fallback immediately; callers that need the strong digest should
-    // use deterministicDigestAsync).
+  try {
+    // Real SHA-256. This binds an approval to an exact action; the previous
+    // 32-bit FNV-1a was collision-prone (an attacker controlling action
+    // parameters could brute-force a colliding digest and reuse an approval).
+    return `sha256:${sha256(input).toString()}`;
+  } catch {
+    // Last resort only. FNV-1a is NOT collision-resistant and must never be
+    // relied on for security identity; reaching here means the hash library
+    // failed to load, which is itself a defect worth surfacing.
+    console.error("[Provenance] SHA-256 digest failed; using non-secure fallback.");
     return fnv1aFallback(input);
   }
-  return fnv1aFallback(input);
 }
 
 export async function deterministicDigestAsync(value: unknown): Promise<string> {
