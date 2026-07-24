@@ -56,6 +56,13 @@ export interface CompleteProductMissionInput {
     missionId: string,
     result: FinalizeMissionTapeWithVerificationResult,
   ) => Promise<void> | void;
+  /**
+   * Opt in to writing an auto-synthesized skill file from the completed
+   * trajectory. Off by default: it persists mission text to disk as a skill
+   * that is later loaded back as LLM context, so untrusted mission content
+   * must not be turned into standing instructions on every completion.
+   */
+  synthesizeSkillOnComplete?: boolean;
 }
 
 export interface CompleteProductMissionResult
@@ -377,21 +384,26 @@ export async function completeProductMission(
       await input.onCompletedArchive(missionId);
       archived = true;
     }
-    // Phase 2: Autonomous Skill Synthesis from completed mission trajectory
-    try {
-      const { autonomousSkillSynthesizer } = await import("../skills/autonomousSkillSynthesizer");
-      const steps = (input.steps || []).map((s) => ({
-        kind: s.kind || "tool_call",
-        description: s.goal,
-        resultSummary: s.notes,
-      }));
-      await autonomousSkillSynthesizer.synthesizeSkill({
-        missionTitle: input.intent || missionId,
-        description: `Autonomous skill generated from completed mission: ${input.intent}`,
-        steps: steps.length > 0 ? steps : [{ kind: "mission", description: input.intent }],
-      });
-    } catch (err) {
-      console.warn("[completeProductMission] Autonomous skill synthesis failed silently:", err);
+    // Phase 2: Autonomous Skill Synthesis from completed mission trajectory.
+    // Opt-in only: writing mission text to a disk skill that is later reloaded
+    // as LLM context is a prompt-injection persistence vector, so it must not
+    // fire on every completion by default.
+    if (input.synthesizeSkillOnComplete) {
+      try {
+        const { autonomousSkillSynthesizer } = await import("../skills/autonomousSkillSynthesizer");
+        const steps = (input.steps || []).map((s) => ({
+          kind: s.kind || "tool_call",
+          description: s.goal,
+          resultSummary: s.notes,
+        }));
+        await autonomousSkillSynthesizer.synthesizeSkill({
+          missionTitle: input.intent || missionId,
+          description: `Autonomous skill generated from completed mission: ${input.intent}`,
+          steps: steps.length > 0 ? steps : [{ kind: "mission", description: input.intent }],
+        });
+      } catch (err) {
+        console.warn("[completeProductMission] Autonomous skill synthesis failed:", err);
+      }
     }
   } else if (completion.blockedByVerification && input.onBlocked) {
     await input.onBlocked(missionId, completion);

@@ -8,6 +8,13 @@ import { fileURLToPath } from 'url';
 import { channelSessionRouter } from './channelSessionRouter.js';
 import { telegramBotGateway } from './telegramBot.js';
 import { discordBotGateway } from './discordBot.js';
+import {
+  generateToken,
+  generateSessionId,
+  isPairingAuthorized,
+  verifyTelegramSecret,
+  verifyDiscordSignature,
+} from './auth.js';
 
 dotenv.config();
 
@@ -57,7 +64,13 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json());
+// Capture the raw body so the Discord webhook can verify its Ed25519 signature
+// over the exact bytes Discord signed.
+app.use(express.json({
+  verify: (req, _res, buf) => {
+    req.rawBody = buf;
+  },
+}));
 
 // Serve static files (guest.html)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -90,32 +103,60 @@ app.get('/api/gateway/status', (req, res) => {
 
 // Telegram Webhook Handler
 app.post('/api/gateway/telegram', async (req, res) => {
-  const result = await telegramBotGateway.handleUpdate(req.body);
-  if (result) {
-    stats.messagesRelayed++;
-    if (result.targetDeviceId && devices.has(result.targetDeviceId)) {
-      const dev = devices.get(result.targetDeviceId);
-      dev.socket.emit('gateway-prompt', result);
-    }
+  // Reject forged/unauthenticated webhooks: Telegram echoes the secret token
+  // we registered with setWebhook. Without it configured, the endpoint is off.
+  if (!verifyTelegramSecret(req)) {
+    return res.status(401).json({ ok: false, error: 'unauthorized' });
   }
-  res.json({ ok: true });
+  try {
+    const result = await telegramBotGateway.handleUpdate(req.body);
+    if (result) {
+      stats.messagesRelayed++;
+      if (result.targetDeviceId && devices.has(result.targetDeviceId)) {
+        const dev = devices.get(result.targetDeviceId);
+        dev.socket.emit('gateway-prompt', result);
+      }
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[GATEWAY] telegram handler error:', err?.message || err);
+    res.status(400).json({ ok: false, error: 'bad_request' });
+  }
 });
 
 // Discord Webhook Handler
 app.post('/api/gateway/discord', async (req, res) => {
-  const result = await discordBotGateway.handleInteraction(req.body);
-  if (result) {
-    stats.messagesRelayed++;
-    if (result.targetDeviceId && devices.has(result.targetDeviceId)) {
-      const dev = devices.get(result.targetDeviceId);
-      dev.socket.emit('gateway-prompt', result);
-    }
+  // Verify the Ed25519 signature over the raw body before doing anything else.
+  if (!verifyDiscordSignature(req)) {
+    return res.status(401).json({ error: 'invalid request signature' });
   }
-  res.json({ ok: true });
+  // Respond to Discord's endpoint-verification PING (interaction type 1).
+  if (req.body && req.body.type === 1) {
+    return res.json({ type: 1 });
+  }
+  try {
+    const result = await discordBotGateway.handleInteraction(req.body);
+    if (result) {
+      stats.messagesRelayed++;
+      if (result.targetDeviceId && devices.has(result.targetDeviceId)) {
+        const dev = devices.get(result.targetDeviceId);
+        dev.socket.emit('gateway-prompt', result);
+      }
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[GATEWAY] discord handler error:', err?.message || err);
+    res.status(400).json({ ok: false, error: 'bad_request' });
+  }
 });
 
 // Generate pairing token endpoint (for Luca app pairing)
 app.post('/api/pairing/generate', (req, res) => {
+  // The mint is the mesh's root of trust — require the owner's shared secret.
+  const authz = isPairingAuthorized(req);
+  if (!authz.ok) {
+    return res.status(authz.status).json({ error: authz.reason });
+  }
   const token = generateToken();
   const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
   
@@ -417,14 +458,7 @@ io.on('connection', (socket) => {
 });
 
 // Helper functions
-function generateToken() {
-  return 'RELAY-' + Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15);
-}
-
-function generateSessionId() {
-  return 'GUEST-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-}
+// generateToken / generateSessionId are imported from ./auth.js (CSPRNG).
 
 function verifyToken(token) {
   const tokenData = pairingTokens.get(token);

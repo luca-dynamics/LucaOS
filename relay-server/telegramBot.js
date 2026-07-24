@@ -4,6 +4,7 @@
  */
 
 import { channelSessionRouter } from "./channelSessionRouter.js";
+import { isTelegramChatAllowed } from "./auth.js";
 
 export class TelegramBotGateway {
   constructor() {
@@ -36,11 +37,21 @@ export class TelegramBotGateway {
     if (!update || !update.message) return null;
 
     const message = update.message;
+    // Guard malformed updates: a message without a chat previously threw a
+    // TypeError inside the awaited route handler, hanging the request.
+    if (!message.chat || message.chat.id == null) return null;
+
     const chatId = String(message.chat.id);
     const text = message.text || message.caption || "";
     const sender = message.from ? (message.from.username || message.from.first_name) : "User";
 
-    console.log(`[TELEGRAM_GATEWAY] Received message from ${sender} (${chatId}): "${text}"`);
+    // Only act on messages from allowlisted chats. Empty allowlist => deny all.
+    if (!isTelegramChatAllowed(chatId)) {
+      console.warn(`[TELEGRAM_GATEWAY] Dropped message from non-allowlisted chat ${chatId}`);
+      return null;
+    }
+
+    console.log(`[TELEGRAM_GATEWAY] Received message from ${sender} (${chatId})`);
 
     // Auto-discover target desktop device ID from active connected devices
     let targetDeviceId = null;

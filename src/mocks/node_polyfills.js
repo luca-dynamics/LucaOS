@@ -1,3 +1,5 @@
+import CryptoJS from 'crypto-js';
+
 export const createRequire = () => () => ({});
 export const promisify = (fn) => fn;
 export const exec = () => {};
@@ -232,16 +234,72 @@ export const dirname = (p) => p;
 export const basename = (p) => p;
 export const extname = () => '';
 
-// crypto mock
-export const createHash = () => ({
-  update: () => ({
-    digest: () => 'mock-hash'
-  })
-});
-export const createHmac = () => ({
-  update() { return this; },
-  digest: () => 'mock-hmac'
-});
+// crypto mock — REAL synchronous hashing/HMAC via crypto-js.
+//
+// These previously returned the constants 'mock-hash' / 'mock-hmac' regardless
+// of input, so any integrity or signature check compiled into the web build was
+// trivially forgeable (produce the constant and you pass) and content hashing
+// (e.g. screen-change detection) was broken. Backing them with crypto-js makes
+// the digests real and input-dependent. Note: in a browser bundle the HMAC key
+// is not secret, so this is integrity, not a server-grade secret — callers that
+// need true secrecy already gate on webSafeMode.
+function _toWordArray(data) {
+  if (data == null) return CryptoJS.lib.WordArray.create();
+  if (typeof data === 'string') return CryptoJS.enc.Utf8.parse(data);
+  if (data instanceof ArrayBuffer) {
+    return CryptoJS.lib.WordArray.create(new Uint8Array(data));
+  }
+  if (ArrayBuffer.isView(data)) {
+    return CryptoJS.lib.WordArray.create(
+      data instanceof Uint8Array ? data : new Uint8Array(data.buffer, data.byteOffset, data.byteLength),
+    );
+  }
+  return CryptoJS.enc.Utf8.parse(String(data));
+}
+
+function _encode(wordArray, encoding) {
+  if (encoding === 'base64') return wordArray.toString(CryptoJS.enc.Base64);
+  if (encoding === 'latin1' || encoding === 'binary') return wordArray.toString(CryptoJS.enc.Latin1);
+  return wordArray.toString(CryptoJS.enc.Hex); // Node's default for digest()
+}
+
+function _digestor(compute) {
+  let acc = CryptoJS.lib.WordArray.create();
+  return {
+    update(data) {
+      acc = acc.concat(_toWordArray(data));
+      return this;
+    },
+    digest(encoding) {
+      return _encode(compute(acc), encoding);
+    },
+  };
+}
+
+export const createHash = (algorithm) => {
+  const hashers = {
+    md5: CryptoJS.MD5,
+    sha1: CryptoJS.SHA1,
+    sha256: CryptoJS.SHA256,
+    sha512: CryptoJS.SHA512,
+  };
+  const fn = hashers[String(algorithm || '').toLowerCase()];
+  if (!fn) throw new Error(`[node_polyfills] Unsupported hash algorithm: ${algorithm}`);
+  return _digestor((wa) => fn(wa));
+};
+
+export const createHmac = (algorithm, key) => {
+  const hmacs = {
+    md5: CryptoJS.HmacMD5,
+    sha1: CryptoJS.HmacSHA1,
+    sha256: CryptoJS.HmacSHA256,
+    sha512: CryptoJS.HmacSHA512,
+  };
+  const fn = hmacs[String(algorithm || '').toLowerCase()];
+  if (!fn) throw new Error(`[node_polyfills] Unsupported HMAC algorithm: ${algorithm}`);
+  const keyWA = _toWordArray(key);
+  return _digestor((wa) => fn(wa, keyWA));
+};
 export const randomBytes = (size) => {
   const length = Number(size);
   if (!Number.isFinite(length) || length < 0) {
