@@ -1138,9 +1138,11 @@ export const ToolRegistry = {
 
     if (name === "export_fine_tuning_dataset") {
       const { missionTapeCompressor } = await import("./missionTape/missionTapeCompressor");
-      const { MissionTapeRecorder } = await import("./missionTape/MissionTapeRecorder");
-      const recorder = new MissionTapeRecorder();
-      const tapes = await recorder.listTapes({ limit: args.limit || 50 });
+      // Use the shared recorder every producer writes to; a fresh
+      // `new MissionTapeRecorder()` is an empty private store, so the export
+      // always returned zero tapes.
+      const { sharedMissionTapeRecorder } = await import("./missionTape/sharedMissionTapeRecorder");
+      const tapes = await sharedMissionTapeRecorder.listTapes({ limit: args.limit || 50 });
       const jsonlDataset = missionTapeCompressor.exportDataset(tapes, {
         format: args.format || "sharegpt",
         targetMaxTokens: args.maxTokens || 8000,
