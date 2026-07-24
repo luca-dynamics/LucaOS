@@ -63,3 +63,6 @@ cortex/python/venv/
 cortex/python/__pycache__/
 .vercel
 .env*.local
+
+# Scratch/QA artifacts — never commit
+tmp/
