@@ -1,0 +1,147 @@
+export const LIQUID_SKSL = `
+uniform float2 resolution;
+uniform float time;
+uniform float radius;
+uniform float intensity;
+uniform vec3 colorCore;
+uniform vec3 colorPrimary;
+uniform vec3 colorSec;
+uniform vec3 colorRim;
+uniform float fresnelStr;
+uniform float refractionStr;
+uniform float contrastBoost;
+uniform float opacityBoost;
+
+vec3 ACESFilm(vec3 x) {
+  float a = 2.51;
+  float b = 0.03;
+  float c = 2.43;
+  float d = 0.59;
+  float e = 0.14;
+  return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+}
+
+vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec3 permute(vec3 x) { return mod289(((x * 34.0) + 1.0) * x); }
+
+float snoise(vec2 v) {
+  const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                     -0.577350269189626, 0.024390243902439);
+  vec2 i  = floor(v + dot(v, C.yy));
+  vec2 x0 = v -   i + dot(i, C.xx);
+  vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+  i = mod289(i);
+  vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0))
+        + i.x + vec3(0.0, i1.x, 1.0));
+  vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0);
+  m = m * m;
+  m = m * m;
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * (a0 * a0 + h * h);
+  vec3 g;
+  g.x = a0.x * x0.x + h.x * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+
+vec2 curlField(vec2 p) {
+  const float e = 0.1;
+  float n1 = snoise(p + vec2(0.0, e));
+  float n2 = snoise(p - vec2(0.0, e));
+  float n3 = snoise(p + vec2(e, 0.0));
+  float n4 = snoise(p - vec2(e, 0.0));
+  return vec2((n1 - n2) / (2.0 * e), (n4 - n3) / (2.0 * e));
+}
+
+float fbm6(vec2 p) {
+  float value = 0.0;
+  float amp = 0.5;
+  float freq = 1.0;
+  for (int i = 0; i < 6; i++) {
+    value += amp * snoise(p * freq);
+    p *= 2.02;
+    amp *= 0.48;
+  }
+  return value;
+}
+
+float recursiveDomainWarp(vec2 p, float t) {
+  vec2 curlVel = curlField(p * 0.8 + t * 0.1) * 0.15;
+  vec2 advectedP = p + curlVel;
+  vec2 q = vec2(fbm6(advectedP + vec2(0.0, 0.0)), fbm6(advectedP + vec2(5.2, 1.3)));
+  vec2 r = vec2(fbm6(advectedP + 4.0 * q + vec2(1.7, 9.2) + 0.12 * t), fbm6(advectedP + 4.0 * q + vec2(8.3, 2.8) + 0.08 * t));
+  vec2 s = vec2(fbm6(advectedP + 4.0 * r + vec2(2.4, 6.1) + 0.05 * t), fbm6(advectedP + 4.0 * r + vec2(3.9, 4.7) + 0.04 * t));
+  return fbm6(advectedP + 4.0 * s);
+}
+
+float filmGrain(vec2 st, float t) {
+  return fract(sin(dot(st * (t * 0.01 + 1.0), vec2(12.9898, 78.233))) * 43758.5453) * 0.018;
+}
+
+half4 main(float2 fragCoord) {
+  float2 st = (fragCoord - 0.5 * resolution) / min(resolution.x, resolution.y);
+  float dist = length(st);
+  float angle = atan(st.y, st.x);
+
+  float t = time * 0.6;
+  float breathing = (sin(t) * 0.012) + (sin(t * 0.35) * 0.006);
+
+  vec2 noisePos = vec2(cos(angle) * 1.5 + t * 0.4, sin(angle) * 1.5 + t * 0.4);
+  float largeDeform = recursiveDomainWarp(noisePos, t) * 0.045;
+  float mediumDeform = fbm6(noisePos * 2.5 + t * 0.6) * 0.018;
+  float microDeform = snoise(noisePos * 5.0 + t * 0.8) * 0.007;
+
+  float totalDeform = (largeDeform + mediumDeform + microDeform) * (0.8 + intensity * 0.5);
+  float outerRadius = radius + breathing + totalDeform;
+
+  float glassThickness = 0.022;
+  float innerRadius = outerRadius - glassThickness;
+
+  float outerAlpha = smoothstep(outerRadius + 0.006, outerRadius - 0.006, dist);
+  float innerAlpha = smoothstep(innerRadius + 0.006, innerRadius - 0.006, dist);
+  float glassShellMask = clamp(outerAlpha - innerAlpha, 0.0, 1.0);
+
+  if (outerAlpha <= 0.001) return half4(0.0);
+
+  vec2 keyLightPos = vec2(cos(t * 0.5) * 0.14, sin(t * 0.5) * 0.14);
+  vec2 fillLightPos = vec2(cos(-t * 0.35 + 2.1) * 0.18, sin(-t * 0.35 + 2.1) * 0.18);
+  vec2 rimLightPos = vec2(-0.22, -0.22);
+
+  float keyLight = pow(clamp(1.0 - length(st - keyLightPos) / (outerRadius * 1.1), 0.0, 1.0), 3.0);
+  float fillLight = pow(clamp(1.0 - length(st - fillLightPos) / (outerRadius * 1.3), 0.0, 1.0), 2.5);
+  float rimLight = pow(clamp(1.0 - length(st - rimLightPos) / (outerRadius * 0.5), 0.0, 1.0), 6.0);
+
+  float radialRatio = clamp(dist / outerRadius, 0.0, 1.0);
+  vec3 colorStep1 = mix(colorCore, colorPrimary, smoothstep(0.0, 0.35, radialRatio));
+  vec3 colorStep2 = mix(colorStep1, colorSec, smoothstep(0.35, 0.75, radialRatio));
+  vec3 colorStep3 = mix(colorStep2, colorRim, smoothstep(0.75, 1.0, radialRatio));
+
+  vec3 liquidCoreRGB = colorStep3 + (colorCore * keyLight * 0.35) + (colorPrimary * fillLight * 0.2);
+
+  float fresnel = pow(radialRatio, 3.5) * fresnelStr * outerAlpha * contrastBoost;
+  float specularGlint = rimLight * refractionStr * 0.65;
+
+  vec3 glassShellRGB = mix(colorRim, vec3(1.0), fresnel * 0.6 + specularGlint);
+  vec3 compositeRGB = mix(liquidCoreRGB, glassShellRGB, glassShellMask * 0.55);
+
+  float chromoShift = 0.003 * refractionStr;
+  vec3 chromoRGB = vec3(
+    compositeRGB.r + snoise(st * 10.0 + vec2(chromoShift, 0.0)) * 0.04,
+    compositeRGB.g,
+    compositeRGB.b + snoise(st * 10.0 - vec2(chromoShift, 0.0)) * 0.04
+  );
+
+  vec3 linearRGB = chromoRGB + (colorCore * (1.0 - radialRatio) * 0.15) + (colorRim * fresnel * 0.25);
+  vec3 tonemappedRGB = ACESFilm(linearRGB * contrastBoost);
+  tonemappedRGB += vec3(filmGrain(fragCoord, time));
+
+  float finalAlpha = clamp(outerAlpha * (0.95 + opacityBoost), 0.0, 1.0);
+  return half4(tonemappedRGB * finalAlpha, finalAlpha);
+}
+`;
