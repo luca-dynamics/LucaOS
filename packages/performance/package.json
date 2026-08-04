@@ -1,0 +1,23 @@
+{
+  "name": "@luca/performance",
+  "version": "0.1.0",
+  "description": "Stage-by-Stage Latency Profiling & Percentile Telemetry Analysis Package for LucaOS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "luca",
+    "performance",
+    "telemetry",
+    "latency",
+    "percentiles"
+  ],
+  "author": "LucaOS Architecture",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
