@@ -1,0 +1,10 @@
+export { type CognitivePresence, createDefaultCognitivePresence } from "./CognitivePresence";
+export { ExpressionState } from "./ExpressionState";
+export { type PresenceProfile, type SurfaceKind, PRESENCE_PROFILES } from "./PresenceProfile";
+export { PresenceTimeline } from "./PresenceTimeline";
+export { OrbTranslator } from "./OrbTranslator";
+export { FaceTranslator } from "./FaceTranslator";
+export { PresenceFusionEngine } from "./PresenceFusionEngine";
+export { PresenceEngine } from "./PresenceEngine";
+export { ExpressionEngine, type ExpressiveOrbParameters } from "./PresenceTranslator";
+export { type Embodiment } from "./Embodiment";

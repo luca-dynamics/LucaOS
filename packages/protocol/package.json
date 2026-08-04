@@ -1,0 +1,23 @@
+{
+  "name": "@luca/protocol",
+  "version": "0.1.0",
+  "description": "Unified Platform Event Schemas, Protocol Versioning, DTOs, and Error Types for LucaOS",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "luca",
+    "protocol",
+    "dto",
+    "schemas",
+    "errors"
+  ],
+  "author": "LucaOS Architecture",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@luca/platform-runtime",
+  "version": "0.1.0",
+  "description": "Unified Platform Composition Root and Dependency Injection Container for LucaOS",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "luca",
+    "platform-runtime",
+    "composition-root",
+    "bootstrap",
+    "container"
+  ],
+  "author": "LucaOS Architecture",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

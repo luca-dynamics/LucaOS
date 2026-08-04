@@ -1,0 +1,1 @@
+export const INTERACTION_PROTOCOL_VERSION = 1;

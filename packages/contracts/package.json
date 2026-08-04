@@ -1,0 +1,20 @@
+{
+  "name": "@luca/contracts",
+  "version": "1.0.0",
+  "description": "Pure type contracts, DTOs, and schemas for LucaOS with zero external package dependencies",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "luca",
+    "contracts",
+    "dto",
+    "schema"
+  ],
+  "author": "LucaOS Architecture",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

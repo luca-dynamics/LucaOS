@@ -1,0 +1,23 @@
+{
+  "name": "@luca/audio",
+  "version": "0.1.0",
+  "description": "Real Audio Device Management, PCM Resampling, VAD Detection, and Streaming STT Pipeline for LucaOS",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "luca",
+    "audio",
+    "microphone",
+    "vad",
+    "stt"
+  ],
+  "author": "LucaOS Architecture",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

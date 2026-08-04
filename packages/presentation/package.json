@@ -1,0 +1,22 @@
+{
+  "name": "@luca/presentation",
+  "version": "0.1.0",
+  "description": "Pure Presentation Layer Adapters and ViewModels for LucaOS",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "luca",
+    "presentation",
+    "view-model",
+    "presenter"
+  ],
+  "author": "LucaOS Architecture",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
