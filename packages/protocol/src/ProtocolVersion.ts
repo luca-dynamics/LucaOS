@@ -1,0 +1,1 @@
+export const LUCA_PLATFORM_PROTOCOL_VERSION = 1;
