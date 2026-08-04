@@ -1,0 +1,22 @@
+{
+  "name": "@luca/trace-viewer",
+  "version": "0.1.0",
+  "description": "Conversation Trace & Latency Waterfall Inspector Application for LucaOS",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "luca",
+    "trace",
+    "viewer",
+    "waterfall",
+    "telemetry"
+  ],
+  "author": "LucaOS Architecture",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

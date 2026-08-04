@@ -1,0 +1,23 @@
+{
+  "name": "@luca/provider-harness",
+  "version": "0.1.0",
+  "description": "Provider Test Harness Application for LucaOS API Isolated Certification",
+  "main": "src/index.ts",
+  "scripts": {
+    "test:openai": "tsx src/openai/test-openai.ts",
+    "test:elevenlabs": "tsx src/elevenlabs/test-elevenlabs.ts",
+    "test:weather": "tsx src/weather/test-weather.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "luca",
+    "provider",
+    "harness",
+    "test"
+  ],
+  "author": "LucaOS Architecture",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

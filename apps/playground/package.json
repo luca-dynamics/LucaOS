@@ -1,0 +1,21 @@
+{
+  "name": "@luca/playground",
+  "version": "0.1.0",
+  "description": "Executable Entrypoint and Live Playground for LucaOS Platform Runtime",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "luca",
+    "playground",
+    "runtime",
+    "executable"
+  ],
+  "author": "LucaOS Architecture",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

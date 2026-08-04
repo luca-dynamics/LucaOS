@@ -1,0 +1,13 @@
+{
+  "name": "@luca/runtime-inspector",
+  "version": "0.1.0",
+  "description": "Live Terminal Activity Monitor & Runtime Inspector for LucaOS",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

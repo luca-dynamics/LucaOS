@@ -1,0 +1,22 @@
+{
+  "id": "conv_bench_abuja_weather_1",
+  "title": "Abuja Weather Forecast & Meeting Reschedule",
+  "sessionId": "sess_gold_demo",
+  "userPrompt": "Luca, I'm travelling to Abuja tomorrow. Will it rain? If so, should I move my 2pm meeting?",
+  "expectedToolCalls": [
+    {
+      "toolName": "weather_lookup",
+      "args": {
+        "city": "Abuja"
+      }
+    }
+  ],
+  "expectedResponseSubstring": "heavy rain is expected",
+  "latencyBudgetsMs": {
+    "firstTranscriptMs": 300,
+    "firstLlmTokenMs": 350,
+    "toolExecutionMs": 500,
+    "firstTtsByteMs": 100,
+    "totalTurnMs": 1500
+  }
+}

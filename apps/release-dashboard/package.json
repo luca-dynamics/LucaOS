@@ -1,0 +1,21 @@
+{
+  "name": "@luca/release-dashboard",
+  "version": "0.1.0",
+  "description": "Single Release Readiness Dashboard for LucaOS Milestones",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "luca",
+    "dashboard",
+    "release",
+    "readiness"
+  ],
+  "author": "LucaOS Architecture",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
