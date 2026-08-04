@@ -1,0 +1,24 @@
+{
+  "name": "@luca/conversation-engine",
+  "version": "0.1.0",
+  "description": "Conversational Reasoning, Planning, Scheduling, and Policy Subsystem for LucaOS",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "luca",
+    "conversation-engine",
+    "scheduler",
+    "policy-engine",
+    "task-planner",
+    "model-router"
+  ],
+  "author": "LucaOS Architecture",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@luca/voice-engine",
+  "version": "0.1.0",
+  "description": "Headless Assistant Interaction Engine & Event Architecture for LucaOS",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "luca",
+    "voice-engine",
+    "interaction-engine",
+    "event-bus",
+    "state-machine"
+  ],
+  "author": "LucaOS Architecture",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
