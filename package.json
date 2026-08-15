@@ -5,6 +5,10 @@
   "license": "MIT",
   "version": "1.0.0",
   "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "main": "platforms/electron/main.cjs",
   "scripts": {
     "dev": "vite",
@@ -16,6 +20,7 @@
     "build:web": "node scripts/build-web.mjs",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "prototype:living-orb": "node scripts/serve-living-orb-prototype.mjs",
     "server": "node server.js",
     "cortex": "node ops/scripts/run-cortex.cjs",
     "cortex:build": "node ops/scripts/build-cortex.cjs",
@@ -30,6 +35,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",
+    "type-check:workspaces": "tsc --noEmit -p tsconfig.workspaces.json",
     "safety-check": "npm run lint && npm run type-check && node ops/scripts/verify_integrity.cjs",
     "mobile:init": "npm run build && node ops/scripts/build-mobile.js init",
     "mobile:sync": "npm run build && node ops/scripts/build-mobile.js sync",
@@ -107,11 +113,13 @@
     "lightweight-charts": "^5.0.9",
     "localtunnel": "^1.8.3",
     "lucide-react": "^1.7.0",
+    "mammoth": "^1.12.1",
     "mqtt": "^5.14.1",
     "msgpack-lite": "^0.1.26",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
     "openai": "^6.10.0",
+    "pdf-parse": "^2.4.5",
     "playwright": "^1.58.2",
     "qrcode": "^1.5.4",
     "quartz": "^0.0.1",
@@ -140,7 +148,8 @@
     "zod": "^3.22.4"
   },
   "optionalDependencies": {
-    "lighter-node-client": "^1.0.0"
+    "lighter-node-client": "^1.0.0",
+    "node-llama-cpp": "^3.19.1"
   },
   "devDependencies": {
     "@capacitor/android": "^6.2.1",

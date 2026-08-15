@@ -76,9 +76,8 @@ export async function runConversationEngineTests(): Promise<void> {
   if (selected.id !== "mock-gpt-4") throw new Error("ModelRouter selectProvider failed");
 
   // Test 4: TaskPlanner & ActionGraph
-  const planner = new TaskPlanner();
-  const plan = planner.plan("Search system stats");
-  if (plan.steps.length !== 4) throw new Error("TaskPlanner plan failed");
+  const plan = TaskPlanner.decomposeUserIntent("Search system stats");
+  if (plan.dag.length !== 4) throw new Error("TaskPlanner decomposeUserIntent failed");
 
   // Test 5: MemoryCoordinator
   const memory = new MemoryCoordinator();
@@ -124,7 +123,23 @@ export async function runConversationEngineTests(): Promise<void> {
   }
 
   const graph = new ActionGraph();
-  const res = await graph.execute(plan, async () => "ok");
+  const res = await graph.execute(
+    {
+      planId: plan.planId,
+      userIntent: plan.userPrompt,
+      status: "pending",
+      createdAt: Date.now(),
+      steps: [
+        {
+          id: "step_1",
+          kind: "search_memory",
+          description: "Search system stats",
+          status: "pending",
+        },
+      ],
+    },
+    async () => "ok"
+  );
   if (!res.success) throw new Error("ActionGraph execution failed");
 
   console.log("✅ All @luca/conversation-engine ToolSession Tests Passed Successfully!");

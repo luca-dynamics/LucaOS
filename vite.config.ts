@@ -73,6 +73,14 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
+        "@luca/orb": path.resolve(
+          __dirname,
+          "packages/luca-orb/src/index.ts",
+        ),
+        "@luca/orb-design": path.resolve(
+          __dirname,
+          "packages/luca-orb-design/src/index.ts",
+        ),
         "onnxruntime-web/wasm": path.resolve(
           __dirname,
           "node_modules/onnxruntime-web/dist/ort.wasm.min.mjs",

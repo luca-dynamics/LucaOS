@@ -17,6 +17,10 @@
   ],
   "author": "LucaOS Architecture",
   "license": "MIT",
+  "dependencies": {
+    "@luca/contracts": "*",
+    "@luca/orb": "*"
+  },
   "devDependencies": {
     "typescript": "^5.0.0"
   }

@@ -17,6 +17,10 @@
   ],
   "author": "LucaOS Architecture",
   "license": "MIT",
+  "dependencies": {
+    "@luca/protocol": "*",
+    "@luca/voice-engine": "*"
+  },
   "devDependencies": {
     "typescript": "^5.0.0"
   }

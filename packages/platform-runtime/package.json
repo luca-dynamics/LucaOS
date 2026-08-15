@@ -17,6 +17,16 @@
   ],
   "author": "LucaOS Architecture",
   "license": "MIT",
+  "dependencies": {
+    "@luca/audio": "*",
+    "@luca/config": "*",
+    "@luca/contracts": "*",
+    "@luca/conversation-engine": "*",
+    "@luca/devtools": "*",
+    "@luca/presence-engine": "*",
+    "@luca/presentation": "*",
+    "@luca/voice-engine": "*"
+  },
   "devDependencies": {
     "typescript": "^5.0.0"
   }
