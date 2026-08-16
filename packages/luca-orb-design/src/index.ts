@@ -14,4 +14,7 @@ export * from './identity/state';
 export * from './geometry/canonical-volume';
 export * from './geometry/hero-assembly';
 export * from './geometry/hero-blueprint';
+export * from './trace/master-contour';
+export * from './trace/deviation';
+export * from './trace/hero-contour.v1';
 export * from './qa/checklist';

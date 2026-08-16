@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   CANONICAL_LUCA_VOLUME_V2,
-  sampleOrbContour,
   sampleOrbHalfDepth,
   validateCanonicalOrbVolume,
 } from '../src/geometry/canonical-volume';
@@ -14,14 +13,21 @@ describe('canonical Luca volume V2', () => {
     );
   });
 
-  it('preserves the master silhouette proportions', () => {
-    const contour = CANONICAL_LUCA_VOLUME_V2.outer;
-    const width = sampleOrbContour(contour, 0) + sampleOrbContour(contour, Math.PI);
-    const height = sampleOrbContour(contour, Math.PI / 2) + sampleOrbContour(contour, Math.PI * 1.5);
-
-    expect(width / height).toBeGreaterThan(1.12);
-    expect(width / height).toBeLessThan(1.3);
-  });
+  /*
+   * Deleted: "preserves the master silhouette proportions", which asserted
+   * width / height in 1.12..1.30.
+   *
+   * It could not discriminate. The authored contour scores 1.184 and the master's
+   * actual traced silhouette scores 1.138 — both inside the window — so the test
+   * passed for a shape that is RMS 10.8 px away from the reference at its own
+   * best-fit rotation, against a stated gate of 2 px. A green check that a wrong
+   * shape satisfies is worse than no check, because it reads as coverage.
+   *
+   * The silhouette is now measured in `src/trace/hero-contour.v1.ts` and tested in
+   * `tests/master-contour.test.ts`. The likeness gate belongs on the SDF form,
+   * which is authored in the same frozen frame as the trace and can therefore be
+   * compared without a fitted placement.
+   */
 
   it('keeps the pearlescent lobe inside the outer volume', () => {
     const { innerLobe } = CANONICAL_LUCA_VOLUME_V2;
