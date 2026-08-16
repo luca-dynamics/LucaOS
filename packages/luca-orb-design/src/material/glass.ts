@@ -67,6 +67,46 @@ export const BaseMaterialAppearance: MaterialAppearance = {
   specularIntensity: 0.90,
 };
 
+export interface OpticalVolumeMaterial {
+  /** Beer-Lambert absorption coefficients; larger values remove more light. */
+  absorption: readonly [number, number, number];
+  /** Effective path-length multiplier through the volume. */
+  opticalDensity: number;
+  /** Cool particulate scatter suspended inside the glass. */
+  scattering: number;
+  /** Strength of the internal thickness caustic. */
+  causticStrength: number;
+  /** Portion of the host scene visible through the volume. */
+  sceneTransmission: number;
+  /** Density of the large smoky pearl body suspended inside the shell. */
+  pearlDensity: number;
+  /** Diffuse silver-blue response of the inner body. */
+  pearlScatter: number;
+  /** Restrained view-dependent cool/warm colour travel. */
+  pearlIridescence: number;
+  /** Broad suspended silver haze behind the authored pearl. */
+  smokeDensity: number;
+  /** Soft vertical light column that gives the pearl its living depth. */
+  internalBloom: number;
+  /** Strength of the nested silver reflection bands at the glass wall. */
+  shellReflectivity: number;
+}
+
+/** Optical target derived from the smoky silver-blue master material. */
+export const LucaOpticalVolumeMaterial: OpticalVolumeMaterial = {
+  absorption: [0.55, 0.34, 0.18],
+  opticalDensity: 1.12,
+  scattering: 0.42,
+  causticStrength: 0.50,
+  sceneTransmission: 0.70,
+  pearlDensity: 0.80,
+  pearlScatter: 0.70,
+  pearlIridescence: 0.16,
+  smokeDensity: 0.50,
+  internalBloom: 0.42,
+  shellReflectivity: 0.96,
+};
+
 /** Backward-compatible legacy GlassMaterial for shader parameter calculation */
 export const GlassMaterial = {
   refractionStrength:  0.08,

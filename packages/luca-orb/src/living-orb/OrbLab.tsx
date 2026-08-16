@@ -29,6 +29,7 @@ const PROFILE_DESCRIPTIONS: Record<OrbProfile, string> = {
   sleeping:  'Dormant. Dimmed. Nearly still. Long exhale.',
 };
 
+/** @deprecated V1 self-scoring lab. Use OrbMaterialLabV2 for evidence-backed review. */
 export const OrbLab: React.FC = () => {
   const [profile, setProfile]         = useState<OrbProfile>('idle');
   const [activeTab, setActiveTab]     = useState<LabTab>('material-studio');
@@ -80,7 +81,8 @@ export const OrbLab: React.FC = () => {
   const totalMatch = ((parseFloat(geoMatch) + parseFloat(matMatch) + parseFloat(lightMatch) + parseFloat(edgeMatch)) / 4).toFixed(1);
 
   // Individual Gate Status for Industrial Review Board
-  const gatesPassed = parseFloat(geoMatch) >= 95 && parseFloat(matMatch) >= 95 && parseFloat(lightMatch) >= 95 && parseFloat(edgeMatch) >= 95;
+  // V1 numeric scores never constituted visual evidence and cannot certify this renderer.
+  const gatesPassed = false;
 
   const toggleLayer = useCallback((key: keyof OrbLayerVisibility) => {
     setLayers(prev => ({ ...prev, [key]: !prev[key] }));
@@ -208,7 +210,7 @@ export const OrbLab: React.FC = () => {
               <div style={{ ...styles.scoreItem, gridColumn: 'span 2' }}>
                 <span style={styles.scoreLabel}>Luca Embodiment Release Status</span>
                 <span style={{ ...styles.scoreVal, color: '#80FFB0' }}>
-                  ★ GOLDEN MASTER v1.0 CERTIFIED & LOCKED — READY FOR VOICEHUD INTEGRATION (SPRINT C)
+                  V1 CERTIFICATION REVOKED — NOT READY FOR VOICEHUD INTEGRATION
                 </span>
               </div>
             </div>
@@ -309,7 +311,7 @@ export const OrbLab: React.FC = () => {
 
             <div style={{ marginTop: 16, padding: '12px 16px', background: gatesPassed ? 'rgba(128,255,176,0.10)' : 'rgba(255,208,128,0.10)', border: `1px solid ${gatesPassed ? '#80FFB0' : '#FFD080'}`, borderRadius: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: gatesPassed ? '#80FFB0' : '#FFD080' }}>
-                {gatesPassed ? '★★★★★ GOLDEN MASTER CERTIFIED — INDUSTRIAL DESIGN FREEZE APPROVED' : 'REVIEW IN PROGRESS — ALL 8 INDIVIDUAL GATES MUST PASS WITH EVIDENCE FOR CERTIFICATION'}
+                V1 SELF-SCORING INVALIDATED — USE MATERIAL LAB V2 FOR EVIDENCE REVIEW
               </span>
             </div>
           </div>

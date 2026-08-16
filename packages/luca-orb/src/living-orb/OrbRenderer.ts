@@ -18,17 +18,25 @@
  * This class is a pure implementation of that specification.
  */
 import { WebGLLayer } from './WebGLLayer';
+import { WebGLRenderTarget } from './WebGLRenderTarget';
+import { WebGLSceneTexture } from './WebGLSceneTexture';
+import { WebGLVolumeDepthPass } from './WebGLVolumeDepthPass';
+import { WebGLHeroSurfacePass } from './WebGLHeroSurfacePass';
+import { WebGLPearlDepthPass } from './WebGLPearlDepthPass';
+import { WebGLStructureTurntablePass } from './WebGLStructureTurntablePass';
 import { OrbDirector } from './OrbDirector';
-import { AnimationState, OrbLayerVisibility, OrbProfile, PROFILE_INDEX, DEFAULT_LAYER_VISIBILITY } from './types';
+import { AnimationState, OrbLayerVisibility, OrbProfile, OrbRenderMode, OrbStructureStudy, PROFILE_INDEX, DEFAULT_LAYER_VISIBILITY } from './types';
 import { GLASS_FRAG }      from './shaders/glass.frag';
 import { BACKGROUND_FRAG } from './shaders/background.frag';
 import { CORE_LIGHT_FRAG } from './shaders/core-light.frag';
 import { HIGHLIGHT_FRAG }  from './shaders/highlight.frag';
 import { SHADOW_FRAG }     from './shaders/shadow.frag';
+import { PEARL_VOLUME_FRAG } from './shaders/pearl-volume.frag';
+import { STRUCTURE_DIAGNOSTIC_FRAG } from './shaders/structure-diagnostic.frag';
 
 import {
   PROFILE_COLORS,
-  GlassMaterial, GLASS_PROFILE_DELTAS,
+  GlassMaterial, GLASS_PROFILE_DELTAS, LucaOpticalVolumeMaterial,
   LIGHTING_RIGS,
   OrbDimensions, OrbBlobShape,
   OrbIdentityDNA, DEFAULT_LUCA_IDENTITY_DNA
@@ -41,6 +49,13 @@ export interface OrbRendererOptions {
   dna?: OrbIdentityDNA;
   layers?: Partial<OrbLayerVisibility>;
   devicePixelRatio?: number;
+  /** A pixel-matched capture of the surface immediately behind the orb. */
+  background?: TexImageSource;
+  /** Frozen neutral geometry inspection; material passes are bypassed. */
+  renderMode?: OrbRenderMode;
+  structureStudy?: OrbStructureStudy;
+  structureYaw?: number;
+  structurePitch?: number;
 }
 
 export class OrbRenderer {
@@ -50,21 +65,38 @@ export class OrbRenderer {
 
   private shadowLayer!:     WebGLLayer;
   private backgroundLayer!: WebGLLayer;
+  private volumeDepthPass: WebGLVolumeDepthPass;
+  private heroSurfacePass: WebGLHeroSurfacePass;
+  private pearlDepthPass: WebGLPearlDepthPass;
+  private structureTurntablePass: WebGLStructureTurntablePass;
   private glassLayer!:      WebGLLayer;
+  private pearlLayer!:      WebGLLayer;
   private coreLayer!:       WebGLLayer;
   private highlightLayer!:  WebGLLayer;
+  private structureLayer!:  WebGLLayer;
+  private thicknessTarget: WebGLRenderTarget;
+  private pearlDepthTarget: WebGLRenderTarget;
+  private sceneTexture: WebGLSceneTexture;
 
   private profile: OrbProfile;
   private layerVisibility: OrbLayerVisibility;
   private dpr: number;
   private rafId: number | null = null;
   private isDisposed = false;
+  private readonly renderMode: OrbRenderMode;
+  private structureStudy: OrbStructureStudy;
+  private structureYaw: number;
+  private structurePitch: number;
 
   constructor(canvas: HTMLCanvasElement, options: OrbRendererOptions = {}) {
     this.canvas = canvas;
     this.profile = options.profile ?? 'idle';
     this.dpr = options.devicePixelRatio ?? window.devicePixelRatio ?? 1;
     this.layerVisibility = { ...DEFAULT_LAYER_VISIBILITY, ...options.layers };
+    this.renderMode = options.renderMode ?? 'material';
+    this.structureStudy = options.structureStudy ?? 'front';
+    this.structureYaw = options.structureYaw ?? 0;
+    this.structurePitch = options.structurePitch ?? 0;
 
     const ctx = canvas.getContext('webgl2', {
       alpha: true,
@@ -75,6 +107,14 @@ export class OrbRenderer {
     });
     if (!ctx) throw new Error('WebGL2 not supported');
     this.gl = ctx;
+    this.thicknessTarget = new WebGLRenderTarget(ctx);
+    this.pearlDepthTarget = new WebGLRenderTarget(ctx);
+    this.sceneTexture = new WebGLSceneTexture(ctx);
+    this.volumeDepthPass = new WebGLVolumeDepthPass(ctx);
+    this.heroSurfacePass = new WebGLHeroSurfacePass(ctx);
+    this.pearlDepthPass = new WebGLPearlDepthPass(ctx);
+    this.structureTurntablePass = new WebGLStructureTurntablePass(ctx);
+    this.sceneTexture.setSource(options.background);
     this.director = new OrbDirector(options.dna ?? DEFAULT_LUCA_IDENTITY_DNA);
     this.director.setProfile(this.profile);
 
@@ -88,8 +128,10 @@ export class OrbRenderer {
     this.shadowLayer     = new WebGLLayer(gl, SHADOW_FRAG);
     this.backgroundLayer = new WebGLLayer(gl, BACKGROUND_FRAG);
     this.glassLayer      = new WebGLLayer(gl, GLASS_FRAG);
+    this.pearlLayer      = new WebGLLayer(gl, PEARL_VOLUME_FRAG);
     this.coreLayer       = new WebGLLayer(gl, CORE_LIGHT_FRAG);
     this.highlightLayer  = new WebGLLayer(gl, HIGHLIGHT_FRAG);
+    this.structureLayer  = new WebGLLayer(gl, STRUCTURE_DIAGNOSTIC_FRAG);
   }
 
   // ── Uniform builders ────────────────────────────────────────────────────────
@@ -98,7 +140,7 @@ export class OrbRenderer {
     const { canvas, dpr } = this;
     const w = canvas.width;
     const h = canvas.height;
-    const r = Math.min(w, h) * 0.5 * OrbDimensions.normalizedRadius / dpr;
+    const r = Math.min(w, h) * OrbDimensions.normalizedRadius / dpr;
 
     // Convert float offset from pixels to normalized UV
     const floatOffsetNorm = anim.floatOffset / h;
@@ -152,9 +194,73 @@ export class OrbRenderer {
     const anim = this.director.tick();
     const state = this.director.getEmbodimentState();
     const common = this.getCommonUniforms(anim);
+    if (this.renderMode === 'structure') {
+      common.u_time = 0;
+      common.u_noiseTime = 0;
+      common.u_breathingScale = 1;
+      common.u_floatOffset = 0;
+      common.u_microJitter = 0;
+      common.u_audioEnergy = 0;
+      common.u_audioOnset = 0;
+      common.u_center = [0.5, 0.5];
+    }
     const r      = common.u_radius as number;
     const cx     = (common.u_center as number[])[0];
     const cy     = (common.u_center as number[])[1];
+
+    if (this.renderMode === 'structure' && this.structureStudy !== 'front') {
+      gl.clearColor(0, 0, 0, 0);
+      gl.clearDepth(1);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      this.structureTurntablePass.draw({
+        ...common,
+        u_structureYaw: this.structureYaw,
+        u_structurePitch: this.structurePitch,
+        u_modelScale: 0.92,
+      }, this.structureStudy);
+      return;
+    }
+
+    // Optical pre-pass: rasterize independent authored front and rear surfaces.
+    this.thicknessTarget.bind();
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.disable(gl.DEPTH_TEST);
+    this.volumeDepthPass.draw({
+      ...common,
+    });
+    this.thicknessTarget.unbind(this.canvas.width, this.canvas.height);
+
+    // Rasterize the suspended pearl once so its material, glow and authored
+    // overlap surfaces all agree on one asymmetric front/rear volume.
+    this.pearlDepthTarget.bind();
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.disable(gl.DEPTH_TEST);
+    this.pearlDepthPass.draw({ ...common });
+    this.pearlDepthTarget.unbind(this.canvas.width, this.canvas.height);
+
+    if (this.renderMode === 'structure') {
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      this.structureLayer.use();
+      this.structureLayer.setUniforms({ ...common });
+      this.structureLayer.bindTexture('u_thicknessMap', this.thicknessTarget.texture, 0);
+      this.structureLayer.bindTexture('u_pearlDepthMap', this.pearlDepthTarget.texture, 1);
+      this.structureLayer.draw();
+      this.heroSurfacePass.bindThicknessMap(this.thicknessTarget.texture, 0);
+      this.heroSurfacePass.bindPearlDepthMap(this.pearlDepthTarget.texture, 1);
+      this.heroSurfacePass.draw({
+        ...common,
+        u_keyLightDirection: [-0.48, 0.66],
+        u_keyLightColor: [0.82, 0.84, 0.88],
+        u_structureMode: 1,
+      });
+      gl.disable(gl.BLEND);
+      return;
+    }
 
     // Clear with full transparency
     gl.clearColor(0, 0, 0, 0);
@@ -187,10 +293,10 @@ export class OrbRenderer {
         u_bloomRadius:     state.bloomRadius,
         u_rippleColor:     state.rippleColor,
         u_rippleOpacity:   state.rippleOpacity,
-        u_rippleCount:     state.rippleCount,
         u_rippleSpacing:   state.rippleSpacing,
         u_rippleWidth:     0.004,
       });
+      this.backgroundLayer.setInt('u_rippleCount', Math.round(state.rippleCount));
       this.backgroundLayer.draw();
     }
 
@@ -210,6 +316,13 @@ export class OrbRenderer {
         u_subsurfaceDepth:     state.subsurfaceDepth,
         u_edgeSoftness:        state.edgeSoftness,
         u_chromaticAberration: state.chromaticAberration,
+        u_hasSceneTexture:     this.sceneTexture.hasSource,
+        u_absorption:          LucaOpticalVolumeMaterial.absorption,
+        u_opticalDensity:      LucaOpticalVolumeMaterial.opticalDensity,
+        u_scattering:          LucaOpticalVolumeMaterial.scattering,
+        u_causticStrength:     LucaOpticalVolumeMaterial.causticStrength,
+        u_sceneTransmission:   LucaOpticalVolumeMaterial.sceneTransmission,
+        u_shellReflectivity:   LucaOpticalVolumeMaterial.shellReflectivity,
         // Colors
         u_glassColor:          state.glassColor,
         u_rimColor:            state.rimColor,
@@ -227,7 +340,43 @@ export class OrbRenderer {
         u_fillLightIntensity:  state.fillLightIntensity,
         u_fillLightColor:      state.glassColor,
       });
+      this.glassLayer.bindTexture('u_thicknessMap', this.thicknessTarget.texture, 0);
+      this.glassLayer.bindTexture('u_sceneTexture', this.sceneTexture.texture, 1);
       this.glassLayer.draw();
+    }
+
+    // The pearl is a private internal pass so the optical glass program stays
+    // within conservative hardware fragment-shader budgets.
+    if (this.layerVisibility.glassBody) {
+      gl.blendFunc(gl.ONE, gl.ONE);
+      this.pearlLayer.use();
+      this.pearlLayer.setUniforms({
+        ...common,
+        u_lowFreqAmp:       state.lowFreqAmp,
+        u_midFreqAmp:       state.midFreqAmp,
+        u_highFreqAmp:      state.highFreqAmp,
+        u_pearlDensity:     LucaOpticalVolumeMaterial.pearlDensity,
+        u_pearlScatter:     LucaOpticalVolumeMaterial.pearlScatter,
+        u_pearlIridescence: LucaOpticalVolumeMaterial.pearlIridescence,
+        u_smokeDensity:     LucaOpticalVolumeMaterial.smokeDensity,
+        u_internalBloom:    LucaOpticalVolumeMaterial.internalBloom,
+      });
+      this.pearlLayer.bindTexture('u_thicknessMap', this.thicknessTarget.texture, 0);
+      this.pearlLayer.bindTexture('u_pearlDepthMap', this.pearlDepthTarget.texture, 1);
+      this.pearlLayer.draw();
+    }
+
+    // Product-master anatomy: independent crown, lower fold and reflection
+    // return. These remain private identity geometry rather than public props.
+    if (this.layerVisibility.glassBody) {
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      this.heroSurfacePass.bindThicknessMap(this.thicknessTarget.texture, 0);
+      this.heroSurfacePass.bindPearlDepthMap(this.pearlDepthTarget.texture, 1);
+      this.heroSurfacePass.draw({
+        ...common,
+        u_keyLightDirection: state.keyLightPos,
+        u_keyLightColor: state.specularColor,
+      });
     }
 
     // ── 4. Core light (additive — volumetric glow INSIDE orb) ────────────────
@@ -244,8 +393,10 @@ export class OrbRenderer {
         u_coronaRadius:       state.coronaRadius,
         u_lowFreqAmp:         state.lowFreqAmp,
         u_midFreqAmp:         state.midFreqAmp,
+        u_highFreqAmp:        state.highFreqAmp,
         u_profile:            PROFILE_INDEX[this.profile],
       });
+      this.coreLayer.bindTexture('u_pearlDepthMap', this.pearlDepthTarget.texture, 0);
       this.coreLayer.draw();
     }
 
@@ -314,6 +465,18 @@ export class OrbRenderer {
     this.director.setAudioInput(energy, onset);
   }
 
+  /** Update the prototype's non-material structural camera without recreating WebGL. */
+  setStructureView(study: OrbStructureStudy, yaw: number, pitch: number): void {
+    this.structureStudy = study;
+    this.structureYaw = yaw;
+    this.structurePitch = pitch;
+  }
+
+  /** Replace the matched host-scene capture used by the refraction pass. */
+  setBackground(background?: TexImageSource): void {
+    this.sceneTexture.setSource(background);
+  }
+
   /** Resize canvas to match container */
   resize(cssWidth: number, cssHeight: number): void {
     this.canvas.width  = cssWidth  * this.dpr;
@@ -321,6 +484,8 @@ export class OrbRenderer {
     this.canvas.style.width  = `${cssWidth}px`;
     this.canvas.style.height = `${cssHeight}px`;
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    this.thicknessTarget.resize(this.canvas.width, this.canvas.height);
+    this.pearlDepthTarget.resize(this.canvas.width, this.canvas.height);
   }
 
   /** Release all WebGL resources */
@@ -329,8 +494,17 @@ export class OrbRenderer {
     this.stop();
     this.shadowLayer.dispose();
     this.backgroundLayer.dispose();
+    this.volumeDepthPass.dispose();
+    this.heroSurfacePass.dispose();
+    this.pearlDepthPass.dispose();
+    this.structureTurntablePass.dispose();
     this.glassLayer.dispose();
+    this.pearlLayer.dispose();
     this.coreLayer.dispose();
     this.highlightLayer.dispose();
+    this.structureLayer.dispose();
+    this.thicknessTarget.dispose();
+    this.pearlDepthTarget.dispose();
+    this.sceneTexture.dispose();
   }
 }

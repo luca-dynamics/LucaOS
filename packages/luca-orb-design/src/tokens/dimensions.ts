@@ -28,13 +28,13 @@ export const OrbDimensions = {
    * Inner glow radius relative to orb radius.
    * The core light is tighter than the glass body.
    */
-  coreGlowRatio: 0.55,
+  coreGlowRatio: 0.34,
 
   /**
    * Highlight size relative to orb radius.
    * The key specular covers the top 28% of the orb diameter.
    */
-  keyHighlightRatio: 0.28,
+  keyHighlightRatio: 0.20,
 
   /**
    * Secondary highlight size relative to orb radius.

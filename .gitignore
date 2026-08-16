@@ -66,3 +66,6 @@ cortex/python/__pycache__/
 
 # Scratch/QA artifacts — never commit
 tmp/
+
+# Prototype capture output (Vite outDir; duplicates public/)
+public/prototypes/
