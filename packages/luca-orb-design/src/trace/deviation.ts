@@ -168,15 +168,24 @@ export function silhouetteIoU(candidate: SilhouetteMask, reference: SilhouetteMa
   };
 }
 
-/** Fill a mask from a traced ring, for comparison against a rendered coverage mask. */
+/**
+ * Fill a mask from a traced ring, for comparison against a rendered coverage mask.
+ *
+ * Pixel `(x, y)` is tested at exactly `(x, y)`, the convention documented on
+ * `ScalarField`, not at the pixel-square centre `(x + 0.5, y + 0.5)`. Testing at
+ * the corner would slide the mask half a pixel down and right of the ring it was
+ * built from; on a ring of this radius that is worth about 0.005 of the
+ * intersection over union, a third of the margin the gate allows, and it would
+ * apply equally to every candidate so it would never look like a bug.
+ */
 export function tracedContourToMask(contour: TracedContour, sampleCount = 1440): SilhouetteMask {
   const size = contour.frameSize;
   const data = new Uint8Array(size * size);
   const points = tracedContourPoints(contour, sampleCount);
   for (let y = 0; y < size; y += 1) {
-    const testY = y + 0.5;
+    const testY = y;
     for (let x = 0; x < size; x += 1) {
-      const testX = x + 0.5;
+      const testX = x;
       let inside = false;
       for (let i = 0, j = points.length - 1; i < points.length; j = i, i += 1) {
         const [xi, yi] = points[i];
