@@ -3,7 +3,7 @@ import { introspectionService } from "./introspectionService";
 import { mcpClientManager } from "./mcpClientManager";
 import { settingsService } from "./settingsService";
 import { TOOL_CONFIGS, MissionScope } from "./toolRegistry";
-import { modelManager } from "./ModelManagerService";
+import { modelManager } from "./local-models/LocalModelLibrary";
 import { resolveVoiceSessionRoute } from "./voiceSessionRouter";
 import { voiceSessionOrchestrator } from "./voiceSessionOrchestrator";
 import { loggerService } from "./loggerService";

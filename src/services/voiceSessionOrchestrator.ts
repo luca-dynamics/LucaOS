@@ -213,7 +213,7 @@ class VoiceSessionOrchestrator {
     if (!this.localCoreConnected) return false;
 
     // Check Local Models
-    const { modelManagerService } = await import("./ModelManagerService");
+    const { modelManagerService } = await import("./local-models/LocalModelLibrary");
     const settings = settingsService.getSettings();
     const sttModel = settings?.voice?.sttModel || "whisper-tiny";
     

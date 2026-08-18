@@ -6,7 +6,7 @@ import { LocalLLMAdapter } from "./LocalLLMAdapter";
 import { GrokAdapter } from "./GrokAdapter";
 import { DeepSeekAdapter } from "./DeepSeekAdapter";
 import { LucaSettings, settingsService } from "../settingsService";
-import { LOCAL_BRAIN_MODEL_IDS } from "../ModelManagerService";
+import { LOCAL_BRAIN_MODEL_IDS } from "../local-models/LocalModelLibrary";
 import {
   ANTHROPIC_MODEL_PRESETS,
   BRAIN_CONFIG,

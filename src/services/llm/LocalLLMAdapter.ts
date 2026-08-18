@@ -1,6 +1,6 @@
 import { LLMProvider, ChatMessage, LLMResponse } from "./LLMProvider";
 import { settingsService } from "../settingsService";
-import { modelManager, LOCAL_BRAIN_MODEL_IDS } from "../ModelManagerService";
+import { modelManager, LOCAL_BRAIN_MODEL_IDS } from "../local-models/LocalModelLibrary";
 import { lucaLocalModelRuntime } from "../local-models/LucaLocalModelRuntime";
 import type { LocalChatMessage, LocalToolDefinition } from "../local-models/LocalModelTypes";
 import { probeOllamaViaRuntimeFacade } from "../local-models/ollamaRuntimeProbe";

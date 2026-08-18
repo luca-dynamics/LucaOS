@@ -7,7 +7,7 @@ import {
   LOCAL_VISION_MODEL_IDS,
   type LocalModel,
   modelManager,
-} from "../ModelManagerService";
+} from "../local-models/LocalModelLibrary";
 import { settingsService, type LucaSettings } from "../settingsService";
 import {
   createBlockedRouteDecision,

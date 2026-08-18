@@ -4,7 +4,7 @@
  * L1).
  *
  * Today Luca keeps parallel hand-curated catalogs (Ollama in
- * ModelManagerService, WebLLM in services/llm/ModelRegistry). This module adds
+ * LocalModelLibrary, WebLLM in services/llm/ModelRegistry). This module adds
  * one typed shape that describes a model regardless of runtime — including the
  * curated, static LocalAI slice imported as OpenAI-compatible entries — with the
  * two fields the audit flagged as missing for "industrial-strong" use:
@@ -13,7 +13,7 @@
  * Pure data + selectors. L2/L3 endpoint health and L5 catalog bridge
  * (`lucaLocalCatalogBridge`) consume this. It does not connect to or start any
  * model; it only describes them. Operational status still lives in
- * ModelManagerService / ModelRegistry.
+ * LocalModelLibrary / ModelRegistry.
  */
 
 export type LucaModelSource = "ollama" | "webllm" | "openai-compatible";
@@ -161,7 +161,7 @@ export const LOCALAI_CURATED_CATALOG: readonly LucaUnifiedModel[] = [
   },
 ];
 
-/** Ollama brain model catalog. Static descriptors only; operational status lives in ModelManagerService. */
+/** Ollama brain model catalog. Static descriptors only; operational status lives in LocalModelLibrary. */
 export const OLLAMA_BRAIN_CATALOG: readonly LucaUnifiedModel[] = [
   {
     id: "gemma-4b",

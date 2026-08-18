@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { LucaSettings } from "../settingsService";
-import type { LocalModel } from "../ModelManagerService";
+import type { LocalModel } from "../local-models/LocalModelLibrary";
 import type { ModelCapability, ModelRouteDecision } from "../../types/modelRouting";
 import { OnboardingModelModeCoordinator } from "./OnboardingModelModeCoordinator";
 

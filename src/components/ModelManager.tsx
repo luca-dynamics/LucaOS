@@ -10,7 +10,7 @@ import { resolveLocalCatalogMetadata } from "../services/llm/lucaLocalCatalogBri
 import {
   modelManagerService,
   LocalModel,
-} from "../services/ModelManagerService";
+} from "../services/local-models/LocalModelLibrary";
 import { settingsService } from "../services/settingsService";
 import { modelReadinessResolver } from "../services/models/ModelReadinessResolver";
 import type { ModelRouteDecision } from "../types/modelRouting";

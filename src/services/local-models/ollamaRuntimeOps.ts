@@ -2,7 +2,7 @@
  * Product-safe Ollama lifecycle/ops through the registered runtime facade.
  * Prefer these helpers over ad-hoc fetch to localhost:11434.
  *
- * Install / pull remain Electron IPC (ModelManagerService.setupOllamaForModel).
+ * Install / pull remain Electron IPC (LocalModelLibrary.setupOllamaForModel).
  */
 
 import { localRuntimeRegistry } from "./RuntimeRegistry";

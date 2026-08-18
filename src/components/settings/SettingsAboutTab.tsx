@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import pkg from "../../../package.json";
 import { LucaSettings } from "../../services/settingsService";
 import { memoryService } from "../../services/memoryService";
-import { modelManagerService } from "../../services/ModelManagerService";
+import { modelManagerService } from "../../services/local-models/LocalModelLibrary";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,

@@ -165,7 +165,7 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
 
   it("keeps premium onboarding free of legacy runtime and conversation imports", () => {
     for (const runtimeImport of [
-      "services/ModelManagerService",
+      "services/local-models/LocalModelLibrary",
       "services/settingsService",
       "services/voice/realtimeVoiceUiBridge",
       "ConversationalOnboarding",
@@ -175,7 +175,7 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     }
     expect(onboardingSource).toContain("LucaOnboardingShell");
     expect(onboardingSource).toContain("LucaOnboardingScreen");
-    expect(webAdapterSource).not.toContain("ModelManagerService");
+    expect(webAdapterSource).not.toContain("LocalModelLibrary");
     expect(webAdapterSource).not.toContain("settingsService");
     expect(webAdapterSource).not.toContain("realtimeVoiceUiBridge");
     expect(webAdapterSource).not.toContain(

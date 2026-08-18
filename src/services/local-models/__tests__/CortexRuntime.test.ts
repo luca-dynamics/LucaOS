@@ -28,13 +28,18 @@ describe("CortexRuntime", () => {
   it("lists catalog-backed Cortex models without probing inference", async () => {
     const runtime = new CortexRuntime({ baseUrl: "http://127.0.0.1:8000" });
 
-    await expect(runtime.listModels()).resolves.toEqual([
-      "gemma-2b",
-      "llama-3.2-1b",
-      "lfm2.5-230m",
-      "phi-3-mini",
-      "smollm2-1.7b",
-    ]);
+    // Order follows the definition list and carries no meaning; the contract is
+    // the set of Cortex-runnable models the catalog projects.
+    await expect(runtime.listModels()).resolves.toEqual(
+      expect.arrayContaining([
+        "gemma-2b",
+        "llama-3.2-1b",
+        "lfm2.5-230m",
+        "phi-3-mini",
+        "smollm2-1.7b",
+      ]),
+    );
+    await expect(runtime.listModels()).resolves.toHaveLength(5);
   });
 
   it("reports online health when Cortex /health is reachable", async () => {

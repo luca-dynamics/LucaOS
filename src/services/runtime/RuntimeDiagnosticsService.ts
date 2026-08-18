@@ -3,7 +3,7 @@ import {
   modelManager,
   modelManagerService,
   type LocalModel,
-} from "../ModelManagerService";
+} from "../local-models/LocalModelLibrary";
 import { memoryService } from "../memoryService";
 import {
   memoryReadinessResolver,

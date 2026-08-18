@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { settingsService, type LucaSettings } from "../../services/settingsService";
-import { modelManager, type LocalModel } from "../../services/ModelManagerService";
+import { modelManager, type LocalModel } from "../../services/local-models/LocalModelLibrary";
 import {
   ANTHROPIC_CLAUDE_MODELS,
   DEEPSEEK_MODELS,

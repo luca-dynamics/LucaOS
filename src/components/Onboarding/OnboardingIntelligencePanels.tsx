@@ -5,7 +5,7 @@ import { probeCortexViaRuntimeFacade, type CortexRuntimeProbeResult } from "../.
 import { canaryChatViaRuntimeFacade } from "../../services/local-models/ollamaRuntimeOps";
 import { getHardwareRamSummary, getUnifiedModelHardwarePolicy } from "../../services/local-models/HardwareRamTierService";
 import { settingsService } from "../../services/settingsService";
-import { modelManager } from "../../services/ModelManagerService";
+import { modelManager } from "../../services/local-models/LocalModelLibrary";
 import {
   lucaMaterialCardStyle,
 } from "../../styles/lucaMaterialSystem";
