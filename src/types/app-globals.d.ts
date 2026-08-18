@@ -19,6 +19,87 @@ interface ImportMeta {
 
 declare const __LUCA_DEV_MODE__: boolean;
 
+/**
+ * A GGUF file the user has registered with the desktop host. `sha256`, `sizeBytes`
+ * and `mtimeMs` are pinned at registration and re-checked on every load, so this
+ * shape is the user-visible record of *which bytes* Luca agreed to run.
+ */
+interface NativeGgufRegistration {
+  id: string;
+  modelPath: string;
+  displayName: string;
+  contextWindow?: number;
+  sha256: string;
+  sizeBytes: number;
+  mtimeMs: number;
+  /** True when the user supplied a checksum and the file matched it. */
+  verified: boolean;
+  /** ISO timestamp of explicit consent; null until the user accepts the pin. */
+  consentedAt: string | null;
+}
+
+interface NativeGgufHealth {
+  reachable: boolean;
+  modelIds: string[];
+  error?: string;
+}
+
+interface NativeGgufChatRequest {
+  model: string;
+  prompt: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+interface NativeGgufStreamEvent {
+  requestId: string;
+  type: "token" | "done" | "error";
+  text?: string;
+  error?: string;
+}
+
+interface NativeGgufApiStatus {
+  running: boolean;
+  host: string;
+  port: number | null;
+}
+
+/** Where in a document a chunk came from — pages for PDFs, paragraphs for DOCX. */
+interface LocalDocsLocator {
+  kind: "page" | "paragraph" | "line";
+  start: number;
+  end: number;
+}
+
+interface LocalDocsFolder {
+  id: string;
+  folderPath: string;
+  displayName: string;
+  createdAt: string;
+  indexedAt: string | null;
+  documentCount: number;
+  chunkCount: number;
+  totalBytes: number;
+  embeddingModelId: string | null;
+  embeddedAt: string | null;
+  embeddedChunkCount: number;
+  failures: { relativePath: string; reason: string }[];
+  failureCount: number;
+  watching: boolean;
+}
+
+interface LocalDocsSearchResult {
+  folderId: string;
+  folderName: string;
+  relativePath: string;
+  chunkIndex: number;
+  text: string;
+  locator: LocalDocsLocator | null;
+  /** Reader-facing source label, already rendered: `manual.pdf, p. 3`. */
+  citation: string;
+  score: number;
+}
+
 interface LucaElectronBridge {
   ipcRenderer: {
     send(channel: string, data?: any): void;
@@ -40,6 +121,46 @@ interface LucaDesktopBridge {
   clickMouse(button: string): Promise<void>;
   openScreenPermissions(): Promise<void>;
   triggerScreenPermission(): Promise<any[]>;
+  nativeGguf?: {
+    list(): Promise<NativeGgufRegistration[]>;
+    register(input: {
+      id: string;
+      modelPath: string;
+      displayName?: string;
+      contextWindow?: number;
+      sha256?: string;
+    }): Promise<NativeGgufRegistration>;
+    /** Accept a locally hashed model's pinned bytes so it becomes loadable. */
+    consent(id: string): Promise<NativeGgufRegistration>;
+    remove(id: string): Promise<boolean>;
+    health(): Promise<NativeGgufHealth>;
+    chat(request: NativeGgufChatRequest): Promise<string>;
+    streamStart(
+      requestId: string,
+      request: NativeGgufChatRequest,
+      callback: (event: NativeGgufStreamEvent) => void,
+    ): Promise<void>;
+    streamCancel(requestId: string): Promise<boolean>;
+    unload(): Promise<void>;
+    apiStart(port?: number): Promise<NativeGgufApiStatus>;
+    apiStop(): Promise<NativeGgufApiStatus>;
+    apiStatus(): Promise<NativeGgufApiStatus>;
+  };
+  localDocs?: {
+    list(): Promise<LocalDocsFolder[]>;
+    register(input: { folderPath: string; displayName?: string }): Promise<LocalDocsFolder>;
+    rescan(id: string): Promise<LocalDocsFolder>;
+    remove(id: string): Promise<boolean>;
+    embed(id: string, modelId: string): Promise<LocalDocsFolder>;
+    search(request: {
+      query: string;
+      modelId: string;
+      limit?: number;
+      minScore?: number;
+    }): Promise<LocalDocsSearchResult[]>;
+    watchStart(id: string): Promise<boolean>;
+    watchStop(id: string): Promise<boolean>;
+  };
   /** Electron sandbox broker IPC (preload). Used by ElectronSandboxBrowserDriver. */
   sandbox?: {
     probe: () => Promise<unknown>;

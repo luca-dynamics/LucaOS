@@ -52,6 +52,43 @@ expose('luca', {
     clickMouse: (button) => ipcRenderer.invoke('mouse-click', { button }),
     openScreenPermissions: () => ipcRenderer.invoke('open-screen-permissions'),
     triggerScreenPermission: () => ipcRenderer.invoke('trigger-screen-permission'),
+    nativeGguf: {
+        list: () => ipcRenderer.invoke('native-gguf:list'),
+        register: (input) => ipcRenderer.invoke('native-gguf:register', input),
+        consent: (id) => ipcRenderer.invoke('native-gguf:consent', id),
+        remove: (id) => ipcRenderer.invoke('native-gguf:remove', id),
+        health: () => ipcRenderer.invoke('native-gguf:health'),
+        chat: (request) => ipcRenderer.invoke('native-gguf:chat', request),
+        streamStart: (requestId, request, callback) => {
+            const listener = (_event, payload) => {
+                if (payload?.requestId !== requestId) return;
+                callback(payload);
+                if (payload.type === 'done' || payload.type === 'error') {
+                    ipcRenderer.removeListener('native-gguf:stream-event', listener);
+                }
+            };
+            ipcRenderer.on('native-gguf:stream-event', listener);
+            return ipcRenderer.invoke('native-gguf:stream-start', { requestId, request }).catch(error => {
+                ipcRenderer.removeListener('native-gguf:stream-event', listener);
+                throw error;
+            });
+        },
+        streamCancel: (requestId) => ipcRenderer.invoke('native-gguf:stream-cancel', requestId),
+        unload: () => ipcRenderer.invoke('native-gguf:unload'),
+        apiStart: (port) => ipcRenderer.invoke('native-gguf:api-start', port),
+        apiStop: () => ipcRenderer.invoke('native-gguf:api-stop'),
+        apiStatus: () => ipcRenderer.invoke('native-gguf:api-status')
+    },
+    localDocs: {
+        list: () => ipcRenderer.invoke('local-docs:list'),
+        register: (input) => ipcRenderer.invoke('local-docs:register', input),
+        rescan: (id) => ipcRenderer.invoke('local-docs:rescan', id),
+        remove: (id) => ipcRenderer.invoke('local-docs:remove', id),
+        embed: (id, modelId) => ipcRenderer.invoke('local-docs:embed', { id, modelId }),
+        search: (request) => ipcRenderer.invoke('local-docs:search', request),
+        watchStart: (id) => ipcRenderer.invoke('local-docs:watch-start', id),
+        watchStop: (id) => ipcRenderer.invoke('local-docs:watch-stop', id)
+    },
     // Credential Vault
     vault: {
         store: (site, username, password) => ipcRenderer.invoke('vault-store', { site, username, password }),

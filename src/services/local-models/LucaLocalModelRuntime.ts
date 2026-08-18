@@ -18,6 +18,7 @@ import type {
   LocalModelDescriptor,
   LocalRuntimeEvent,
 } from "./LocalModelTypes";
+import { nativeGgufModelRegistry } from "./NativeGgufModelRegistry";
 
 interface LucaLocalModelRuntimeOptions {
   registry?: RuntimeRegistry;
@@ -109,7 +110,28 @@ export class LucaLocalModelRuntime {
         (model) => model.id === modelId || model.runtimeModelId === modelId,
       ) ?? findLocalModelDescriptor(modelId);
 
-    if (!descriptor) throw new Error(`Unknown local model: ${modelId}`);
+    if (!descriptor) {
+      // Only the registry may name a runnable GGUF. A `native-gguf:<path>`
+      // prefix used to synthesize a descriptor here, which meant any string
+      // shaped like one resolved to a loadable model and skipped the lookup
+      // directly below — admission by spelling rather than by registration.
+      const native = nativeGgufModelRegistry
+        .list()
+        .find((model) => model.id === modelId);
+      if (native) {
+        return {
+          id: native.id,
+          displayName: native.displayName ?? native.id,
+          runtime: "native-gguf",
+          runtimeModelId: native.id,
+          contextWindow: native.contextWindow,
+          features: ["chat", "streaming"],
+          install: { strategy: "native-gguf-file", ref: native.modelPath },
+          artifact: native.artifact,
+        };
+      }
+      throw new Error(`Unknown local model: ${modelId}`);
+    }
     return descriptor;
   }
 }

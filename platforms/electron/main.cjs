@@ -15,6 +15,9 @@ Menu.setApplicationMenu(null);
 require('dotenv').config(); // Load environment variables for Main process (and Medic)
 const path = require('path');
 const fs = require('fs');
+const { createNativeGgufHost } = require('./nativeGgufHost.cjs');
+const { createNativeGgufApiServer } = require('./nativeGgufApiServer.cjs');
+const { createLocalDocsHost } = require('./localDocsHost.cjs');
 const { findAvailableExecutable, getPythonCandidates } = require('../shared/platform.cjs');
 const {
     createMiniChatWindow: createMiniChatWindowFactory,
@@ -1402,6 +1405,69 @@ app.on('ready', () => {
     // Standardize userData path — must happen inside ready, not at module load time
     app.setPath('userData', paths.ELECTRON_DATA_DIR);
     console.log(`[MAIN] Architecture Sync: UserData standardized to ${paths.ELECTRON_DATA_DIR}`);
+
+    // Local intelligence hosts are constructed *after* the line above and read
+    // paths.ELECTRON_DATA_DIR directly. Deriving a state root from
+    // app.getPath('userData') before the standardization put native-gguf state
+    // outside Luca's data dir and split it from local-docs, which is one store
+    // in two places — the shared-memory invariant does not survive that.
+    const nativeGgufHost = createNativeGgufHost({
+        stateRoot: path.join(paths.ELECTRON_DATA_DIR, 'native-gguf')
+    });
+    const nativeGgufApiServer = createNativeGgufApiServer({ host: nativeGgufHost });
+    const localDocsHost = createLocalDocsHost({
+        stateRoot: path.join(paths.ELECTRON_DATA_DIR, 'local-docs')
+    });
+    ipcMain.handle('native-gguf:list', () => nativeGgufHost.list());
+    ipcMain.handle('native-gguf:register', (_event, input) => nativeGgufHost.register(input));
+    ipcMain.handle('native-gguf:consent', (_event, id) => nativeGgufHost.consent(id));
+    ipcMain.handle('native-gguf:remove', (_event, id) => nativeGgufHost.remove(id));
+    ipcMain.handle('native-gguf:health', () => nativeGgufHost.health());
+    ipcMain.handle('native-gguf:chat', (_event, request) => nativeGgufHost.chat(request));
+    const nativeGgufStreams = new Map();
+    ipcMain.handle('native-gguf:stream-start', async (event, { requestId, request }) => {
+        if (!requestId || nativeGgufStreams.has(requestId)) throw new Error('Invalid or duplicate native stream id.');
+        const controller = new AbortController();
+        nativeGgufStreams.set(requestId, controller);
+        try {
+            await nativeGgufHost.stream({
+                ...request,
+                signal: controller.signal,
+                onToken: text => event.sender.send('native-gguf:stream-event', { requestId, type: 'token', text })
+            });
+            event.sender.send('native-gguf:stream-event', { requestId, type: 'done' });
+        } catch (error) {
+            event.sender.send('native-gguf:stream-event', {
+                requestId,
+                type: controller.signal.aborted ? 'done' : 'error',
+                error: error?.message || String(error)
+            });
+        } finally {
+            nativeGgufStreams.delete(requestId);
+        }
+    });
+    ipcMain.handle('native-gguf:stream-cancel', (_event, requestId) => {
+        const controller = nativeGgufStreams.get(requestId);
+        if (!controller) return false;
+        controller.abort();
+        return true;
+    });
+    ipcMain.handle('native-gguf:unload', () => nativeGgufHost.unload());
+    ipcMain.handle('native-gguf:api-start', (_event, port) => nativeGgufApiServer.start(port));
+    ipcMain.handle('native-gguf:api-stop', () => nativeGgufApiServer.stop());
+    ipcMain.handle('native-gguf:api-status', () => nativeGgufApiServer.status());
+    ipcMain.handle('local-docs:list', () => localDocsHost.list());
+    ipcMain.handle('local-docs:register', (_event, input) => localDocsHost.register(input));
+    ipcMain.handle('local-docs:rescan', (_event, id) => localDocsHost.rescan(id));
+    ipcMain.handle('local-docs:remove', (_event, id) => localDocsHost.remove(id));
+    ipcMain.handle('local-docs:embed', (_event, { id, modelId }) =>
+        localDocsHost.embedFolder(id, modelId, texts => nativeGgufHost.embed({ model: modelId, texts }))
+    );
+    ipcMain.handle('local-docs:search', (_event, request) =>
+        localDocsHost.search(request, texts => nativeGgufHost.embed({ model: request.modelId, texts }))
+    );
+    ipcMain.handle('local-docs:watch-start', (_event, id) => localDocsHost.startWatching(id));
+    ipcMain.handle('local-docs:watch-stop', (_event, id) => localDocsHost.stopWatching(id));
 
     // --- IPC HANDLERS ---
     console.log("[MAIN] Registering IPC Handlers...");

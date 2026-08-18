@@ -2,6 +2,7 @@ import type { LocalRuntimeAdapter } from "./LocalRuntimeAdapter";
 import type { LocalRuntimeKind } from "./LocalModelTypes";
 import { CortexRuntime } from "./runtimes/CortexRuntime";
 import { OllamaRuntime } from "./runtimes/OllamaRuntime";
+import { NativeGgufRuntime } from "./runtimes/NativeGgufRuntime";
 
 export class RuntimeRegistry {
   private readonly adapters = new Map<LocalRuntimeKind, LocalRuntimeAdapter>();
@@ -36,6 +37,7 @@ export function createDefaultLocalRuntimeRegistry(): RuntimeRegistry {
   const registry = new RuntimeRegistry();
   registry.register(new OllamaRuntime());
   registry.register(new CortexRuntime());
+  registry.register(new NativeGgufRuntime());
   return registry;
 }
 
