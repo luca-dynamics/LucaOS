@@ -73,6 +73,9 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
     host: "127.0.0.1",
     port: null,
   });
+  // Held only for as long as this listener runs, and only here: the host hands
+  // the token over once at start and cannot be asked for it again.
+  const [apiToken, setApiToken] = useState<string | null>(null);
 
   useEffect(() => localModelLibrary.subscribe(setModels), []);
   useEffect(() => {
@@ -162,12 +165,21 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
       return;
     }
     try {
-      const status = nativeApi.running ? await bridge.apiStop() : await bridge.apiStart(4891);
-      setNativeApi(status);
+      if (nativeApi.running) {
+        setNativeApi(await bridge.apiStop());
+        // The stopped listener's token is spent; leaving it on screen would
+        // imply it still opens something.
+        setApiToken(null);
+        setNativeStatus("Local API stopped.");
+        return;
+      }
+      // The host asks for confirmation outside the window before it opens the
+      // listener, so this rejects if the person at the machine declines.
+      const session = await bridge.apiStart(4891);
+      setNativeApi({ running: session.running, host: session.host, port: session.port });
+      setApiToken(session.token);
       setNativeStatus(
-        status.running
-          ? `Local API listening only on http://127.0.0.1:${status.port}/v1.`
-          : "Local API stopped.",
+        `Local API listening only on http://127.0.0.1:${session.port}/v1. Requests without the token below are refused.`,
       );
     } catch (error) {
       setNativeStatus(error instanceof Error ? error.message : String(error));
@@ -407,14 +419,28 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
                 </p>
                 <p className="text-xs" style={{ color: settingsSurfaceTokens.textSecondary }}>
                   {nativeApi.running
-                    ? `Listening on 127.0.0.1:${nativeApi.port}`
-                    : "Off by default; accepts non-streaming chat requests from this computer only."}
+                    ? `Listening on 127.0.0.1:${nativeApi.port} · streaming and non-streaming chat`
+                    : "Off by default. Lets programs on this computer run your local models, with streaming, using an access token."}
                 </p>
               </div>
               <LucaButton onClick={() => void toggleNativeApi()}>
                 {nativeApi.running ? "Stop API" : "Start API"}
               </LucaButton>
             </div>
+            {apiToken && (
+              <div className="rounded-lg border p-3" style={{ borderColor: settingsSurfaceTokens.borderSubtle }}>
+                <p className="text-xs font-semibold" style={{ color: settingsSurfaceTokens.textPrimary }}>
+                  Access token — copy it now, Luca will not show it again
+                </p>
+                <p className="mt-1 break-all font-mono text-xs" style={{ color: settingsSurfaceTokens.textSecondary }}>
+                  {apiToken}
+                </p>
+                <p className="mt-2 text-xs" style={{ color: settingsSurfaceTokens.textSecondary }}>
+                  Send it as <span className="font-mono">Authorization: Bearer …</span>. Stopping the API
+                  retires this token; starting it again issues a new one.
+                </p>
+              </div>
+            )}
             {nativeStatus && (
               <p className="text-xs" style={{ color: settingsSurfaceTokens.textSecondary }}>
                 {nativeStatus}

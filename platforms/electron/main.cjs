@@ -1453,7 +1453,28 @@ app.on('ready', () => {
         return true;
     });
     ipcMain.handle('native-gguf:unload', () => nativeGgufHost.unload());
-    ipcMain.handle('native-gguf:api-start', (_event, port) => nativeGgufApiServer.start(port));
+    // Opening a listener that runs local models is a side effect on the user's
+    // machine, so it is gated by the OS dialog rather than by the renderer alone:
+    // any code running in the window can reach this channel, and a compromised
+    // renderer must not be able to publish local inference by itself. Consent
+    // lasts for the app session and stopping the API revokes the listener.
+    let localApiConsented = false;
+    ipcMain.handle('native-gguf:api-start', async (_event, port) => {
+        if (!localApiConsented) {
+            const { response } = await dialog.showMessageBox(mainWindow, {
+                type: 'warning',
+                buttons: ['Cancel', 'Start the local API'],
+                defaultId: 0,
+                cancelId: 0,
+                title: 'Start the local inference API?',
+                message: 'Programs on this computer will be able to run your local models through Luca.',
+                detail: 'The API listens on 127.0.0.1 only, so nothing outside this computer can reach it, and every request must carry the access token Luca shows you once. You can stop it at any time in Settings.'
+            });
+            if (response !== 1) throw new Error('Starting the local inference API was declined.');
+            localApiConsented = true;
+        }
+        return nativeGgufApiServer.start(port);
+    });
     ipcMain.handle('native-gguf:api-stop', () => nativeGgufApiServer.stop());
     ipcMain.handle('native-gguf:api-status', () => nativeGgufApiServer.status());
     ipcMain.handle('local-docs:list', () => localDocsHost.list());

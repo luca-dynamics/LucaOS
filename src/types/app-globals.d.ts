@@ -64,6 +64,15 @@ interface NativeGgufApiStatus {
   port: number | null;
 }
 
+/**
+ * What `start()` returns, and the only place the token appears. `status()`
+ * deliberately cannot carry it: a token anything could poll back is not shown
+ * once, it is readable forever.
+ */
+interface NativeGgufApiSession extends NativeGgufApiStatus {
+  token: string;
+}
+
 /** Where in a document a chunk came from — pages for PDFs, paragraphs for DOCX. */
 interface LocalDocsLocator {
   kind: "page" | "paragraph" | "line";
@@ -142,7 +151,7 @@ interface LucaDesktopBridge {
     ): Promise<void>;
     streamCancel(requestId: string): Promise<boolean>;
     unload(): Promise<void>;
-    apiStart(port?: number): Promise<NativeGgufApiStatus>;
+    apiStart(port?: number): Promise<NativeGgufApiSession>;
     apiStop(): Promise<NativeGgufApiStatus>;
     apiStatus(): Promise<NativeGgufApiStatus>;
   };
