@@ -33,6 +33,7 @@
     "restore": "node ops/scripts/restore.js",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:node": "node --test \"platforms/**/*.test.cjs\" \"ops/**/*.test.cjs\"",
     "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",
     "type-check:workspaces": "tsc --noEmit -p tsconfig.workspaces.json",
