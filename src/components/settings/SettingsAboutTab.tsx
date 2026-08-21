@@ -8,21 +8,16 @@ import {
   SettingsSection,
   SettingsStatList,
 } from "./SettingsLayout";
+import {
+  buildAboutHardwareStats,
+  type AboutSystemSpecs,
+} from "./settingsAboutHardware";
 
 interface SettingsAboutTabProps {
   theme?: any;
   settings: LucaSettings;
   isMobile?: boolean;
 }
-
-interface AboutSystemSpecs {
-  cpu?: string;
-  gpu?: string;
-  memory?: { total?: number };
-}
-
-const formatGigabytes = (bytes?: number): string =>
-  bytes && bytes > 0 ? `${(bytes / 1_000_000_000).toFixed(1)} GB` : "Unknown";
 
 const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
   settings,
@@ -129,28 +124,10 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
       >
         <SettingsStatList
           columns={2}
-          items={[
-            {
-              label: "CPU",
-              value: systemSpecs.cpu || "Unknown",
-              detail: "Reported by the desktop shell at startup.",
-            },
-            {
-              label: "GPU",
-              value: systemSpecs.gpu || "Unknown",
-              detail: "Determines which local models can run accelerated.",
-            },
-            {
-              label: "Installed memory",
-              value: formatGigabytes(systemSpecs.memory?.total),
-              detail: "Used to size local model recommendations.",
-            },
-            {
-              label: "Build metadata",
-              value: `v${version}`,
-              detail: `Package v${version} • Runtime ${electronVersion}`,
-            },
-          ]}
+          items={buildAboutHardwareStats(systemSpecs, {
+            version,
+            runtime: electronVersion,
+          })}
         />
       </SettingsAdvancedDisclosure>
     </div>
