@@ -6,9 +6,8 @@
  * endpoint, and hands the call to an adapter. Nothing above this file branches
  * on vendor (Invariant 4).
  *
- * RFC-0006 Stage 2, Change 1: every OpenAI-compatible provider routes here.
- * Gemini and Anthropic are not routed yet and raise UnsupportedProviderError
- * rather than falling through to a silent default — see Change 2.
+ * RFC-0006 Stage 2: every provider the core can call routes here — the
+ * OpenAI-compatible family (Change 1) plus Gemini and Anthropic (Change 2).
  */
 
 import { getApiKey } from './credentialResolver.js';
@@ -16,6 +15,8 @@ import {
   OpenAICompatibleAdapter,
   DEFAULT_MAX_TOKENS
 } from './openaiCompatibleAdapter.js';
+import { GeminiAdapter } from './geminiAdapter.js';
+import { AnthropicAdapter } from './anthropicAdapter.js';
 import {
   resolveOpenAICompatibleAlias,
   resolveOpenAICompatibleEndpoint
@@ -36,13 +37,13 @@ export const OPENAI_COMPATIBLE_PROVIDERS = Object.freeze([
 ]);
 
 /**
- * Raised when a model id resolves to a provider the core cannot call yet.
+ * Raised when a model id resolves to a provider that has no adapter.
  * Fail closed and say why, rather than quietly answering with another vendor.
  */
 export class UnsupportedProviderError extends Error {
   constructor(provider, modelId) {
     super(
-      `[LLMGateway] Provider '${provider}' (model '${modelId}') is not routed through the core provider layer yet — see RFC-0006 Stage 2, Change 2.`
+      `[LLMGateway] Provider '${provider}' (model '${modelId}') has no adapter in the core provider layer.`
     );
     this.name = 'UnsupportedProviderError';
     this.provider = provider;
@@ -139,16 +140,29 @@ async function resolveOpenAICompatibleTarget(provider, cleanModelId) {
 }
 
 /**
- * Build an adapter for a model id. Throws UnsupportedProviderError for
- * providers Change 1 does not route.
+ * Build an adapter for a model id. Throws UnsupportedProviderError if the id
+ * resolves to a provider with no adapter behind it.
  */
 export async function createAdapter(modelId) {
   const provider = detectProvider(modelId);
+  const cleanModelId = normalizeModelId(modelId);
+
+  if (provider === 'gemini') {
+    const apiKey = await getApiKey('gemini');
+    if (!apiKey) throw new Error('Gemini API key not found in settings or environment');
+    return new GeminiAdapter({ apiKey, modelName: cleanModelId });
+  }
+
+  if (provider === 'anthropic') {
+    const apiKey = await getApiKey('anthropic');
+    if (!apiKey) throw new Error('Anthropic API key not found in settings');
+    return new AnthropicAdapter({ apiKey, modelName: cleanModelId });
+  }
+
   if (!isOpenAICompatible(provider)) {
     throw new UnsupportedProviderError(provider, modelId);
   }
 
-  const cleanModelId = normalizeModelId(modelId);
   const target = await resolveOpenAICompatibleTarget(provider, cleanModelId);
 
   return new OpenAICompatibleAdapter({

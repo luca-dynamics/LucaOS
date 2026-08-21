@@ -5,18 +5,15 @@
  * selected AI model (Gemini, GPT-4, Claude, DeepSeek, local Ollama).
  *
  * Model access goes through the core provider layer in ./llm (RFC-0006
- * Stage 2). Two vendors are still called directly from here — Gemini and
- * Anthropic — and move behind the gateway in Change 2, at which point the
- * last SDK imports leave this file.
+ * Stage 2). No vendor SDK is imported here and nothing in this file branches
+ * on vendor: the gateway owns provider detection, credentials and the wire
+ * format (Invariant 4).
  */
 
-import { GoogleGenAI } from '@google/genai';
-import Anthropic from '@anthropic-ai/sdk';
 import { EventEmitter } from 'events';
 import exchangeManager from './exchangeManager.js';
 import indicatorService from './indicatorService.js';
-import { getApiKey } from './llm/credentialResolver.js';
-import llmGateway, { detectProvider, normalizeModelId } from './llm/llmGateway.js';
+import llmGateway from './llm/llmGateway.js';
 
 // ============================================================================
 // Unified Model Caller
@@ -29,34 +26,6 @@ const DEBATE_MAX_TOKENS = 512;
  * Returns the text response.
  */
 async function callModel(modelId, prompt) {
-  const provider = detectProvider(modelId);
-  const cleanModelId = normalizeModelId(modelId);
-
-  if (provider === 'gemini') {
-    const apiKey = await getApiKey('gemini');
-    if (!apiKey) throw new Error('Gemini API key not found in settings or environment');
-
-    const genAI = new GoogleGenAI({ apiKey });
-    const result = await genAI.models.generateContent({
-      model: cleanModelId || 'gemini-3-flash-preview',
-      contents: prompt,
-    });
-    return result.text;
-  }
-
-  if (provider === 'anthropic') {
-    const apiKey = await getApiKey('anthropic');
-    if (!apiKey) throw new Error('Anthropic API key not found in settings');
-
-    const anthropic = new Anthropic({ apiKey });
-    const msg = await anthropic.messages.create({
-      model: cleanModelId,
-      max_tokens: DEBATE_MAX_TOKENS,
-      messages: [{ role: 'user', content: prompt }],
-    });
-    return msg.content[0]?.text ?? '';
-  }
-
   return llmGateway.completeText({
     modelId,
     prompt,

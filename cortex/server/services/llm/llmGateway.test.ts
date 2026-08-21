@@ -3,10 +3,10 @@
  *
  * These are the other half of RFC-0006 Stage 2's criterion: the core has to be
  * able to complete a provider call, and nothing above the adapter may know which
- * vendor answered. The `openai` module is mocked with a recording stub rather
- * than injecting a client, so the assertions cover what actually reaches the SDK
- * — the resolved endpoint and key — which is the part the old vendor `switch`
- * got to keep implicit.
+ * vendor answered. All three vendor SDKs are mocked with recording stubs rather
+ * than injecting clients, so the assertions cover what actually reaches the SDK
+ * — the resolved endpoint, key and request body — which is the part the old
+ * vendor `switch` got to keep implicit.
  *
  * `credentialResolver` is mocked out: it reaches the Secure Vault, and what is
  * under test here is routing, not credential storage.
@@ -23,6 +23,32 @@ vi.mock("openai", () => ({
     constructor(config: unknown) {
       openAIConstructor(config);
       this.chat = { completions: { create: createCompletion } };
+    }
+  },
+}));
+
+const generateContent = vi.fn();
+const googleGenAIConstructor = vi.fn();
+
+vi.mock("@google/genai", () => ({
+  GoogleGenAI: class MockGoogleGenAI {
+    models: { generateContent: typeof generateContent };
+    constructor(config: unknown) {
+      googleGenAIConstructor(config);
+      this.models = { generateContent };
+    }
+  },
+}));
+
+const anthropicCreate = vi.fn();
+const anthropicConstructor = vi.fn();
+
+vi.mock("@anthropic-ai/sdk", () => ({
+  default: class MockAnthropic {
+    messages: { create: typeof anthropicCreate };
+    constructor(config: unknown) {
+      anthropicConstructor(config);
+      this.messages = { create: anthropicCreate };
     }
   },
 }));
@@ -48,12 +74,25 @@ const textResponse = (content: string) => ({
   choices: [{ message: { content } }],
 });
 
+/** No vendor client was built, whichever vendor the id pointed at. */
+const expectNoClientConstructed = () => {
+  expect(openAIConstructor).not.toHaveBeenCalled();
+  expect(googleGenAIConstructor).not.toHaveBeenCalled();
+  expect(anthropicConstructor).not.toHaveBeenCalled();
+};
+
 beforeEach(() => {
   createCompletion.mockReset();
   openAIConstructor.mockReset();
+  generateContent.mockReset();
+  googleGenAIConstructor.mockReset();
+  anthropicCreate.mockReset();
+  anthropicConstructor.mockReset();
   getApiKey.mockReset();
   getApiKey.mockResolvedValue("test-key");
   createCompletion.mockResolvedValue(textResponse("ok"));
+  generateContent.mockResolvedValue({ text: "ok" });
+  anthropicCreate.mockResolvedValue({ content: [{ type: "text", text: "ok" }] });
 });
 
 afterEach(() => {
@@ -113,7 +152,7 @@ describe("normalizeModelId", () => {
 });
 
 describe("isOpenAICompatible", () => {
-  it("covers exactly the six providers Change 1 routes", () => {
+  it("covers exactly the six providers that share the OpenAI wire", () => {
     expect([...OPENAI_COMPATIBLE_PROVIDERS]).toEqual([
       "openai",
       "xai",
@@ -122,6 +161,8 @@ describe("isOpenAICompatible", () => {
       "ollama",
       "openai-compat",
     ]);
+    // Gemini and Anthropic route too, but through their own wire — not by being
+    // quietly declared OpenAI-compatible.
     expect(isOpenAICompatible("gemini")).toBe(false);
     expect(isOpenAICompatible("anthropic")).toBe(false);
   });
@@ -215,6 +256,122 @@ describe("createAdapter — endpoint and credential resolution", () => {
   });
 });
 
+describe("createAdapter — Gemini", () => {
+  it("routes a Gemini id to the Gemini adapter under the gemini key", async () => {
+    const adapter = await createAdapter("gemini-1.5-flash");
+
+    expect(getApiKey).toHaveBeenCalledWith("gemini");
+    expect(adapter.modelName).toBe("gemini-1.5-flash");
+    expect(googleGenAIConstructor).toHaveBeenCalledWith({ apiKey: "test-key" });
+    expect(openAIConstructor).not.toHaveBeenCalled();
+  });
+
+  it("defaults a blank model id to Luca's own brain", async () => {
+    // `detectProvider` sends anything it does not recognise — including nothing
+    // at all — to gemini, so this is the path an unset model setting takes.
+    expect((await createAdapter()).modelName).toBe("gemini-3-flash-preview");
+    expect((await createAdapter("")).modelName).toBe("gemini-3-flash-preview");
+  });
+
+  it("routes an unrecognised id to Gemini rather than refusing it", async () => {
+    const adapter = await createAdapter("something-unfamiliar");
+
+    expect(adapter.modelName).toBe("something-unfamiliar");
+    expect(googleGenAIConstructor).toHaveBeenCalledWith({ apiKey: "test-key" });
+  });
+
+  it("sends the prompt as contents and sets no output limit", async () => {
+    // Deliberate asymmetry, preserved from the pre-Stage-2 call: Gemini got no
+    // max-output-tokens. Honouring the gateway's 512 default here would newly
+    // truncate answers on the default brain.
+    generateContent.mockResolvedValue({ text: "Bullish, with caveats." });
+
+    await expect(
+      completeText({ modelId: "gemini-1.5-flash", prompt: "Your read?" }),
+    ).resolves.toBe("Bullish, with caveats.");
+
+    expect(generateContent).toHaveBeenCalledWith({
+      model: "gemini-1.5-flash",
+      contents: "Your read?",
+    });
+  });
+
+  it("returns an empty string when Gemini sends no text", async () => {
+    generateContent.mockResolvedValue({});
+
+    await expect(
+      completeText({ modelId: "gemini-1.5-flash", prompt: "hi" }),
+    ).resolves.toBe("");
+  });
+
+  it("refuses with no key, and constructs no client", async () => {
+    getApiKey.mockResolvedValue(null);
+
+    await expect(createAdapter("gemini-1.5-flash")).rejects.toThrow(
+      "Gemini API key not found in settings or environment",
+    );
+    expectNoClientConstructed();
+    expect(generateContent).not.toHaveBeenCalled();
+  });
+});
+
+describe("createAdapter — Anthropic", () => {
+  it("routes a Claude id to the Anthropic adapter under the anthropic key", async () => {
+    const adapter = await createAdapter("claude-3-5-sonnet-20240620");
+
+    expect(getApiKey).toHaveBeenCalledWith("anthropic");
+    expect(adapter.modelName).toBe("claude-3-5-sonnet-20240620");
+    expect(anthropicConstructor).toHaveBeenCalledWith({ apiKey: "test-key" });
+    expect(openAIConstructor).not.toHaveBeenCalled();
+  });
+
+  it("sends a plain-string user message and the default token budget", async () => {
+    anthropicCreate.mockResolvedValue({
+      content: [{ type: "text", text: "Bearish." }],
+    });
+
+    await expect(
+      completeText({ modelId: "claude-3-5-sonnet-20240620", prompt: "Read?" }),
+    ).resolves.toBe("Bearish.");
+
+    expect(anthropicCreate).toHaveBeenCalledWith({
+      model: "claude-3-5-sonnet-20240620",
+      max_tokens: 512,
+      messages: [{ role: "user", content: "Read?" }],
+    });
+  });
+
+  it("passes an explicit token budget through", async () => {
+    await completeText({
+      modelId: "claude-3-5-sonnet-20240620",
+      prompt: "hi",
+      maxTokens: 64,
+    });
+
+    expect(anthropicCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ max_tokens: 64 }),
+    );
+  });
+
+  it("returns an empty string when Anthropic sends no content block", async () => {
+    anthropicCreate.mockResolvedValue({ content: [] });
+
+    await expect(
+      completeText({ modelId: "claude-3-5-sonnet-20240620", prompt: "hi" }),
+    ).resolves.toBe("");
+  });
+
+  it("refuses with no key, and constructs no client", async () => {
+    getApiKey.mockResolvedValue(null);
+
+    await expect(createAdapter("claude-3-5-sonnet-20240620")).rejects.toThrow(
+      "Anthropic API key not found in settings",
+    );
+    expectNoClientConstructed();
+    expect(anthropicCreate).not.toHaveBeenCalled();
+  });
+});
+
 describe("createAdapter — failing closed", () => {
   it.each([
     ["gpt-4o", "OpenAI API key not found in settings"],
@@ -227,25 +384,27 @@ describe("createAdapter — failing closed", () => {
       getApiKey.mockResolvedValue(null);
 
       await expect(createAdapter(modelId)).rejects.toThrow(message);
-      expect(openAIConstructor).not.toHaveBeenCalled();
+      expectNoClientConstructed();
       expect(createCompletion).not.toHaveBeenCalled();
     },
   );
 
-  it.each([
-    ["gemini-1.5-flash", "gemini"],
-    ["claude-3-5-sonnet-20240620", "anthropic"],
-    ["something-unfamiliar", "gemini"],
-  ])(
-    "refuses %s as unrouted rather than answering with another vendor",
-    async (modelId, provider) => {
-      await expect(createAdapter(modelId)).rejects.toThrow(
-        UnsupportedProviderError,
-      );
-      await expect(createAdapter(modelId)).rejects.toMatchObject({ provider });
-      expect(openAIConstructor).not.toHaveBeenCalled();
-    },
-  );
+  it("keeps a guard for a provider with no adapter behind it", () => {
+    // No model id can reach this today: every provider `detectProvider` returns
+    // now has an adapter, and its fallback is gemini. That is the point — the
+    // guard is what a *seventh* provider hits if someone adds it to
+    // `detectProvider` and forgets the adapter, rather than that id silently
+    // being answered by Gemini.
+    const error = new UnsupportedProviderError("bedrock", "bedrock.titan");
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe("UnsupportedProviderError");
+    expect(error.provider).toBe("bedrock");
+    expect(error.modelId).toBe("bedrock.titan");
+    expect(error.message).toContain(
+      "has no adapter in the core provider layer",
+    );
+  });
 });
 
 describe("completeText", () => {
