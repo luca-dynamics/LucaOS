@@ -272,7 +272,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
     <div className={isMobile ? "space-y-1 px-0" : "space-y-1 pr-2"}>
       <SettingsSection
         title="Voice experience"
-        description="Pick how Luca listens and speaks. Presets choose the speech models for you; everything can be tuned below."
+        description="Pick how Luca listens and speaks. Presets choose the models for you."
         icon="Sparkles"
         accentColor={theme.hex}
         isMobile={isMobile}

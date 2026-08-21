@@ -8,7 +8,6 @@ import { SkillManifestPreviewCard } from "./personalIntelligencePreview";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
-  SettingsRow,
   SettingsSection,
   SettingsStatList,
 } from "./SettingsLayout";
@@ -34,6 +33,10 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
   const [bridgeMode, setBridgeMode] = useState<"inbound" | "outbound">(
     "inbound",
   );
+
+  const servers = settings.mcp.servers;
+  const autoConnectCount = servers.filter((server) => server.autoConnect).length;
+  const localCount = servers.filter((server) => server.type === "stdio").length;
 
   const skillManifestPreview = createSkillManifestPreview({
     id: "settings-preview-skill",
@@ -84,7 +87,7 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
 
       <SettingsSection
         title="MCP Status"
-        description="Connect tools Luca can use while keeping permissions and diagnostics easy to review."
+        description="Tool servers Luca can reach right now."
         icon="Plug"
         accentColor={theme.hex}
         isMobile={isMobile}
@@ -92,22 +95,19 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
         <SettingsStatList
           items={[
             {
-              label: "Bridge",
-              value: settings.mcp.servers.length > 0 ? "Configured" : "Ready",
-              detail:
-                "MCP Bridge remains available on desktop and mobile Advanced Settings.",
+              label: "Servers",
+              value: `${servers.length}`,
+              detail: "Tool servers configured on this device.",
             },
             {
-              label: "Connected servers",
-              value: `${settings.mcp.servers.length}`,
-              detail:
-                "Server health and exposed tools stay managed by the existing bridge UI.",
+              label: "Auto-connect",
+              value: `${autoConnectCount}`,
+              detail: "Servers that start together with Luca.",
             },
             {
-              label: "Approval policy",
-              value: "User reviewed",
-              detail:
-                "Tool approvals, blocked tools, and history are grouped below.",
+              label: "Local / remote",
+              value: `${localCount} / ${servers.length - localCount}`,
+              detail: "Local servers run as a process on this machine.",
             },
           ]}
         />
@@ -115,14 +115,14 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
 
       <SettingsSection
         title="Connected MCP Servers"
-        description="Review server name, permission scope, exposed tools, health, and management actions."
+        description="Name, transport, and connection mode for each server."
         icon="Server"
         accentColor={theme.hex}
         isMobile={isMobile}
       >
-        {settings.mcp.servers.length > 0 ? (
+        {servers.length > 0 ? (
           <div className="space-y-3">
-            {settings.mcp.servers.map((server) => (
+            {servers.map((server) => (
               <SettingsCard key={server.id}>
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -157,7 +157,7 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
 
       <SettingsSection
         title="Add MCP Server"
-        description="Use trusted templates, local servers, remote servers, or imported configs from the existing bridge controls."
+        description="Connect a tool server, or share Luca's own capabilities."
         icon="PlusCircle"
         accentColor={theme.hex}
         isMobile={isMobile}
@@ -220,76 +220,27 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
         </div>
       </SettingsSection>
 
-      <SettingsSection
-        title="Permissions"
-        description="Filesystem, browser, shell, database, messaging, and confirmation requirements remain explicit."
-        icon="ShieldCheck"
-        accentColor={theme.hex}
-        isMobile={isMobile}
-      >
-        <SettingsRow
-          label="Filesystem access"
-          description="Review per-server scope before Luca can use file-aware tools."
-        />
-        <SettingsRow
-          label="Browser access"
-          description="Browser tools remain permissioned and user-reviewed."
-        />
-        <SettingsRow
-          label="Shell and database access"
-          description="High-impact capabilities require explicit approval in the bridge policy."
-        />
-        <SettingsRow
-          label="Messaging access"
-          description="Messaging-capable tools stay grouped with confirmation requirements."
-        />
-      </SettingsSection>
-
-      <SettingsSection
-        title="Tool Approval Policy"
-        description="Choose whether Luca asks every time, trusts approved tools, blocks dangerous tools, or shows history."
-        icon="CheckCircle"
-        accentColor={theme.hex}
-        isMobile={isMobile}
-      >
-        <SettingsRow
-          label="Ask every time"
-          description="Recommended for new or sensitive servers."
-        />
-        <SettingsRow
-          label="Allow trusted tools"
-          description="Use only for tools you have reviewed."
-        />
-        <SettingsRow
-          label="Block dangerous tools"
-          description="Keep command, file, and messaging actions behind review."
-        />
-        <SettingsRow
-          label="Review tool history"
-          description="Inspect recent approvals and failures in the existing bridge diagnostics."
-        />
-      </SettingsSection>
-
       <SettingsAdvancedDisclosure
         title="Advanced Details"
-        description="Raw MCP JSON/config, server logs, restart bridge, export/import config, and protocol diagnostics."
+        description="Raw server definitions as Luca stores them."
       >
-        <SettingsRow
-          label="Raw MCP JSON/config"
-          description="Use the bridge controls above to edit or import server definitions."
-        />
-        <SettingsRow
-          label="Server logs"
-          description="Server startup and sync diagnostics stay out of the main user controls."
-        />
-        <SettingsRow
-          label="Restart bridge"
-          description="Restart and export/import actions remain part of existing bridge management."
-        />
-        <SettingsRow
-          label="Protocol diagnostics"
-          description="Low-level protocol details stay grouped here."
-        />
+        {servers.length > 0 ? (
+          <SettingsCard>
+            <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-all text-xs leading-relaxed opacity-80">
+              {JSON.stringify(servers, null, 2)}
+            </pre>
+          </SettingsCard>
+        ) : (
+          <SettingsStatList
+            items={[
+              {
+                label: "Raw MCP config",
+                value: "Empty",
+                detail: "Add a server above to see its stored definition.",
+              },
+            ]}
+          />
+        )}
       </SettingsAdvancedDisclosure>
     </div>
   );

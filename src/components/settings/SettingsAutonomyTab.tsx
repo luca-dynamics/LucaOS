@@ -77,7 +77,7 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
     <div className={`space-y-6 ${isMobile ? "px-0" : "pr-2"} overflow-y-auto`}>
       <SettingsSection
         title="Autonomy Status"
-        description="Choose how much Luca can do on your behalf with safety-first framing."
+        description="How much Luca can currently do on your behalf."
         icon="Ghost"
         accentColor={theme.hex}
         isMobile={isMobile}
@@ -85,66 +85,34 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
         <SettingsStatList
           items={[
             {
-              label: "Autonomy",
+              label: "Background missions",
               value: autonomy.backgroundMissionsEnabled ? "Enabled" : "Paused",
-              detail: "Background missions only continue when this is enabled.",
+              detail: "Missions only continue while this is enabled.",
             },
             {
-              label: "Current mode",
-              value: autonomy.backgroundMissionsEnabled
-                ? "Ask before acting"
-                : "Suggest only",
-              detail: "Risky actions remain user-reviewed.",
+              label: "Idle threshold",
+              value: `${autonomy.idleThresholdMinutes} min`,
+              detail: "Idle time before background work may start.",
             },
             {
-              label: "Active missions",
-              value: "User approved",
-              detail: "Mission execution continues through existing services.",
-            },
-            {
-              label: "Safety state",
-              value: `${activeSafety}/3 safeguards`,
-              detail: "Shadow preview, consensus, and resource limits.",
+              label: "Safeguards",
+              value: `${activeSafety}/3 active`,
+              detail: "Shadow preview, consensus, and resource throttling.",
             },
           ]}
         />
       </SettingsSection>
 
       <SettingsSection
-        title="Permission Level"
-        description="Do not expose risky autonomy controls as casual toggles; keep approvals visible."
-        icon="ShieldCheck"
-        accentColor={theme.hex}
-        isMobile={isMobile}
-      >
-        <SettingsRow
-          label="Suggest only"
-          description="Luca prepares recommendations without taking action."
-        />
-        <SettingsRow
-          label="Ask before acting"
-          description="Recommended default for tasks with tools, apps, or spending."
-        />
-        <SettingsRow
-          label="Approve trusted actions"
-          description="Use only for reviewed actions within clear limits."
-        />
-        <SettingsRow
-          label="Autonomous within limits"
-          description="Keep sensitive apps and high-impact actions restricted."
-        />
-      </SettingsSection>
-
-      <SettingsSection
         title="Missions"
-        description="Background tasks, recurring work, active missions, and mission history remain grouped together."
+        description="Let Luca continue approved goals while you are away."
         icon="Target"
         accentColor={theme.hex}
         isMobile={isMobile}
       >
         <SettingsRow
           label="Background missions"
-          description="Allow Luca to continue approved goals while you are idle."
+          description="Continue approved goals while you are idle."
           control={
             <SettingsToggle
               checked={!!autonomy.backgroundMissionsEnabled}
@@ -154,47 +122,51 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
             />
           }
         />
-        <SettingsRow
-          label="Recurring tasks"
-          description="Recurring mission setup stays in the mission surfaces that already manage it."
-        />
-        <SettingsRow
-          label="Mission history"
-          description="Review completed and stopped missions through existing autonomy history."
-        />
       </SettingsSection>
 
       <SettingsSection
         title="Safety Controls"
-        description="Mission killswitch, approvals, restricted actions, and sensitive app rules are emphasized before diagnostics."
+        description="Extra review passes before Luca acts autonomously."
         icon="Lock"
         accentColor={theme.hex}
         isMobile={isMobile}
       >
         <SettingsRow
-          label="Mission killswitch"
-          description="Pause background autonomy immediately when mission risk or context changes."
+          label="Shadow execution"
+          description="Preview actions before Luca runs them."
+          control={
+            <SettingsToggle
+              checked={!!autonomy.shadowExecutionEnabled}
+              onChange={() => toggle("shadowExecutionEnabled")}
+              accentColor={theme.hex}
+              ariaLabel="Shadow execution safeguard"
+            />
+          }
         />
         <SettingsRow
-          label="Approval requirements"
-          description="Tool, spending, messaging, and sensitive-app actions should stay review-gated."
-        />
-        <SettingsRow
-          label="Restricted actions"
-          description="Spending, messaging, shell, and sensitive app actions should require approval."
+          label="Double-brain consensus"
+          description="Require a second reasoning pass on sensitive steps."
+          control={
+            <SettingsToggle
+              checked={!!autonomy.doubleBrainConsensus}
+              onChange={() => toggle("doubleBrainConsensus")}
+              accentColor={theme.hex}
+              ariaLabel="Double-brain consensus safeguard"
+            />
+          }
         />
       </SettingsSection>
 
       <SettingsSection
         title="Resource Awareness"
-        description="CPU, battery, network, focus mode, and quiet hours stay visible as user-level safety settings."
+        description="Keep missions from competing with your own work."
         icon="Gauge"
         accentColor={theme.hex}
         isMobile={isMobile}
       >
         <SettingsRow
           label="Resource-aware throttling"
-          description="Pause or slow missions when Luca detects low resource availability."
+          description="Slow missions when the machine is under load."
           control={
             <SettingsToggle
               checked={!!autonomy.resourceAwareThrottling}
@@ -206,7 +178,7 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
         />
         <SettingsRow
           label="Idle threshold"
-          description={`${autonomy.idleThresholdMinutes} minutes before Luca considers background work.`}
+          description={`${autonomy.idleThresholdMinutes} minutes before background work.`}
           control={
             <LucaSlider
               min="1"
@@ -219,19 +191,11 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
             />
           }
         />
-        <SettingsRow
-          label="Network limits"
-          description="Network-sensitive missions continue through existing autonomy limits."
-        />
-        <SettingsRow
-          label="Quiet hours"
-          description="Quiet-hour behavior remains controlled by existing notification and mission policies."
-        />
       </SettingsSection>
 
       <SettingsSection
         title="Computer-use sandbox"
-        description="Real browser automation stays off by default. Enable only when you understand sandbox boundaries and approvals."
+        description="Real browser automation. Off by default; guards still apply."
         icon="Browser"
         accentColor={theme.hex}
         isMobile={isMobile}
@@ -265,7 +229,7 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
         </div>
         <SettingsRow
           label="Real sandbox browser"
-          description="When on, computer-use can drive Playwright or the Electron sandbox browser behind guards. Default is simulated only."
+          description="Allow Playwright or the Electron sandbox browser."
           control={
             <SettingsToggle
               checked={!!computerUse.realSandboxEnabled}
@@ -282,7 +246,7 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
         />
         <SettingsRow
           label="Driver"
-          description="Auto uses Electron sandbox IPC when available, otherwise Playwright. Click and type still require guard approval."
+          description="Auto prefers Electron sandbox IPC, else Playwright."
           control={
             <select
               className="bg-transparent border border-white/10 rounded-lg px-2 py-1 text-sm"
@@ -304,7 +268,7 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
         />
         <SettingsRow
           label="Mission tape recording"
-          description="Forward computer-use invocation events into the in-process MissionTape recorder (no disk export)."
+          description="Record invocation events in-process; nothing hits disk."
           control={
             <SettingsToggle
               checked={!!computerUse.enableMissionTapeSink}
@@ -323,45 +287,9 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
 
       <SettingsAdvancedDisclosure
         title="Advanced Details"
-        description="Advanced autonomy safeguards, planning traces, tool execution diagnostics, and autonomy logs."
+        description="Live sandbox fleet state for running missions."
       >
         <SandboxFleetLivePanel />
-        <SettingsRow
-          label="Shadow execution safeguard"
-          description="Preview actions before Luca runs or surfaces them. Use only when you understand the mission review flow."
-          control={
-            <SettingsToggle
-              checked={!!autonomy.shadowExecutionEnabled}
-              onChange={() => toggle("shadowExecutionEnabled")}
-              accentColor={theme.hex}
-              ariaLabel="Shadow execution safeguard"
-            />
-          }
-        />
-        <SettingsRow
-          label="Double-brain consensus safeguard"
-          description="Require a second reasoning pass before sensitive autonomous steps; keep enabled for higher-risk missions."
-          control={
-            <SettingsToggle
-              checked={!!autonomy.doubleBrainConsensus}
-              onChange={() => toggle("doubleBrainConsensus")}
-              accentColor={theme.hex}
-              ariaLabel="Double-brain consensus safeguard"
-            />
-          }
-        />
-        <SettingsRow
-          label="Planning traces"
-          description="Keep raw plans and tool diagnostics away from primary controls."
-        />
-        <SettingsRow
-          label="Tool execution diagnostics"
-          description="Diagnostics are informational only in this UI migration."
-        />
-        <SettingsRow
-          label="Autonomy logs"
-          description="Review low-level mission details from the existing runtime surfaces."
-        />
       </SettingsAdvancedDisclosure>
     </div>
   );

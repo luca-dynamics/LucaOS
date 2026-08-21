@@ -154,8 +154,6 @@ describe("remaining Settings premium migration", () => {
         "MCP Status",
         "Connected MCP Servers",
         "Add MCP Server",
-        "Permissions",
-        "Tool Approval Policy",
         "Advanced Details",
       ]),
     );
@@ -166,6 +164,53 @@ describe("remaining Settings premium migration", () => {
     expect(remainingSettingsPremiumTabStructure.personality).toContain(
       "Advanced / Origin-only",
     );
+  });
+
+  // Every section this model names must actually render. Prose-only sections
+  // describing settings that never existed were deleted from the panes, so the
+  // model may not keep claiming them.
+  it("records only sections that actually render", () => {
+    for (const [tabId, source] of Object.entries(migratedSources)) {
+      for (const section of remainingSettingsPremiumTabStructure[
+        tabId as keyof typeof remainingSettingsPremiumTabStructure
+      ]) {
+        // Danger Zone is a dedicated primitive, not a titled section.
+        if (section === "Danger Zone") {
+          expect(source).toContain("SettingsDangerZone");
+          continue;
+        }
+        expect(source, `${tabId} → ${section}`).toContain(
+          `title="${section}"`,
+        );
+      }
+    }
+  });
+
+  it("keeps prose-only sections out of the model", () => {
+    for (const [tabId, removed] of Object.entries({
+      "mcp-bridge": ["Permissions", "Tool Approval Policy"],
+      connectors: ["Connector Permissions", "Activity & Safety"],
+      "knowledge-bridge": ["Retrieval Settings", "Source Management"],
+      autonomy: ["Permission Level"],
+      iot: ["Devices", "Permissions", "Automations"],
+      profile: ["Work Context", "Personalization"],
+      personality: ["Behavior Preferences", "Role Profiles", "Boundaries"],
+      about: ["Legal & Trust"],
+      "model-manager": ["Downloads"],
+    })) {
+      const source =
+        migratedSources[tabId as keyof typeof migratedSources];
+      for (const section of removed) {
+        expect(
+          remainingSettingsPremiumTabStructure[
+            tabId as keyof typeof remainingSettingsPremiumTabStructure
+          ] as readonly string[],
+        ).not.toContain(section);
+        expect(source, `${tabId} → ${section}`).not.toContain(
+          `title="${section}"`,
+        );
+      }
+    }
   });
 
   it("renders migrated tabs with the PR #180 SettingsLayout primitives", () => {
@@ -186,11 +231,11 @@ describe("remaining Settings premium migration", () => {
       expect.arrayContaining([
         "model-manager.rawModelIds",
         "mcp-bridge.rawMcpJson",
-        "connectors.tokenRefreshState",
-        "knowledge-bridge.embeddingModel",
+        "connectors.liveStatus",
+        "knowledge-bridge.sourceIndexCounts",
         "lucalink.pairingTokenDiagnostics",
-        "autonomy.planningTraces",
-        "iot.homeAssistantEndpoint",
+        "autonomy.sandboxFleetState",
+        "iot.endpointDiagnostics",
         "personality.rawSystemBlueprint",
       ]),
     );
@@ -219,6 +264,16 @@ describe("remaining Settings premium migration", () => {
     expect(connectorsSource).not.toContain("SettingsDangerZone");
     expect(dataSource).toContain("SettingsDangerZone");
     expect(iotSource).not.toContain("SettingsDangerZone");
+  });
+
+  it("records only LucaLink sections that actually render", () => {
+    for (const section of remainingSettingsPremiumTabStructure.lucalink) {
+      expect(lucaLinkSource).toContain(`title="${section}"`);
+    }
+    for (const stub of ["Linked Devices", "Sync Behavior", "Access Control"]) {
+      expect(remainingSettingsPremiumTabStructure.lucalink).not.toContain(stub);
+      expect(lucaLinkSource).not.toContain(`title="${stub}"`);
+    }
   });
 
   it("keeps raw profile and personality/system controls out of primary user controls", () => {

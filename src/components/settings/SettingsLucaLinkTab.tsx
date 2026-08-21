@@ -106,6 +106,7 @@ import {
   SettingsRow,
   SettingsSection,
   SettingsStatList,
+  SettingsToggle,
   settingsControlInlineStyle,
   settingsSelectClassName,
 } from "./SettingsLayout";
@@ -884,7 +885,9 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       lucaLinkDeviceCenterTabs.filter(
         (tab) =>
           isCreatorMode ||
-          (tab.id !== "bridge-review" && tab.id !== "advanced"),
+          (tab.id !== "hosts" &&
+            tab.id !== "bridge-review" &&
+            tab.id !== "advanced"),
       ),
     [isCreatorMode],
   );
@@ -2441,10 +2444,10 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         </SettingsSection>
       )}
 
-      {deviceCenterTab === "hosts" && (
+      {isCreatorMode && deviceCenterTab === "hosts" && (
         <SettingsSection
           title="Host Connections / Adaptation"
-          description="Read-only multi-host connection and Host Adaptation Intelligence summary for LucaLink's adaptive host mesh."
+          description="Other computers and devices Luca is connected to. Read-only."
           icon="Devices"
           accentColor={theme.hex}
           isMobile={isMobile}
@@ -2595,7 +2598,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       {deviceCenterTab === "approvals" && (
         <SettingsSection
           title="Approvals"
-          description="Primary Host approval queue. Decisions update in-memory queue status only; they do not execute, retry, replay, emit, or continue blocked actions."
+          description="Requests waiting on you. Nothing runs until you approve it, and approving records the decision without starting the action."
           icon="ShieldCheck"
           accentColor={theme.hex}
           isMobile={isMobile}
@@ -2965,7 +2968,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       {deviceCenterTab === "guests" && (
         <SettingsSection
           title="Guest Sessions"
-          description="Review guest access, end tracked guest sessions locally, and inspect inbound protection counters."
+          description="Create a time-limited guest link, see who has access, and end a guest session."
           icon="Globus"
           accentColor={theme.hex}
           isMobile={isMobile}
@@ -2977,9 +2980,13 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               </p>
               <p className="mt-1 text-xs opacity-70">
                 Local only; invite generation, PIN setup, and WebRTC setup stay
-                in the Link a device guest access flow.
+                in their own controls and are left untouched.
               </p>
             </SettingsCard>
+          )}
+
+          {!isMobile && (
+            <GuestAccessSection theme={theme} connected={linkState.connected} />
           )}
 
           <SettingsStatList
@@ -3011,10 +3018,9 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               Guest access controls
             </p>
             <p className="mt-1 text-xs opacity-70">
-              Guest host records are derived from existing guest security
-              session state. Ending access marks a guest revoked locally and
-              closes any local peer connection. Invite regeneration, PIN setup,
-              and WebRTC setup remain in the Link a device guest flow.
+              Ending access marks a guest revoked on this host and closes its
+              local connection. Links and PIN protection are managed in Remote
+              access above.
             </p>
             {deviceCenterSnapshot.guestSecuritySessions.length === 0 ? (
               <p className="mt-3 text-xs opacity-70">
@@ -3092,7 +3098,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       {deviceCenterTab === "sync" && (
         <SettingsSection
           title="Sync & Handoff"
-          description="Safe model-first handoff for conversation, memory intent, mission, artifact, settings context, and model context."
+          description="Hand a conversation, mission, or artifact to another of your devices. Handoffs are prepared and approved here, never sent automatically."
           icon="RefreshCircle"
           accentColor={theme.hex}
           isMobile={isMobile}
@@ -3220,36 +3226,25 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 Continue on another host
               </button>
             </div>
-            <div
-              className="mt-3 flex items-center justify-between gap-3 rounded-lg border p-3"
-              style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
-            >
-              <div>
-                <p className="text-sm font-semibold">Live handoff transport</p>
-                <p className="mt-1 text-xs opacity-70">
-                  Off by default. When on, an approved handoff can be
-                  transmitted encrypted to its target device with the Send
-                  action — every approval and transport policy gate still
-                  applies, and unencrypted sends are always refused.
-                </p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={settings.lucaLink.liveHandoffEnabled === true}
-                onClick={() =>
-                  onUpdate(
-                    "lucaLink",
-                    "liveHandoffEnabled",
-                    settings.lucaLink.liveHandoffEnabled !== true,
-                  )
-                }
-                className="rounded-lg border px-3 py-2 text-sm font-semibold"
-                style={settingsControlInlineStyle}
-              >
-                {settings.lucaLink.liveHandoffEnabled === true ? "On" : "Off"}
-              </button>
-            </div>
+            <SettingsRow
+              className="mt-2"
+              label="Live handoff transport"
+              description="Off by default. When on, an approved handoff can be transmitted encrypted to its target device with the Send action — every approval and transport policy gate still applies, and unencrypted sends are always refused."
+              control={
+                <SettingsToggle
+                  checked={settings.lucaLink.liveHandoffEnabled === true}
+                  onChange={() =>
+                    onUpdate(
+                      "lucaLink",
+                      "liveHandoffEnabled",
+                      settings.lucaLink.liveHandoffEnabled !== true,
+                    )
+                  }
+                  accentColor={theme.hex}
+                  ariaLabel="Live handoff transport"
+                />
+              }
+            />
             {handoffActionMessage && (
               <p className="mt-3 text-xs opacity-70">{handoffActionMessage}</p>
             )}
@@ -3401,7 +3396,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       {isCreatorMode && deviceCenterTab === "advanced" && (
         <SettingsSection
           title="Advanced"
-          description="Creator diagnostics for LucaLink approvals, continuity records, and adapter safety signals."
+          description="Creator diagnostics for approvals, continuity records, and adapter safety signals."
           icon="Settings"
           accentColor={theme.hex}
           isMobile={isMobile}
@@ -3695,43 +3690,8 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       {deviceCenterTab === "devices" && (
         <>
           <SettingsSection
-            title="Linked Devices"
-            description="Use Luca across Primary Host, companion, display, guest, sensor, and future Luca-capable hosts in one host mesh."
-            icon="Devices"
-            accentColor={theme.hex}
-            isMobile={isMobile}
-          >
-            <SettingsStatList
-              items={[
-                {
-                  label: "Primary Host",
-                  value: !isMobile ? status.text : "Available",
-                  detail: "This LucaOS session can pair with trusted clients.",
-                },
-                {
-                  label: "Phone",
-                  value: isMobile ? status.text : "Pair below",
-                  detail: "Companion hosts remain available through Luca Link.",
-                },
-                {
-                  label: "Tablet / browser",
-                  value: "Supported",
-                  detail:
-                    "Browser sessions and future devices use the same pairing surface.",
-                },
-                {
-                  label: "Connection health",
-                  value: linkState.connected ? "Connected" : "Ready",
-                  detail:
-                    "Relay, local, and VPN status remains in existing controls.",
-                },
-              ]}
-            />
-          </SettingsSection>
-
-          <SettingsSection
             title="Pair New Device"
-            description="Pair with QR code, pairing code, nearby device, or trusted-device flows without network-admin framing."
+            description="Add a phone, tablet, or browser to this host. Nothing connects without pairing."
             icon="Link"
             accentColor={theme.hex}
             isMobile={isMobile}
@@ -3950,56 +3910,39 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             {!isMobile && (
               <>
                 {/* Enable/Disable */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-base font-bold text-[var(--app-text-muted)]">
-                      Enable Luca Link Remote Access
-                    </label>
-                    <p className="text-sm text-[var(--app-text-muted)] opacity-60 mt-1">
-                      Allow trusted Luca-capable hosts to pair securely with
-                      this Primary Host
-                    </p>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      const newValue = !settings.lucaLink.enabled;
-                      onUpdate("lucaLink", "enabled", newValue);
+                <SettingsRow
+                  label="Luca Link"
+                  description="Allow trusted Luca-capable hosts to pair securely with this Primary Host."
+                  control={
+                    <SettingsToggle
+                      checked={settings.lucaLink.enabled}
+                      onChange={async () => {
+                        const newValue = !settings.lucaLink.enabled;
+                        onUpdate("lucaLink", "enabled", newValue);
 
-                      try {
-                        if (newValue) {
-                          await fetch(apiUrl("/api/luca-link/start"), {
-                            method: "POST",
-                          });
-                        } else {
-                          await fetch(apiUrl("/api/luca-link/stop"), {
-                            method: "POST",
-                          });
-                          lucaLinkManager.console.disconnect();
+                        try {
+                          if (newValue) {
+                            await fetch(apiUrl("/api/luca-link/start"), {
+                              method: "POST",
+                            });
+                          } else {
+                            await fetch(apiUrl("/api/luca-link/stop"), {
+                              method: "POST",
+                            });
+                            lucaLinkManager.console.disconnect();
+                          }
+                          console.log(
+                            `[LucaLink] Server ${newValue ? "started" : "stopped"}`,
+                          );
+                        } catch (e) {
+                          console.error("[LucaLink] Failed to toggle server:", e);
                         }
-                        console.log(
-                          `[LucaLink] Server ${newValue ? "started" : "stopped"}`,
-                        );
-                      } catch (e) {
-                        console.error("[LucaLink] Failed to toggle server:", e);
-                      }
-                    }}
-                    className={`w-7 h-3.5 rounded-full transition-all relative ${settings.lucaLink.enabled ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
-                    style={{
-                      backgroundColor: settings.lucaLink.enabled
-                        ? theme.hex
-                        : undefined,
-                    }}
-                  >
-                    <div
-                      className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${settings.lucaLink.enabled ? "translate-x-4" : "translate-x-0.5"}`}
-                      style={{
-                        backgroundColor: settings.lucaLink.enabled
-                          ? "white"
-                          : "var(--app-text-muted)",
                       }}
+                      accentColor={theme.hex}
+                      ariaLabel="Luca Link"
                     />
-                  </button>
-                </div>
+                  }
+                />
 
                 {/* Pairing lives in ONE place: the Link a device flow
                     (server-minted tokens + the served companion page). The
@@ -4039,166 +3982,86 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   </div>
                 )}
 
-                {/* ========== GUEST ACCESS SECTION (Long Distance) ========== */}
-                <GuestAccessSection
-                  theme={theme}
-                  connected={linkState.connected}
-                />
-
-                {/* Relay Server Configuration */}
-                {settings.lucaLink.enabled && (
-                  <div className="space-y-2 mt-4">
-                    <label className="text-base font-bold text-[var(--app-text-muted)]">
-                      Custom relay server
-                    </label>
-                    <LucaInput
-                      type="text"
-                      value={settings.lucaLink.relayServerUrl || ""}
-                      onChange={(e) =>
-                        onUpdate("lucaLink", "relayServerUrl", e.target.value)
-                      }
-                      disabled={!settings.lucaLink.enabled}
-                      placeholder="https://lucaos.onrender.com"
-                      className={`w-full rounded-lg p-3 outline-none font-mono text-sm disabled:opacity-50 transition-all border`}
-                      style={settingsControlInlineStyle}
-                    />
-                    <p className="text-sm text-[var(--app-text-muted)] opacity-60">
-                      Default encrypted relay provided. Advanced users can
-                      self-host their own.
-                    </p>
-                  </div>
-                )}
-
-                {/* VPN Server URL */}
-                {(settings.lucaLink.connectionMode === "auto" ||
-                  settings.lucaLink.connectionMode === "vpn") && (
-                  <div className="space-y-2">
-                    <label className="text-base font-bold text-[var(--app-text-muted)]">
-                      Trusted VPN server URL (optional)
-                    </label>
-                    <LucaInput
-                      type="text"
-                      value={settings.lucaLink.vpnServerUrl}
-                      onChange={(e) =>
-                        onUpdate("lucaLink", "vpnServerUrl", e.target.value)
-                      }
-                      disabled={!settings.lucaLink.enabled}
-                      placeholder={`http://100.x.x.x:${WS_PORT} (Tailscale IP)`}
-                      className={`w-full rounded-lg p-3 outline-none font-mono text-sm disabled:opacity-50 transition-all border`}
-                      style={settingsControlInlineStyle}
-                    />
-                    <p className="text-sm text-[var(--app-text-muted)] opacity-60">
-                      Leave empty for auto-detection. Use a trusted Tailscale IP
-                      (100.x.x.x) if configured.
-                    </p>
-                  </div>
-                )}
-
-                {/* Info Box */}
-                <div
-                  className={`p-4 rounded-xl border transition-all text-[var(--app-text-main)] opacity-90 shadow-sm mt-6`}
-                  style={{
-                    background: settingsCardStyle.background,
-                    borderColor: settingsSurfaceTokens.borderSubtle,
-                  }}
-                >
-                  <div className="flex items-start gap-3">
-                    <Icon
-                      name="Shield"
-                      variant="BoldDuotone"
-                      className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--app-text-main)]"
-                    />
-                    <div>
-                      <div className="font-medium mb-1 text-sm opacity-70">
-                        Privacy & Security
-                      </div>
-                      <div className="font-bold mb-1">
-                        Connection Protection
-                      </div>
-                      <ul className="space-y-1 opacity-80 text-sm list-disc pl-4 text-[var(--app-text-muted)]">
-                        <li>
-                          Local & VPN: direct private routes, no relay server
-                        </li>
-                        <li>
-                          Relay: End-to-end encrypted, messages are unreadable
-                          by relay
-                        </li>
-                        <li>Auto mode prioritizes local for maximum privacy</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
               </>
             )}
           </SettingsSection>
         </>
       )}
 
-      {deviceCenterTab === "sync" && (
-        <SettingsSection
-          title="Sync Behavior"
-          description="Memory sync, settings sync, conversation handoff, voice handoff, and notification handoff stay user-readable."
-          icon="RefreshCircle"
-          accentColor={theme.hex}
-          isMobile={isMobile}
-        >
-          <SettingsRow
-            label="Memory sync"
-            description="Use existing Luca Link sync behavior when enabled."
-          />
-          <SettingsRow
-            label="Settings sync"
-            description="Keep device preferences aligned through the current link service."
-          />
-          <SettingsRow
-            label="Conversation and voice handoff"
-            description="Move between Primary Host, companion hosts, display hosts, browser hosts, and future Luca-capable hosts where Luca Link supports handoff."
-          />
-          <SettingsRow
-            label="Notification handoff"
-            description="Notification routing stays under existing service policy."
-          />
-        </SettingsSection>
-      )}
-
-      {deviceCenterTab === "approvals" && (
-        <SettingsSection
-          title="Access Control"
-          description="Trusted devices, revoke device, confirmation requirements, and session expiry stay grouped here."
-          icon="ShieldCheck"
-          accentColor={theme.hex}
-          isMobile={isMobile}
-        >
-          <SettingsCard>
-            <p className="text-sm font-semibold">Trusted device flow</p>
-            <p className="mt-1 text-xs opacity-70">
-              Use the existing pairing and guest access controls to authorize or
-              revoke devices.
-            </p>
-          </SettingsCard>
-        </SettingsSection>
-      )}
-
       {isCreatorMode && deviceCenterTab === "advanced" && (
         <SettingsAdvancedDisclosure
           title="Advanced Details"
-          description="Relay mode, local network discovery, VPN/tunnel settings, pairing token details, and connection logs."
+          description="Connection method, relay and VPN endpoints, and pairing diagnostics."
         >
           <SettingsRow
-            label="Relay mode"
-            description="Relay server URL and mode controls remain in the existing Luca Link fields."
+            label="Connection method"
+            description="How Luca reaches this host. Auto tries local, then VPN, then relay."
+            control={
+              <LucaSelect
+                aria-label="Connection method"
+                value={settings.lucaLink.connectionMode}
+                onChange={(e) =>
+                  onUpdate("lucaLink", "connectionMode", e.target.value)
+                }
+                className="w-52 rounded-xl border px-3 py-2 text-sm outline-none transition-colors"
+                style={settingsControlInlineStyle}
+              >
+                <option value="auto">Auto</option>
+                <option value="local">Local network</option>
+                <option value="vpn">VPN</option>
+                <option value="relay">Cloud relay</option>
+              </LucaSelect>
+            }
           />
           <SettingsRow
-            label="Local network discovery"
-            description="Discovery details stay grouped with low-level connection details."
+            label="Cloud relay server"
+            description="Leave as provided unless you self-host your own relay."
+            control={
+              <LucaInput
+                type="text"
+                aria-label="Cloud relay server"
+                value={settings.lucaLink.relayServerUrl || ""}
+                onChange={(e) =>
+                  onUpdate("lucaLink", "relayServerUrl", e.target.value)
+                }
+                placeholder="https://lucaos.onrender.com"
+                className="w-64 rounded-xl border px-3 py-2 font-mono text-xs outline-none transition-colors"
+                style={settingsControlInlineStyle}
+              />
+            }
           />
           <SettingsRow
-            label="VPN/tunnel settings"
-            description="VPN server URL and tunnel details are advanced configuration."
+            label="Trusted VPN address"
+            description="Optional. Use a Tailscale or ZeroTier address if you have one."
+            control={
+              <LucaInput
+                type="text"
+                aria-label="Trusted VPN address"
+                value={settings.lucaLink.vpnServerUrl || ""}
+                onChange={(e) =>
+                  onUpdate("lucaLink", "vpnServerUrl", e.target.value)
+                }
+                placeholder={`100.x.x.x:${WS_PORT}`}
+                className="w-64 rounded-xl border px-3 py-2 font-mono text-xs outline-none transition-colors"
+                style={settingsControlInlineStyle}
+              />
+            }
           />
-          <SettingsRow
-            label="Connection logs"
-            description="Pairing token details and connection logs stay here."
+          <SettingsStatList
+            className="mt-1"
+            items={[
+              {
+                label: "Pairing token",
+                value: linkState.pairingToken ? "Active" : "None",
+                detail:
+                  "Pairing tokens are minted by this machine and expire after five minutes.",
+              },
+              {
+                label: "Local server",
+                value: settings.lucaLink.enabled ? "Running" : "Stopped",
+                detail: "Started and stopped by the Luca Link toggle.",
+              },
+            ]}
           />
         </SettingsAdvancedDisclosure>
       )}

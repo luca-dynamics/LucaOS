@@ -7,7 +7,6 @@ import { cortexUrl } from "../../config/api";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
-  SettingsRow,
   SettingsSection,
   SettingsStatList,
 } from "./SettingsLayout";
@@ -425,6 +424,20 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
     tags: ["settings", "preview", "knowledge"],
   });
 
+  const connectedSourceCount = [
+    notionConnected,
+    googleConnected,
+    obsidianConnected,
+  ].filter(Boolean).length;
+  const importStatusLabel =
+    status === "idle"
+      ? "Ready"
+      : status === "success"
+        ? "Complete"
+        : status === "error"
+          ? "Failed"
+          : `${status} ${progress}%`;
+
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
       {settingsService.get("general").experienceMode !== "basic" && (
@@ -441,7 +454,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
 
       <SettingsSection
         title="Knowledge Status"
-        description="Teach Luca with your files, folders, and apps while keeping embedding and vector details tucked away."
+        description="What Luca has indexed from your files, folders, and apps."
         icon="Library"
         accentColor={theme.hex}
         isMobile={isMobile}
@@ -449,27 +462,19 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
         <SettingsStatList
           items={[
             {
-              label: "Indexed sources",
+              label: "Connected sources",
+              value: `${connectedSourceCount} of 3`,
+              detail: "Notion, Google Drive, and Obsidian workspaces.",
+            },
+            {
+              label: "Distilled facts",
               value: `${importedFacts.length}`,
-              detail:
-                "Files, folders, websites, docs, repos, and connected apps stay grouped below.",
+              detail: "Facts extracted from the most recent import.",
             },
             {
-              label: "Last sync",
-              value: "When connected",
-              detail:
-                "Notion, Google Drive, and Obsidian sync through existing flows.",
-            },
-            {
-              label: "Storage used",
-              value: "Local knowledge",
-              detail:
-                "Distilled facts are stored by the existing memory/knowledge services.",
-            },
-            {
-              label: "Search readiness",
-              value: status === "success" ? "Ready" : "Ready to index",
-              detail: "Retrieval controls remain in this tab.",
+              label: "Import",
+              value: importStatusLabel,
+              detail: "State of the last file or workspace import.",
             },
           ]}
         />
@@ -481,7 +486,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
 
       <SettingsSection
         title="Sources"
-        description="Files, folders, websites, docs, GitHub repos, and connected apps are managed by the existing knowledge bridge."
+        description="Files, folders, docs, repos, and connected workspaces."
         icon="Folder"
         accentColor={theme.hex}
         isMobile={isMobile}
@@ -1276,63 +1281,40 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
         </div>
       </SettingsSection>
 
-      <SettingsSection
-        title="Retrieval Settings"
-        description="Search depth, citation behavior, included sources, excluded sources, and refresh frequency stay user-facing."
-        icon="Search"
-        accentColor={theme.hex}
-        isMobile={isMobile}
-      >
-        <SettingsRow
-          label="Search depth"
-          description="Use the existing knowledge bridge behavior for retrieval scope."
-        />
-        <SettingsRow
-          label="Citation behavior"
-          description="Citations remain tied to indexed sources when available."
-        />
-        <SettingsRow
-          label="Refresh frequency"
-          description="Source refresh is controlled by the existing sync flows."
-        />
-      </SettingsSection>
-
-      <SettingsSection
-        title="Source Management"
-        description="Pause, resync, remove sources, and view indexed chunks where the existing bridge exposes those actions."
-        icon="Sliders"
-        accentColor={theme.hex}
-        isMobile={isMobile}
-      >
-        <SettingsRow
-          label="Pause source"
-          description="Pause a source from its connected source controls when supported."
-        />
-        <SettingsRow
-          label="Resync source"
-          description="Use each source's sync action to refresh indexed content."
-        />
-        <SettingsRow
-          label="Remove source"
-          description="Source removal remains tied to the existing source cards."
-        />
-      </SettingsSection>
-
       <SettingsAdvancedDisclosure
         title="Advanced Details"
-        description="Embedding model, chunking settings, indexing logs, vector store diagnostics, and raw sync metadata."
+        description="Per-source index state and connection diagnostics."
       >
-        <SettingsRow
-          label="Embedding model"
-          description="Model internals are intentionally not top-level copy."
-        />
-        <SettingsRow
-          label="Chunking settings"
-          description="Chunking and vector diagnostics stay in Advanced Details."
-        />
-        <SettingsRow
-          label="Indexing logs"
-          description="Raw sync metadata remains grouped with diagnostics."
+        <SettingsStatList
+          columns={2}
+          items={[
+            {
+              label: "Notion",
+              value: notionConnected ? `${notionPages.length} pages` : "Off",
+              detail: notionConnected
+                ? "Pages visible to the connected Notion workspace."
+                : "Connect Notion to index workspace pages.",
+            },
+            {
+              label: "Google Drive",
+              value: googleConnected ? `${googleFiles.length} files` : "Off",
+              detail: googleConnected
+                ? "Documents readable through the Google connector."
+                : "Connect Google to index Drive documents.",
+            },
+            {
+              label: "Obsidian",
+              value: obsidianConnected
+                ? `${obsidianFiles.length} notes`
+                : "Off",
+              detail: vaultPath || "No vault selected.",
+            },
+            {
+              label: "Distilled facts",
+              value: `${importedFacts.length}`,
+              detail: "Facts extracted from the most recent import.",
+            },
+          ]}
         />
       </SettingsAdvancedDisclosure>
     </div>

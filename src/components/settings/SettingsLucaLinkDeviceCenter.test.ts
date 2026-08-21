@@ -594,3 +594,75 @@ describe("Settings LucaLink Device Center creator bridge review surfaces", () =>
     expect(helperSource).not.toMatch(/localStorage|sessionStorage/);
   });
 });
+
+describe("Settings LucaLink Device Center rows are controls, not descriptions", () => {
+  it("gives every SettingsRow a control", () => {
+    const rowCount = lucaLinkSource.split("<SettingsRow").length - 1;
+    const controlCount = lucaLinkSource.split("control={").length - 1;
+    expect(rowCount).toBeGreaterThan(0);
+    expect(controlCount).toBe(rowCount);
+    // A row with children instead of a control would close explicitly.
+    expect(lucaLinkSource).not.toContain("</SettingsRow>");
+  });
+
+  it("uses the shared SettingsToggle instead of a hand-rolled switch", () => {
+    expect(lucaLinkSource).toContain("SettingsToggle");
+    expect(lucaLinkSource).toContain('ariaLabel="Luca Link"');
+    expect(lucaLinkSource).toContain('ariaLabel="Live handoff transport"');
+    expect(lucaLinkSource).not.toContain("rounded-full transition-all relative");
+    expect(lucaLinkSource).not.toContain('role="switch"');
+  });
+
+  it("drops the stub panels that pointed at controls elsewhere", () => {
+    for (const staleCopy of [
+      'title="Linked Devices"',
+      'title="Sync Behavior"',
+      'title="Access Control"',
+      "Use existing Luca Link sync behavior",
+      "remain in the existing Luca Link fields",
+      "Use the existing pairing and guest access",
+      "Relay server URL and mode controls",
+      'value: "Supported"',
+      '"Pair below"',
+    ]) {
+      expect(lucaLinkSource).not.toContain(staleCopy);
+    }
+  });
+
+  it("puts real connection controls in Advanced Details", () => {
+    const advancedDetailsSource = lucaLinkSource.slice(
+      lucaLinkSource.indexOf('title="Advanced Details"'),
+    );
+    expect(advancedDetailsSource).toContain(
+      'onUpdate("lucaLink", "connectionMode", e.target.value)',
+    );
+    expect(advancedDetailsSource).toContain(
+      'onUpdate("lucaLink", "relayServerUrl", e.target.value)',
+    );
+    expect(advancedDetailsSource).toContain(
+      'onUpdate("lucaLink", "vpnServerUrl", e.target.value)',
+    );
+  });
+
+  it("creator-gates Hosts, Bridge Review, and Advanced", () => {
+    const filterSource = lucaLinkSource.slice(
+      lucaLinkSource.indexOf("const visibleDeviceCenterTabs"),
+      lucaLinkSource.indexOf("const refreshDeviceCenter"),
+    );
+    expect(filterSource).toContain('tab.id !== "hosts"');
+    expect(filterSource).toContain('tab.id !== "bridge-review"');
+    expect(filterSource).toContain('tab.id !== "advanced"');
+    expect(lucaLinkSource).toContain(
+      'isCreatorMode && deviceCenterTab === "hosts"',
+    );
+  });
+
+  it("keeps guest link creation in the Guests tab with session management", () => {
+    const guestsTabSource = lucaLinkSource.slice(
+      lucaLinkSource.indexOf('deviceCenterTab === "guests"'),
+      lucaLinkSource.indexOf('deviceCenterTab === "sync"'),
+    );
+    expect(guestsTabSource).toContain("<GuestAccessSection");
+    expect(guestsTabSource).toContain('handleGuestSessionAction(session, "revoke")');
+  });
+});

@@ -4,7 +4,6 @@ import { apiUrl } from "../../config/api";
 import { Icon } from "../ui/Icon";
 import {
   SettingsAdvancedDisclosure,
-  SettingsRow,
   SettingsSection,
   SettingsStatList,
   settingsControlInlineStyle,
@@ -59,11 +58,25 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
   // the onboarding connect grid). See src/config/connectorCatalog.ts.
   const SOCIAL_APPS = FIRST_PARTY_CONNECTORS;
 
+  const connectedCount = SOCIAL_APPS.filter((app) => {
+    const appStatus = socialStatus[app.id] || {};
+    return (
+      Boolean(
+        settings.connectors?.[app.id as keyof typeof settings.connectors],
+      ) ||
+      appStatus.status === "READY" ||
+      appStatus.status === "AUTHENTICATED"
+    );
+  }).length;
+  const rememberedCount = SOCIAL_APPS.filter(
+    (app) => settings.socialPersistence?.[app.id] === "ALWAYS_ON",
+  ).length;
+
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
       <SettingsSection
         title="Connected Apps"
-        description="Connect apps and services Luca can work with. Sessions are remembered only when you allow persistence."
+        description="Apps Luca can work with. Sessions persist only if you allow it."
         icon="Plug"
         accentColor={theme?.hex}
         isMobile={isMobile}
@@ -71,26 +84,19 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
         <SettingsStatList
           items={[
             {
-              label: "Workspace",
-              value: settings.connectors?.google
-                ? "Google connected"
-                : "Ready",
-              detail:
-                "Gmail, Calendar, and Drive connect through the existing Google auth flow.",
+              label: "Connected",
+              value: `${connectedCount} of ${SOCIAL_APPS.length}`,
+              detail: "Accounts Luca can use on your behalf right now.",
             },
             {
-              label: "Developer",
-              value: settings.connectors?.linkedin
-                ? "Developer apps ready"
-                : "Add when available",
-              detail:
-                "Developer connectors stay grouped with recommended apps.",
+              label: "Remembered sessions",
+              value: `${rememberedCount}`,
+              detail: "Connectors kept signed in between launches.",
             },
             {
-              label: "Community",
-              value: "Optional",
-              detail:
-                "Slack, Discord, Telegram, and social connectors remain opt-in.",
+              label: "Status refresh",
+              value: "Every 5s",
+              detail: "Connector health is polled from the core server.",
             },
           ]}
         />
@@ -98,7 +104,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
 
       <SettingsSection
         title="Recommended Connectors"
-        description="Choose productivity, developer, finance, social/community, and smart home integrations from the existing connector cards."
+        description="Connect an account, and choose whether Luca remembers it."
         icon="Sparkles"
         accentColor={theme?.hex}
         isMobile={isMobile}
@@ -281,67 +287,25 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
         </div>
       </SettingsSection>
 
-      <SettingsSection
-        title="Connector Permissions"
-        description="Read, write, send/post, file, automation access, and approval mode stay explicit."
-        icon="ShieldCheck"
-        accentColor={theme?.hex}
-        isMobile={isMobile}
-      >
-        <SettingsRow
-          label="Read access"
-          description="Luca can summarize connected account context only after authorization."
-        />
-        <SettingsRow
-          label="Write access"
-          description="Write-capable integrations continue through their existing approval flows."
-        />
-        <SettingsRow
-          label="Send and post access"
-          description="Messaging and posting actions should require review."
-        />
-        <SettingsRow
-          label="File and automation access"
-          description="File and automation-capable connectors stay grouped behind permissions."
-        />
-      </SettingsSection>
-
-      <SettingsSection
-        title="Activity & Safety"
-        description="Recent connector actions, failed actions, pending approvals, and revoke access stay visible."
-        icon="Activity"
-        accentColor={theme?.hex}
-        isMobile={isMobile}
-      >
-        <SettingsRow
-          label="Recent connector actions"
-          description="Connector activity continues to come from existing services."
-        />
-        <SettingsRow
-          label="Failed actions"
-          description="Failures and pending approvals remain surfaced by each connector."
-        />
-        <SettingsRow
-          label="Revoke access"
-          description="Use each connector card to disconnect or revoke where supported."
-        />
-      </SettingsSection>
-
       <SettingsAdvancedDisclosure
         title="Advanced Details"
-        description="Browser automation/session persistence, connector debugging, webhook URLs, token refresh state, and raw connector metadata."
+        description="Live connector status as reported by the core server."
       >
-        <SettingsRow
-          label="Browser sessions"
-          description="Browser session persistence is kept out of the top-level connector copy."
-        />
-        <SettingsRow
-          label="Connector debugging"
-          description="Troubleshooting metadata stays under Advanced Details."
-        />
-        <SettingsRow
-          label="Webhook URLs and token refresh state"
-          description="Raw connector internals are not primary user controls."
+        <SettingsStatList
+          items={SOCIAL_APPS.map((app) => {
+            const appStatus = socialStatus[app.id] || {};
+            return {
+              label: app.name,
+              value: appStatus.status || "unknown",
+              detail: [
+                appStatus.email ? `Account ${appStatus.email}` : null,
+                appStatus.hasChromeProfile ? "Chrome profile found" : null,
+                `Session ${settings.socialPersistence?.[app.id] ?? "LAZY"}`,
+              ]
+                .filter(Boolean)
+                .join(" · "),
+            };
+          })}
         />
       </SettingsAdvancedDisclosure>
 

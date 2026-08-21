@@ -5,7 +5,6 @@ import RuntimeDiagnosticsPanel from "../runtime/RuntimeDiagnosticsPanel";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
-  SettingsRow,
   SettingsSection,
   SettingsStatList,
 } from "./SettingsLayout";
@@ -381,7 +380,7 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
 
       <SettingsSection
         title="Native GGUF Runtime"
-        description="Register GGUF files for host-native inference with no Ollama or Cortex daemon. Luca pins each file's checksum and refuses to load it if those bytes change."
+        description="Run GGUF files with no Ollama or Cortex daemon. Checksums are pinned."
         icon="HardDrive"
         accentColor={theme.hex}
         isMobile={isMobile}
@@ -568,24 +567,34 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
 
       <SettingsAdvancedDisclosure
         title="Advanced Details"
-        description="Raw model IDs, model paths, runtime logs, force rescan, and cache cleanup stay here."
+        description="Raw routing identifiers and on-disk model paths."
       >
-        <SettingsRow
-          label="Raw model IDs"
-          description="Visible in the model manager for troubleshooting provider and local-runtime routing."
+        <SettingsStatList
+          items={
+            models.length
+              ? models.map((model) => ({
+                  label: model.name,
+                  value: model.id,
+                  detail: `${model.category} · ${model.sizeFormatted} · ${model.status}`,
+                }))
+              : [
+                  {
+                    label: "Raw model IDs",
+                    value: "None registered",
+                    detail: "Install a model to see its routing identifier.",
+                  },
+                ]
+          }
         />
-        <SettingsRow
-          label="Model paths"
-          description="Downloaded models are stored in the application data directory."
-        />
-        <SettingsRow
-          label="Runtime logs"
-          description="Use runtime diagnostics above for detailed local runtime health."
-        />
-        <SettingsRow
-          label="Force rescan / cache cleanup"
-          description="Maintenance actions remain available where the existing model manager exposes them."
-        />
+        {nativeModels.length > 0 && (
+          <SettingsStatList
+            items={nativeModels.map((model) => ({
+              label: model.displayName,
+              value: model.modelPath,
+              detail: describeProvenance(model),
+            }))}
+          />
+        )}
       </SettingsAdvancedDisclosure>
     </div>
   );
