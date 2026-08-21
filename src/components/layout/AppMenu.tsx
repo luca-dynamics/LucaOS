@@ -1,10 +1,27 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Icon } from "../ui/Icon";
+import {
+  LucaMenu,
+  LucaMenuContent,
+  LucaMenuItem,
+  LucaMenuSub,
+  LucaMenuSubContent,
+  LucaMenuSubTrigger,
+  LucaMenuTrigger,
+} from "../ui/luca";
 import { isElectronShell, sendWindowControl } from "../../windowControlsOverlay";
 
 /**
  * AppMenu: the compact shell menu at the header's left edge. It replaces the
  * removed native menu bar with File / Edit / View / Window command groups.
+ *
+ * Behavior comes from {@link LucaMenu}, so this file only declares commands and
+ * paints. That is deliberate: as a hand-rolled menu it announced the menu role
+ * without ever moving focus into it, its submenus opened on `onMouseEnter` with
+ * no pointer grace (diagonal travel swapped them out mid-move), `ArrowRight` did
+ * nothing despite each row rendering an `AltArrowRight` affordance, it nested a
+ * menu role directly inside another one, and its `z-[80]` sat below
+ * `LUCA_LAYER.panel` so it drew *behind* floating panels.
  */
 
 interface AppMenuProps {
@@ -37,35 +54,8 @@ export const AppMenu: React.FC<AppMenuProps> = ({
   onToggleRightPanel,
 }) => {
   const [open, setOpen] = useState(false);
-  const [section, setSection] = useState<SectionId | null>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-        setSection(null);
-      }
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        setSection(null);
-      }
-    };
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  const close = () => {
-    setOpen(false);
-    setSection(null);
-  };
+  const close = () => setOpen(false);
 
   const runWindowAction =
     (action: "minimize" | "maximize" | "close") => () => {
@@ -134,51 +124,52 @@ export const AppMenu: React.FC<AppMenuProps> = ({
     padding: 4,
   };
 
-  return (
-    <div ref={rootRef} className="relative flex items-center">
-      <button
-        type="button"
-        aria-label="Menu"
-        title="Menu"
-        aria-expanded={open}
-        onClick={() => {
-          setOpen((v) => !v);
-          setSection(null);
-        }}
-        className="luca-workspace-toggle"
-        style={{
-          width: 26,
-          height: 26,
-          display: "grid",
-          placeItems: "center",
-          border: 0,
-          borderRadius: 7,
-          background: "transparent",
-          color: "var(--luca-text-tertiary, var(--app-text-muted))",
-          cursor: "pointer",
-        }}
-      >
-        <Icon name="HamburgerMenu" size={16} />
-      </button>
+  // One row appearance for sections and commands alike. `data-highlighted` is
+  // Radix's highlight — it fires for keyboard *and* pointer, so it carries the
+  // same look hover always had, which is why keyboard travel is now visible at
+  // all. `outline-none` because the highlight is the indicator; a focus ring on
+  // top of it is not what a menu looks like on any desktop.
+  const rowClassName =
+    "flex h-8 w-full items-center rounded-lg px-3 text-[13px] text-[var(--app-text-main)] outline-none transition-colors hover:bg-[var(--luca-surface-hover,rgba(255,255,255,0.06))] data-[highlighted]:bg-[var(--luca-surface-hover,rgba(255,255,255,0.06))]";
 
-      {open && (
-        <div
-          role="menu"
-          className="absolute left-0 top-full z-[80] mt-1.5 w-[168px]"
-          style={menuSurface}
-        >
-          {SECTIONS.map((entry) => (
-            <div
-              key={entry.id}
-              className="relative"
-              onMouseEnter={() => setSection(entry.id)}
-            >
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => setSection(section === entry.id ? null : entry.id)}
-                className="flex h-8 w-full items-center rounded-lg px-3 text-[13px] text-[var(--app-text-main)] transition-colors hover:bg-[var(--luca-surface-hover,rgba(255,255,255,0.06))]"
-              >
+  return (
+    <LucaMenu open={open} onOpenChange={setOpen}>
+      <div className="flex items-center">
+        <LucaMenuTrigger>
+          <button
+            type="button"
+            aria-label="Menu"
+            title="Menu"
+            className="luca-workspace-toggle"
+            style={{
+              width: 26,
+              height: 26,
+              display: "grid",
+              placeItems: "center",
+              border: 0,
+              borderRadius: 7,
+              background: "transparent",
+              color: "var(--luca-text-tertiary, var(--app-text-muted))",
+              cursor: "pointer",
+            }}
+          >
+            <Icon name="HamburgerMenu" size={16} />
+          </button>
+        </LucaMenuTrigger>
+      </div>
+
+      <LucaMenuContent
+        aria-label="Application menu"
+        side="bottom"
+        align="start"
+        sideOffset={6}
+        className="w-[168px]"
+        style={menuSurface}
+      >
+        {SECTIONS.map((entry) => (
+          <LucaMenuSub key={entry.id}>
+            <LucaMenuSubTrigger asChild>
+              <button type="button" className={rowClassName}>
                 {entry.label}
                 <Icon
                   name="AltArrowRight"
@@ -186,30 +177,20 @@ export const AppMenu: React.FC<AppMenuProps> = ({
                   className="ml-auto text-[var(--app-text-muted)]"
                 />
               </button>
-              {section === entry.id && (
-                <div
-                  role="menu"
-                  className="absolute left-full top-0 ml-1 w-[176px]"
-                  style={menuSurface}
-                >
-                  {entry.items.map((item) => (
-                    <button
-                      key={item.label}
-                      type="button"
-                      role="menuitem"
-                      onClick={item.action}
-                      className="flex h-8 w-full items-center rounded-lg px-3 text-[13px] text-[var(--app-text-main)] transition-colors hover:bg-[var(--luca-surface-hover,rgba(255,255,255,0.06))]"
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+            </LucaMenuSubTrigger>
+            <LucaMenuSubContent sideOffset={4} className="w-[176px]" style={menuSurface}>
+              {entry.items.map((item) => (
+                <LucaMenuItem key={item.label} asChild onSelect={item.action}>
+                  <button type="button" className={rowClassName}>
+                    {item.label}
+                  </button>
+                </LucaMenuItem>
+              ))}
+            </LucaMenuSubContent>
+          </LucaMenuSub>
+        ))}
+      </LucaMenuContent>
+    </LucaMenu>
   );
 };
 
