@@ -11,6 +11,7 @@ import {
   settingsControlInlineStyle,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import SettingsVisionTab from "./SettingsVisionTab";
 import { lucaCapabilities } from "../../config/lucaReleaseTarget";
 import { WebUnavailableState } from "../ui/WebUnavailableState";
 import {
@@ -1028,6 +1029,17 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           </div>
         </SettingsAdvancedDisclosure>
       </SettingsSection>
+
+      {/* Vision's only control writes brain.visionModel, so it never justified a
+          destination of its own. It is a Brain field, rendered here. */}
+      <div data-settings-anchor="vision">
+        <SettingsVisionTab
+          settings={settings}
+          onUpdate={onUpdate}
+          theme={theme}
+          isMobile={isMobile}
+        />
+      </div>
     </div>
   );
 };

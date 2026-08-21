@@ -7,13 +7,16 @@ import mcpSource from "../SettingsMCPBridgeTab.tsx?raw";
 import lucaLinkSource from "../SettingsLucaLinkTab.tsx?raw";
 import { settingsExperienceMap } from "../settingsExperienceMap";
 
+// The panes below still own the preview cards; three of the destinations that
+// used to host them were merged away. Knowledge Base now renders inside Data &
+// Memory, MCP Bridge inside Integrations, and Model Manager was relabelled
+// Models. The cards moved with their files, so the labels are what changed.
 const expectedExistingLabels = [
   "Personality",
-  "Knowledge Base",
   "Data & Memory",
   "Brain",
-  "Model Manager",
-  "MCP Bridge",
+  "Models",
+  "Integrations",
   "Luca Link",
 ];
 
@@ -37,6 +40,11 @@ describe("Settings Personal Intelligence preview integration", () => {
     const labels = settingsExperienceMap.map((entry) => entry.currentLabel);
     for (const label of expectedExistingLabels) {
       expect(labels).toContain(label);
+    }
+    // The merge retired these destinations; the cards they hosted did not move
+    // files, so a stale label here would mean the map drifted back.
+    for (const retired of ["Knowledge Base", "Model Manager", "MCP Bridge"]) {
+      expect(labels).not.toContain(retired);
     }
   });
 

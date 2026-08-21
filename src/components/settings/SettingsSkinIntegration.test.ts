@@ -5,14 +5,25 @@ const settingsModalSource = readFileSync("src/components/SettingsModal.tsx", "ut
 const generalTabSource = readFileSync("src/components/settings/SettingsGeneralTab.tsx", "utf8");
 const appearanceTabSource = readFileSync("src/components/settings/SettingsAppearanceTab.tsx", "utf8");
 const skinSectionSource = readFileSync("src/components/settings/SkinPreviewSection.tsx", "utf8");
+const lucaDialogSource = readFileSync("src/components/ui/luca/LucaDialog.tsx", "utf8");
 
 describe("settings skin integration", () => {
   it("applies the selected LucaOS skin to the Settings modal boundary", () => {
     expect(settingsModalSource).toContain("getLucaSkinMaterialVariables");
     expect(settingsModalSource).toContain("settings.general.selectedSkinId");
-    expect(settingsModalSource).toContain("style={skinMaterialVariables as React.CSSProperties}");
+    // The boundary style became a spread when the Codex skin variables and the
+    // modal layer style joined it (2afdeb22); the pinned literal was never
+    // updated. The skin variables still land on the dialog root first, which is
+    // the guarantee this asserts.
+    expect(settingsModalSource).toContain(
+      "style={{ ...skinMaterialVariables, ...settingsCodexSkinVariables,",
+    );
     expect(settingsModalSource).toContain('skinMaterialVariables["--luca-accent-primary"]');
-    expect(settingsModalSource).toContain('data-luca-material-role="dialog"');
+    // The dialog material role moved into the LucaDialog primitive in the same
+    // commit. The modal inherits it now instead of stamping it inline, so the
+    // role is asserted where it actually lives.
+    expect(settingsModalSource).toContain("<LucaDialog");
+    expect(lucaDialogSource).toContain('data-luca-material-role="dialog"');
   });
 
   it("keeps legacy Settings theme preview scoped to an explicit local boundary", () => {

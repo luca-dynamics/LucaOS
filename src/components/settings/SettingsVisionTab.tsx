@@ -15,10 +15,10 @@ import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 interface SettingsVisionTabProps {
   settings: LucaSettings;
   onUpdate: (section: keyof LucaSettings, key: string, value: any) => void;
+  // Only the accent is read. Narrowed so Brain, which now hosts this panel, can
+  // forward its own theme without inventing fields this pane never uses.
   theme: {
-    primary: string;
     hex: string;
-    themeName: string;
   };
   isMobile?: boolean;
 }

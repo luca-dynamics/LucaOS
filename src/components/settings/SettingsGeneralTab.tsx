@@ -24,6 +24,7 @@ import {
   settingsSelectClassName,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import SettingsAboutTab from "./SettingsAboutTab";
 import { CREATOR_ACCESS_STATE } from "../../experience/experienceModeAccess";
 import {
   getExperienceModeOptions,
@@ -725,6 +726,16 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
           </SettingsAdvancedDisclosure>
         </motion.div>
       </motion.div>
+
+      {/* About is a footer readout, not a destination — which is what its own
+          audit note recommended. Version, runtime, and system specs live here. */}
+      <div data-settings-anchor="about">
+        <SettingsAboutTab
+          theme={theme}
+          settings={settings}
+          isMobile={isMobile}
+        />
+      </div>
     </div>
   );
 };

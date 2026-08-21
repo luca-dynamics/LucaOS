@@ -665,8 +665,8 @@ export const settingsSectionArchitectureMap = [
       "Keep audit-only; later gate under Advanced with explicit consent, provenance, and deletion controls.",
   },
   {
-    tabId: "vision",
-    tabLabel: "Vision",
+    tabId: "brain",
+    tabLabel: "Brain",
     sectionId: "vision-engine",
     sectionTitle: "Vision Engine",
     currentPurpose: "Select visual/spatial understanding model.",
@@ -690,8 +690,8 @@ export const settingsSectionArchitectureMap = [
       "Keep top-level; add camera/screen permission framing in future.",
   },
   {
-    tabId: "vision",
-    tabLabel: "Vision",
+    tabId: "brain",
+    tabLabel: "Brain",
     sectionId: "vision-tips",
     sectionTitle: "Vision Tips",
     currentPurpose: "Explain how LucaOS uses visual awareness.",
@@ -713,7 +713,7 @@ export const settingsSectionArchitectureMap = [
   },
   {
     tabId: "model-manager",
-    tabLabel: "Model Manager",
+    tabLabel: "Models",
     sectionId: "response-dynamic-controls",
     sectionTitle: "Response Dynamic Controls",
     currentPurpose: "Frame lower-level runtime/model management controls.",
@@ -736,7 +736,7 @@ export const settingsSectionArchitectureMap = [
   },
   {
     tabId: "model-manager",
-    tabLabel: "Model Manager",
+    tabLabel: "Models",
     sectionId: "runtime-status",
     sectionTitle: "Runtime Status",
     currentPurpose: "Show runtime diagnostics for model infrastructure.",
@@ -760,7 +760,7 @@ export const settingsSectionArchitectureMap = [
   },
   {
     tabId: "model-manager",
-    tabLabel: "Model Manager",
+    tabLabel: "Models",
     sectionId: "local-model-manager",
     sectionTitle: "Model Manager",
     currentPurpose: "Manage local model downloads/storage/runtime inventory.",
@@ -790,7 +790,7 @@ export const settingsSectionArchitectureMap = [
   },
   {
     tabId: "model-manager",
-    tabLabel: "Model Manager",
+    tabLabel: "Models",
     sectionId: "local-storage-note",
     sectionTitle: "Local Storage Note",
     currentPurpose: "Explain GGUF/ONNX offline storage location behavior.",
@@ -953,8 +953,8 @@ export const settingsSectionArchitectureMap = [
       "Keep with stronger governance link and explicit action approval rules.",
   },
   {
-    tabId: "profile",
-    tabLabel: "Profile",
+    tabId: "personality",
+    tabLabel: "Personality",
     sectionId: "identity-card",
     sectionTitle: "Identity Card",
     currentPurpose: "Display operator identity, promise, and profile summary.",
@@ -974,8 +974,8 @@ export const settingsSectionArchitectureMap = [
     recommendedFutureAction: "Keep visible.",
   },
   {
-    tabId: "profile",
-    tabLabel: "Profile",
+    tabId: "personality",
+    tabLabel: "Personality",
     sectionId: "partnership-status",
     sectionTitle: "Partnership Status",
     currentPurpose: "Show Luca/operator bond stage, vibe, growth, and metrics.",
@@ -1002,8 +1002,8 @@ export const settingsSectionArchitectureMap = [
       "Keep as LucaOS identity feature; clarify how metrics are computed and stored.",
   },
   {
-    tabId: "profile",
-    tabLabel: "Profile",
+    tabId: "personality",
+    tabLabel: "Personality",
     sectionId: "assistant-directives",
     sectionTitle: "Assistant Directives",
     currentPurpose:
@@ -1118,8 +1118,8 @@ export const settingsSectionArchitectureMap = [
     recommendedFutureAction: "Move under Advanced connection settings later.",
   },
   {
-    tabId: "mcp-bridge",
-    tabLabel: "MCP Bridge",
+    tabId: "integrations",
+    tabLabel: "Integrations",
     sectionId: "traffic-control-switcher",
     sectionTitle: "Traffic Control Switcher",
     currentPurpose:
@@ -1142,8 +1142,8 @@ export const settingsSectionArchitectureMap = [
       "Keep in Advanced Tools/Integrations; clarify inbound vs outbound risk.",
   },
   {
-    tabId: "mcp-bridge",
-    tabLabel: "MCP Bridge",
+    tabId: "integrations",
+    tabLabel: "Integrations",
     sectionId: "connect-tool-servers",
     sectionTitle: "Connect Tool Servers",
     currentPurpose:
@@ -1181,8 +1181,8 @@ export const settingsSectionArchitectureMap = [
       "Keep future Advanced Tools surface; add permission scopes before enabling sensitive tools.",
   },
   {
-    tabId: "mcp-bridge",
-    tabLabel: "MCP Bridge",
+    tabId: "integrations",
+    tabLabel: "Integrations",
     sectionId: "share-luca-capabilities",
     sectionTitle: "Share Luca Capabilities",
     currentPurpose:
@@ -1215,8 +1215,8 @@ export const settingsSectionArchitectureMap = [
       "Keep audit-only; future outbound capabilities need explicit governance and possibly Origin placement.",
   },
   {
-    tabId: "iot",
-    tabLabel: "Smart Home",
+    tabId: "integrations",
+    tabLabel: "Integrations",
     sectionId: "home-assistant-connection",
     sectionTitle: "Home Assistant Connection",
     currentPurpose: "Configure smart-home server and token.",
@@ -1241,8 +1241,8 @@ export const settingsSectionArchitectureMap = [
       "Move later under Devices/Connections with explicit device-control safety framing.",
   },
   {
-    tabId: "connectors",
-    tabLabel: "Connectors",
+    tabId: "integrations",
+    tabLabel: "Integrations",
     sectionId: "connected-accounts",
     sectionTitle: "Connected Accounts",
     currentPurpose:
@@ -1361,8 +1361,8 @@ export const settingsSectionArchitectureMap = [
     recommendedFutureAction: "Keep with clearer consequences.",
   },
   {
-    tabId: "knowledge-bridge",
-    tabLabel: "Knowledge Base",
+    tabId: "data",
+    tabLabel: "Data & Memory",
     sectionId: "local-knowledge-import",
     sectionTitle: "Local Knowledge Import",
     currentPurpose:
@@ -1401,8 +1401,8 @@ export const settingsSectionArchitectureMap = [
       "Keep top-level; later separate standard imports from developer-context imports.",
   },
   {
-    tabId: "knowledge-bridge",
-    tabLabel: "Knowledge Base",
+    tabId: "data",
+    tabLabel: "Data & Memory",
     sectionId: "saas-sync",
     sectionTitle: "SaaS Sync",
     currentPurpose:
@@ -1442,8 +1442,8 @@ export const settingsSectionArchitectureMap = [
       "Keep but harmonize with Connectors so account connection state is not duplicated.",
   },
   {
-    tabId: "about",
-    tabLabel: "About",
+    tabId: "general",
+    tabLabel: "General",
     sectionId: "system-identity-status",
     sectionTitle: "System Identity & Status",
     currentPurpose:
@@ -1471,8 +1471,8 @@ export const settingsSectionArchitectureMap = [
       "Keep display-only; avoid adding self-update or release controls to normal Settings.",
   },
   {
-    tabId: "about",
-    tabLabel: "About",
+    tabId: "general",
+    tabLabel: "General",
     sectionId: "permissions-updates-links",
     sectionTitle: "Permissions & Updates Links",
     currentPurpose:
@@ -1493,8 +1493,8 @@ export const settingsSectionArchitectureMap = [
       "Keep links lightweight; any privileged update workflow belongs in future Origin.",
   },
   {
-    tabId: "about",
-    tabLabel: "About",
+    tabId: "general",
+    tabLabel: "General",
     sectionId: "labs-branding",
     sectionTitle: "LucaOS Labs Branding",
     currentPurpose: "Display Electron version and labs brand footer.",

@@ -9,22 +9,19 @@ import {
   settingsSensitiveSectionIds,
 } from "./settingsSectionArchitectureMap";
 
+// Nine, not ten: this audit map predates the Appearance tab and has never
+// carried a section for it. The seven destinations the 16 → 10 merge retired
+// kept their audit rows and were re-pointed at the tab that absorbed them.
 const expectedSettingsTabIds = [
   "general",
   "brain",
   "voice",
-  "vision",
   "model-manager",
   "personality",
   "autonomy",
-  "profile",
   "lucalink",
-  "mcp-bridge",
-  "iot",
-  "connectors",
+  "integrations",
   "data",
-  "knowledge-bridge",
-  "about",
 ];
 
 describe("settingsSectionArchitectureMap", () => {
@@ -80,14 +77,14 @@ describe("settingsSectionArchitectureMap", () => {
         "general:privacy-awareness",
         "brain:cloud-api-config",
         "voice:voice-cloning-studio",
-        "vision:vision-engine",
+        "brain:vision-engine",
         "autonomy:mission-control",
         "lucalink:desktop-server-pairing",
-        "mcp-bridge:connect-tool-servers",
-        "iot:home-assistant-connection",
-        "connectors:connected-accounts",
+        "integrations:connect-tool-servers",
+        "integrations:home-assistant-connection",
+        "integrations:connected-accounts",
         "data:memory-explorer",
-        "knowledge-bridge:saas-sync",
+        "data:saas-sync",
       ]),
     );
   });
@@ -100,9 +97,53 @@ describe("settingsSectionArchitectureMap", () => {
       expect.arrayContaining([
         "personality:unified-consciousness",
         "personality:archetype-blueprint",
-        "mcp-bridge:share-luca-capabilities",
+        "integrations:share-luca-capabilities",
       ]),
     );
     expect(settingsSectionArchitectureAuditNote).toContain("future-only");
+  });
+
+  // The merge moved sections between destinations; it did not delete audit rows.
+  // Every sensitive section that belonged to a retired tab must now be attributed
+  // to the tab that absorbed it, or the census silently lost a surface.
+  it("re-points retired destinations instead of dropping their sections", () => {
+    for (const retired of [
+      "vision",
+      "profile",
+      "mcp-bridge",
+      "iot",
+      "connectors",
+      "knowledge-bridge",
+      "about",
+    ]) {
+      expect(settingsSectionTabIds).not.toContain(retired);
+      expect(
+        settingsSensitiveSectionIds.some((id) => id.startsWith(`${retired}:`)),
+        retired,
+      ).toBe(false);
+    }
+
+    const absorbed = {
+      brain: ["vision-engine", "vision-tips"],
+      personality: ["identity-card", "partnership-status", "assistant-directives"],
+      integrations: [
+        "connect-tool-servers",
+        "connected-accounts",
+        "home-assistant-connection",
+      ],
+      data: ["local-knowledge-import", "saas-sync"],
+      general: ["system-identity-status", "labs-branding"],
+    };
+
+    for (const [tabId, sectionIds] of Object.entries(absorbed)) {
+      for (const sectionId of sectionIds) {
+        expect(
+          settingsSectionArchitectureMap.some(
+            (entry) => entry.tabId === tabId && entry.sectionId === sectionId,
+          ),
+          `${tabId}:${sectionId}`,
+        ).toBe(true);
+      }
+    }
   });
 });

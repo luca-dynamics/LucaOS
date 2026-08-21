@@ -510,7 +510,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                       onClick={() =>
                         window.dispatchEvent(
                           new CustomEvent("luca:open-settings", {
-                            detail: { tab: "mcp" },
+                            detail: { tab: "integrations" },
                           }),
                         )
                       }
@@ -635,7 +635,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                           onClick={() =>
                             window.dispatchEvent(
                               new CustomEvent("luca:open-settings", {
-                                detail: { tab: "mcp" },
+                                detail: { tab: "integrations" },
                               }),
                             )
                           }
