@@ -491,17 +491,32 @@ async function bootSequence(isSilent = false) {
     log(`Spawning Luca Cortex...`, 'warn', 40);
     await startCortex();
 
-    // 3. Wait Loop
+    // 3. Readiness.
+    //
+    // The window is created and starts loading as soon as the CORE answers.
+    // Nothing waits on Cortex. Python's import graph takes minutes on a cold
+    // disk and dev still has to cold-compile the renderer through Vite; running
+    // those in series is what made boot look hung, because until
+    // launchInterface() runs there is no window, no URL loading, and no reveal
+    // watchdog armed — the splash is all there is.
+    //
+    // The core is the only subsystem the renderer depends on for its own boot
+    // checks, so it is the only one the window waits for. Cortex is reported as
+    // a subsystem coming online, never a gate: local models and RAG light up
+    // when it lands and everything else is usable before that.
     let serverReady = false;
     let cortexReady = false;
+    let interfaceLaunched = false;
     let attempts = 0;
-    const maxAttempts = app.isPackaged ? 180 : 420; // Dev first boot can spend several minutes loading the Node core.
+    const maxAttempts = app.isPackaged ? 180 : 420; // Budget for the CORE. Cortex is not on this clock.
 
     const checkInterval = setInterval(async () => {
         attempts++;
-        
-        // Don't check if we are rebooting/cleaning up
-        if (!bootWindow) {
+
+        // Abandon the poll only if boot was torn down before the interface got
+        // going (reboot/cleanup). Once the window exists the splash is free to
+        // close, and this loop keeps reporting Cortex without it.
+        if (!bootWindow && !interfaceLaunched) {
             clearInterval(checkInterval);
             return;
         }
@@ -512,22 +527,35 @@ async function bootSequence(isSilent = false) {
         if (!serverReady) serverReady = serverPort ? await checkPort(serverPort) : false;
         if (!cortexReady) cortexReady = await checkPort(cortexPort);
 
-        if (serverReady && !cortexReady) {
-            log(`[WAIT] Logic Core Ready. Waiting for Cortex Graph DB... (${attempts}s)`, 'info', 50 + Math.floor(attempts/2));
-        } else if (!serverReady && cortexReady) {
-             log(`[WAIT] Cortex Ready. Waiting for Logic Core... (${attempts}s)`, 'info', 50 + Math.floor(attempts/2));
+        if (serverReady && !interfaceLaunched) {
+            interfaceLaunched = true;
+            rebootAttempts = 0; // The core came up; this is not a crash loop.
+            log("Logic Core ready. Opening LucaOS.", 'success', 70);
+            if (bootWindow) bootWindow.webContents.send('boot-status', 'APP READY');
+            launchInterface(isSilent);
         }
 
-        if (serverReady && cortexReady) {
+        if (cortexReady) {
             clearInterval(checkInterval);
-            rebootAttempts = 0; // Reset on success
-            log("Core services ready. Opening LucaOS.", 'success', 100);
-            if (bootWindow) bootWindow.webContents.send('boot-status', 'APP READY');
-            
-            setTimeout(() => {
-                launchInterface(isSilent);
-            }, 1000); 
-        } else if (attempts >= maxAttempts) {
+            log("Cortex ready. Local intelligence online.", 'success', 100);
+            return;
+        }
+
+        if (interfaceLaunched) {
+            // The window is up and usable; Cortex is still loading. Report at a
+            // calm cadence and NEVER reboot over it — tearing down a working
+            // window because a Python import is slow is the worse failure.
+            if (attempts % 15 === 0) {
+                log(`Cortex still loading (${attempts}s). Local models arrive when it lands.`, 'info');
+            }
+            if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                log("Cortex did not come up. Local models and RAG stay offline; the rest of LucaOS is unaffected.", 'warn');
+            }
+            return;
+        }
+
+        if (attempts >= maxAttempts) {
             clearInterval(checkInterval);
             handleBootFailure("TIMEOUT", log);
         }
@@ -608,14 +636,32 @@ function launchInterface(isSilent = false) {
         // trigger that means "the destination UI has actually painted"; the
         // timeout below is the safety net if that signal never arrives.
         ipcMain.once('renderer-ready', () => show('renderer-ready'));
-        // Hard fallback so the window can never get stuck hidden if boot ever
-        // stalls. It must be long enough to NEVER fire during a normal boot,
-        // or it reveals a still-booting (blank) window and closes the splash
-        // early. Dev cold-compiles the whole app through Vite before React even
-        // mounts (tens of seconds), so dev gets a much longer net than a
-        // packaged build where React paints in a second or two.
-        const revealTimeoutMs = app.isPackaged ? 20000 : 90000;
+
+        // Safety net, armed from the moment the renderer starts loading — which
+        // is now, because nothing gates window creation on a subsystem.
+        //
+        // It must be longer than the slowest legitimate first paint or it
+        // reveals a still-blank window and closes the splash early. In dev that
+        // slowest case is a cold Vite compile of ~1,900 modules, measured at
+        // ~185s on a Defender-scanned disk; the old 90s net fired mid-compile
+        // and showed exactly that empty frame. 300s covers it with margin and
+        // still bounds the "stuck hidden" case. Packaged builds load prebuilt
+        // assets and paint in a second or two, so they keep a tight net.
+        //
+        // A slow *renderer* is now the only thing this can trip on: Cortex can
+        // no longer hold the window shut, because launchInterface() is called
+        // as soon as the core is up.
+        const revealTimeoutMs = app.isPackaged ? 20000 : 300000;
         fallbackTimer = setTimeout(() => show('timeout'), revealTimeoutMs);
+
+        // A renderer that fails to load will never send 'renderer-ready' and
+        // would otherwise sit behind the splash until the net above. Reveal
+        // immediately so the failure is visible in the app instead of looking
+        // like an indefinite hang.
+        mainWindow.webContents.once('did-fail-load', (_event, errorCode, errorDescription) => {
+            console.error(`[MAIN] Renderer failed to load (${errorCode}): ${errorDescription}`);
+            show('did-fail-load');
+        });
     } else {
         if (bootWindow) bootWindow.close();
     }
