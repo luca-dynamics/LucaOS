@@ -60,9 +60,18 @@ vi.mock("./credentialResolver.js", () => ({
   default: { getApiKey: (provider: string) => getApiKey(provider) },
 }));
 
+// `chat` is imported under an alias on purpose. Vitest hoists the `vi.mock`
+// factories above these imports and rewrites imported bindings *inside* them —
+// and the OpenAI factory has a `chat` member (`this.chat.completions`), so a
+// binding named `chat` gets rewritten in there too and the file dies with
+// "Cannot access '__vi_import_0__' before initialization" before a single test
+// collects. The name is the whole cause: aliasing any unrelated export to
+// `chat` reproduces it. Renaming the binding is the fix.
 import {
   OPENAI_COMPATIBLE_PROVIDERS,
   UnsupportedProviderError,
+  canRouteModel,
+  chat as gatewayChat,
   completeText,
   createAdapter,
   detectProvider,
@@ -489,5 +498,137 @@ describe("adapter.chat — the turn-shaped call Stage 3 will use", () => {
     const request = createCompletion.mock.calls[0][0];
     expect(request.tools).toBeUndefined();
     expect(request.tool_choice).toBeUndefined();
+  });
+});
+
+describe("gateway.chat — one routed call, three vendor wires", () => {
+  const PNG = "data:image/png;base64,AAAB";
+
+  it("routes an OpenAI id and sends the image as a data URL", async () => {
+    await gatewayChat({
+      modelId: "gpt-4o",
+      messages: [{ role: "user", content: "what is on screen?" }],
+      images: [PNG],
+    });
+
+    const request = createCompletion.mock.calls[0][0];
+    expect(request.model).toBe("gpt-4o");
+    expect(request.messages[0].content).toEqual([
+      { type: "text", text: "what is on screen?" },
+      { type: "image_url", image_url: { url: PNG } },
+    ]);
+    expect(googleGenAIConstructor).not.toHaveBeenCalled();
+    expect(anthropicConstructor).not.toHaveBeenCalled();
+  });
+
+  it("routes a Gemini id and sends the image as inlineData", async () => {
+    generateContent.mockResolvedValue({ text: "a login form" });
+
+    await expect(
+      gatewayChat({
+        modelId: "gemini-2.0-flash",
+        messages: [{ role: "user", content: "what is on screen?" }],
+        images: [PNG],
+      }),
+    ).resolves.toEqual({
+      text: "a login form",
+      thought: undefined,
+      thought_signature: undefined,
+      toolCalls: undefined,
+    });
+
+    const request = generateContent.mock.calls[0][0];
+    expect(request.model).toBe("gemini-2.0-flash");
+    // Text first, then the image — Gemini's order. Anthropic's wire puts the
+    // image first (the shape its docs ask for). The two disagree on purpose;
+    // asserting each vendor's own order is the point of testing all three.
+    expect(request.contents[0].parts).toEqual([
+      { text: "what is on screen?" },
+      { inlineData: { data: "AAAB", mimeType: "image/png" } },
+    ]);
+    // No output limit unless the caller sets one — the Gemini asymmetry.
+    expect(request.config).toBeUndefined();
+    expect(openAIConstructor).not.toHaveBeenCalled();
+  });
+
+  it("routes a Claude id and sends the image as a base64 source block", async () => {
+    anthropicCreate.mockResolvedValue({
+      content: [{ type: "text", text: "a login form" }],
+    });
+
+    await expect(
+      gatewayChat({
+        modelId: "claude-3-5-sonnet-20240620",
+        messages: [{ role: "user", content: "what is on screen?" }],
+        images: [PNG],
+      }),
+    ).resolves.toEqual({
+      text: "a login form",
+      thought: undefined,
+      thought_signature: undefined,
+      toolCalls: undefined,
+    });
+
+    const request = anthropicCreate.mock.calls[0][0];
+    expect(request.model).toBe("claude-3-5-sonnet-20240620");
+    expect(request.max_tokens).toBe(512);
+    expect(request.messages[0].content).toEqual([
+      {
+        type: "image",
+        source: { type: "base64", media_type: "image/png", data: "AAAB" },
+      },
+      { type: "text", text: "what is on screen?" },
+    ]);
+  });
+
+  it("passes an explicit token budget through to Gemini's config", async () => {
+    await gatewayChat({
+      modelId: "gemini-2.0-flash",
+      messages: [{ role: "user", content: "hi" }],
+      maxTokens: 128,
+    });
+
+    expect(generateContent.mock.calls[0][0].config).toEqual({
+      maxOutputTokens: 128,
+    });
+  });
+
+  it("fails closed with the legacy message when no credential resolves", async () => {
+    getApiKey.mockResolvedValue(null);
+
+    await expect(
+      gatewayChat({
+        modelId: "gemini-2.0-flash",
+        messages: [{ role: "user", content: "hi" }],
+      }),
+    ).rejects.toThrow("Gemini API key not found in settings or environment");
+
+    expectNoClientConstructed();
+    expect(generateContent).not.toHaveBeenCalled();
+  });
+});
+
+describe("canRouteModel — named unavailability before the attempt", () => {
+  it("is true when a credential resolves for the model's provider", async () => {
+    await expect(canRouteModel("gemini-2.0-flash")).resolves.toBe(true);
+    await expect(canRouteModel("claude-3-5-sonnet-20240620")).resolves.toBe(
+      true,
+    );
+    await expect(canRouteModel("gpt-4o")).resolves.toBe(true);
+  });
+
+  it("is false when no credential resolves, without throwing", async () => {
+    getApiKey.mockResolvedValue(null);
+
+    await expect(canRouteModel("gemini-2.0-flash")).resolves.toBe(false);
+    await expect(canRouteModel("gpt-4o")).resolves.toBe(false);
+  });
+
+  it("is true for a local provider, which needs no credential at all", async () => {
+    getApiKey.mockResolvedValue(null);
+
+    await expect(canRouteModel("local/gemma-2b")).resolves.toBe(true);
+    await expect(canRouteModel("ollama:llama3")).resolves.toBe(true);
+    expect(getApiKey).not.toHaveBeenCalled();
   });
 });

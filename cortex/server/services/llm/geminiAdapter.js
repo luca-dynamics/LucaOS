@@ -10,6 +10,13 @@
  */
 
 import { GoogleGenAI } from '@google/genai';
+import {
+  extractGeminiThought,
+  normalizeGeminiToolCalls,
+  toGeminiContents,
+  toGeminiSystemInstruction,
+  toGeminiTools
+} from '../../../../src/shared/llm/geminiWire.js';
 
 export const DEFAULT_GEMINI_MODEL = 'gemini-3-flash-preview';
 
@@ -40,6 +47,45 @@ export class GeminiAdapter {
       contents: prompt
     });
     return result.text ?? '';
+  }
+
+  /**
+   * Full turn-shaped call: history, images, a system instruction and tools,
+   * normalized to Luca's internal representation on the way out.
+   *
+   * The request side comes from the shared wire; only the response side is
+   * SDK-specific, because @google/genai exposes `result.text` and
+   * `result.functionCalls` where the renderer's @google/generative-ai exposes
+   * `result.response.text()`.
+   *
+   * `maxTokens` is honoured only when the caller sets it. Defaulting it would
+   * newly truncate callers that never had an output limit — the same reasoning
+   * as `completeText` above.
+   */
+  async chat({ messages, images, systemInstruction, tools, maxTokens } = {}) {
+    const geminiTools = toGeminiTools(tools);
+    const instruction = toGeminiSystemInstruction(systemInstruction);
+
+    const config = {};
+    if (geminiTools) config.tools = geminiTools;
+    if (instruction) config.systemInstruction = instruction;
+    if (maxTokens) config.maxOutputTokens = maxTokens;
+
+    const request = {
+      model: this.modelName,
+      contents: toGeminiContents(messages, { images })
+    };
+    if (Object.keys(config).length > 0) request.config = config;
+
+    const result = await this.client.models.generateContent(request);
+    const { thought, thought_signature } = extractGeminiThought(result);
+
+    return {
+      text: result.text ?? '',
+      thought,
+      thought_signature,
+      toolCalls: normalizeGeminiToolCalls(result.functionCalls)
+    };
   }
 }
 

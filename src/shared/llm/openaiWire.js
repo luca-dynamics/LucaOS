@@ -1,4 +1,8 @@
-import { normalizeToolCalls, parseToolArguments } from "./llmContract.js";
+import {
+  normalizeToolCalls,
+  parseToolArguments,
+  resolveImagePayload,
+} from "./llmContract.js";
 
 export function toOpenAIMessages(messages, options = {}) {
   const { images, systemInstruction } = options;
@@ -35,9 +39,10 @@ export function toOpenAIMessages(messages, options = {}) {
     if (message.content) content.push({ type: "text", text: message.content });
     if (isLast && images && images.length > 0) {
       for (const image of images) {
+        const { data, mimeType } = resolveImagePayload(image);
         content.push({
           type: "image_url",
-          image_url: { url: `data:image/jpeg;base64,${image}` },
+          image_url: { url: `data:${mimeType};base64,${data}` },
         });
       }
     }

@@ -84,6 +84,22 @@ describe("toAnthropicMessages", () => {
     ]);
   });
 
+  it("labels a PNG data URL as PNG, not as the jpeg default", () => {
+    // Vision sends screenshots as PNG. This wire hardcoded image/jpeg until
+    // RFC-0006 Stage 2 Change 3, so every screenshot went out mislabelled.
+    const messages = toAnthropicMessages([{ role: "user", content: "look" }], {
+      images: ["data:image/png;base64,AAAB"],
+    });
+
+    expect((messages[0] as any).content).toEqual([
+      {
+        type: "image",
+        source: { type: "base64", media_type: "image/png", data: "AAAB" },
+      },
+      { type: "text", text: "look" },
+    ]);
+  });
+
   it("does not fold a system instruction into the messages array", () => {
     // Anthropic takes the system prompt as a separate request parameter.
     const messages = toAnthropicMessages([{ role: "user", content: "hi" }]);

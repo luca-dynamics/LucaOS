@@ -32,3 +32,12 @@ export declare function parseToolArguments(raw: unknown): unknown;
 export declare function normalizeToolCalls(
   toolCalls?: ToolCall[],
 ): ToolCall[] | undefined;
+
+export declare const DEFAULT_IMAGE_MIME_TYPE: string;
+
+export interface ImagePayload {
+  data: string;
+  mimeType: string;
+}
+
+export declare function resolveImagePayload(image: string): ImagePayload;

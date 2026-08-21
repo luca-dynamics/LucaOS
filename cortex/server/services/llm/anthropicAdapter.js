@@ -9,6 +9,11 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import {
+  fromAnthropicMessage,
+  toAnthropicMessages,
+  toAnthropicTools
+} from '../../../../src/shared/llm/anthropicWire.js';
 
 const DEFAULT_MAX_TOKENS = 512;
 
@@ -34,6 +39,34 @@ export class AnthropicAdapter {
       messages: [{ role: 'user', content: prompt }]
     });
     return msg.content[0]?.text ?? '';
+  }
+
+  /**
+   * Full turn-shaped call: history, images, a system instruction and tools,
+   * normalized to Luca's internal representation on the way out.
+   *
+   * Both processes resolve the same SDK version, so every part of this — request
+   * and response — comes from the shared wire. A system instruction is the
+   * separate `system` parameter here, not a message.
+   */
+  async chat({
+    messages,
+    images,
+    systemInstruction,
+    tools,
+    maxTokens = DEFAULT_MAX_TOKENS
+  } = {}) {
+    const anthropicTools = toAnthropicTools(tools);
+
+    const request = {
+      model: this.modelName,
+      max_tokens: maxTokens,
+      messages: toAnthropicMessages(messages, { images })
+    };
+    if (systemInstruction) request.system = systemInstruction;
+    if (anthropicTools) request.tools = anthropicTools;
+
+    return fromAnthropicMessage(await this.client.messages.create(request));
   }
 }
 

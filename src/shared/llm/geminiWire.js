@@ -1,4 +1,4 @@
-import { normalizeToolCalls } from "./llmContract.js";
+import { normalizeToolCalls, resolveImagePayload } from "./llmContract.js";
 
 /**
  * Google Gemini wire format — request side, plus the thought/signature scan.
@@ -12,8 +12,6 @@ import { normalizeToolCalls } from "./llmContract.js";
  *
  * RFC-0006 Stage 2, Change 2.
  */
-
-const IMAGE_MIME_TYPE = "image/jpeg";
 
 /**
  * Builds Gemini `contents` from Luca's chat history.
@@ -74,7 +72,8 @@ export function toGeminiContents(messages, options = {}) {
     const parts = [{ text: message.content || "" }];
     if (isLast && images && images.length > 0) {
       for (const image of images) {
-        parts.push({ inlineData: { data: image, mimeType: IMAGE_MIME_TYPE } });
+        const { data, mimeType } = resolveImagePayload(image);
+        parts.push({ inlineData: { data, mimeType } });
       }
     }
     currentGroup = { role: "user", parts };

@@ -1,4 +1,4 @@
-import { normalizeToolCalls } from "./llmContract.js";
+import { normalizeToolCalls, resolveImagePayload } from "./llmContract.js";
 
 /**
  * Anthropic Messages API wire format.
@@ -10,7 +10,7 @@ import { normalizeToolCalls } from "./llmContract.js";
  * RFC-0006 Stage 2, Change 2.
  */
 
-const IMAGE_MEDIA_TYPE = "image/jpeg";
+const IMAGE_SOURCE_TYPE = "base64";
 
 /**
  * Anthropic has no `tool` role — a tool result is a `user` message carrying a
@@ -64,9 +64,10 @@ export function toAnthropicMessages(messages, options = {}) {
     // Images attach to the last message only, ahead of its text.
     if (isLast && images && images.length > 0) {
       for (const image of images) {
+        const { data, mimeType } = resolveImagePayload(image);
         content.push({
           type: "image",
-          source: { type: "base64", media_type: IMAGE_MEDIA_TYPE, data: image },
+          source: { type: IMAGE_SOURCE_TYPE, media_type: mimeType, data },
         });
       }
     }

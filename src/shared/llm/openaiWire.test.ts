@@ -106,6 +106,22 @@ describe("toOpenAIMessages", () => {
     ]);
   });
 
+  it("rebuilds a PNG data URL as PNG, not as the jpeg default", () => {
+    // Vision sends screenshots as PNG. This wire hardcoded image/jpeg until
+    // RFC-0006 Stage 2 Change 3, so every screenshot went out mislabelled.
+    const mapped = toOpenAIMessages([{ role: "user", content: "look" }], {
+      images: ["data:image/png;base64,AAAB"],
+    }) as Array<Record<string, any>>;
+
+    expect(mapped[0].content).toEqual([
+      { type: "text", text: "look" },
+      {
+        type: "image_url",
+        image_url: { url: "data:image/png;base64,AAAB" },
+      },
+    ]);
+  });
+
   it("unshifts the system instruction ahead of the history", () => {
     const mapped = toOpenAIMessages([{ role: "user", content: "hi" }], {
       systemInstruction: "You are Luca.",

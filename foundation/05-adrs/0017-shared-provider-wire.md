@@ -80,6 +80,17 @@ The seam is machine-checkable, and is checked. `vendorSdkBoundary.test.ts` reads
 exact map from SDK specifier to the single file allowed to import it, so a new
 file in either directory is covered the moment it lands.
 
+That check was necessary and not sufficient. It looks for **imports**, and a file
+can depend on a vendor without importing anything: `visionManager.js` and
+`vision.routes.js` spoke Gemini's REST wire with `fetch`, hardcoding the endpoint,
+the `contents`/`parts` request shape and the `candidates[0]` response walk. They
+passed the boundary test through two changes of boundary work by importing nothing
+at all. So the rule is stated the way the invariant is: **an SDK is one way to
+depend on a vendor; knowing its URL is the other.** The test now walks all of
+`cortex/` and asserts that no vendor model endpoint appears anywhere in it, with
+Google Workspace's `www.googleapis.com/auth/*` scopes distinguished explicitly
+rather than matched loosely — a permanently red test gets deleted instead of fixed.
+
 ## Consequences
 
 ### Positive
@@ -95,6 +106,14 @@ file in either directory is covered the moment it lands.
 - **The invariant is enforced by a test, not by vigilance.** An exact
   specifier-to-filename map fails loudly when a second importer appears, including
   in files nobody thought to check.
+- **A feature that stops writing its own HTTP gains provider choice for free.**
+  Vision is the case: pointing Luca's eyes at Claude or GPT-4o used to be
+  impossible without a code edit, and is now a configuration value. Three defects
+  went with the hand-rolled path — an API key in a URL query string, an unchecked
+  `resp.ok` that silently defeated the file's own fallback, and a credential read
+  that ignored the Secure Vault. None of them was a vendor-abstraction bug; all
+  three existed because a feature was allowed to speak HTTP for itself. That is
+  the argument for this decision that a wire-format diff does not show.
 
 ### Negative
 
@@ -117,10 +136,20 @@ file in either directory is covered the moment it lands.
   one method; a bug here is an outage of Luca's primary path. That is the price of
   a single definition, and it is why these modules carry the densest tests in the
   provider layer.
-- **Invariant 4 is not yet fully satisfied, and this ADR does not claim it is.**
-  `cortex/agent/lifeLoop.js` still imports `@google/genai` directly and inspects
-  `functionCall` parts itself. The boundary holds for `cortex/server/` and the
-  renderer; one file in `cortex/agent/` is outstanding and is the next change.
+- **Invariant 4 holds in the core now, and this ADR is precise about where it
+  stops.** The site this ADR originally named as outstanding —
+  `cortex/agent/lifeLoop.js`, importing `@google/genai` above the adapter — turned
+  out to be dead code with no importer in the repo's history, and was deleted
+  rather than ported. The breach that mattered was the one no import could reveal:
+  vision's hand-rolled Gemini REST call, now a routed `llmGateway.chat`. Every
+  `.js` file under `cortex/` holds exactly three vendor SDK imports, one per
+  adapter, and no vendor endpoint. Two surfaces remain open and are not claimed
+  otherwise: `cortex/python/cortex.py` branches on vendor in Python with its own
+  credential lookups and a hardcoded `api.x.ai` endpoint — a second provider layer
+  in a language this guard cannot walk — and the renderer still hand-rolls the
+  OpenAI and Anthropic wires in `src/services/llmService.ts`, names Gemini's
+  endpoint in `src/services/visionManager.ts`, and imports Google's types in ~45
+  files for tool declarations. Each is its own change.
 
 ## Alternatives considered
 

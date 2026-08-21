@@ -52,8 +52,10 @@ export class OpenAICompatibleAdapter {
    * Full turn-shaped call: history, images, a system instruction and tools,
    * normalized to Luca's internal representation on the way out.
    *
-   * No live core caller yet — the core-resident turn loop (RFC-0006 Stage 3)
-   * is its first consumer. Covered by unit tests against an injected client.
+   * Vision is its first live caller (Change 3): `/api/vision` routes a
+   * screenshot through `llmGateway.chat`, so whichever provider serves vision
+   * arrives here. Streaming and multi-turn tool loops come with the
+   * core-resident turn loop (RFC-0006 Stage 3).
    */
   async chat({
     messages,

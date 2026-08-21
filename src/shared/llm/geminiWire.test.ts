@@ -100,6 +100,19 @@ describe("toGeminiContents — parts", () => {
     ]);
   });
 
+  it("labels a PNG data URL as PNG, not as the jpeg default", () => {
+    // Vision sends screenshots as PNG. This wire hardcoded image/jpeg until
+    // RFC-0006 Stage 2 Change 3, so every screenshot went out mislabelled.
+    const contents = toGeminiContents([{ role: "user", content: "look" }], {
+      images: ["data:image/png;base64,AAAB"],
+    });
+
+    expect((contents[0] as any).parts).toEqual([
+      { text: "look" },
+      { inlineData: { data: "AAAB", mimeType: "image/png" } },
+    ]);
+  });
+
   it("maps a system message to the user role, as the SDK requires", () => {
     // A system *instruction* is a separate request field; a system message in
     // the history has nowhere else to go.

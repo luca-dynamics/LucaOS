@@ -286,7 +286,7 @@ and new loops side by side behind a single flag — a flag, not a fork.
 | Stage | Delivers | Verified by |
 |---|---|---|
 | **1 — Lease only** ✅ *built, awaiting the two-Surface run* | `session_leases` + two routes; the renderer acquires on turn start, renews, releases on end. The loop does not move. | Two Surfaces attached: the second's send is refused and names the holder. A killed holder's lease lapses within one TTL. |
-| **2 — Provider layer in the core** 🔶 *in progress; see below* | A shared wire layer both processes import, plus a real adapter layer in the core; `tradingDebateService.js` moves onto the adapters and drops its direct SDK imports. | Existing adapter tests pass unchanged; the core completes a non-streaming provider call with no vendor SDK imported above the adapter. |
+| **2 — Provider layer in the core** ✅ *built, awaiting the live vision run* | A shared wire layer both processes import, plus a real adapter layer in the core; `tradingDebateService.js` moves onto the adapters and drops its direct SDK imports. | Existing adapter tests pass unchanged; the core completes a non-streaming provider call, and no code above the adapter names a vendor's SDK **or speaks its wire by hand**. The second clause was added in Change 3, after the first proved insufficient — see below. |
 | **3 — Core loop, Surface as client** | `POST /api/turn`, the attach and interject routes, and the tool-callback channel; `TurnRunner` runs in the core; `lucaService.sendMessageStream` keeps its signature and becomes a client. | A turn survives closing and reopening the window. An answer begun on one Surface is attached to and continued from a second. A LEVEL_1 tool with no Surface attached is refused, not run. |
 | **4 — Retire the renderer loop** | The flag and the renderer-resident loop are removed; `AgentService` can call the real loop. | One loop in the tree; `executeStep` no longer simulates. |
 
@@ -321,12 +321,50 @@ What landed: **Change 1** — the OpenAI-compatible family (six providers) behin
 `llmGateway`, sharing `openaiWire.js` with the renderer's `OpenAIAdapter`. **Change 2** —
 `anthropicWire.js` and `geminiWire.js`, the core's Gemini and Anthropic adapters, and
 `tradingDebateService.js` reduced to one `llmGateway.completeText` call, with ~190 lines
-of duplicated mapping removed from the renderer's two adapters.
+of duplicated mapping removed from the renderer's two adapters. **Change 3** — `chat()`
+on all three core adapters and on `llmGateway`, vision routed through it, `cortex/agent/`
+deleted, and the boundary test taught to catch a wire that imports nothing.
 
-**The criterion in the table is not yet met, and should not be read as met.**
-`cortex/agent/lifeLoop.js` still imports `@google/genai` directly. After Change 2 the
-boundary holds for `cortex/server/` and the renderer; Change 3 moves the life loop and is
-what actually closes Stage 2.
+**The criterion is now met, and it had to be rewritten to be worth meeting.** Change 3
+was scoped as "move `cortex/agent/lifeLoop.js` behind the adapter" — the one file left
+importing `@google/genai` above the provider layer. Two things were found instead.
+
+`lifeLoop.js` was **dead code**: `git log -S "agent/lifeLoop" --all` returns only Change
+2's own commit message, so no commit in this repo's history has ever contained an import
+of it. The whole `cortex/agent/` directory had no importers, and its `goalManager.js` was
+a stale parallel copy of the live goal services in `cortex/server/services/`. Porting it
+would have satisfied the grep, changed no runtime behavior, and left a second goal
+implementation for a later agent to mistake for the real one. It was deleted.
+
+The live breach was somewhere the criterion **could not see**. Invariant 4 forbids
+depending on a vendor's "SDK *or wire format*"; the criterion said *SDK imported*. So
+`visionManager.js` and `vision.routes.js` — both reachable through `/api/vision`, mounted
+at tier 1 in `server.js` — hand-rolled Gemini's REST wire with `fetch`, hardcoded
+`generativelanguage.googleapis.com`, `contents`/`parts`/`inline_data`, and
+`candidates[0].content.parts[0].text`, and were invisible to an import check because they
+imported nothing. They survived Changes 1 and 2 that way. They also could not reach any
+other model: `if (config.provider === "gemini")` with no router and no settings, so Luca's
+eyes were Gemini's whatever the brain was set to. Vision is now a routed
+`llmGateway.chat` call, its model ids come from configuration, and four latent defects
+went with the hand-rolled HTTP — the key left the URL query string, `resp.ok` is checked
+(so the ui-tars → fallback path fires for the first time since it was written), the
+Secure Vault is consulted instead of a module-load `process.env` read, and `/status` no
+longer reports readiness it never verified.
+
+The lesson is the durable part: **an import-only boundary check cannot find a breach that
+imports nothing.** `vendorSdkBoundary.test.ts` now also asserts that no vendor model
+endpoint appears anywhere under `cortex/`, walking the directory from disk so a new file
+is covered the moment it lands. Google Workspace's `www.googleapis.com/auth/*` scopes are
+distinguished explicitly rather than matched loosely, because a permanently red test gets
+deleted instead of fixed.
+
+Two surfaces are named rather than claimed closed. `cortex/python/cortex.py` branches on
+vendor in Python with its own credential lookups and a hardcoded `api.x.ai` endpoint — a
+second provider layer in another language, which the `.js` walker cannot reach. And the
+renderer has its own outstanding wire surface (`src/services/llmService.ts`,
+`src/services/visionManager.ts`, and ~45 files importing Google's types for tool
+declarations). Neither is in Stage 2's scope; both are real, and Stage 3 will meet the
+first of them when the turn loop moves.
 
 ## Invariants and the Four Questions
 
@@ -335,7 +373,7 @@ what actually closes Stage 2.
 | 1 — One Luca Identity | **strengthens** | One loop for the whole system; the lease makes "two Surfaces, two conversations" structurally impossible rather than merely unlikely. |
 | 2 — Persistent Runtime | **strengthens** | This is the invariant's remaining gap: a turn becomes something the persistent core is doing, not something a window is doing. |
 | 3 — Shared Memory | preserves | The transcript store and its append-only rule (ADR-0015) are unchanged; the number of writers drops from *n* Surfaces to one core. |
-| 4 — Provider Abstraction | **stresses, then strengthens** | Interim state is honest: the core today imports vendor SDKs directly in `tradingDebateService.js`. Stage 2 puts the adapter layer in the core and removes that import — but until Stage 2 lands, the core is a place where the invariant is broken, and this RFC's acceptance should be read as a commitment to fix it, not permission to add more. |
+| 4 — Provider Abstraction | **stresses, then strengthens** | Interim state is honest: the core today imports vendor SDKs directly in `tradingDebateService.js`. Stage 2 puts the adapter layer in the core and removes that import — but until Stage 2 lands, the core is a place where the invariant is broken, and this RFC's acceptance should be read as a commitment to fix it, not permission to add more. **Update, Change 3:** that import is gone, and the breach that outlasted it was worse than the one this row names — vision spoke Gemini's REST wire by hand, so it depended on a vendor while importing nothing. The core's `.js` now holds three SDK imports, one per adapter, and no vendor endpoint. `cortex/python/` and the renderer remain open, and are named as such in Stage 2 above. |
 | 5 — Cross-Surface Continuity | **strengthens** | RFC-0004 let Surfaces share state; this gives them one producer of it. A handoff mid-turn becomes possible for the first time. |
 | 6 — Strong Typing and Modularity | preserves | The wire events (`delta`, `tool_request`, `tool-result`) are a new typed seam and get explicit types, no `any`. Risk to watch: `lucaService.ts` at 1,612 lines is already near god-module territory and must shrink, not grow, as it becomes a client. |
 | 7 — Backward Compatibility | preserves | `session_leases` is a new table, not a migration. `sendMessageStream`/`sendMessage` keep their signatures, so the three call sites are untouched. |

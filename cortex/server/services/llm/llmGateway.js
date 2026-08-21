@@ -174,6 +174,27 @@ export async function createAdapter(modelId) {
 }
 
 /**
+ * Whether the core can reach a model right now: does a credential resolve for
+ * whatever provider this id routes to (Secure Vault first, then environment),
+ * and is there an adapter behind it?
+ *
+ * Surfaces call this to report named unavailability *before* attempting work —
+ * a vision route with no key configured should say so with guidance, not fail
+ * mid-retry. Local providers need no credential and are always reachable.
+ */
+export async function canRouteModel(modelId) {
+  try {
+    await createAdapter(modelId);
+    return true;
+  } catch (error) {
+    console.debug(
+      `[LLMGateway] '${modelId}' is not routable: ${error.message}`
+    );
+    return false;
+  }
+}
+
+/**
  * Single-shot text completion for any routed model id.
  */
 export async function completeText({
@@ -185,8 +206,36 @@ export async function completeText({
   return adapter.completeText({ prompt, maxTokens });
 }
 
+/**
+ * Full turn-shaped call for any routed model id: history, images, a system
+ * instruction and tools in, Luca's internal response representation out.
+ *
+ * `maxTokens` is passed through as given rather than defaulted here, so each
+ * adapter applies its own vendor rule — Anthropic requires a limit, Gemini
+ * historically had none and must not gain one silently.
+ */
+export async function chat({
+  modelId,
+  messages,
+  images,
+  systemInstruction,
+  tools,
+  maxTokens
+} = {}) {
+  const adapter = await createAdapter(modelId);
+  return adapter.chat({
+    messages,
+    images,
+    systemInstruction,
+    tools,
+    ...(maxTokens === undefined ? {} : { maxTokens })
+  });
+}
+
 export default {
+  chat,
   completeText,
+  canRouteModel,
   createAdapter,
   detectProvider,
   normalizeModelId,
