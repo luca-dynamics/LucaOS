@@ -4,11 +4,30 @@ import { thoughtStreamService } from "../thoughtStreamService";
 import { cognitiveDeliberator } from "../cognitiveDeliberator";
 import { StreamingToolExecutor } from "../streamingToolExecutor";
 import { lucaService } from "../lucaService";
+import { sessionLease } from "../session/sessionLease";
+import { sessionTranscript } from "../session/sessionTranscript";
+import type { LLMProvider } from "../llm/LLMProvider";
+import {
+  compactHistory,
+  contextWindowFor,
+  estimateHistoryTokens,
+  extractPriorSummary,
+  needsCompaction,
+} from "./contextCompactor";
 
 // Ceiling on how many times one turn may hand tool results back to the model.
 // Without it a model that keeps retrying a failing tool never returns, and the
 // only escape is the user aborting — after the API calls have been paid for.
 export const MAX_TOOL_ROUNDS = 10;
+
+/**
+ * Per-turn compaction bookkeeping. Lives on the stack of a single turn rather
+ * than on the runner (which is a singleton), so one turn's failed attempt can
+ * never suppress compaction on the next.
+ */
+interface CompactionState {
+  lastAttemptedLength: number;
+}
 
 export interface RunStreamTurnOptions {
   message: string;
@@ -31,6 +50,67 @@ export interface RunTurnOptions {
 }
 
 class TurnRunner {
+  /**
+   * Shrink history when it approaches the model's context window, replacing the
+   * oldest turns with a model-written summary.
+   *
+   * Called at the top of each tool round rather than once per turn, because a
+   * single turn can add ten rounds of large tool results and overflow mid-flight.
+   * That is safe to do here: `findCutIndex` only ever returns a user message or a
+   * plain model reply, and the turn's own user message is one of those, so a
+   * mid-turn cut can never separate an in-flight tool call from its results.
+   *
+   * Never throws. A summarizer that fails is worth a warning, not a lost turn —
+   * the provider call still goes out with the uncompacted history, which is
+   * exactly what would have happened before this existed.
+   */
+  private async maybeCompact(
+    provider: LLMProvider,
+    model: string | undefined,
+    state: CompactionState,
+  ): Promise<void> {
+    const history = lucaService.getTurnState().history;
+    const contextWindowTokens = contextWindowFor(model);
+    if (!needsCompaction(history, contextWindowTokens)) return;
+
+    // Nothing has been appended since the last attempt, so a retry would produce
+    // the same result and cost another summarizing call.
+    if (history.length === state.lastAttemptedLength) return;
+    state.lastAttemptedLength = history.length;
+
+    try {
+      const outcome = await compactHistory({
+        history,
+        contextWindowTokens,
+        summarize: (prompt) => provider.generateContent(prompt),
+      });
+
+      if (!outcome) {
+        console.warn(
+          `[TURN_RUNNER] History is over budget (~${estimateHistoryTokens(history)} of ${contextWindowTokens} tokens) but has no safe cut point; sending it uncompacted.`,
+        );
+        return;
+      }
+
+      lucaService.replaceHistoryAfterCompaction(outcome.history);
+
+      // Record the compaction in the durable transcript as a new entry. The rows
+      // it covers are NOT rewritten — they stay on disk — but hydration after a
+      // restart starts here, so the model is shown the same compacted view it is
+      // being shown now instead of replaying turns the summary already describes.
+      const summary = extractPriorSummary(outcome.history.slice(0, 1));
+      if (summary) sessionTranscript.appendSummary(summary);
+
+      console.log(
+        `[TURN_RUNNER] Compacted ${outcome.messagesBefore}→${outcome.messagesAfter} messages (~${outcome.tokensBefore}→~${outcome.tokensAfter} tokens)`,
+      );
+    } catch (e: any) {
+      console.warn(
+        `[TURN_RUNNER] Compaction failed; sending uncompacted history: ${e?.message || e}`,
+      );
+    }
+  }
+
   async runStreamTurn({
     message,
     imageBase64,
@@ -48,6 +128,24 @@ class TurnRunner {
     let generatedImage: string | undefined;
     let generatedVideo: string | undefined;
     const historyAtStart = [...lucaService.getTurnState().history];
+
+    // Admission first, before anything mutates. This sits above `perceive`,
+    // `beginTurn`, and `appendUserMessage` on purpose: a refused turn must leave
+    // no trace at all — no mental state, no harness turn, and above all no user
+    // entry appended to the shared transcript with no answer after it. That
+    // orphaned entry is the exact corruption the lease exists to prevent, so
+    // appending before refusing would create the very thing being guarded.
+    const admission = await sessionLease.acquireForTurn();
+    if (!admission.admitted) {
+      console.warn(`[TURN_RUNNER] Turn refused — ${admission.message}`);
+      onChunk(admission.message);
+      return {
+        text: admission.message,
+        groundingMetadata: null,
+        route,
+        refused: true,
+      };
+    }
 
     harnessService.beginTurn(historyAtStart);
     console.log(
@@ -128,8 +226,10 @@ class TurnRunner {
 
       let keepGenerating = true;
       let toolRounds = 0;
+      const compactionState: CompactionState = { lastAttemptedLength: -1 };
       while (keepGenerating) {
         keepGenerating = false;
+        await this.maybeCompact(activeProvider, route.model, compactionState);
         const turnState = lucaService.getTurnState();
         const result = await (activeProvider as any).chatStream(
           turnState.history,
@@ -206,6 +306,12 @@ class TurnRunner {
         thought: fullResponseText,
       });
       creditService.setMode(originalMode);
+      // Awaited rather than fired and forgotten. A renewing holder keeps its
+      // token, so a DELETE still in flight when the next turn acquires would
+      // delete *that* turn's lease; awaiting keeps release strictly before the
+      // next acquire. `releaseAfterTurn` never throws, so this cannot replace
+      // the value the turn is returning.
+      await sessionLease.releaseAfterTurn();
     }
   }
 
@@ -224,6 +330,20 @@ class TurnRunner {
     let generatedImage: string | undefined;
     let generatedVideo: string | undefined;
     const historyAtStart = [...lucaService.getTurnState().history];
+
+    // Same admission gate, same placement, and for the same reason as the
+    // streaming path above. There is no `onChunk` here, so the refusal travels
+    // back as the turn's text.
+    const admission = await sessionLease.acquireForTurn();
+    if (!admission.admitted) {
+      console.warn(`[TURN_RUNNER] Non-stream turn refused — ${admission.message}`);
+      return {
+        text: admission.message,
+        groundingMetadata: null,
+        route,
+        refused: true,
+      };
+    }
 
     harnessService.beginTurn(historyAtStart);
     console.log(
@@ -292,8 +412,10 @@ class TurnRunner {
       );
 
       let loopCount = 0;
+      const compactionState: CompactionState = { lastAttemptedLength: -1 };
       while (loopCount < MAX_TOOL_ROUNDS) {
         loopCount++;
+        await this.maybeCompact(activeProvider, route.model, compactionState);
         const turnState = lucaService.getTurnState();
         const result = await (activeProvider as any).chat(
           turnState.history,
@@ -351,6 +473,10 @@ class TurnRunner {
         thought: finalResponseText,
       });
       creditService.setMode(originalMode);
+      // Awaited for the same reason as in `runStreamTurn`: release must land
+      // before the next turn's acquire, or a late DELETE could drop a lease that
+      // turn is relying on.
+      await sessionLease.releaseAfterTurn();
     }
   }
 }
