@@ -3,7 +3,7 @@
  * Centralizes all backend API URLs for easy environment management
  */
 
-import { isLucaApiUrl } from "./lucaApiOrigin";
+import { isLucaApiUrl, type LucaTrustedOrigin } from "./lucaApiOrigin";
 
 // For Vite apps, use import.meta.env
 // For Node/Electron, use process.env
@@ -113,14 +113,12 @@ if (typeof window !== "undefined") {
         : resource instanceof URL
           ? resource.href
           : resource.url;
-    // Determine if this is a Luca API call. `localPortFor` and `linkedHostIp`
-    // are both declared below and read here at request time, not at module init —
-    // the core may not have bound its port yet when this patch is installed.
+    // Determine if this is a Luca API call. `lucaTrustedOrigins` is declared
+    // below and read here at request time, not at module init — the core may not
+    // have bound its port yet when this patch is installed.
     const isLucaCall = isLucaApiUrl(url, {
       apiBaseUrl: API_BASE_URL,
-      corePort: localPortFor("API"),
-      linkedHostIp,
-      allowLoopback: !IS_PUBLIC_WEB_TARGET,
+      trustedOrigins: lucaTrustedOrigins(),
     });
 
     if (isLucaCall && lucaSecretToken) {
@@ -237,6 +235,51 @@ const localPortFor = (type: "API" | "CORTEX" | "OLLAMA"): string => {
   if (livePort) return String(livePort);
   // Fallback for hosts that never publish ports (browser dev, linked mobile).
   return type === "API" ? SERVER_HTTP_PORT : "8000";
+};
+
+/**
+ * Every host:port that belongs to LucaOS itself, and so may carry the master
+ * token. Built fresh per request: the renderer can paint before the backends have
+ * bound, and pairing can change the LAN host at any time.
+ *
+ * Who actually needs it:
+ *   - The core requires the token on every `/api` route except health, handshake,
+ *     and status (`cortex/server/middleware/authMiddleware.js`).
+ *   - Cortex exempts loopback callers but REQUIRES the token from remote ones
+ *     (`require_privileged` in `cortex/python/luca_security.py`), so a paired LAN
+ *     host must carry it or privileged Cortex routes answer 403. Loopback Cortex
+ *     is listed too: it is LucaOS-owned and reads the header, and the asymmetry
+ *     would buy nothing.
+ *
+ * Ollama and the host-native GGUF API server are deliberately absent. They are
+ * third parties that happen to share the loopback interface — and, once paired,
+ * the LAN host — and must never receive the token. That is why this enumerates
+ * the ports it trusts instead of trusting a host: `localPortFor("OLLAMA")` is
+ * never consulted here.
+ */
+const lucaTrustedOrigins = (): LucaTrustedOrigin[] => {
+  // On a public web target the only trusted origin is the configured API URL.
+  if (IS_PUBLIC_WEB_TARGET) return [];
+
+  const origins: LucaTrustedOrigin[] = [];
+  const add = (host: string | null, port: string) => {
+    if (host && port) origins.push({ host, port });
+  };
+
+  const apiPort = localPortFor("API");
+  const cortexPort = localPortFor("CORTEX");
+  for (const host of ["127.0.0.1", "localhost"]) {
+    add(host, apiPort);
+    add(host, cortexPort);
+  }
+  // A paired desktop reached over the LAN runs the same two services. When the
+  // stored host is itself "127.0.0.1" — a value `getConnectionTier` and
+  // `resolveBaseUrl` both tolerate — these collapse into the loopback pairs
+  // above rather than widening to every port on the interface.
+  add(linkedHostIp, apiPort);
+  add(linkedHostIp, cortexPort);
+
+  return origins;
 };
 
 /**
