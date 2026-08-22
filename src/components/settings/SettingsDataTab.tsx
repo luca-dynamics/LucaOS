@@ -4,6 +4,7 @@ import { LucaInput, LucaSelect } from "../ui/luca";
 import { memoryService } from "../../services/memoryService";
 import { settingsService } from "../../services/settingsService";
 import { memoryProposalService } from "../../services/memory/MemoryProposalService";
+import { conversationThreadService } from "../../services/conversation/conversationThreadService";
 import {
   buildBundleFromPendingProposals,
   buildBundleFromProposalId,
@@ -538,24 +539,27 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
           }
         />
         <SettingsRow
-          label="Clear sessions"
-          description="Clear active chat history while preserving long-term memory."
+          label="Clear conversations"
+          description="Delete every conversation thread. Long-term memory is preserved."
           control={
             <button
               onClick={() => {
                 if (
                   confirm(
-                    "Clear active chat session? (Long-term memory will be preserved)",
+                    "Delete all conversation threads? (Long-term memory will be preserved)",
                   )
                 ) {
-                  localStorage.removeItem("LUCA_CHAT_HISTORY_V1");
+                  // Goes through the service so the pre-threads key is removed
+                  // too — otherwise the migration would read it on the next
+                  // launch and resurrect exactly what was just cleared.
+                  conversationThreadService.clearAllThreads();
                   window.location.reload();
                 }
               }}
               className="rounded-xl border px-3 py-2 text-sm"
               style={settingsControlInlineStyle}
             >
-              Reset Session
+              Clear conversations
             </button>
           }
         />

@@ -1157,6 +1157,11 @@ function AppContent() {
     handleSendMessage,
     handleStop,
     handleClearChat,
+    // The controller also returns `threads` / `activeThreadId` / `switchThread` /
+    // `renameThread` / `deleteThread`. They are deliberately not destructured
+    // yet: nothing renders the archive until the sidebar does, and the lint
+    // policy is --max-warnings 0.
+    newThread,
   } = useChatController({
     persona,
     isVoiceMode,
@@ -3174,7 +3179,7 @@ function AppContent() {
                     const field = document.querySelector("textarea");
                     if (field) (field as HTMLTextAreaElement).focus();
                   }}
-                  onNewSession={handleClearChat}
+                  onNewSession={newThread}
                   onOpenSettings={() => setShowSettingsModal(true)}
                   groups={[
                     {
@@ -3396,7 +3401,7 @@ function AppContent() {
                     </span>
                   )}
                   <AppMenu
-                    onNewSession={handleClearChat}
+                    onNewSession={newThread}
                     onOpenSettings={() => setShowSettingsModal(true)}
                     onToggleLeftPanel={handleToggleLeftPanel}
                     onToggleRightPanel={handleToggleRightPanel}
