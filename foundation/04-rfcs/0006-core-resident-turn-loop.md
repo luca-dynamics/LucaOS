@@ -286,7 +286,7 @@ and new loops side by side behind a single flag — a flag, not a fork.
 | Stage | Delivers | Verified by |
 |---|---|---|
 | **1 — Lease only** ✅ *built, awaiting the two-Surface run* | `session_leases` + two routes; the renderer acquires on turn start, renews, releases on end. The loop does not move. | Two Surfaces attached: the second's send is refused and names the holder. A killed holder's lease lapses within one TTL. |
-| **2 — Provider layer in the core** ✅ *built, awaiting the live vision run* | A shared wire layer both processes import, plus a real adapter layer in the core; `tradingDebateService.js` moves onto the adapters and drops its direct SDK imports. | Existing adapter tests pass unchanged; the core completes a non-streaming provider call, and no code above the adapter names a vendor's SDK **or speaks its wire by hand**. The second clause was added in Change 3, after the first proved insufficient — see below. |
+| **2 — Provider layer in the core** ✅ *built; routing proven live, the vendor round trip still unproven — see below* | A shared wire layer both processes import, plus a real adapter layer in the core; `tradingDebateService.js` moves onto the adapters and drops its direct SDK imports. | Existing adapter tests pass unchanged; the core completes a non-streaming provider call, and no code above the adapter names a vendor's SDK **or speaks its wire by hand**. The second clause was added in Change 3, after the first proved insufficient — see below. |
 | **3 — Core loop, Surface as client** | `POST /api/turn`, the attach and interject routes, and the tool-callback channel; `TurnRunner` runs in the core; `lucaService.sendMessageStream` keeps its signature and becomes a client. | A turn survives closing and reopening the window. An answer begun on one Surface is attached to and continued from a second. A LEVEL_1 tool with no Surface attached is refused, not run. |
 | **4 — Retire the renderer loop** | The flag and the renderer-resident loop are removed; `AgentService` can call the real loop. | One loop in the tree; `executeStep` no longer simulates. |
 
@@ -357,6 +357,37 @@ endpoint appears anywhere under `cortex/`, walking the directory from disk so a 
 is covered the moment it lands. Google Workspace's `www.googleapis.com/auth/*` scopes are
 distinguished explicitly rather than matched loosely, because a permanently red test gets
 deleted instead of fixed.
+
+**The live run proved the routing and could not reach the vendor.** A core was started on
+a spare port and probed twice with an identical request, one environment variable apart.
+With vision's action model left at its default, both `/api/vision/status` and a
+`POST /api/vision/analyze` named `gemini-2.0-flash` in their `fix:` guidance, and the
+gateway logged `'gemini-2.0-flash' is not routable: Gemini API key not found in settings
+or environment`. With `LUCA_VISION_ACTION_FALLBACK_MODEL=claude-3-5-sonnet-20240620`, the
+same request produced `Anthropic API key not found in settings` — a different adapter's
+credential path, not a relabelled string. That distinction is the whole proof: renaming a
+model id would have kept saying Gemini. Choosing what Luca sees through is now a
+configuration value.
+
+Three other behaviors held under the probe. A missing credential returns HTTP 503
+`NO_VISION_SERVICE_AVAILABLE` with its guidance, not a 200 carrying an empty prediction.
+A tokenless `POST` is refused 401. And ui-tars is still tried first, the routed call
+firing only after `[UI-TARS] Python service not available`. Health reported `database:
+{ok: true, degraded: false, mock: false}` — no silent in-memory fallback. One thing did
+not hold and predates this change: `authMiddleware` matches public routes with
+`req.path.endsWith(p)`, so `/api/vision/status` inherits `/api/status`'s exemption and
+returns the configured model id to an unauthenticated caller. A model name is not a
+credential, but the match is loose enough that every future `/api/<x>/status` inherits it.
+
+What the run could not touch: **no provider credential exists on this machine** — no
+`.env`, no vendor key in the environment, and no entries in the file vault under
+`.luca/security`. So each path that needs a real key remains test-only coverage: the PNG
+media type through `resolveImagePayload` into each vendor's request shape, the vault
+read's *present* branch, the adapter's response parse, and the ui-tars fallback firing on
+a vendor 4xx rather than on an unreachable service. The criterion's first clause — *the
+core completes a non-streaming provider call* — is **unproven against a real vendor** and
+must not be read as proven; nothing in Stage 2 has yet exchanged bytes with one. One key
+and one screen-analysis action closes it.
 
 Two surfaces are named rather than claimed closed. `cortex/python/cortex.py` branches on
 vendor in Python with its own credential lookups and a hardcoded `api.x.ai` endpoint — a
