@@ -332,3 +332,40 @@ export const evolveCodeSafeTool: FunctionDeclaration = {
     required: ["targetPath", "code"],
   },
 };
+
+// --- PROGRAMMATIC TOOL CALLING ---
+// The handler and its LEVEL_1 gate have existed for a long time
+// (inlineToolHandlers.ts + TOOL_CONFIGS.execute_script); this declaration is what
+// makes the tool reachable, since a tool with no FunctionDeclaration is never
+// registered and never offered to the model.
+export const executeScriptTool: FunctionDeclaration = {
+  name: "execute_script",
+  description:
+    "Run a short JavaScript program that orchestrates several tools locally, instead of calling them one at a time through the conversation. " +
+    "Inside the script: `await luca.tools.<toolName>({ ... })` calls any tool at security level 0 or 1 and returns its parsed result, so loops, filtering and joins happen here rather than as separate turns. " +
+    "`luca.state` is a plain object of JSON data that outlives the call: write intermediate results to it (`luca.state.rows = rows`) and read them back in a later script — it survives context compaction and a restart of LucaOS, and is scoped to this session. " +
+    "Prefer storing a large intermediate result in `luca.state` and returning only a summary; that is what this tool is for, since the conversation then carries \"stored 10 000 rows in luca.state.rows\" instead of the rows. " +
+    "`console.log` output and the value you `return` both come back as the result, together with a note saying whether `luca.state` was actually persisted. " +
+    "Tools above level 1 (biometric or dual-authorization) are refused rather than escalated, and this tool cannot call itself: invoke those directly so the user can approve them. " +
+    "Needs the user's approval each time, and stops after 30 seconds or 50 tool calls.",
+  parameters: {
+    type: SchemaType.OBJECT,
+    properties: {
+      script: {
+        type: SchemaType.STRING,
+        description:
+          "The JavaScript body to run, as if it were inside an async function: `await` works and the value you `return` is the result. " +
+          "`luca.tools`, `luca.state`, `luca.env` and `console` are in scope; `fetch`, `require`, `process` and `window` are not.",
+      },
+      timeoutMs: {
+        type: SchemaType.NUMBER,
+        description: "Optional deadline in milliseconds. Defaults to 30000.",
+      },
+      maxToolCalls: {
+        type: SchemaType.NUMBER,
+        description: "Optional ceiling on `luca.tools` calls. Defaults to 50.",
+      },
+    },
+    required: ["script"],
+  },
+};

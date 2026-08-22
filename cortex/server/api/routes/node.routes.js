@@ -5,14 +5,15 @@ const router = express.Router();
 
 // Stateful Node.js execution
 router.post('/execute', async (req, res) => {
-    const { script } = req.body;
+    // `sessionId` keys the vm context; see the note in python.routes.js.
+    const { script, sessionId } = req.body;
 
     if (!script) {
         return res.status(400).json({ error: "Missing script content." });
     }
 
     try {
-        const resultJSON = await sandboxService.executeNode(script);
+        const resultJSON = await sandboxService.executeNode(script, sessionId);
 
         try {
             const parsed = typeof resultJSON === 'string' ? JSON.parse(resultJSON) : resultJSON;

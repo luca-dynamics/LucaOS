@@ -152,6 +152,24 @@ export const TOOL_CONFIGS: Record<
     level: SecurityLevel.LEVEL_2,
     scope: MissionScope.SYSTEM,
   },
+  // Arbitrary code in a persistent local interpreter. Same tier as the terminal
+  // above, because that is the same capability: `import os; os.system(...)` from
+  // Python, and a `vm` context holding `require` from Node, reach everything
+  // `run_terminal` reaches. Until this row existed both registered at LEVEL_0 —
+  // the bulk registrar files them under SYSTEM, which has no category floor (see
+  // CATEGORY_SECURITY_FLOOR below) — so the operator was never asked.
+  // Not concurrency-safe: one worker process per language serializes execution,
+  // and two cells interleaving in one namespace is a data race by construction.
+  runPythonScript: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+    isConcurrencySafe: false,
+  },
+  runNodeScript: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+    isConcurrencySafe: false,
+  },
   wipeMemory: { level: SecurityLevel.LEVEL_3, scope: MissionScope.SYSTEM },
   initiateLockdown: {
     level: SecurityLevel.LEVEL_3,
@@ -262,9 +280,17 @@ export const TOOL_CONFIGS: Record<
  * not by omission. SYSTEM is intentionally absent: the bulk registrar defaults
  * every unmatched tool to SYSTEM (toolInitialization.ts), so it is a dumping
  * ground rather than a danger signal, and its genuinely dangerous members
- * (run_terminal, wipeMemory, update_luca_settings, ...) are already listed
- * explicitly above. Flooring SYSTEM would train the operator to wave prompts
- * through — the opposite of protection.
+ * (run_terminal, wipeMemory, update_luca_settings, runPythonScript,
+ * runNodeScript, ...) are already listed explicitly above. Flooring SYSTEM
+ * would train the operator to wave prompts through — the opposite of protection.
+ *
+ * That trade has a standing cost, and it has already been paid once: because
+ * SYSTEM has no floor, `runPythonScript` and `runNodeScript` registered at
+ * LEVEL_0 for as long as they existed — arbitrary local code execution with no
+ * approval — purely because nobody added a row above. **The list above is the
+ * only thing protecting a SYSTEM tool.** When adding one that touches the shell,
+ * an interpreter, the filesystem or device control, add its row in the same
+ * change; omission here is silent, and silence here means ungated.
  *
  * The point is defense in depth: a new offensive-security, financial, or
  * messaging tool can never reach the model ungated just because nobody

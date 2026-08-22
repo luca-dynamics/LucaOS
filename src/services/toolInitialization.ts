@@ -41,6 +41,16 @@ export const initializeToolRegistry = () => {
         "readscreen",
         "aiclick",
         "captureview",
+        // Programmatic tool calling. Belongs in the always-loaded set for the same
+        // reason `invokeanytool` and `listavailabletools` do: it is a meta-capability
+        // the model has to already know about to reach for. Left at the SYSTEM
+        // default it registers fine, gates fine, and is never offered — `activeTools`
+        // comes from `ToolRegistry.getCore()` alone (lucaService.ts), and the one
+        // discovery path, `invokeAnyTool`, refuses LEVEL_1 tools and tells the model
+        // to call them directly, which it cannot do without a declaration in the
+        // payload. Category affects the payload only; the explicit LEVEL_1 row in
+        // TOOL_CONFIGS still wins in `register`, so the approval gate is unchanged.
+        "execute_script",
       ];
 
       if (CORE_WHITELIST.includes(toolName)) {

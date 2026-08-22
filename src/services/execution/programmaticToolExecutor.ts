@@ -1,4 +1,5 @@
 import { ToolRegistry, TOOL_CONFIGS, SecurityLevel } from "../toolRegistry";
+import { sessionScratchpad } from "../session/sessionScratchpad";
 
 export interface PTCExecutionOptions {
   timeoutMs?: number;
@@ -45,6 +46,20 @@ export interface PTCExecutionResult {
   error?: string;
 }
 
+/**
+ * Append the `luca.state` notices to the script's output.
+ *
+ * In the output rather than in a field of `PTCExecutionResult`, because the only
+ * consumer that matters is the model reading the tool result: a structured field
+ * nobody renders would make an unpersisted write invisible, which is the exact
+ * failure `foundation/02-specification/10-data-and-storage.md` rules out. Quiet
+ * when there is nothing to say.
+ */
+function formatStateNotices(notices: string[]): string {
+  if (notices.length === 0) return "";
+  return `\n\n--- luca.state ---\n${notices.join("\n")}`;
+}
+
 export class ProgrammaticToolExecutor {
   private static DEFAULT_TIMEOUT_MS = 30000;
   private static DEFAULT_MAX_TOOL_CALLS = 50;
@@ -64,6 +79,35 @@ export class ProgrammaticToolExecutor {
     
     let toolCallCount = 0;
     const logs: string[] = [];
+
+    // `luca.state` — the session's durable working data, loaded before the script
+    // body is built.
+    //
+    // Loaded once here rather than through an accessor inside the script, for two
+    // reasons: the body stays synchronous-looking (`luca.state.rows` is a property
+    // read, not an await, so a script cannot stall mid-execution on the network),
+    // and the script cannot trigger a request by touching a key.
+    //
+    // This is the point of the whole feature. A 10 000-row intermediate result
+    // goes in `luca.state.rows`; the transcript carries only "stored 10 000 rows
+    // in luca.state.rows", so Tier 1a's compaction can summarise that stretch away
+    // without destroying the data the next script needs.
+    const loaded = await sessionScratchpad.load();
+    // Safe to stringify — it came out of `JSON.parse`. Compared after the run so a
+    // script that never touched state costs no write.
+    const stateBefore = JSON.stringify(loaded.state);
+    const stateNotices: string[] = [];
+    if (!loaded.persisted) {
+      // Reported even if the script turns out not to use state at all: a script
+      // that *read* it saw `undefined` for keys that do exist in the store, and the
+      // model must know that before it concludes anything from their absence.
+      stateNotices.push(
+        `[STATE NOT LOADED] ${loaded.reason ?? "the scratchpad could not be read"} — ` +
+          `luca.state started empty; anything stored earlier is still in the store, not here.`,
+      );
+    } else if (loaded.reason) {
+      stateNotices.push(`[STATE INCOMPLETE] ${loaded.reason}`);
+    }
 
     // Custom console logger interceptor
     const customConsole = {
@@ -116,6 +160,12 @@ export class ProgrammaticToolExecutor {
     const lucaEnvironment = {
       tools: toolProxy,
       env: options.customArgs || {},
+      /**
+       * A plain mutable object, deliberately **not** a `Proxy`: a trap here would
+       * let a script observe the flush that happens after it returns, and an async
+       * accessor would hand it a way to stall the turn from inside the body.
+       */
+      state: loaded.state,
     };
 
     // Construct execution sandbox function.
@@ -185,14 +235,16 @@ export class ProgrammaticToolExecutor {
         if (timeoutHandler) clearTimeout(timeoutHandler);
       });
 
+      stateNotices.push(...(await this.flushState(lucaEnvironment, stateBefore)));
       const executionTimeMs = Date.now() - startTime;
-      
+
       let formattedOutput = "";
       if (logs.length > 0) {
         formattedOutput += `--- Script Logs ---\n${logs.join("\n")}\n\n`;
       }
       formattedOutput += `--- Script Result ---\n`;
       formattedOutput += typeof returnValue === "object" ? JSON.stringify(returnValue, null, 2) : String(returnValue ?? "undefined");
+      formattedOutput += formatStateNotices(stateNotices);
 
       return {
         success: true,
@@ -201,14 +253,22 @@ export class ProgrammaticToolExecutor {
         executionTimeMs,
       };
     } catch (error: any) {
-      const executionTimeMs = Date.now() - startTime;
       const errorMessage = error?.message || String(error);
+
+      // Flushed on the failure path too. What is expensive about a script that dies
+      // at step 9 is usually what it stored at step 3, and discarding that forces
+      // the whole thing to run again. On a timeout the body is still running and may
+      // still mutate `state`: this saves the snapshot as of now, which is the most
+      // that can be promised while the body cannot be stopped.
+      stateNotices.push(...(await this.flushState(lucaEnvironment, stateBefore)));
+      const executionTimeMs = Date.now() - startTime;
 
       let formattedOutput = "";
       if (logs.length > 0) {
         formattedOutput += `--- Script Logs (Prior to Error) ---\n${logs.join("\n")}\n\n`;
       }
       formattedOutput += `--- Script Error ---\n${errorMessage}`;
+      formattedOutput += formatStateNotices(stateNotices);
 
       return {
         success: false,
@@ -218,6 +278,46 @@ export class ProgrammaticToolExecutor {
         error: errorMessage,
       };
     }
+  }
+
+  /**
+   * Persist `luca.state` and return what the model has to be told about it.
+   *
+   * Read back off `lucaEnvironment` rather than from a captured reference, because
+   * a script may assign `luca.state = { … }` outright; flushing the object we
+   * handed in would silently discard everything it stored.
+   *
+   * A script that never touched state writes nothing — the comparison is against
+   * the JSON the load produced, so an untouched object is provably unchanged. A
+   * value that cannot be stringified is still handed to `save`, so the refusal is
+   * described by the one place that knows why.
+   */
+  private async flushState(
+    environment: { state: Record<string, unknown> },
+    before: string,
+  ): Promise<string[]> {
+    const current = environment.state;
+
+    let after: string | null;
+    try {
+      after = JSON.stringify(current);
+    } catch {
+      after = null; // circular, or a `toJSON` that throws — `save` reports it
+    }
+    if (after !== null && after === before) return [];
+
+    const saved = await sessionScratchpad.save(current);
+    if (!saved.persisted) {
+      return [
+        `[STATE NOT PERSISTED] ${saved.reason ?? "the core did not confirm the write"} — ` +
+          `values set in luca.state are lost when this call ends.`,
+      ];
+    }
+    if (saved.reason) return [`[STATE PARTIALLY PERSISTED] ${saved.reason}`];
+    return [
+      `[STATE PERSISTED] luca.state now holds ${saved.keyCount} key(s), ` +
+        `${saved.bytesUsed} bytes — readable from a later call in this session.`,
+    ];
   }
 }
 

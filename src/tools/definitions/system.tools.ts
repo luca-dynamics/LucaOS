@@ -251,14 +251,14 @@ export const searchAndInstallToolsTool: FunctionDeclaration = {
 export const runPythonScriptTool: FunctionDeclaration = {
   name: "runPythonScript",
   description:
-    "Execute a Python script in a persistent, STATEFUL local sandbox. Variables, functions, and imports you define in one call will remain available in memory for subsequent calls. Use this for complex calculations, data analysis, or executing steps incrementally. Returns stdout/stderr. Do NOT import heavy modules every time; install/import them once and use them. Output is automatically captured for the last evaluated expression.",
+    "Execute a Python script in a stateful local sandbox. Variables, functions and imports you define stay in memory for later calls IN THIS SESSION ONLY, for as long as LucaOS keeps running: another session cannot see them, and a restart of LucaOS clears them, so re-create what a later script depends on rather than assuming it survived. Import heavy modules once and reuse them. Each call needs the user's approval, so prefer one substantial script over many small ones. A script is stopped after 60 seconds, which also clears this session's variables. Returns stdout and stderr; the last evaluated expression is captured automatically.",
   parameters: {
     type: SchemaType.OBJECT,
     properties: {
       script: {
         type: SchemaType.STRING,
         description:
-          "The complete Python code to execute in the current stateful environment.",
+          "The complete Python code to execute. Runs in this session's namespace, alongside whatever earlier calls in this session left behind.",
       },
     },
     required: ["script"],
@@ -268,14 +268,14 @@ export const runPythonScriptTool: FunctionDeclaration = {
 export const runNodeScriptTool: FunctionDeclaration = {
   name: "runNodeScript",
   description:
-    "Execute a Javascript/Node.js script in a persistent, STATEFUL local sandbox. Variables, functions, and imports are retained across calls. Useful for executing web scraping, Node API calls, and logic processing.",
+    "Execute a Javascript/Node.js script in a stateful local sandbox — useful for web scraping, Node API calls and logic processing. Variables, functions and requires stay in memory for later calls IN THIS SESSION ONLY, for as long as LucaOS keeps running: another session cannot see them, and a restart of LucaOS clears them. Each call needs the user's approval, and a script is stopped after 60 seconds, which also clears this session's variables. Returns stdout and stderr; the last evaluated expression is captured automatically.",
   parameters: {
     type: SchemaType.OBJECT,
     properties: {
       script: {
         type: SchemaType.STRING,
         description:
-          "The Javascript code to execute in the stateful Node sandbox.",
+          "The Javascript code to execute. Runs in this session's context, alongside whatever earlier calls in this session left behind. `require` is available; there is no `process` handle.",
       },
     },
     required: ["script"],

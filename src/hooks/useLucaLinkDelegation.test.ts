@@ -13,6 +13,15 @@ describe("isDelegatableCommand (LucaLink delegation authorization)", () => {
     expect(isDelegatableCommand("invokeAnyTool")).toBe(false);
   });
 
+  it("blocks the persistent code sandbox from both languages", () => {
+    // These were denied by the `!config` branch while they had no TOOL_CONFIGS
+    // row at all; now they are denied by level (LEVEL_2). Asserted because the
+    // route to a live local interpreter is the last thing that should open to a
+    // remote device, and a future LEVEL_0 row would do exactly that silently.
+    expect(isDelegatableCommand("runPythonScript")).toBe(false);
+    expect(isDelegatableCommand("runNodeScript")).toBe(false);
+  });
+
   it("blocks LEVEL_2 / LEVEL_3 tools reachable only with elevation", () => {
     expect(isDelegatableCommand("run_sandboxed_command")).toBe(false); // LEVEL_2
     expect(isDelegatableCommand("deleteFile")).toBe(false); // LEVEL_2
