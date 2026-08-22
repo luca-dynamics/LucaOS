@@ -3,6 +3,8 @@
  * Centralizes all backend API URLs for easy environment management
  */
 
+import { isLucaApiUrl } from "./lucaApiOrigin";
+
 // For Vite apps, use import.meta.env
 // For Node/Electron, use process.env
 const getEnvVar = (key: string, fallback: string): string => {
@@ -105,19 +107,21 @@ if (typeof window !== "undefined") {
     const resource = args[0];
     let config = args[1];
 
-    // Determine if this is a Luca API call
     const url =
       typeof resource === "string"
         ? resource
         : resource instanceof URL
           ? resource.href
           : resource.url;
-    const localLoopbackAllowed = !IS_PUBLIC_WEB_TARGET;
-    const isLucaCall =
-      (API_BASE_URL !== "" && url.includes(API_BASE_URL)) ||
-      url.startsWith("/api") || // Safely captures relative proxy calls
-      (localLoopbackAllowed && url.includes("127.0.0.1:3002")) ||
-      (localLoopbackAllowed && linkedHostIp && url.includes(linkedHostIp));
+    // Determine if this is a Luca API call. `localPortFor` and `linkedHostIp`
+    // are both declared below and read here at request time, not at module init —
+    // the core may not have bound its port yet when this patch is installed.
+    const isLucaCall = isLucaApiUrl(url, {
+      apiBaseUrl: API_BASE_URL,
+      corePort: localPortFor("API"),
+      linkedHostIp,
+      allowLoopback: !IS_PUBLIC_WEB_TARGET,
+    });
 
     if (isLucaCall && lucaSecretToken) {
       config = config || {};
