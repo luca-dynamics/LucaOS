@@ -199,4 +199,34 @@ describe("WorkspaceShell", () => {
 
     cleanup();
   });
+
+  describe("edges", () => {
+    it("nests its outer corners without opening gutters between panels", () => {
+      const { container, cleanup } = mountShell(<WorkspaceShell {...baseProps} />);
+      const shell = shellOf(container);
+
+      // Rounded on the OUTSIDE only. The seams stay a 1px hairline gap, so
+      // adopting the nested corner must not cost the frame any width.
+      expect(shell.style.borderRadius).toBe("12px");
+      expect(shell.style.gap).toBe("1px");
+      expect(shell.style.padding).toBe("");
+      expect(shell.style.overflow).toBe("hidden");
+
+      cleanup();
+    });
+
+    it("fills the corner crescent with the app's own ground, not the window's", () => {
+      // Electron sets documentElement/body to `transparent` and the platform
+      // policy makes the dashboard container transparent too, so without this
+      // ring the four corners fall through to the frameless BrowserWindow's
+      // light `#e2edf2`. The spread must match the radius to cover the crescent.
+      const { container, cleanup } = mountShell(<WorkspaceShell {...baseProps} />);
+      const shell = shellOf(container);
+
+      expect(shell.style.boxShadow).toContain("--luca-background-base");
+      expect(shell.style.boxShadow).toContain("12px");
+
+      cleanup();
+    });
+  });
 });
