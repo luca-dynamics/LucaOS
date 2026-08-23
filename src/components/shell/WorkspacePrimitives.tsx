@@ -53,16 +53,10 @@ export const PanelCard: React.FC<{
 }> = ({ label, children, style }) => (
   <section style={{ ...workspaceCardStyle, ...style }}>
     {label ? (
-      <h3
-        style={{
-          margin: "0 0 9px",
-          fontSize: workspaceType.label,
-          fontWeight: 600,
-          letterSpacing: "0.09em",
-          textTransform: "uppercase",
-          color: workspaceColor.ink3,
-        }}
-      >
+      /* Composes the section-label token rather than restating it: this h3 used
+         to carry its own uppercase + 0.09em inline, so changing how the shell
+         speaks meant finding every copy. Only the box metrics are local. */
+      <h3 style={{ ...workspaceSectionLabelStyle, padding: 0, margin: "0 0 9px" }}>
         {label}
       </h3>
     ) : null}
@@ -243,6 +237,16 @@ export const WORKSPACE_INTERACTION_CSS = `
 }
 .luca-workspace-toggle:hover { background: ${workspaceColor.hover}; color: ${workspaceColor.ink}; }
 .luca-workspace-handle:hover { color: ${workspaceColor.ink}; }
+/* A conversation row is two controls in one strip — the row itself and a forget
+   ⨯ — so the CONTAINER owns hover (the inner button's own nav hover is cancelled,
+   or the two translucent layers would stack into a darker band). The ⨯ is hidden
+   at rest and revealed by hover OR focus-within, so it never becomes a
+   destructive control that only a mouse can find. */
+.luca-thread-row:hover { background: ${workspaceColor.hover}; }
+.luca-thread-row .luca-workspace-nav:hover { background: transparent !important; }
+.luca-thread-forget { opacity: 0; transition: opacity 160ms ease; }
+.luca-thread-row:hover .luca-thread-forget,
+.luca-thread-row:focus-within .luca-thread-forget { opacity: 1; }
 /* Seam grips: invisible until hovered/dragged, then a centred accent line
    marks the edge you're pulling. */
 .luca-workspace-resizer { background: transparent; }
@@ -273,7 +277,7 @@ export const WORKSPACE_INTERACTION_CSS = `
 :root.light-mode .luca-brand-icon-dark { display: none; }
 :root.light-mode .luca-brand-icon-light { display: block; }
 @media (prefers-reduced-motion: reduce) {
-  .luca-workspace-grid, .luca-workspace-toggle, .luca-workspace-nav { transition: none !important; }
+  .luca-workspace-grid, .luca-workspace-toggle, .luca-workspace-nav, .luca-thread-forget { transition: none !important; }
 }
 /* The command bar's living outline: the accent hairline brightens and dims on a
    slow breath, so the box you speak into feels awake. The lift shadow is folded

@@ -113,6 +113,11 @@ import ShellCommandBar from "./components/shell/ShellCommandBar";
 import WorkspaceShell from "./components/shell/WorkspaceShell";
 import WorkspaceArrival from "./components/shell/WorkspaceArrival";
 import WorkspaceSidebar from "./components/shell/WorkspaceSidebar";
+import WorkspaceToolsSurface from "./components/shell/WorkspaceToolsSurface";
+import {
+  buildWorkspaceNavGroups,
+  type WorkspaceSurfaceHandlers,
+} from "./components/shell/workspaceNavGroups";
 import OperationCenter from "./components/shell/OperationCenter";
 import WorkspaceWindowControls from "./components/shell/WorkspaceWindowControls";
 import WorkspaceEnvironmentControls from "./components/shell/WorkspaceEnvironmentControls";
@@ -1157,11 +1162,14 @@ function AppContent() {
     handleSendMessage,
     handleStop,
     handleClearChat,
-    // The controller also returns `threads` / `activeThreadId` / `switchThread` /
-    // `renameThread` / `deleteThread`. They are deliberately not destructured
-    // yet: nothing renders the archive until the sidebar does, and the lint
-    // policy is --max-warnings 0.
     newThread,
+    threads,
+    activeThreadId,
+    switchThread,
+    deleteThread,
+    // `renameThread` is returned too, and stays undestructured: the rail has no
+    // rename affordance yet (titles derive from the first message), and the lint
+    // policy is --max-warnings 0.
   } = useChatController({
     persona,
     isVoiceMode,
@@ -1409,6 +1417,74 @@ function AppContent() {
   const [showInvestigationReports, setShowInvestigationReports] =
     useState(false);
   const [showDarkWebScanner, setShowDarkWebScanner] = useState(false);
+
+  // ── The workspace sidebar's 21 surfaces ─────────────────────────────────────
+  //
+  // This used to be ~48 lines of nested object literal inside the JSX below.
+  // The catalogue — labels, glyphs, sentences, which group a surface belongs to,
+  // which three are pinned — now lives in `workspaceNavGroups.ts`, where it can
+  // be read and tested. App keeps only the two things App actually owns: which
+  // modal each surface opens, and which of them is open right now.
+  //
+  // `WorkspaceSurfaceHandlers` is a total `Record`, so adding a surface to the
+  // catalogue without wiring it here is a compile error rather than a row that
+  // looks alive until somebody clicks it.
+  //
+  // Deliberately not memoised. The factory maps 21 items and allocates one
+  // closure each — precisely what the inline literal did on every render — and a
+  // `useMemo` whose honest dependency list is 21 booleans is a worse lie than no
+  // `useMemo` at all.
+  const workspaceSurfaceHandlers: WorkspaceSurfaceHandlers = {
+    cognitive: () => setShowThoughtProcess(true),
+    reports: () => setShowInvestigationReports(true),
+    autonomy: () => setShowAutonomyDashboard(true),
+    lucalink: () => setShowLucaLinkModal(true),
+    browser: () => setShowGhostBrowser(true),
+    files: () => setShowAppExplorer(true),
+    code: () => setShowCodeEditor(true),
+    skills: () => setShowSkillsMatrix(true),
+    agent: () => setShowAgentMode(true),
+    hacking: () => setShowHackingTerminal(true),
+    osint: () => setShowOsintDossier(true),
+    darkweb: () => setShowDarkWebScanner(true),
+    network: () => setShowNetworkMap(true),
+    geo: () => setShowGeoTactical(true),
+    stock: () => setShowStockTerminal(true),
+    crypto: () => setShowCryptoTerminal(true),
+    fx: () => setShowForexTerminal(true),
+    prediction: () => setShowPredictionTerminal(true),
+    aitrading: () => setShowAITradersPage(true),
+    screen: () => setShowLucaRecorder(true),
+    subsystems: () => setShowSubsystemDashboard(true),
+  };
+  const workspaceNavGroups = buildWorkspaceNavGroups(workspaceSurfaceHandlers, {
+    cognitive: showThoughtProcess,
+    reports: showInvestigationReports,
+    autonomy: showAutonomyDashboard,
+    lucalink: showLucaLinkModal,
+    // Not destructured above — only its setter is. Reading it off the hook's
+    // object avoids adding a binding whose only use is this one line.
+    browser: diagnostics.showGhostBrowser,
+    files: showAppExplorer,
+    code: showCodeEditor,
+    skills: showSkillsMatrix,
+    agent: showAgentMode,
+    hacking: showHackingTerminal,
+    osint: showOsintDossier,
+    darkweb: showDarkWebScanner,
+    network: showNetworkMap,
+    geo: showGeoTactical,
+    stock: showStockTerminal,
+    crypto: showCryptoTerminal,
+    fx: showForexTerminal,
+    prediction: showPredictionTerminal,
+    aitrading: showAITradersPage,
+    screen: showLucaRecorder,
+    subsystems: showSubsystemDashboard,
+  });
+  /** `All tools…` — the spatial surface the other seventeen relocated into. */
+  const [showAllTools, setShowAllTools] = useState(false);
+  const allToolsRef = useRef<HTMLButtonElement>(null);
 
   // --- GLOBAL BROWSER TRIGGER ---
   useEffect(() => {
@@ -3174,65 +3250,34 @@ function AppContent() {
               }
               sidebar={
                 <WorkspaceSidebar
-                  contextLabel="Personal"
+                  threads={threads}
+                  activeThreadId={activeThreadId}
+                  onSelectThread={switchThread}
+                  onDeleteThread={deleteThread}
+                  onNewSession={newThread}
                   onNewTask={() => {
                     const field = document.querySelector("textarea");
                     if (field) (field as HTMLTextAreaElement).focus();
                   }}
-                  onNewSession={newThread}
+                  groups={workspaceNavGroups}
+                  onOpenAllTools={() => setShowAllTools(true)}
+                  allToolsRef={allToolsRef}
                   onOpenSettings={() => setShowSettingsModal(true)}
-                  groups={[
-                    {
-                      id: "intelligence",
-                      label: "Intelligence",
-                      items: [
-                        { id: "cognitive", label: "Cognitive", glyph: "❋", hint: "Watch Luca's cognitive engine think", onOpen: () => setShowThoughtProcess(true) },
-                        { id: "reports", label: "Reports", glyph: "❑", hint: "Investigation reports", onOpen: () => setShowInvestigationReports(true) },
-                        { id: "autonomy", label: "Autonomy", glyph: "◈", hint: "Autonomy dashboard", onOpen: () => setShowAutonomyDashboard(true) },
-                      ],
-                    },
-                    {
-                      id: "connections",
-                      label: "Connections",
-                      items: [
-                        { id: "lucalink", label: "LucaLink", glyph: "⇄", hint: "Link and hand off to other devices", onOpen: () => setShowLucaLinkModal(true) },
-                      ],
-                    },
-                    {
-                      id: "tools",
-                      label: "Tools",
-                      items: [
-                        { id: "browser", label: "Browser", glyph: "◎", hint: "Open the ghost browser", onOpen: () => setShowGhostBrowser(true) },
-                        { id: "files", label: "Files", glyph: "▤", hint: "Browse apps and files", onOpen: () => setShowAppExplorer(true) },
-                        { id: "code", label: "Code", glyph: "⌗", hint: "Open the code editor", onOpen: () => setShowCodeEditor(true) },
-                        { id: "skills", label: "Skills", glyph: "◇", hint: "Skills matrix", onOpen: () => setShowSkillsMatrix(true) },
-                      ],
-                    },
-                    {
-                      id: "advanced",
-                      label: "Advanced",
-                      advanced: true,
-                      items: [
-                        { id: "agent", label: "Agent", glyph: "⬡", hint: "Autonomous agent mode", onOpen: () => setShowAgentMode(true) },
-                        { id: "hacking", label: "Hacking", glyph: "⌁", hint: "Offensive security terminal", onOpen: () => setShowHackingTerminal(true) },
-                        { id: "osint", label: "OSINT", glyph: "◉", hint: "Open-source intelligence", onOpen: () => setShowOsintDossier(true) },
-                        { id: "darkweb", label: "Dark web", glyph: "◍", hint: "Dark web scanner", onOpen: () => setShowDarkWebScanner(true) },
-                        { id: "network", label: "Network", glyph: "⌘", hint: "Network map", onOpen: () => setShowNetworkMap(true) },
-                        { id: "geo", label: "Geo", glyph: "⊕", hint: "Geo-tactical view", onOpen: () => setShowGeoTactical(true) },
-                        { id: "stock", label: "Stocks", glyph: "▦", hint: "Stock terminal", onOpen: () => setShowStockTerminal(true) },
-                        { id: "crypto", label: "Crypto", glyph: "◊", hint: "Crypto / DeFi terminal", onOpen: () => setShowCryptoTerminal(true) },
-                        { id: "fx", label: "FX", glyph: "⇋", hint: "Forex terminal", onOpen: () => setShowForexTerminal(true) },
-                        { id: "prediction", label: "Prediction", glyph: "◔", hint: "Prediction markets", onOpen: () => setShowPredictionTerminal(true) },
-                        { id: "aitrading", label: "AI traders", glyph: "◧", hint: "AI trading desk", onOpen: () => setShowAITradersPage(true) },
-                        { id: "screen", label: "Screen", glyph: "▷", hint: "Screen recorder", onOpen: () => setShowLucaRecorder(true) },
-                        { id: "subsystems", label: "Systems", glyph: "▤", hint: "Subsystem dashboard", onOpen: () => setShowSubsystemDashboard(true) },
-                      ],
-                    },
-                  ]}
                 />
               }
               centre={
                 <div style={{ position: "relative", display: "flex", flexDirection: "column", minHeight: 0, height: "100%" }}>
+                  {/* The seventeen relocated surfaces, laid over the centre
+                      column rather than over the whole window — the conversation
+                      stays visible around its edges, which is what makes it read
+                      as something summoned instead of somewhere you navigated. */}
+                  <WorkspaceToolsSurface
+                    open={showAllTools}
+                    onClose={() => setShowAllTools(false)}
+                    groups={workspaceNavGroups}
+                    experienceMode={experienceMode}
+                    triggerRef={allToolsRef}
+                  />
                   {/* While the thread is empty, the centre is a calm arrival —
                       a quiet greeting, no legacy "Operator" jargon or boot
                       chatter. The first user message swaps it for the real

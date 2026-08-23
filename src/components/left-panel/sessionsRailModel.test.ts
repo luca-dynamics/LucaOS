@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildSessionsRailRows, bucketSessionRow } from "./sessionsRailModel";
+import {
+  SESSIONS_RAIL_MAX_ROWS,
+  buildSessionsRailRows,
+  buildThreadRailRows,
+  bucketSessionRow,
+  type ThreadRailThread,
+} from "./sessionsRailModel";
 import type { AgentSessionContinuityRecord } from "../../types/agentSessionContinuity";
 
 const record = (
@@ -87,5 +93,110 @@ describe("bucketSessionRow", () => {
 
   it("treats an unparseable timestamp as earlier", () => {
     expect(bucketSessionRow("not-a-date", now)).toBe("earlier");
+  });
+});
+
+describe("buildThreadRailRows", () => {
+  // Local noon, for the same reason bucketSessionRow's block uses it: the
+  // buckets are the user's LOCAL day, so the offsets below must be reasoned in
+  // local time or they land on the wrong side of midnight in some timezones.
+  const now = new Date(2026, 6, 4, 12, 0, 0).getTime();
+  const iso = (ms: number) => new Date(now + ms).toISOString();
+  const HOUR = 60 * 60 * 1000;
+  const DAY = 24 * HOUR;
+
+  const thread = (
+    overrides: Partial<ThreadRailThread> & { id: string },
+  ): ThreadRailThread => ({
+    title: "A conversation",
+    updatedAt: iso(-HOUR),
+    messages: ["hello"],
+    ...overrides,
+  });
+
+  it("buckets by local day, newest first", () => {
+    const rows = buildThreadRailRows(
+      [
+        thread({ id: "old", title: "Trip planning", updatedAt: iso(-3 * DAY) }),
+        thread({ id: "new", title: "Q3 update", updatedAt: iso(-2 * HOUR) }),
+      ],
+      undefined,
+      now,
+    );
+    expect(rows.map((row) => [row.id, row.bucket])).toEqual([
+      ["new", "today"],
+      ["old", "earlier"],
+    ]);
+  });
+
+  it("marks exactly one row active, and only when it is in the list", () => {
+    const rows = buildThreadRailRows(
+      [thread({ id: "a" }), thread({ id: "b" })],
+      "b",
+      now,
+    );
+    expect(rows.filter((row) => row.active).map((row) => row.id)).toEqual(["b"]);
+  });
+
+  it("hides empty threads, because three presses of New chat are not three conversations", () => {
+    const rows = buildThreadRailRows(
+      [
+        thread({ id: "typed", messages: ["hi"] }),
+        thread({ id: "blank-1", messages: [] }),
+        thread({ id: "blank-2", messages: [] }),
+      ],
+      undefined,
+      now,
+    );
+    expect(rows.map((row) => row.id)).toEqual(["typed"]);
+  });
+
+  it("keeps the empty thread you are actually in — the rail must show where you are", () => {
+    const rows = buildThreadRailRows(
+      [thread({ id: "typed", messages: ["hi"] }), thread({ id: "fresh", messages: [] })],
+      "fresh",
+      now,
+    );
+    expect(rows.map((row) => row.id)).toContain("fresh");
+  });
+
+  it("caps at the same row budget the agent rail uses", () => {
+    const many = Array.from({ length: SESSIONS_RAIL_MAX_ROWS + 4 }, (_, i) =>
+      thread({ id: `t${i}`, updatedAt: iso(-i * HOUR) }),
+    );
+    expect(buildThreadRailRows(many, undefined, now)).toHaveLength(
+      SESSIONS_RAIL_MAX_ROWS,
+    );
+  });
+
+  it("says a time for today, a weekday this week, and a date beyond it", () => {
+    const [today, thisWeek, older] = buildThreadRailRows(
+      [
+        thread({ id: "a", updatedAt: iso(-2 * HOUR) }),
+        thread({ id: "b", updatedAt: iso(-3 * DAY) }),
+        thread({ id: "c", updatedAt: iso(-40 * DAY) }),
+      ],
+      undefined,
+      now,
+    );
+    // Locale formatting varies by runner, so assert the SHAPE, not the string:
+    // a clock time contains a colon; a weekday and a short date do not.
+    expect(today.when).toMatch(/\d/);
+    expect(today.when).toContain(":");
+    expect(thisWeek.when).not.toContain(":");
+    expect(thisWeek.when).not.toBe("");
+    expect(older.when).not.toContain(":");
+    expect(older.when).not.toBe(thisWeek.when);
+  });
+
+  it("does not crash on an unparseable timestamp", () => {
+    const rows = buildThreadRailRows(
+      [thread({ id: "a", updatedAt: "not-a-date" })],
+      "a",
+      now,
+    );
+    expect(rows).toEqual([
+      { id: "a", title: "A conversation", when: "", bucket: "earlier", active: true },
+    ]);
   });
 });

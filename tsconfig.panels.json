@@ -1,0 +1,37 @@
+// Scoped type-check scaffold. `npm run type-check` has a large pre-existing
+// error baseline, so a whole-codebase run cannot tell you whether YOUR change is
+// clean — the signal is buried. This narrows the entry points to the files a
+// change touches:
+//
+//   node node_modules/typescript/bin/tsc --noEmit -p tsconfig.panels.json
+//
+// Two things about reading the result, both learned the hard way:
+//
+//  1. `files` sets ENTRY POINTS, not a boundary. tsc still walks every import,
+//     so the full baseline still appears in the output. The method is therefore:
+//     grep the output down to the paths you touched, require zero there, and
+//     confirm the total still equals the baseline — which proves you did not
+//     push an error somewhere else either.
+//  2. `src/vite-env.d.ts` must stay in the list. Without it every `import.meta.env`
+//     reports TS2339 "Property 'env' does not exist on type 'ImportMeta'", three
+//     spurious errors that look like they are yours.
+//
+// The `files` list below is per-change scaffolding — rewrite it for whatever you
+// are working on. It currently holds the left-panel rewrite.
+{
+  "extends": "./tsconfig.json",
+  "files": [
+    "src/vite-env.d.ts",
+    "src/App.tsx",
+    "src/components/shell/WorkspaceSidebar.tsx",
+    "src/components/shell/WorkspaceToolsSurface.tsx",
+    "src/components/shell/workspaceNavGroups.ts",
+    "src/components/shell/WorkspacePrimitives.tsx",
+    "src/components/shell/workspaceShellTokens.ts",
+    "src/components/left-panel/sessionsRailModel.ts",
+    "src/components/left-panel/sessionsRailModel.test.ts",
+    "src/components/shell/WorkspaceSidebar.test.tsx",
+    "src/components/shell/WorkspaceToolsSurface.test.tsx",
+    "src/components/shell/workspaceNavGroups.test.ts"
+  ]
+}
