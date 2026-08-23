@@ -152,7 +152,11 @@ export function WebLifecycleShell() {
           hostKind="desktop-web"
           supportsLocalProvisioning={false}
           localEndpointStatus={localEndpointStatus}
-          style={{ minHeight: "100dvh" }}
+          // Definite, not just a minimum — the surrounding <main> is
+          // `min-h-dvh` only, so a percentage inside onboarding has nothing to
+          // divide into and the whole column collapses to text height. See the
+          // matching note at the desktop mount in App.tsx.
+          style={{ minHeight: "100dvh", height: "100dvh" }}
           onComplete={(flow) => {
             const { profile, premiumPreferences } =
               mapLucaOnboardingFlowToWebProfile(flow);
