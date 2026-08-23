@@ -17,21 +17,19 @@
 //     spurious errors that look like they are yours.
 //
 // The `files` list below is per-change scaffolding — rewrite it for whatever you
-// are working on. It currently holds the left-panel rewrite.
+// are working on. It currently holds the right-panel rewrite.
 {
   "extends": "./tsconfig.json",
   "files": [
     "src/vite-env.d.ts",
     "src/App.tsx",
-    "src/components/shell/WorkspaceSidebar.tsx",
-    "src/components/shell/WorkspaceToolsSurface.tsx",
-    "src/components/shell/workspaceNavGroups.ts",
+    "src/components/shell/OperationCenter.tsx",
+    "src/components/shell/OperationCenter.test.tsx",
+    "src/components/shell/useWorkspacePanels.ts",
+    "src/components/shell/WorkspaceShell.tsx",
     "src/components/shell/WorkspacePrimitives.tsx",
-    "src/components/shell/workspaceShellTokens.ts",
-    "src/components/left-panel/sessionsRailModel.ts",
-    "src/components/left-panel/sessionsRailModel.test.ts",
+    "src/components/shell/WorkspaceSidebar.tsx",
     "src/components/shell/WorkspaceSidebar.test.tsx",
-    "src/components/shell/WorkspaceToolsSurface.test.tsx",
-    "src/components/shell/workspaceNavGroups.test.ts"
+    "src/components/shell/WorkspaceShell.test.tsx"
   ]
 }

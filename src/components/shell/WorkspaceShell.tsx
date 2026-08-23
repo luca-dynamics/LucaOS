@@ -89,6 +89,12 @@ export interface WorkspaceShellProps {
   centreHeader?: React.ReactNode;
   /** Frameless-window controls, seated in the top-right panel. */
   windowControls?: React.ReactNode;
+  /**
+   * Where the operation centre starts for someone who has never collapsed it.
+   * Forwarded verbatim to `useWorkspacePanels`, so a stored preference always
+   * wins — see its own doc comment.
+   */
+  defaultOpsCollapsed?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -101,11 +107,12 @@ export const WorkspaceShell: React.FC<WorkspaceShellProps> = ({
   pendingCount = 0,
   centreHeader,
   windowControls,
+  defaultOpsCollapsed = false,
   className,
   style,
 }) => {
   const { sidebarCollapsed, opsCollapsed, compact, toggleSidebar, toggleOps } =
-    useWorkspacePanels();
+    useWorkspacePanels({ defaultOpsCollapsed });
 
   const hasCanvas = Boolean(canvas);
   const hasOps = Boolean(operationCenter);

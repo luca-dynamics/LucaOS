@@ -81,7 +81,7 @@ const ThreadRow: React.FC<{
   onDelete?: (id: string) => void;
 }> = ({ row, onSelect, onDelete }) => (
   <div
-    className="luca-thread-row"
+    className="luca-reveal-row"
     style={{
       display: "flex",
       alignItems: "center",
@@ -165,7 +165,7 @@ const ThreadRow: React.FC<{
         }}
         aria-label={`Delete ${row.title}`}
         title="Delete this conversation"
-        className="luca-thread-forget luca-workspace-toggle"
+        className="luca-reveal-action luca-workspace-toggle"
         style={{
           flex: "none",
           width: 22,

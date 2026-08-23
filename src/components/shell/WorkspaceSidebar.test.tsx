@@ -48,7 +48,7 @@ const mount = (ui: React.ReactElement) => {
  */
 const primaryRows = (container: HTMLElement) =>
   Array.from(container.querySelectorAll<HTMLElement>(".luca-workspace-nav")).filter(
-    (el) => !el.closest(".luca-thread-row"),
+    (el) => !el.closest(".luca-reveal-row"),
   );
 
 /**
@@ -130,7 +130,7 @@ describe("WorkspaceSidebar at rest", () => {
 
   it("shows the conversations, bucketed, as content rather than navigation", () => {
     const { container, cleanup } = mount(<WorkspaceSidebar {...baseProps} />);
-    expect(container.querySelectorAll(".luca-thread-row")).toHaveLength(2);
+    expect(container.querySelectorAll(".luca-reveal-row")).toHaveLength(2);
     expect(textOf(container)).toContain("Q3 investor update");
     expect(textOf(container)).toContain("Trip planning");
     cleanup();
@@ -226,7 +226,7 @@ describe("WorkspaceSidebar actions", () => {
       <WorkspaceSidebar {...baseProps} onSelectThread={onSelectThread} />,
     );
     const rows = container.querySelectorAll<HTMLElement>(
-      ".luca-thread-row .luca-workspace-nav",
+      ".luca-reveal-row .luca-workspace-nav",
     );
     act(() => rows[1]?.click());
     expect(onSelectThread).toHaveBeenCalledWith("t-earlier");
@@ -287,7 +287,7 @@ describe("WorkspaceSidebar actions", () => {
     const { container, cleanup } = mount(
       <WorkspaceSidebar {...baseProps} onDeleteThread={undefined} />,
     );
-    expect(container.querySelectorAll(".luca-thread-forget")).toHaveLength(0);
+    expect(container.querySelectorAll(".luca-reveal-action")).toHaveLength(0);
     cleanup();
   });
 });

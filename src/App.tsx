@@ -3228,6 +3228,9 @@ function AppContent() {
             <WorkspaceShell
               style={{ flex: 1, minHeight: 0 }}
               pendingCount={workspacePendingCount}
+              /* Founder decision #1: Basic opens without a right rail. Seeds the
+                 first launch only — a stored preference always wins after that. */
+              defaultOpsCollapsed={experienceMode === "basic"}
               windowControls={<WorkspaceWindowControls />}
               centreHeader={
                 <SafeComponent componentName="WorkspaceEnvironmentControls">
@@ -3384,6 +3387,13 @@ function AppContent() {
                       : "Local core offline — cloud mode",
                     healthy: Boolean(isLocalCoreConnected),
                   }}
+                  experienceMode={experienceMode}
+                  /* The same persisted mode the mobile right panel reads, so the
+                     two surfaces cannot drift about which tab you are on. */
+                  mode={displayedRightPanelMode}
+                  onModeChange={setRightPanelMode}
+                  visibleModes={visibleRightPanelModes}
+                  toolLogs={toolLogs}
                 />
               }
             />

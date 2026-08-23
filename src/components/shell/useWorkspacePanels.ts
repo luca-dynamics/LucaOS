@@ -26,20 +26,32 @@ const DEFAULTS: WorkspacePanelState = {
   opsCollapsed: false,
 };
 
-const read = (): WorkspacePanelState => {
-  if (typeof localStorage === "undefined") return DEFAULTS;
+/** `null` distinguishes "never chosen" from "chosen, and they chose false". */
+const read = (): WorkspacePanelState | null => {
+  if (typeof localStorage === "undefined") return null;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULTS;
+    if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<WorkspacePanelState>;
     return {
       sidebarCollapsed: Boolean(parsed.sidebarCollapsed),
       opsCollapsed: Boolean(parsed.opsCollapsed),
     };
   } catch {
-    return DEFAULTS;
+    return null;
   }
 };
+
+export interface UseWorkspacePanelsOptions {
+  /**
+   * Where the ops panel starts **on a profile that has never touched it** —
+   * founder decision #1 wants Basic to open without a right rail. It seeds the
+   * first render only; the persistence effect then writes that seed, so from the
+   * second launch onward the stored value wins and this is ignored. A default
+   * that kept re-asserting itself would be a nag, not a default.
+   */
+  defaultOpsCollapsed?: boolean;
+}
 
 export interface UseWorkspacePanelsResult extends WorkspacePanelState {
   /** True when the viewport is too narrow to carry side panels at all. */
@@ -48,8 +60,13 @@ export interface UseWorkspacePanelsResult extends WorkspacePanelState {
   toggleOps: () => void;
 }
 
-export function useWorkspacePanels(): UseWorkspacePanelsResult {
-  const [state, setState] = useState<WorkspacePanelState>(read);
+export function useWorkspacePanels(
+  options: UseWorkspacePanelsOptions = {},
+): UseWorkspacePanelsResult {
+  const { defaultOpsCollapsed = false } = options;
+  const [state, setState] = useState<WorkspacePanelState>(
+    () => read() ?? { ...DEFAULTS, opsCollapsed: defaultOpsCollapsed },
+  );
   const [compact, setCompact] = useState<boolean>(() =>
     typeof window !== "undefined" && typeof window.matchMedia === "function"
       ? window.matchMedia(WORKSPACE_COMPACT_QUERY).matches
