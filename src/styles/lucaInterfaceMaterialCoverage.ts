@@ -92,6 +92,7 @@ export const LUCA_INTERFACE_MATERIAL_COVERAGE: readonly LucaInterfaceMaterialCov
     area: "desktop-shell",
     owners: [
       "src/App.tsx",
+      "src/components/shell",
       "src/components/dashboard/LucaDashboardSurface.tsx",
       "src/components/layout/Header.tsx",
       "src/components/layout/OperationsSidebar.tsx",
@@ -103,7 +104,7 @@ export const LUCA_INTERFACE_MATERIAL_COVERAGE: readonly LucaInterfaceMaterialCov
     opticalTier: "quiet-css",
     skinBoundary: "dashboard-boundary",
     reducedTransparency: "solid",
-    notes: "Repeated shell chrome uses semantic CSS material roles; matched WebGL is not duplicated per panel.",
+    notes: "Repeated shell chrome uses semantic CSS material roles; matched WebGL is not duplicated per panel. src/components/shell is the live desktop frame (workspace grid, rails, tabs); layout/OperationsSidebar, layout/ChatPanel and right-panel are the legacy path it replaced, still rendered on mobile and in the web build.",
   },
   {
     area: "mobile-shell",
