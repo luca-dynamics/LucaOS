@@ -546,9 +546,12 @@ state.embedding_logic = embedding_logic
 app = FastAPI()
 
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import HTMLResponse
 import socket
+
+# Frontend serving lives in its own module so a missing or half-written dist/
+# cannot raise at import time. StaticFiles and FileResponse are imported there.
+from static_frontend import describe_missing_build, mount_frontend
 
 from luca_security import allowed_origins as _luca_allowed_origins, require_privileged
 # Security gate (Phase 1): explicit origin allowlist instead of wildcard.
@@ -3234,31 +3237,16 @@ if __name__ == "__main__":
     host = "0.0.0.0" if REMOTE_ACCESS_ENABLED else "127.0.0.1"
     
     # --- STATIC FILE SERVING FOR PRODUCTION ---
-    # In production, serve the built frontend from dist folder
-    # The dist folder is relative to the project root (2 levels up from cortex/python)
+    # Serve the built renderer when, and only when, there is a complete build to
+    # serve. static_frontend owns that decision and never raises for a missing or
+    # half-written dist/ -- see the module docstring for why that mattered.
     project_root = Path(__file__).resolve().parent.parent.parent
-    dist_path = project_root / "dist"
-    
-    if dist_path.exists() and dist_path.is_dir():
-        print(f"[CORTEX] Serving frontend from: {dist_path}")
-        
-        # Serve index.html for root path
-        @app.get("/")
-        async def serve_index():
-            return FileResponse(dist_path / "index.html")
-        
-        # Serve static assets
-        app.mount("/assets", StaticFiles(directory=dist_path / "assets"), name="assets")
-        
-        # Catch-all for SPA routing (must be last)
-        @app.get("/{full_path:path}")
-        async def serve_spa(full_path: str):
-            file_path = dist_path / full_path
-            if file_path.exists() and file_path.is_file():
-                return FileResponse(file_path)
-            return FileResponse(dist_path / "index.html")
+
+    mounted_build = mount_frontend(app, project_root)
+    if mounted_build is not None:
+        print(f"[CORTEX] Serving frontend from: {mounted_build.root}")
     else:
-        print(f"[CORTEX] No dist folder found at {dist_path} - API only mode")
+        print(f"[CORTEX] {describe_missing_build(project_root)}")
     
     print(f"[CORTEX] Starting Server on {host}:{port}")
     if host == "0.0.0.0":
