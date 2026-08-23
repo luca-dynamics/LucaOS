@@ -13,6 +13,8 @@
     "verify:web:env": "node scripts/verify-web-build-env.mjs",
     "verify:web:imports": "node scripts/verify-web-import-boundaries.mjs",
     "verify:web:dist-imports": "node scripts/verify-web-dist-no-bare-server-imports.mjs",
+    "verify:vault": "node scripts/verify-vault-roundtrip.mjs",
+    "verify:auth": "node scripts/verify-api-auth.mjs",
     "build:web": "node scripts/build-web.mjs",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",

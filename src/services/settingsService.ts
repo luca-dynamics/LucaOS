@@ -48,6 +48,21 @@ export interface SovereignFact {
   confidence: number;
 }
 
+/**
+ * Outcome of `saveSettings`.
+ *
+ * A secret that could not reach the Secure Vault is not persisted at all — it
+ * stays live in memory for the current session and is gone on reload. Callers
+ * that let the user type keys should surface `vaultFailures` rather than report a
+ * clean save, because the alternative (writing the "[SECURED]" sentinel anyway)
+ * makes the load path clear the field and looks like the key vanished by itself.
+ */
+export interface SaveSettingsResult {
+  readonly ok: boolean;
+  /** `section.key` names whose secret could not be written to the Secure Vault. */
+  readonly vaultFailures: readonly string[];
+}
+
 export interface LucaSettings {
   general: {
     backgroundBlur?: number;
@@ -607,9 +622,25 @@ class SettingsService extends EventEmitter {
               console.log(
                 `[SECURITY] Migrating ${item.key} to secure vault...`,
               );
-              await secureVault.store(vaultKey, item.key, plainValue);
-              // Redact immediately in parsed for next write
-              parsed[item.section][item.key] = "[SECURED]";
+              const stored = await secureVault.store(
+                vaultKey,
+                item.key,
+                plainValue,
+              );
+              if (stored.success) {
+                // Redact immediately in parsed for next write
+                parsed[item.section][item.key] = "[SECURED]";
+              } else {
+                // Leave the plaintext where it already is. Redacting a failed
+                // migration would replace a key that currently works with a
+                // sentinel the vault cannot honour, and the branch above would
+                // clear it to "" on the next load — losing a working key. The
+                // value is already in localStorage, so this writes nothing new.
+                console.error(
+                  `[SECURITY] Vault migration failed for ${item.key}` +
+                    `${stored.error ? `: ${stored.error}` : ""} — left as-is.`,
+                );
+              }
             }
           } catch (e) {
             console.error(
@@ -854,7 +885,9 @@ class SettingsService extends EventEmitter {
     return this.settings[section];
   }
 
-  public async saveSettings(newSettings: Partial<LucaSettings>) {
+  public async saveSettings(
+    newSettings: Partial<LucaSettings>,
+  ): Promise<SaveSettingsResult> {
     this.settings = this.deepMerge(this.settings, newSettings);
     this.settings.general.experienceMode = normalizeSelectableExperienceMode(
       this.settings.general.experienceMode,
@@ -882,24 +915,40 @@ class SettingsService extends EventEmitter {
         { section: "iot", key: "haToken" },
       ];
 
+      const vaultFailures: string[] = [];
+
       for (const item of SENSITIVE_MAP) {
         if (!(this.settings as any)[item.section]) continue;
+        if (!savedSettings[item.section]) continue;
         const value = (this.settings as any)[item.section][item.key];
-        // Always update vault to match current state (even if empty)
-        if (
-          typeof value === "string" &&
-          value !== "[SECURED]" &&
-          value !== ""
-        ) {
-          await secureVault.store(
-            `setting:${item.section}:${item.key}`,
-            item.key,
-            value,
-          );
+
+        // Nothing to secure. An empty field stays empty, and "[SECURED]" means the
+        // value is already in the vault and the user did not retype it.
+        if (typeof value !== "string" || value === "" || value === "[SECURED]") {
+          continue;
         }
-        // Redact in local storage copy
-        if (savedSettings[item.section]) {
+
+        const stored = await secureVault.store(
+          `setting:${item.section}:${item.key}`,
+          item.key,
+          value,
+        );
+
+        if (stored.success) {
           (savedSettings as any)[item.section][item.key] = "[SECURED]";
+        } else {
+          // Do NOT write "[SECURED]" here. That sentinel is a claim that the vault
+          // holds the key, and the load path clears any "[SECURED]" it cannot
+          // resolve — so redacting after a failed write silently deletes the user's
+          // key on the next reload. Persist nothing instead and report it: the
+          // value stays live in memory for this session, and the caller can tell
+          // the user it needs re-entering. Never fall back to plaintext on disk.
+          (savedSettings as any)[item.section][item.key] = "";
+          vaultFailures.push(`${item.section}.${item.key}`);
+          console.error(
+            `[SETTINGS] Secure Vault write failed for ${item.section}.${item.key}` +
+              `${stored.error ? `: ${stored.error}` : ""} — not persisted.`,
+          );
         }
       }
 
@@ -921,8 +970,11 @@ class SettingsService extends EventEmitter {
       }
 
       this.emit("settings-changed", this.settings);
+
+      return { ok: vaultFailures.length === 0, vaultFailures };
     } catch (e) {
       console.error("[SETTINGS] Failed to save settings", e);
+      return { ok: false, vaultFailures: [] };
     }
   }
 

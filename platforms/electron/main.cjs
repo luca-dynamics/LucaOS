@@ -184,6 +184,31 @@ function saveWindowStateVC(bounds) {
 const paths = require('../../cortex/server/config/paths.cjs');
 // NOTE: app.setPath must be called after app is ready — see app.on('ready') below.
 
+/**
+ * The core's API token, read from the file the core writes at startup.
+ *
+ * One definition, because there are two consumers with the same question: the
+ * renderer (via the 'get-secure-token' handler) and this process's own vault
+ * proxies, which talk to `/api/credentials/*` behind `authMiddleware`.
+ *
+ * Read per call, never cached: the core generates this file during its own boot,
+ * which can finish after this process has started, so a value captured at module
+ * load would be permanently empty. `process.env.LUCA_SECRET` is only a fallback
+ * for a caller that sets it — nothing in this repo does, so in dev the file is
+ * the only source.
+ */
+const readSecureToken = () => {
+    const secretPath = path.join(paths.SECURITY_DIR, 'luca_secret.key');
+    try {
+        if (fs.existsSync(secretPath)) {
+            return fs.readFileSync(secretPath, 'utf8').trim();
+        }
+    } catch (e) {
+        console.error('[MAIN] Failed to read secure token:', e);
+    }
+    return process.env.LUCA_SECRET || '';
+};
+
 const WiFiScanner = require('./pentesting/wifiScanner.cjs');
 const wifiScanner = new WiFiScanner();
 
@@ -1462,17 +1487,7 @@ ipcMain.handle('get-local-ip', async () => {
         return `http://127.0.0.1:${cortexPort}`;
     });
 
-    ipcMain.handle('get-secure-token', () => {
-        const secretPath = path.join(paths.SECURITY_DIR, 'luca_secret.key');
-        try {
-            if (fs.existsSync(secretPath)) {
-                return fs.readFileSync(secretPath, 'utf8').trim();
-            }
-        } catch (e) {
-            console.error('[MAIN] Failed to read secure token:', e);
-        }
-        return process.env.LUCA_SECRET || '';
-    });
+    ipcMain.handle('get-secure-token', () => readSecureToken());
 
     ipcMain.on('window-minimize', (event) => {
         const win = BrowserWindow.fromWebContents(event.sender);
@@ -2268,36 +2283,53 @@ app.on('before-quit', () => {
 // Resolved per call: the core's port is ephemeral and not known at module load.
 const serverApi = () => `http://127.0.0.1:${serverPort ?? SERVER_PORT}/api`;
 
+// `/api/credentials/*` sits behind authMiddleware like every other /api route, so
+// these proxies have to authenticate. Without the token every vault write 401s —
+// which is what used to happen, silently, on every key the user typed in Settings.
+const vaultHeaders = () => ({
+    'Content-Type': 'application/json',
+    'X-LUCA-TOKEN': readSecureToken(),
+});
+
 ipcMain.handle('vault-store', async (event, { site, username, password, metadata }) => {
     try {
         const response = await fetch(`${serverApi()}/credentials/store`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: vaultHeaders(),
             body: JSON.stringify({ site, username, password, metadata })
         });
         return await response.json();
     } catch (error) {
-        console.error('[MAIN] Vault Store Proxy Error:', error);
+        // The message, not the error: a rejected fetch stringifies to a URL that
+        // carries the site name, and this line lands in a log file.
+        console.error('[MAIN] Vault Store Proxy Error:', error.message);
         return { success: false, error: 'Server unavailable' };
     }
 });
 
 ipcMain.handle('vault-retrieve', async (event, { site }) => {
     try {
-        const response = await fetch(`${serverApi()}/credentials/retrieve?site=${encodeURIComponent(site)}`);
+        const response = await fetch(`${serverApi()}/credentials/retrieve?site=${encodeURIComponent(site)}`, {
+            headers: vaultHeaders()
+        });
         return await response.json();
     } catch (error) {
-        console.error('[MAIN] Vault Retrieve Proxy Error:', error);
+        console.error('[MAIN] Vault Retrieve Proxy Error:', error.message);
         return { success: false, error: 'Server unavailable' };
     }
 });
 
 ipcMain.handle('vault-list', async () => {
     try {
-        const response = await fetch(`${serverApi()}/credentials/list`);
-        return await response.json();
+        const response = await fetch(`${serverApi()}/credentials/list`, {
+            headers: vaultHeaders()
+        });
+        const body = await response.json();
+        // A 401 or a warming 503 answers with an object, not an array. Returning
+        // it as-is hands callers something that has no .length and no .filter.
+        return Array.isArray(body) ? body : [];
     } catch (error) {
-        console.error('[MAIN] Vault List Proxy Error:', error);
+        console.error('[MAIN] Vault List Proxy Error:', error.message);
         return [];
     }
 });
@@ -2306,21 +2338,28 @@ ipcMain.handle('vault-delete', async (event, { site }) => {
     try {
         const response = await fetch(`${serverApi()}/credentials/delete`, {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
+            headers: vaultHeaders(),
             body: JSON.stringify({ site })
         });
         return await response.json();
     } catch (error) {
-        console.error('[MAIN] Vault Delete Proxy Error:', error);
+        console.error('[MAIN] Vault Delete Proxy Error:', error.message);
         return { success: false, error: 'Server unavailable' };
     }
 });
 
 ipcMain.handle('vault-has', async (event, { site }) => {
     try {
-        const response = await fetch(`${serverApi()}/credentials/has?site=${encodeURIComponent(site)}`);
-        return await response.json();
+        const response = await fetch(`${serverApi()}/credentials/has?site=${encodeURIComponent(site)}`, {
+            headers: vaultHeaders()
+        });
+        const body = await response.json();
+        // Fail closed, and strictly. A 401 answers `{error, message}` — a truthy
+        // object — so returning the body unchanged would report "yes, there is a
+        // key" precisely when the caller was not allowed to ask.
+        return body === true;
     } catch {
+        // Same for an unreachable core: "no key", never a guess.
         return false;
     }
 });

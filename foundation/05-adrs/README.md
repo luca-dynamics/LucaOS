@@ -111,6 +111,7 @@ the index below in the same change.
 | [0015](0015-server-side-session-transcript.md) | The session transcript is server-side and append-only | Accepted | [3 — Shared Memory](../01-constitution/01-the-eight-invariants.md#invariant-3--shared-memory) |
 | [0016](0016-session-scoped-programmatic-state.md) | A script's durable state is core-owned, session-keyed JSON | Accepted | [2 — Persistent Runtime](../01-constitution/01-the-eight-invariants.md#invariant-2--persistent-runtime) |
 | [0017](0017-shared-provider-wire.md) | Shared wire modules, per-edge clients | Accepted | [4 — Provider Abstraction](../01-constitution/01-the-eight-invariants.md#invariant-4--provider-abstraction) |
+| [0018](0018-credential-bridge.md) | The core owns the Secure Vault; the renderer reaches it over the API | Accepted | [8 — Security and Explicit Permissions](../01-constitution/01-the-eight-invariants.md#invariant-8--security-and-explicit-permissions) |
 
 ## See also
 

@@ -69,6 +69,10 @@ const ROUTE_GROUPS = [
     { id: 'ui', mounts: ['/api/ui'], module: './cortex/server/api/routes/ui.routes.js', tier: 1 },
     { id: 'subsystems', mounts: ['/api/subsystems'], module: './cortex/server/api/routes/subsystems.routes.js', tier: 1 },
     { id: 'security', mounts: ['/api/security'], module: './cortex/server/api/routes/security.routes.js', tier: 1 },
+    // The Secure Vault, served to the renderer that types the keys. Tier 1
+    // because settings load during boot: a warming 503 here reads to the user as
+    // "your API key vanished", and the load path would then clear the field.
+    { id: 'credentials', mounts: ['/api/credentials'], module: './cortex/server/api/routes/credentials.routes.js', tier: 1 },
     { id: 'luca-link', mounts: ['/api/luca-link'], module: './cortex/server/api/routes/lucaLink.routes.js', tier: 1 },
     { id: 'router', mounts: ['/api/router'], module: './cortex/server/api/routes/router.routes.js', tier: 1 },
     { id: 'control', mounts: ['/api/control'], module: './cortex/server/api/routes/unified-control.routes.js', tier: 1 },

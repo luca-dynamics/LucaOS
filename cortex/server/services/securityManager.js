@@ -41,11 +41,21 @@ class SecurityManager {
 
     validateToken(receivedToken) {
         if (!this.token || !receivedToken) return false;
+
+        const expected = Buffer.from(this.token);
+        const received = Buffer.from(receivedToken);
+
+        // timingSafeEqual throws RangeError on a length mismatch, and nothing on
+        // the /api path catches it — so a one-character token used to reach
+        // express's default error handler and return 500 with a stack trace and
+        // absolute paths to an unauthenticated caller. A wrong length is simply a
+        // wrong token: answer it the same way. Comparing lengths first reveals
+        // only the length, which is not secret, and every token that clears this
+        // guard is still compared in constant time.
+        if (expected.length !== received.length) return false;
+
         // Use timingSafeEqual to prevent timing attacks
-        return crypto.timingSafeEqual(
-            Buffer.from(this.token),
-            Buffer.from(receivedToken)
-        );
+        return crypto.timingSafeEqual(expected, received);
     }
 
     setGodMode(enabled) {
