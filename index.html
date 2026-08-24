@@ -1465,6 +1465,49 @@
               captureBootError(event.reason || "Unhandled startup rejection");
             }
           });
+
+          // A <script type="module"> that fails to LOAD is otherwise completely
+          // silent, and it is how this app hangs on boot.
+          //
+          // Three layers all miss it. (1) A resource error fires on the ELEMENT
+          // and does not bubble, so the two listeners above -- registered
+          // without `capture` -- never run, and __LUCA_BOOT_ERROR__ stays empty.
+          // (2) The 5s sweeper below requires a description, so an empty error
+          // state means it does nothing. (3) Chromium reports the ERR_* code
+          // from the browser process, so main.cjs's dev console forwarder does
+          // not relay it either. Net effect: the entry never executes, React
+          // never mounts, the loader spins forever, and the only trace is a line
+          // in devtools that nobody has open. Capture is the one phase that sees
+          // these, which is why this listener exists separately from the two
+          // above rather than being folded into them.
+          //
+          // This is our own entry, from our own origin, so a load failure here
+          // is never "the user is offline" -- it is a torn transport or a corrupt
+          // HTTP cache entry (a force-quit mid-write leaves one behind, and
+          // ERR_CACHE_READ_FAILURE then fails the same request on every launch
+          // until something evicts it). Both are exactly what a bounded reload
+          // fixes, so the description deliberately uses a phrase already in
+          // MODULE_LOAD_FAILURES: recovery, the retry budget and the eventual
+          // honest failure screen are the reviewed code paths, not new ones.
+          window.addEventListener(
+            "error",
+            (event) => {
+              if (window.__LUCA_REACT_MOUNTED__ === true) return;
+              const element = event.target;
+              if (!element || element === window) return;
+              if (element.tagName !== "SCRIPT") return;
+              const src = element.getAttribute("src") || "(inline script)";
+              const description = `Importing a module script failed: ${src}`;
+              captureBootError(description);
+              // Self-heals first; only paints the failure screen once the retry
+              // budget is spent.
+              window.__LUCA_SHOW_BOOT_FAILURE__(
+                "LucaOS could not load its app code",
+                description,
+              );
+            },
+            true,
+          );
         }
 
         window.addEventListener("luca-react-bootstrap-error", () => {
