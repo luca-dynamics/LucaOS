@@ -26,6 +26,10 @@ import {
 // Import Refactored Tabs
 import { settingsCodexSkinVariables } from "./settings/settingsCodexSkin";
 import "./settings/settingsCodexSkin.css";
+import {
+  SETTINGS_SAVE_FAILED_MESSAGE,
+  describeSettingsSaveOutcome,
+} from "./settings/settingsSaveOutcome";
 import SettingsGeneralTab from "./settings/SettingsGeneralTab";
 import SettingsAppearanceTab from "./settings/SettingsAppearanceTab";
 import SettingsBrainTab from "./settings/SettingsBrainTab";
@@ -249,7 +253,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setLoading(true);
     try {
       // 1. Save General Settings
-      await settingsService.saveSettings(settings);
+      const saveResult = await settingsService.saveSettings(settings);
 
       // 2. Save Persona Config (if loaded)
       if (personaConfig) {
@@ -261,10 +265,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         window.luca.applySystemSettings(settings.general);
       }
 
-      setStatusMsg("Settings Saved Successfully");
-      setTimeout(() => setStatusMsg(""), 2000);
+      // A secret that could not reach the Secure Vault is not persisted at all, so
+      // reporting a clean save here would be a lie the user only discovers on the
+      // next reload, when the field comes back empty.
+      const outcome = describeSettingsSaveOutcome(saveResult);
+      setStatusMsg(outcome.message);
+      if (outcome.autoClearMs !== null) {
+        setTimeout(() => setStatusMsg(""), outcome.autoClearMs);
+      }
     } catch {
-      setStatusMsg("Error Saving Settings");
+      setStatusMsg(SETTINGS_SAVE_FAILED_MESSAGE);
     }
     setLoading(false);
   };
