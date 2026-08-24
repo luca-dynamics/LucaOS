@@ -531,6 +531,7 @@ async function bootSequence(isSilent = false) {
     // when it lands and everything else is usable before that.
     let serverReady = false;
     let cortexReady = false;
+    let cortexAnnounced = false;
     let interfaceLaunched = false;
     let attempts = 0;
     const maxAttempts = app.isPackaged ? 180 : 420; // Budget for the CORE. Cortex is not on this clock.
@@ -560,9 +561,32 @@ async function bootSequence(isSilent = false) {
             launchInterface(isSilent);
         }
 
-        if (cortexReady) {
+        // Cortex is a subsystem report, never a gate — and so it must never stop
+        // this poll. This loop is the ONLY caller of launchInterface(), so ending
+        // it before the core answers leaves the app with no window, no reveal
+        // watchdog, and no route to handleBootFailure below: a silent, permanent
+        // hang behind the splash, which is not recoverable and not even logged.
+        //
+        // Cortex genuinely wins this race whenever its venv is warm and the core
+        // is slow to announce its ephemeral port — serverPort is still null on
+        // that tick, so serverReady is false and the launch is skipped. That is
+        // why the failure looked intermittent rather than broken.
+        //
+        // Report it once, and only stop polling once the window is actually up.
+        if (cortexReady && !cortexAnnounced) {
+            cortexAnnounced = true;
+            // Progress is deliberately left alone unless the interface is up:
+            // driving the splash bar to 100% while the core is still missing is
+            // the exact "it says done but nothing happens" symptom.
+            if (interfaceLaunched) {
+                log("Cortex ready. Local intelligence online.", 'success', 100);
+            } else {
+                log("Cortex ready. Local intelligence online. Waiting on the core.", 'success');
+            }
+        }
+
+        if (cortexReady && interfaceLaunched) {
             clearInterval(checkInterval);
-            log("Cortex ready. Local intelligence online.", 'success', 100);
             return;
         }
 
@@ -583,6 +607,13 @@ async function bootSequence(isSilent = false) {
         if (attempts >= maxAttempts) {
             clearInterval(checkInterval);
             handleBootFailure("TIMEOUT", log);
+            return;
+        }
+
+        // Nothing else reports during the pre-window wait, so a slow core reads as
+        // a hang on a splash that has stopped moving. Say what is being waited on.
+        if (attempts % 15 === 0) {
+            log(`Waiting on the Node core (${attempts}s).`, 'info');
         }
     }, 1000);
 }
