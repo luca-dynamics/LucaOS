@@ -7,7 +7,8 @@ import { CORTEX_PORT } from '../../config/constants.js';
 // From: /cortex/server/api/routes/vision.routes.js
 // To:   /src/services/visionManager.js
 // Path: ../../../../src/services/visionManager.js
-import { visionManager } from '../../services/visionManager.js';
+import { visionManager, toVisionImagePayload } from '../../services/visionManager.js';
+import { canRouteModel, chat } from '../../services/llm/llmGateway.js';
 import { screenCaptureService } from '../../services/screenCaptureService.js';
 import visionAnalyzerService from '../../services/visionAnalyzerService.js';
 import { systemControlService } from '../../services/systemControlService.js';
@@ -94,25 +95,30 @@ router.post('/analyze', async (req, res) => {
                 lastError = fetchError;
             }
 
-            // FALLBACK: Use Gemini Vision API for analysis
-            const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-            
-            if (!GEMINI_API_KEY) {
+            // FALLBACK: route the analysis through the provider layer. Which
+            // model serves it is vision configuration, not a hardcoded vendor.
+            const fallbackModel = visionManager.fallbackModelFor('action');
+
+            if (!(await canRouteModel(fallbackModel))) {
                 return res.status(503).json({
                     status: 'error',
-                    message: 'UI-TARS service not running and no Gemini API key configured.',
+                    message: 'UI-TARS service not running and no vision model credential configured.',
                     code: 'NO_VISION_SERVICE_AVAILABLE',
-                    fix: 'Please start the UI-TARS Python service (cortex/python/startup.sh) or configure GEMINI_API_KEY in your .env file.'
+                    fix: `Please start the UI-TARS Python service (cortex/python/startup.sh), or add an API key for '${fallbackModel}' in Settings (stored in the Secure Vault) or your .env file.`
                 });
             }
 
-            console.log(`[UI-TARS] Using Gemini Vision fallback (attempt ${attempt}/${maxRetries})`);
-            const fallbackPrediction = await analyzeWithGeminiVision(screenshot, instruction);
-            
+            console.log(`[UI-TARS] Using ${fallbackModel} vision fallback (attempt ${attempt}/${maxRetries})`);
+            const fallbackPrediction = await analyzeWithVisionFallback(screenshot, instruction, fallbackModel);
+
             return res.json({
                 status: 'success',
                 prediction: fallbackPrediction,
-                method: 'gemini-vision-fallback',
+                // Was 'gemini-vision-fallback' before the fallback was routed.
+                // Nothing in the repo reads this field; the model id does the
+                // work the vendor name used to.
+                method: 'routed-vision-fallback',
+                model: fallbackModel,
                 attempt
             });
 
@@ -141,47 +147,36 @@ router.post('/analyze', async (req, res) => {
 });
 
 /**
- * Fallback vision analysis using Gemini Vision
+ * Fallback vision analysis for when Luca's local vision service cannot answer.
+ *
+ * Routed through the provider layer: this function knows a model id and a
+ * prompt, and nothing about any vendor's endpoint, key or wire format. Which
+ * model serves it comes from vision configuration (Invariant 4).
  */
-async function analyzeWithGeminiVision(screenshotBase64, instruction) {
+async function analyzeWithVisionFallback(screenshotBase64, instruction, modelId) {
     try {
-        // Use Gemini's vision capabilities as fallback
-        // This requires the Gemini API to be configured
-        const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-        
-        if (!GEMINI_API_KEY) {
+        // Defensive: the route checks reachability before calling, but a direct
+        // caller deserves the guidance rather than an opaque failure.
+        if (!(await canRouteModel(modelId))) {
             return {
                 action: 'ANALYSIS_UNAVAILABLE',
-                message: 'UI-TARS service not running and no Gemini API key configured.',
+                message: 'UI-TARS service not running and no vision model credential configured.',
                 coordinates: null,
-                fix: 'Please start the UI-TARS Python service (cortex/python/startup.sh) or set your GEMINI_API_KEY in the .env file to enable vision fallbacks.'
+                fix: `Please start the UI-TARS Python service (cortex/python/startup.sh), or add an API key for '${modelId}' in Settings (stored in the Secure Vault) or your .env file, to enable vision fallbacks.`
             };
         }
 
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [
-                            { text: `Analyze this screenshot and help with: ${instruction}\n\nProvide the action to take and coordinates if applicable. Format: {"action": "click/type/scroll", "coordinates": {"x": 0, "y": 0}, "text": "optional text to type"}` },
-                            { 
-                                inline_data: {
-                                    mime_type: 'image/png',
-                                    data: screenshotBase64.replace(/^data:image\/\w+;base64,/, '')
-                                }
-                            }
-                        ]
-                    }]
-                })
-            }
-        );
+        const response = await chat({
+            modelId,
+            messages: [{
+                role: 'user',
+                content: `Analyze this screenshot and help with: ${instruction}\n\nProvide the action to take and coordinates if applicable. Format: {"action": "click/type/scroll", "coordinates": {"x": 0, "y": 0}, "text": "optional text to type"}`
+            }],
+            images: [toVisionImagePayload(screenshotBase64)]
+        });
 
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No analysis available';
-        
+        const text = response.text || 'No analysis available';
+
         // Try to parse JSON response
         try {
             const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -199,7 +194,7 @@ async function analyzeWithGeminiVision(screenshotBase64, instruction) {
         };
 
     } catch (error) {
-        console.error('[GEMINI_VISION] Fallback failed:', error);
+        console.error('[VISION_FALLBACK] Routed vision fallback failed:', error);
         return {
             action: 'ERROR',
             message: error.message,
@@ -235,70 +230,79 @@ router.post('/stop', (req, res) => {
  */
 router.get('/status', async (req, res) => {
     const UITARS_URL = process.env.UITARS_URL || `http://localhost:${CORTEX_PORT}`;
-    const hasGemini = !!process.env.GEMINI_API_KEY;
-    
+    // Vision's cloud capability is "is the configured vision model reachable",
+    // not "is GEMINI_API_KEY set": the credential may live in the Secure Vault
+    // rather than the environment, and the model may not be Gemini. Reporting
+    // the resolved model id keeps this endpoint honest when vision is pointed
+    // somewhere else.
+    const cloudModel = visionManager.fallbackModelFor('action');
+    const cloudReady = await canRouteModel(cloudModel);
+    const cloudProvider = cloudReady ? cloudModel : 'None';
+
     try {
         // 1. Try the granular status endpoint first
-        const response = await fetch(`${UITARS_URL}/api/vision/status`, { 
+        const response = await fetch(`${UITARS_URL}/api/vision/status`, {
             method: 'GET',
             signal: AbortSignal.timeout(3000)
         });
-        
+
         if (response.ok) {
             const cortexStatus = await response.json();
             const localReady = cortexStatus.vision_models_ready || cortexStatus.live_models_ready;
-            
-            return res.json({ 
+
+            return res.json({
                 active: true,
-                status: (localReady || hasGemini) ? 'ONLINE' : 'STANDBY',
+                status: (localReady || cloudReady) ? 'ONLINE' : 'STANDBY',
                 running: visionServiceRunning,
-                cloud_provider: hasGemini ? 'Gemini 2.0' : 'None',
+                cloud_provider: cloudProvider,
                 local_agent: cortexStatus.vision_agent ? 'Available' : 'Missing Dependencies',
                 local_models: localReady ? 'Ready' : 'Download Required',
                 service: 'Hybrid Vision Core',
                 url: UITARS_URL
             });
         }
-        
+
         // 2. Cortex responded but with non-200 — try basic /health as fallback
         try {
-            const healthRes = await fetch(`${UITARS_URL}/health`, { 
-                method: 'GET', signal: AbortSignal.timeout(2000) 
+            const healthRes = await fetch(`${UITARS_URL}/health`, {
+                method: 'GET', signal: AbortSignal.timeout(2000)
             });
             if (healthRes.ok) {
-                return res.json({ 
-                    active: true, 
-                    status: hasGemini ? 'ONLINE' : 'STANDBY',
+                return res.json({
+                    active: true,
+                    status: cloudReady ? 'ONLINE' : 'STANDBY',
                     running: visionServiceRunning,
-                    cloud_provider: hasGemini ? 'Gemini 2.0' : 'None',
+                    cloud_provider: cloudProvider,
                     local_models: 'Initializing',
                     service: 'Cortex (Booting)',
                     url: UITARS_URL
                 });
             }
         } catch (_) { /* health also failed, fall through */ }
-        
+
         // 3. Cortex is up but unhealthy
-        return res.json({ 
-            active: hasGemini, 
-            status: hasGemini ? 'ONLINE' : 'DEGRADED',
+        return res.json({
+            active: cloudReady,
+            status: cloudReady ? 'ONLINE' : 'DEGRADED',
             running: visionServiceRunning,
-            cloud_provider: hasGemini ? 'Gemini 2.0' : 'None',
+            cloud_provider: cloudProvider,
             local_models: 'Error',
             message: `Cortex returned HTTP ${response.status}`,
             url: UITARS_URL
         });
-        
+
     } catch (error) {
         // 4. Cortex not reachable at all — Cloud fallback
-        return res.json({ 
-            active: hasGemini, 
-            status: hasGemini ? 'ONLINE' : 'ERROR',
+        return res.json({
+            active: cloudReady,
+            status: cloudReady ? 'ONLINE' : 'ERROR',
             running: visionServiceRunning,
-            cloud_provider: hasGemini ? 'Gemini 2.0 (Direct)' : 'None',
+            cloud_provider: cloudReady ? `${cloudModel} (Direct)` : 'None',
             local_models: 'Offline',
             message: 'Cortex Python service not reachable.',
-            fix: hasGemini ? 'Operating in Cloud-Only mode.' : 'Start Cortex or add GEMINI_API_KEY.'
+            fix: cloudReady
+                ? 'Operating in Cloud-Only mode.'
+                : `Start Cortex, or add an API key for '${cloudModel}' in Settings or your .env file.`
         });
     }
 });

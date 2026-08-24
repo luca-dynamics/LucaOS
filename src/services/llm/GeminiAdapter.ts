@@ -2,6 +2,13 @@ import { LLMProvider, LLMResponse, ToolCall, ChatMessage } from "./LLMProvider";
 import { getApiKey, SYSTEM_API_KEY } from "../genAIClient";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { BRAIN_CONFIG } from "../../config/brain.config";
+import {
+  extractGeminiThought,
+  normalizeGeminiToolCalls,
+  toGeminiContents,
+  toGeminiSystemInstruction,
+  toGeminiTools,
+} from "../../shared/llm/geminiWire.js";
 
 export class GeminiAdapter implements LLMProvider {
   name = "Google Gemini";
@@ -113,71 +120,14 @@ export class GeminiAdapter implements LLMProvider {
   ): Promise<LLMResponse> {
     const client = this.getClient();
 
-    // Map history to Google GenAI format (V1 Beta)
-    const contents: any[] = [];
-    let currentGroup: any = null;
-
-    messages.forEach((msg, index) => {
-      const isLast = index === messages.length - 1;
-
-      if (msg.role === "tool") {
-        const part = {
-          functionResponse: {
-            name: msg.name || "unknown",
-            response: { result: msg.content },
-          },
-        };
-
-        if (currentGroup && currentGroup.role === "function") {
-          currentGroup.parts.push(part);
-        } else {
-          currentGroup = { role: "function", parts: [part] };
-          contents.push(currentGroup);
-        }
-      } else if (msg.role === "model") {
-        const parts: any[] = [];
-        if (msg.thought) parts.push({ thought: msg.thought });
-        if (msg.thought_signature)
-          parts.push({ thought_signature: msg.thought_signature });
-        if (msg.content) parts.push({ text: msg.content });
-        if (msg.toolCalls) {
-          msg.toolCalls.forEach((tc) => {
-            parts.push({
-              functionCall: {
-                name: tc.name,
-                args: tc.args,
-              },
-            });
-          });
-        }
-        if (parts.length === 0) parts.push({ text: "" });
-        currentGroup = { role: "model", parts };
-        contents.push(currentGroup);
-      } else {
-        const parts: any[] = [{ text: msg.content || "" }];
-        if (isLast && images && images.length > 0) {
-          parts.push(
-            ...images.map((img) => ({
-              inlineData: { data: img, mimeType: "image/jpeg" },
-            })),
-          );
-        }
-        currentGroup = { role: "user", parts };
-        contents.push(currentGroup);
-      }
-    });
-
     const model = client.getGenerativeModel({
       model: this.modelName,
-      systemInstruction: systemInstruction ? { role: "system", parts: [{ text: systemInstruction }] } : undefined,
-      tools:
-        tools && tools.length > 0
-          ? [{ functionDeclarations: tools }]
-          : undefined,
+      systemInstruction: toGeminiSystemInstruction(systemInstruction),
+      tools: toGeminiTools(tools) as any,
     });
 
     const stream = await model.generateContentStream({
-      contents: contents,
+      contents: toGeminiContents(messages, { images }) as any,
       generationConfig: {
         temperature: 0.7,
       },
@@ -192,25 +142,15 @@ export class GeminiAdapter implements LLMProvider {
       if (abortSignal?.aborted) break;
 
       // 1. Extract Thoughts
-      if (chunk.candidates?.[0]?.content?.parts) {
-        for (const part of chunk.candidates[0].content.parts) {
-          if ("thought" in part && (part as any).thought) {
-            thought += (part as any).thought;
-          }
-          if ("thought_signature" in part || "thoughtSignature" in part) {
-            thought_signature =
-              (part as any).thought_signature || (part as any).thoughtSignature;
-          }
-        }
+      const thoughts = extractGeminiThought(chunk);
+      if (thoughts.thought) thought += thoughts.thought;
+      if (thoughts.thought_signature) {
+        thought_signature = thoughts.thought_signature;
       }
 
       // 2. Extract Function Calls
-      const calls = chunk.functionCalls();
-      if (calls && calls.length > 0) {
-        toolCalls.push(
-          ...calls.map((c: any) => ({ name: c.name, args: c.args })),
-        );
-      }
+      const calls = normalizeGeminiToolCalls(chunk.functionCalls());
+      if (calls) toolCalls.push(...calls);
 
       // 3. Extract Text
       try {
@@ -240,123 +180,26 @@ export class GeminiAdapter implements LLMProvider {
   ): Promise<LLMResponse> {
     const client = this.getClient();
 
-    // Map history to Google GenAI format (V1 Beta)
-    // CRITICAL: Group consecutive role: 'tool' messages into a single function role message
-    // to comply with Gemini's strictly alternating role requirements.
-    const contents: any[] = [];
-    let currentGroup: any = null;
-
-    messages.forEach((msg, index) => {
-      const isLast = index === messages.length - 1;
-
-      if (msg.role === "tool") {
-        const part = {
-          functionResponse: {
-            name: msg.name || "unknown",
-            response: { result: msg.content },
-          },
-        };
-
-        if (currentGroup && currentGroup.role === "function") {
-          currentGroup.parts.push(part);
-        } else {
-          currentGroup = { role: "function", parts: [part] };
-          contents.push(currentGroup);
-        }
-      } else if (msg.role === "model") {
-        const parts: any[] = [];
-        // Support BOTH property names for transition period
-        if (msg.thought) {
-          parts.push({ thought: msg.thought });
-        }
-        if ((msg as any).thought_signature) {
-          parts.push({ thought_signature: (msg as any).thought_signature });
-        }
-        if (msg.content) parts.push({ text: msg.content });
-        if (msg.toolCalls) {
-          msg.toolCalls.forEach((tc) => {
-            parts.push({
-              functionCall: {
-                name: tc.name,
-                args: tc.args,
-              },
-            });
-          });
-        }
-        // Safeguard: Ensure parts is never empty (causes API error)
-        if (parts.length === 0) {
-          parts.push({ text: "" });
-        }
-        currentGroup = { role: "model", parts };
-        contents.push(currentGroup);
-      } else {
-        // user or system message
-        const parts: any[] = [{ text: msg.content || "" }];
-
-        // Append images to LAST user message
-        if (isLast && images && images.length > 0) {
-          parts.push(
-            ...images.map((img) => ({
-              inlineData: {
-                data: img,
-                mimeType: "image/jpeg",
-              },
-            })),
-          );
-        }
-
-        currentGroup = {
-          role: "user",
-          parts,
-        };
-        contents.push(currentGroup);
-      }
-    });
-
     const model = client.getGenerativeModel({
       model: this.modelName,
-      systemInstruction: systemInstruction ? { role: "system", parts: [{ text: systemInstruction }] } : undefined,
-      tools:
-        tools && tools.length > 0
-          ? [{ functionDeclarations: tools }]
-          : undefined,
+      systemInstruction: toGeminiSystemInstruction(systemInstruction),
+      tools: toGeminiTools(tools) as any,
     });
 
     // Stateless call - clearer and often more robust
     const result = await model.generateContent({
-      contents: contents,
+      contents: toGeminiContents(messages, { images }) as any,
       generationConfig: {
         temperature: 0.7,
       },
     });
+
+    // Text and function calls stay SDK-native: this SDK's helpers surface safety
+    // blocks that a raw scan of `parts` would swallow.
     const response = result.response;
     const text = response.text() || "";
-
-    // Handle function calls
-    const calls = response.functionCalls();
-
-    let thought: string | undefined;
-    let thought_signature: string | undefined;
-
-    // Extract thoughts and signatures from parts
-    if (response.candidates?.[0]?.content?.parts) {
-      for (const part of response.candidates[0].content.parts) {
-        if ("thought" in part && (part as any).thought) {
-          thought = (part as any).thought;
-        }
-        if ("thought_signature" in part || "thoughtSignature" in part) {
-          thought_signature = (part as any).thought_signature || (part as any).thoughtSignature;
-        }
-      }
-    }
-
-    let toolCalls: ToolCall[] | undefined;
-    if (calls && calls.length > 0) {
-      toolCalls = calls.map((c: any) => ({
-        name: c.name,
-        args: c.args,
-      }));
-    }
+    const toolCalls = normalizeGeminiToolCalls(response.functionCalls());
+    const { thought, thought_signature } = extractGeminiThought(response);
 
     return { text, toolCalls, thought, thought_signature };
   }

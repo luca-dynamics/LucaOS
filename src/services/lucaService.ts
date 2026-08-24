@@ -15,6 +15,7 @@ import { creditService } from "./creditService";
 import { loggerService } from "./loggerService";
 import { lucaLinkManager } from "./lucaLink/manager";
 import { conversationService } from "./conversationService";
+import { sessionTranscript } from "./session/sessionTranscript";
 import { taskService } from "./taskService";
 import { validateToolArgs } from "./schemas";
 import { DeviceType } from "./deviceCapabilityService";
@@ -309,10 +310,11 @@ class LucaService {
    */
   public async setDeviceType(deviceType: DeviceType) {
     this.currentDeviceType = deviceType;
-    // Reinitialize chat with filtered tools if already initialized
-    // Reinitialize chat with filtered tools if already initialized
+    // Reinitialize chat with filtered tools if already initialized, carrying the
+    // live history across. Calling initChat() bare here used to replace a running
+    // conversation with a re-read of the old Chroma index.
     if (this.localHistory.length > 0) {
-      await this.initChat();
+      await this.initChat(this.localHistory);
     }
   }
 
@@ -327,44 +329,39 @@ class LucaService {
     // return this.activeTools.filter(t => filteredNames.includes(t.name));
   }
 
-  // Helper to format history for Google GenAI SDK
-  private async getFormattedHistory(): Promise<any[]> {
-    try {
-      const recentMessages =
-        await conversationService.getRecentConversations(20);
-      return recentMessages
-        .map((msg: any) => ({
-          role: msg.sender === "LUCA" ? "model" : "user",
-          parts: [{ text: msg.text }],
-        }))
-        .reverse(); // Reverse to chronological order (oldest first)
-    } catch (e) {
-      console.warn("[LUCA] Failed to hydrate conversation history:", e);
-      return [];
-    }
-  }
-
-  private async initChat(history?: any[]) {
+  /**
+   * Initialize (or re-initialize) the chat session.
+   *
+   * `history` is provider-shaped and passed through untouched. When it is absent,
+   * history is hydrated from the durable transcript.
+   */
+  private async initChat(history?: ChatMessage[]) {
     // Build system instruction and tools
     await this.rebuildSystemConfig();
 
-    // HYDRATE HISTORY IF MISSING
-    let chatHistory: ChatMessage[] = [];
-    if (history && history.length > 0) {
-      // Assume passed history is compatible or map it
-      chatHistory = history.map((h) => ({
-        role: h.role === "model" ? "model" : "user",
-        content: h.parts ? h.parts[0].text : h.content,
-      })) as ChatMessage[];
-    } else {
-      const raw = await this.getFormattedHistory();
-      chatHistory = raw.map((m) => ({
-        role: m.role === "model" ? "model" : "user",
-        content: m.parts[0].text,
-      })) as ChatMessage[];
-    }
+    // One session id for everything that stamps a record with one — the durable
+    // transcript, the memory graph's execution chain, and Chroma's metadata. The
+    // core assigns it rather than each renderer minting its own, because a
+    // per-surface id is how one Luca quietly becomes several.
+    const sessionId = await sessionTranscript.getCurrentSessionId();
+    if (sessionId) conversationService.setSessionId(sessionId);
 
-    this.localHistory = chatHistory;
+    if (history && history.length > 0) {
+      // Already in provider shape, so copy it and change nothing. This branch
+      // used to rebuild every message as `{role: user|model, content}`, which
+      // dropped `toolCalls`, `toolCallId` and `name` — so a persona or device
+      // change mid-conversation quietly corrupted a live history, and (via
+      // `ensureTurnReady`) every settings change did too.
+      this.localHistory = [...history];
+    } else {
+      // Hydrate from the append-only transcript
+      // (cortex/server/services/sessionEntryStore.js), not from the Chroma vector
+      // index. Chroma holds flat `{text, sender}` pairs: it returned at most 20
+      // messages, in descending order, with every tool result flattened into
+      // something the user appeared to have said. Chroma keeps the job it is
+      // actually good at — retrieval, in `getConversationContext`.
+      this.localHistory = await sessionTranscript.loadHistory();
+    }
 
     console.log(
       `[LUCA] Chat initialized. History: ${this.localHistory.length}, Tools: ${this.sessionTools.length}`,
@@ -1259,12 +1256,24 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
     this.currentImageContext = imageBase64;
   }
 
+  /**
+   * The three appenders below are the single write path for conversation history,
+   * so they are also where it becomes durable. Each records to
+   * `sessionTranscript`, which enqueues and returns — it never awaits, never
+   * throws, and a dead core server slows no turn down. What it will not do is
+   * pretend a write landed when it did not; see the loud-failure handling in
+   * `src/services/session/sessionTranscript.ts`.
+   */
   public appendUserMessage(message: string) {
-    this.localHistory.push({ role: "user", content: message });
+    const entry: ChatMessage = { role: "user", content: message };
+    this.localHistory.push(entry);
+    sessionTranscript.appendMessage(entry);
   }
 
   public appendModelMessage(message: string, toolCalls?: any[]) {
-    this.localHistory.push({ role: "model", content: message, toolCalls });
+    const entry: ChatMessage = { role: "model", content: message, toolCalls };
+    this.localHistory.push(entry);
+    sessionTranscript.appendMessage(entry);
   }
 
   public appendToolMessage(
@@ -1272,12 +1281,25 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
     result: string,
     toolCallId?: string,
   ) {
-    this.localHistory.push({
+    const entry: ChatMessage = {
       role: "tool",
       content: result,
       name,
       toolCallId,
-    });
+    };
+    this.localHistory.push(entry);
+    sessionTranscript.appendMessage(entry);
+  }
+
+  /**
+   * Swap history for a compacted equivalent. Called only by the turn loop's
+   * compactor (`src/services/turns/contextCompactor.ts`) once it has produced a
+   * summary of the dropped range — deliberately not a general `setHistory`,
+   * because arbitrary history replacement is how tool calls get separated from
+   * their results, which the providers reject outright.
+   */
+  public replaceHistoryAfterCompaction(next: ChatMessage[]) {
+    this.localHistory = next;
   }
 
   public getTurnState() {

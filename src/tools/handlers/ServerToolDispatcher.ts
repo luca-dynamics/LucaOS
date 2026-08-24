@@ -9,6 +9,7 @@ import { permissionGateService } from "../../services/permissionGateService";
 import { skillIngestionService } from "../../services/skillIngestionService";
 import { requestAgentMemoryWrite } from "../../services/memory/agentMemoryWriteGate";
 import { runtimeAgentMemoryWriteDependencies } from "../../services/memory/agentMemoryWriteGateRuntime";
+import { sessionTranscript } from "../../services/session/sessionTranscript";
 import { eventBus } from "../../services/eventBus";
 
 const SERVER_TOOLS = [
@@ -33,6 +34,14 @@ const SERVER_TOOLS = [
   "sendInstantMessage",
   "ingestGithubRepo",
   "runPythonScript",
+  // `isServerTool` is exactly this list, and it is the only thing that routes a
+  // name here (toolRegistry.ts step 6). `runNodeScript` was declared to the model
+  // and registered, but never listed — so it fell past step 6 and past
+  // dispatchSystemTools to `ERROR: Unknown Tool "runNodeScript"`. It had never
+  // executed once. Safe to route now, and only now, because the LEVEL_2 row in
+  // TOOL_CONFIGS landed first: routing it before the gate existed would have made
+  // ungated arbitrary code execution reachable for the first time.
+  "runNodeScript",
   "openInteractiveTerminal",
   "getScreenDimensions",
   "compileSelf",
@@ -497,10 +506,28 @@ export class ServerToolDispatcher {
     else if (name === "readUrl") endpoint = apiUrl("/api/knowledge/scrape");
     // Network Tools
     // --- PROCESS & TERMINAL ---
-    else if (name === "runPythonScript")
-      endpoint = apiUrl("/api/python/execute");
-    else if (name === "runNodeScript") endpoint = apiUrl("/api/node/execute");
-    else if (name === "executeTerminalCommand")
+    // Both script endpoints read `req.body.script` (python.routes.js,
+    // node.routes.js). The default body above is `{ tool, args }`, so setting
+    // only the endpoint — as this branch did — sent no `script` at all: the
+    // routes answered 400 and the model got "HTTP 400: Bad Request" for every
+    // call it ever made. `sessionId` keys the interpreter namespace, so two
+    // conversations cannot read each other's variables.
+    else if (name === "runPythonScript" || name === "runNodeScript") {
+      endpoint = apiUrl(
+        name === "runPythonScript" ? "/api/python/execute" : "/api/node/execute",
+      );
+      body = {
+        // `code` accepted as an alias: the declaration says `script`, but models
+        // reach for `code` often enough that a 400 here is not worth the purity.
+        script: args.script ?? args.code,
+        // Read, never resolved. `getCurrentSessionId()` awaits `waitForAuth()`,
+        // a flat two seconds outside Electron, and this is the tool path — the
+        // same trap documented in services/session/sessionLease.ts. A null id
+        // means no transcript has been resolved yet; the worker maps it to one
+        // shared fallback namespace.
+        sessionId: sessionTranscript.status().sessionId,
+      };
+    } else if (name === "executeTerminalCommand")
       endpoint = apiUrl("/api/command");
     // automation.routes handles this
     else if (name === "killProcess")

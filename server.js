@@ -53,6 +53,10 @@ const ROUTE_GROUPS = [
     { id: 'admin', mounts: ['/api/admin'], module: './cortex/server/api/routes/admin.routes.js', tier: 1 },
     { id: 'system', mounts: ['/api/system'], module: './cortex/server/api/routes/system.routes.js', tier: 1 },
     { id: 'memory', mounts: ['/api/memory'], module: './cortex/server/api/routes/memory.routes.js', tier: 1 },
+    // Durable conversation transcript. Tier 1 because the renderer hydrates its
+    // history from it during boot; deferring it would make the first read pay
+    // for a cold import.
+    { id: 'session', mounts: ['/api/session'], module: './cortex/server/api/routes/session.routes.js', tier: 1 },
     { id: 'files', mounts: ['/api/fs'], module: './cortex/server/api/routes/files.routes.js', tier: 1 },
     { id: 'tasks', mounts: ['/api/tasks'], module: './cortex/server/api/routes/tasks.routes.js', tier: 1 },
     { id: 'autonomy', mounts: ['/api/autonomy'], module: './cortex/server/api/routes/autonomy.routes.js', tier: 1 },
@@ -65,6 +69,10 @@ const ROUTE_GROUPS = [
     { id: 'ui', mounts: ['/api/ui'], module: './cortex/server/api/routes/ui.routes.js', tier: 1 },
     { id: 'subsystems', mounts: ['/api/subsystems'], module: './cortex/server/api/routes/subsystems.routes.js', tier: 1 },
     { id: 'security', mounts: ['/api/security'], module: './cortex/server/api/routes/security.routes.js', tier: 1 },
+    // The Secure Vault, served to the renderer that types the keys. Tier 1
+    // because settings load during boot: a warming 503 here reads to the user as
+    // "your API key vanished", and the load path would then clear the field.
+    { id: 'credentials', mounts: ['/api/credentials'], module: './cortex/server/api/routes/credentials.routes.js', tier: 1 },
     { id: 'luca-link', mounts: ['/api/luca-link'], module: './cortex/server/api/routes/lucaLink.routes.js', tier: 1 },
     { id: 'router', mounts: ['/api/router'], module: './cortex/server/api/routes/router.routes.js', tier: 1 },
     { id: 'control', mounts: ['/api/control'], module: './cortex/server/api/routes/unified-control.routes.js', tier: 1 },

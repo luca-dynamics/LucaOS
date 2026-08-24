@@ -9,15 +9,18 @@ import { sandboxService } from '../../services/sandboxService.js';
 const router = express.Router();
 
 router.post('/execute', async (req, res) => {
-    const { script, venv, stateful = true } = req.body;
-    
+    // `sessionId` keys the interpreter namespace. Optional and additive: an older
+    // caller that omits it lands in the shared fallback namespace, which is what
+    // every caller shared before this existed.
+    const { script, venv, stateful = true, sessionId } = req.body;
+
     if (!script) {
         return res.status(400).json({ error: 'Script content required' });
     }
 
     if (stateful) {
         try {
-            const output = await sandboxService.execute(script);
+            const output = await sandboxService.execute(script, sessionId);
             res.json(output); // output has { result: stdout, stderr }
         } catch (err) {
             res.status(500).json({ error: err.message, fix: "Check Python sandbox stability or syntax." });

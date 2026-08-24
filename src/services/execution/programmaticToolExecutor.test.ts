@@ -26,11 +26,51 @@ vi.mock("../toolRegistry", () => {
 
 const execMock = ToolRegistry.execute as unknown as ReturnType<typeof vi.fn>;
 
+// The scratchpad client is mocked rather than exercised: its own file covers the
+// HTTP behaviour, and mocking it keeps this file from importing `config/api` and
+// the transcript client transitively. `loadResult` / `saveResult` are what the
+// state tests move around.
+let loadResult: {
+  state: Record<string, unknown>;
+  persisted: boolean;
+  reason: string | null;
+  bytesUsed: number;
+  keyCount: number;
+  limits: null;
+};
+let saveResult: { persisted: boolean; reason: string | null; bytesUsed: number; keyCount: number };
+// Typed through the generic rather than the implementation: several tests assert
+// on the argument (`toHaveBeenCalledWith({ rows: [1, 2, 3] })`), so the call
+// signature has to declare it, while the body has no use for it. An unused
+// parameter here would be a lint warning, and `--max-warnings 0` treats that as
+// a failure.
+const saveMock = vi.fn<(next: Record<string, unknown>) => Promise<typeof saveResult>>(
+  async () => saveResult,
+);
+
+vi.mock("../session/sessionScratchpad", () => ({
+  sessionScratchpad: {
+    load: async () => loadResult,
+    save: (next: Record<string, unknown>) => saveMock(next),
+  },
+}));
+
+const loadedState = (state: Record<string, unknown>) => ({
+  state,
+  persisted: true,
+  reason: null,
+  bytesUsed: JSON.stringify(state).length,
+  keyCount: Object.keys(state).length,
+  limits: null,
+});
+
 describe("ProgrammaticToolExecutor", () => {
   let executor: ProgrammaticToolExecutor;
 
   beforeEach(() => {
     executor = new ProgrammaticToolExecutor();
+    loadResult = loadedState({});
+    saveResult = { persisted: true, reason: null, bytesUsed: 0, keyCount: 0 };
     vi.clearAllMocks();
   });
 
@@ -155,5 +195,151 @@ describe("ProgrammaticToolExecutor", () => {
     );
     expect(result.success).toBe(true);
     expect(result.output).toContain("undefined,undefined,undefined,undefined,undefined,undefined");
+  });
+});
+
+// --- luca.state: durable working data across calls, compaction and restart ---
+
+describe("ProgrammaticToolExecutor — luca.state", () => {
+  let executor: ProgrammaticToolExecutor;
+
+  beforeEach(() => {
+    executor = new ProgrammaticToolExecutor();
+    loadResult = loadedState({});
+    saveResult = { persisted: true, reason: null, bytesUsed: 0, keyCount: 0 };
+    vi.clearAllMocks();
+  });
+
+  it("hands the script what an earlier call stored", async () => {
+    loadResult = loadedState({ rows: [1, 2, 3], label: "batch-7" });
+
+    const result = await executor.executeScript(
+      `return luca.state.label + ":" + luca.state.rows.length;`,
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.output).toContain("batch-7:3");
+  });
+
+  it("flushes what the script stored, and says it landed", async () => {
+    saveResult = { persisted: true, reason: null, bytesUsed: 27, keyCount: 1 };
+
+    const result = await executor.executeScript(
+      `luca.state.rows = [1, 2, 3]; return "stored";`,
+    );
+
+    expect(saveMock).toHaveBeenCalledTimes(1);
+    expect(saveMock).toHaveBeenCalledWith({ rows: [1, 2, 3] });
+    // The model has to know the data is there, or it will re-fetch it.
+    expect(result.output).toContain("[STATE PERSISTED]");
+    expect(result.output).toContain("1 key(s)");
+  });
+
+  it("writes nothing when the script never touches state", async () => {
+    loadResult = loadedState({ rows: [1, 2, 3] });
+
+    const result = await executor.executeScript(`return luca.state.rows.length;`);
+
+    // A read-only script must not cost a write, and must not be told about one.
+    expect(saveMock).not.toHaveBeenCalled();
+    expect(result.output).not.toContain("luca.state ---");
+  });
+
+  it("persists a deletion, which is why the flush is authoritative", async () => {
+    loadResult = loadedState({ rows: [1], stale: true });
+
+    await executor.executeScript(`delete luca.state.stale; return "cleaned";`);
+
+    expect(saveMock).toHaveBeenCalledWith({ rows: [1] });
+  });
+
+  it("flushes what the script assigned even if it replaced the object outright", async () => {
+    loadResult = loadedState({ old: 1 });
+
+    await executor.executeScript(`luca.state = { fresh: 2 }; return "swapped";`);
+
+    // Flushing the object we handed in would silently discard everything the
+    // script stored.
+    expect(saveMock).toHaveBeenCalledWith({ fresh: 2 });
+  });
+
+  it("says so loudly when the write did not land, and still returns the result", async () => {
+    saveResult = {
+      persisted: false,
+      reason: "fetch failed",
+      bytesUsed: 0,
+      keyCount: 0,
+    };
+
+    const result = await executor.executeScript(
+      `luca.state.rows = [1, 2, 3]; return "computed anyway";`,
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.output).toContain("computed anyway");
+    expect(result.output).toContain("[STATE NOT PERSISTED]");
+    expect(result.output).toContain("fetch failed");
+    expect(result.output).toContain("lost when this call ends");
+  });
+
+  it("passes on a caveat about a write that landed incompletely", async () => {
+    saveResult = {
+      persisted: true,
+      reason: "the previous state could not be read, so this save removed none",
+      bytesUsed: 12,
+      keyCount: 3,
+    };
+
+    const result = await executor.executeScript(`luca.state.a = 1; return "ok";`);
+
+    expect(result.output).toContain("[STATE PARTIALLY PERSISTED]");
+    expect(result.output).toContain("removed none");
+  });
+
+  it("warns when the state could not be read at all", async () => {
+    loadResult = {
+      state: {},
+      persisted: false,
+      reason: "no session id resolved yet",
+      bytesUsed: 0,
+      keyCount: 0,
+      limits: null,
+    };
+
+    // Said even for a script that never touches state: one that *read* it saw
+    // undefined for keys that do exist, and the model must not conclude they are
+    // absent.
+    const result = await executor.executeScript(`return "untouched";`);
+
+    expect(result.output).toContain("[STATE NOT LOADED]");
+    expect(result.output).toContain("no session id resolved yet");
+    expect(saveMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps the state a plain object with no route back to the tool proxy", async () => {
+    // A Proxy here would let a script observe the flush; a reference to `luca`
+    // would let a stored value carry the tool proxy into the next call.
+    const result = await executor.executeScript(
+      `return [typeof luca.state, luca.state.tools === undefined, Object.getPrototypeOf(luca.state) === Object.prototype].join(",");`,
+    );
+
+    expect(result.output).toContain("object,true,true");
+  });
+
+  it("saves what a failed script had already stored", async () => {
+    execMock.mockResolvedValue("ok");
+    saveResult = { persisted: true, reason: null, bytesUsed: 9, keyCount: 1 };
+
+    const result = await executor.executeScript(`
+      luca.state.expensive = await luca.tools.safe_read({});
+      throw new Error("failed at step 2");
+    `);
+
+    expect(result.success).toBe(false);
+    // The expensive part of a script that dies late is usually what it stored
+    // early; discarding it forces the whole thing to run again.
+    expect(saveMock).toHaveBeenCalledWith({ expensive: "ok" });
+    expect(result.output).toContain("failed at step 2");
+    expect(result.output).toContain("[STATE PERSISTED]");
   });
 });

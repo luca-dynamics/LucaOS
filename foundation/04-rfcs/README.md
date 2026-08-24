@@ -126,6 +126,7 @@ back. The five accepted RFCs below each seeded one or more decisions now recorde
 | [0003](0003-provider-abstraction-layer.md) | Provider Abstraction Layer | Accepted | Inv. 4 | Adapters that normalize each vendor's native tool-call format to one internal representation, behind a Router — no vendor branching above the Adapter. |
 | [0004](0004-cross-surface-continuity-protocol.md) | Cross-Surface Continuity Protocol | Accepted | Inv. 5, 7 | Versioned state-sync messages with checkpoint/resume and explicit conflict handling, so switching Surface or device continues rather than restarts. |
 | [0005](0005-permissioned-computer-use.md) | Permissioned Computer-Use | Accepted | Inv. 8 | Computer-Use as one gated, interchangeable Tool: operator-resolved permission, provenance, fail-closed, never authorized by transcript text. |
+| [0006](0006-core-resident-turn-loop.md) | Core-Resident Turn Loop and Session Lease | Review | Inv. 2, 5, 8 | The turn loop moves from the renderer to the core; a binding per-session lease admits one loop rather than one window, so an answer in flight continues on whichever Surface the operator turns to; the operator's gate stays at the Surface as an addressed, fail-closed request. |
 
 Use [`0000-template.md`](0000-template.md) to write the next one.
 

@@ -4,221 +4,33 @@
  * Per-participant model routing. Each debate agent uses their own
  * selected AI model (Gemini, GPT-4, Claude, DeepSeek, local Ollama).
  *
- * Providers supported:
- *  - Google Gemini   → @google/genai
- *  - OpenAI / OpenAI-compatible (GPT*, DeepSeek, Mistral via base_url)
- *  - Anthropic Claude → @anthropic-ai/sdk
- *  - Local Ollama    → http://localhost:11434 (OpenAI-compatible)
+ * Model access goes through the core provider layer in ./llm (RFC-0006
+ * Stage 2). No vendor SDK is imported here and nothing in this file branches
+ * on vendor: the gateway owns provider detection, credentials and the wire
+ * format (Invariant 4).
  */
 
-import { GoogleGenAI } from '@google/genai';
-import OpenAI from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
 import { EventEmitter } from 'events';
 import exchangeManager from './exchangeManager.js';
 import indicatorService from './indicatorService.js';
-import secureVault from './secureVault.js';
-
-// ============================================================================
-// Provider Detection & Settings
-// ============================================================================
-
-const LOCAL_MODELS = [
-  "gemma-2b", "phi-3-mini", "llama-3.2-1b", "smollm2-1.7b", 
-  "qwen-2.5-7b", "deepseek-r1-distill-7b"
-];
-
-/**
- * Helper to fetch API keys from Secure Vault with Env fallback.
- */
-async function getApiKey(provider) {
-  const vaultKey = `setting:brain:${provider}ApiKey`;
-  try {
-    const secured = await secureVault.retrieve(vaultKey);
-    // vault.retrieve returns the raw value if stored as a string, or an object if JSON
-    if (secured) {
-      const val = typeof secured === 'object' ? secured.password || secured.apiKey || secured.value : secured;
-      if (val && val !== '[SECURED]') return val;
-    }
-  } catch (e) {
-    console.debug(`[DebateService] Vault lookup failed for ${provider}:`, e.message);
-  }
-
-  // Fallback to Env
-  const envMap = {
-    gemini: ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
-    openai: ['OPENAI_API_KEY'],
-    anthropic: ['ANTHROPIC_API_KEY'],
-    xai: ['XAI_API_KEY', 'GROK_API_KEY'],
-    deepseek: ['DEEPSEEK_API_KEY']
-  };
-
-  const envKeys = envMap[provider] || [];
-  for (const key of envKeys) {
-    if (process.env[key]) return process.env[key];
-  }
-  
-  return null;
-}
-
-/**
- * Detect which provider handles this modelId.
- * Returns: 'gemini' | 'openai' | 'anthropic' | 'xai' | 'deepseek' | 'cortex' | 'ollama' | 'openai-compat'
- */
-function detectProvider(modelId = '') {
-  const m = modelId.toLowerCase();
-  
-  // 1. Local Luca / Cortex Models
-  if (LOCAL_MODELS.some(lm => m.includes(lm)) || m.startsWith('local/')) return 'cortex';
-  
-  // 2. Cloud Providers
-  if (m.includes('gemini') || m.includes('google'))   return 'gemini';
-  if (m.includes('claude') || m.includes('anthropic')) return 'anthropic';
-  if (m.includes('grok') || m.includes('xai'))         return 'xai';
-  if (m.includes('deepseek'))                          return 'deepseek';
-  if (m.startsWith('ollama:') || m.includes('ollama')) return 'ollama';
-  
-  // Mistral, Groq via OpenAI SDK
-  if (m.includes('mistral') || m.includes('groq')) return 'openai-compat';
-  
-  // Default OpenAI
-  if (m.startsWith('gpt') || m.includes('openai') || m.includes('o1') || m.includes('o3')) return 'openai';
-  
-  return 'gemini';
-}
+import llmGateway from './llm/llmGateway.js';
 
 // ============================================================================
 // Unified Model Caller
 // ============================================================================
+
+const DEBATE_MAX_TOKENS = 512;
 
 /**
  * Call any supported model with a prompt string.
  * Returns the text response.
  */
 async function callModel(modelId, prompt) {
-  const provider = detectProvider(modelId);
-  const cleanModelId = modelId.replace(/^ollama:|local\//, '');
-
-  switch (provider) {
-    case 'gemini': {
-      const apiKey = await getApiKey('gemini');
-      if (!apiKey) throw new Error('Gemini API key not found in settings or environment');
-      
-      const genAI = new GoogleGenAI({ apiKey });
-      const result = await genAI.models.generateContent({
-        model: cleanModelId || 'gemini-3-flash-preview',
-        contents: prompt,
-      });
-      return result.text;
-    }
-
-    case 'anthropic': {
-      const apiKey = await getApiKey('anthropic');
-      if (!apiKey) throw new Error('Anthropic API key not found in settings');
-      
-      const anthropic = new Anthropic({ apiKey });
-      const msg = await anthropic.messages.create({
-        model: cleanModelId,
-        max_tokens: 512,
-        messages: [{ role: 'user', content: prompt }],
-      });
-      return msg.content[0]?.text ?? '';
-    }
-
-    case 'xai': {
-      const apiKey = await getApiKey('xai');
-      if (!apiKey) throw new Error('X.AI (Grok) API key not found in settings');
-      
-      const client = new OpenAI({ 
-        baseURL: 'https://api.x.ai/v1',
-        apiKey 
-      });
-      const res = await client.chat.completions.create({
-        model: cleanModelId,
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 512,
-      });
-      return res.choices[0]?.message?.content ?? '';
-    }
-
-    case 'deepseek': {
-      const apiKey = await getApiKey('deepseek');
-      if (!apiKey) throw new Error('DeepSeek API key not found in settings');
-      
-      const client = new OpenAI({ 
-        baseURL: 'https://api.deepseek.com/v1',
-        apiKey 
-      });
-      const res = await client.chat.completions.create({
-        model: cleanModelId,
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 512,
-      });
-      return res.choices[0]?.message?.content ?? '';
-    }
-
-    case 'cortex': {
-      // Local Luca Inference (Cortex) - OpenAI-compatible endpoint on Port 8000
-      const client = new OpenAI({
-        baseURL: process.env.CORTEX_URL || 'http://localhost:8000/v1',
-        apiKey: 'luca-local', 
-      });
-      const res = await client.chat.completions.create({
-        model: cleanModelId,
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 512,
-      });
-      return res.choices[0]?.message?.content ?? '';
-    }
-
-    case 'ollama': {
-      const client = new OpenAI({
-        baseURL: process.env.OLLAMA_URL || 'http://localhost:11434/v1',
-        apiKey: 'ollama',
-      });
-      const res = await client.chat.completions.create({
-        model: cleanModelId,
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 512,
-      });
-      return res.choices[0]?.message?.content ?? '';
-    }
-
-    case 'openai-compat': {
-      const baseURLMap = {
-        deepseek: 'https://api.deepseek.com/v1',
-        mistral:  'https://api.mistral.ai/v1',
-        groq:     'https://api.groq.com/openai/v1',
-      };
-      
-      const providerKey = Object.keys(baseURLMap).find(k => cleanModelId.includes(k)) ?? 'deepseek';
-      const apiKey = await getApiKey(providerKey) || await getApiKey('openai');
-      
-      if (!apiKey) throw new Error(`API key for ${providerKey} not found in settings`);
-      
-      const client = new OpenAI({ baseURL: baseURLMap[providerKey], apiKey });
-      const res = await client.chat.completions.create({
-        model: cleanModelId,
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 512,
-      });
-      return res.choices[0]?.message?.content ?? '';
-    }
-
-    case 'openai':
-    default: {
-      const apiKey = await getApiKey('openai');
-      if (!apiKey) throw new Error('OpenAI API key not found in settings');
-      
-      const client = new OpenAI({ apiKey });
-      const res = await client.chat.completions.create({
-        model: cleanModelId || 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 512,
-      });
-      return res.choices[0]?.message?.content ?? '';
-    }
-  }
+  return llmGateway.completeText({
+    modelId,
+    prompt,
+    maxTokens: DEBATE_MAX_TOKENS,
+  });
 }
 
 // ============================================================================
