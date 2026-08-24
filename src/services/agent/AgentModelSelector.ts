@@ -9,7 +9,7 @@
 
 import type { AgentStep } from "./types";
 import { settingsService } from "../settingsService";
-import { modelManagerService } from "../ModelManagerService";
+import { localModelLibrary as modelManagerService } from "../local-models/LocalModelLibrary";
 
 export interface ModelCapability {
   name: string;

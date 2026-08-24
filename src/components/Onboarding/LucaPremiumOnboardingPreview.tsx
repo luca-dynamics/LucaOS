@@ -337,6 +337,13 @@ export const LucaPremiumOnboardingPreview: React.FC<
         data-luca-onboarding-preview-complete={complete ? "true" : "false"}
         style={{
           minHeight: "100%",
+          // Definite, so the hero below can resolve its own `minHeight: 100%`.
+          // The shell's content layer is a flex item now, which gives IT a
+          // definite height -- so this percentage finally has something to
+          // divide into. A screen taller than the window still grows past this
+          // box (min-height, not height, is what the hero uses) and the shell's
+          // content layer scrolls.
+          height: "100%",
           display: "flex",
           flexDirection: "column",
           // The welcome hero is full-bleed (it owns its own insets); other

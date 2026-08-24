@@ -1,4 +1,5 @@
 import { SecureSocket } from "./secureSocket";
+import { authorizeLucaLinkInbound } from "./lucaLinkInboundAuthorization";
 import { lucaLinkRelayBoundary as legacyRelayClient } from "./lucaLinkRelayBoundary";
 import type { LucaLinkRelayImplementation } from "./lucaLinkRelayBoundary";
 export type {
@@ -294,12 +295,18 @@ import type {
  * This is the primary interface for Luca Link functionality.
  */
 export class LucaLinkManager {
+  private static readonly COMMAND_MAX_AGE_MS = 60_000;
+  private static readonly COMMAND_FUTURE_SKEW_MS = 10_000;
+  private static readonly COMMAND_RESPONSE_TIMEOUT_MS = 30_000;
+  private static readonly MAX_SEEN_COMMAND_IDS = 1_000;
   private socket: SecureSocket | null = null;
   private isInitialized = false;
   private myDeviceId: string | null = null;
   private identityKeyPair: KeyPair | null = null;
   private eventHandlers: Map<string, Set<(event: LucaLinkEvent) => void>> =
     new Map();
+  private seenCommandIds = new Map<string, number>();
+  private pendingCommandResponders = new Map<string, string>();
 
   get deviceId(): string | null {
     return this.myDeviceId;
@@ -534,16 +541,7 @@ export class LucaLinkManager {
       commandId: this.generateCommandId(),
     };
 
-    // --- CRYPTOGRAPHIC SIGNING ---
-    if (this.identityKeyPair) {
-      message.identitySignature = CryptoService.signPayload(
-        message.payload,
-        this.identityKeyPair.secretKey
-      );
-      message.identityPublicKey = CryptoService.encodeKey(
-        this.identityKeyPair.publicKey
-      );
-    }
+    this.signPeerMessage(message);
 
     try {
       await this.socket.send(message);
@@ -705,6 +703,8 @@ export class LucaLinkManager {
       commandId,
     };
 
+    this.signPeerMessage(message);
+
     await this.socket.send(message);
   }
 
@@ -726,7 +726,10 @@ export class LucaLinkManager {
       target: targetId === "all" ? undefined : targetId,
       source: this.myDeviceId || undefined,
       timestamp: Date.now(),
+      commandId: this.generateMessageId("event"),
     };
+
+    this.signPeerMessage(message);
 
     await this.socket.send(message);
   }
@@ -779,10 +782,14 @@ export class LucaLinkManager {
     // Wrap in a promise to wait for response
     return new Promise((resolve, reject) => {
       const commandId = this.generateCommandId();
+      let responseTimeout: ReturnType<typeof setTimeout> | undefined;
+      this.pendingCommandResponders.set(commandId, device!.id);
 
       // Setup temporary listener for the response
       const responseHandler = (event: LucaLinkEvent) => {
         if (event.data.message?.commandId === commandId) {
+          if (responseTimeout) clearTimeout(responseTimeout);
+          this.pendingCommandResponders.delete(commandId);
           this.off("response:received", responseHandler);
           resolve(event.data.message.payload);
         }
@@ -801,16 +808,7 @@ export class LucaLinkManager {
             commandId,
           };
 
-          // --- CRYPTOGRAPHIC SIGNING ---
-          if (this.identityKeyPair) {
-            message.identitySignature = CryptoService.signPayload(
-              message.payload,
-              this.identityKeyPair.secretKey
-            );
-            message.identityPublicKey = CryptoService.encodeKey(
-              this.identityKeyPair.publicKey
-            );
-          }
+          this.signPeerMessage(message);
 
           if (!this.socket?.isConnected()) {
             throw new Error("Luca Link not connected");
@@ -819,12 +817,18 @@ export class LucaLinkManager {
           await this.socket.send(message);
 
           // Timeout handling
-          setTimeout(() => {
+          responseTimeout = setTimeout(() => {
             this.off("response:received", responseHandler);
-            // Don't reject yet as some commands are fire-and-forget or taking long
-            // But resolve with a status if needed
-          }, 30000);
+            this.pendingCommandResponders.delete(commandId);
+            reject(
+              new Error(
+                `LucaLink command timed out after ${LucaLinkManager.COMMAND_RESPONSE_TIMEOUT_MS}ms`
+              )
+            );
+          }, LucaLinkManager.COMMAND_RESPONSE_TIMEOUT_MS);
         } catch (error) {
+          if (responseTimeout) clearTimeout(responseTimeout);
+          this.pendingCommandResponders.delete(commandId);
           this.off("response:received", responseHandler);
           reject(error);
         }
@@ -1021,8 +1025,12 @@ export class LucaLinkManager {
     const message: LucaLinkMessage = {
       type: "sync",
       payload: { key, data },
+      target: "all",
+      source: this.myDeviceId || undefined,
       timestamp: Date.now(),
+      commandId: this.generateMessageId("sync"),
     };
+    this.signPeerMessage(message);
 
     try {
       await this.socket.send(message);
@@ -1032,14 +1040,118 @@ export class LucaLinkManager {
   }
 
   private async handleIncomingMessage(message: LucaLinkMessage): Promise<void> {
+    if (message.type !== "command") {
+      const sourceDevice = message.source
+        ? this.deviceRegistry.getDevice(message.source)
+        : null;
+      const now = Date.now();
+      this.pruneSeenCommandIds(now);
+      const authorization = authorizeLucaLinkInbound({
+        sourceId: message.source,
+        targetId: message.target,
+        localDeviceId: this.myDeviceId,
+        sourceKnown: !!sourceDevice,
+        sourceActive: sourceDevice?.status === "online",
+        sourceTrust: sourceDevice?.trustLevel && sourceDevice.trustLevel >= 80
+          ? "trusted"
+          : sourceDevice
+            ? "paired"
+            : "unknown",
+        requiresPinnedIdentity: true,
+        hasPinnedIdentity: !!sourceDevice?.identityPublicKey,
+        messageId: message.commandId,
+        timestamp: message.timestamp,
+        now,
+        maxAgeMs: LucaLinkManager.COMMAND_MAX_AGE_MS,
+        futureSkewMs: LucaLinkManager.COMMAND_FUTURE_SKEW_MS,
+        replayed: message.commandId
+          ? this.seenCommandIds.has(message.commandId)
+          : false,
+        allowBroadcast: message.type === "event" || message.type === "sync",
+      });
+      if (!authorization.allowed) {
+        console.error(
+          `[SECURITY] ${message.type} rejected (${authorization.code}): ${authorization.reason}`
+        );
+        return;
+      }
+      if (!sourceDevice?.identityPublicKey || !message.commandId) return;
+      if (
+        !message.identitySignature ||
+        (message.identityPublicKey &&
+          message.identityPublicKey !== sourceDevice.identityPublicKey) ||
+        !CryptoService.verifyPayload(
+          this.commandSignatureEnvelope(message),
+          message.identitySignature,
+          CryptoService.decodeKey(sourceDevice.identityPublicKey)
+        )
+      ) {
+        console.error(`[SECURITY] Invalid ${message.type} identity signature rejected`);
+        return;
+      }
+      if (message.type === "response") {
+        const expectedSource = this.pendingCommandResponders.get(message.commandId);
+        if (!expectedSource || expectedSource !== message.source) {
+          console.error(`[SECURITY] Unsolicited or mismatched response rejected`);
+          return;
+        }
+      }
+      this.seenCommandIds.set(message.commandId, now);
+    }
+
     // --- SIGNATURE VERIFICATION ---
     if (message.type === "command") {
       const sourceDevice = message.source
         ? this.deviceRegistry.getDevice(message.source)
         : null;
 
+      const now = Date.now();
+      this.pruneSeenCommandIds(now);
+      const authorization = authorizeLucaLinkInbound({
+        sourceId: message.source,
+        targetId: message.target,
+        localDeviceId: this.myDeviceId,
+        sourceKnown: !!sourceDevice,
+        sourceActive: sourceDevice?.status === "online",
+        sourceTrust:
+          sourceDevice && sourceDevice.trustLevel >= 80
+            ? "trusted"
+            : sourceDevice
+              ? "paired"
+              : "unknown",
+        requiresPinnedIdentity: true,
+        hasPinnedIdentity: !!sourceDevice?.identityPublicKey,
+        messageId: message.commandId,
+        timestamp: message.timestamp,
+        now,
+        maxAgeMs: LucaLinkManager.COMMAND_MAX_AGE_MS,
+        futureSkewMs: LucaLinkManager.COMMAND_FUTURE_SKEW_MS,
+        replayed: message.commandId
+          ? this.seenCommandIds.has(message.commandId)
+          : false,
+      });
+      if (!authorization.allowed) {
+        console.error(
+          `[SECURITY] Command rejected (${authorization.code}): ${authorization.reason}`
+        );
+        return;
+      }
+
+      // The shared boundary guarantees these before cryptographic verification.
+      if (!sourceDevice?.identityPublicKey || !message.commandId) return;
+
+      if (
+        message.identityPublicKey &&
+        message.identityPublicKey !== sourceDevice.identityPublicKey
+      ) {
+        console.error(
+          `[SECURITY] Identity key substitution from ${message.source} rejected`
+        );
+        return;
+      }
+
       // Ensure command is signed
-      if (!message.identitySignature || !message.identityPublicKey) {
+      if (!message.identitySignature) {
         console.error(
           `[SECURITY] 🚨 Unsigned command received from ${
             message.source || "unknown"
@@ -1054,13 +1166,12 @@ export class LucaLinkManager {
         return;
       }
 
-      // Verify signature against pinned public key if we have it, otherwise use the one provided (trust-on-first-use)
-      const publicKeyToVerify = sourceDevice?.identityPublicKey
-        ? CryptoService.decodeKey(sourceDevice.identityPublicKey)
-        : CryptoService.decodeKey(message.identityPublicKey);
+      const publicKeyToVerify = CryptoService.decodeKey(
+        sourceDevice.identityPublicKey
+      );
 
       const isValid = CryptoService.verifyPayload(
-        message.payload,
+        this.commandSignatureEnvelope(message),
         message.identitySignature,
         publicKeyToVerify
       );
@@ -1080,15 +1191,7 @@ export class LucaLinkManager {
         return;
       }
 
-      // If this is a new device with identity, pin it in the registry
-      if (sourceDevice && !sourceDevice.identityPublicKey) {
-        this.deviceRegistry.updateDevice(sourceDevice.id, {
-          identityPublicKey: message.identityPublicKey,
-        });
-        console.log(
-          `[SECURITY] 📌 Pinned identity public key for device: ${sourceDevice.id}`
-        );
-      }
+      this.seenCommandIds.set(message.commandId, now);
     }
 
     switch (message.type) {
@@ -1182,6 +1285,49 @@ export class LucaLinkManager {
 
   private generateCommandId(): string {
     return `cmd_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  private generateMessageId(kind: string): string {
+    return `${kind}_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  }
+
+  private signPeerMessage(message: LucaLinkMessage): void {
+    if (!this.identityKeyPair) {
+      throw new Error("LucaLink identity key is unavailable");
+    }
+    message.identitySignature = CryptoService.signPayload(
+      this.commandSignatureEnvelope(message),
+      this.identityKeyPair.secretKey
+    );
+    message.identityPublicKey = CryptoService.encodeKey(
+      this.identityKeyPair.publicKey
+    );
+  }
+
+  private commandSignatureEnvelope(message: LucaLinkMessage): object {
+    return {
+      type: message.type,
+      payload: message.payload,
+      target: message.target,
+      source: message.source,
+      timestamp: message.timestamp,
+      commandId: message.commandId,
+    };
+  }
+
+  private pruneSeenCommandIds(now: number): void {
+    for (const [commandId, timestamp] of this.seenCommandIds) {
+      if (timestamp < now - LucaLinkManager.COMMAND_MAX_AGE_MS) {
+        this.seenCommandIds.delete(commandId);
+      }
+    }
+    while (this.seenCommandIds.size > LucaLinkManager.MAX_SEEN_COMMAND_IDS) {
+      const oldest = this.seenCommandIds.keys().next().value as
+        | string
+        | undefined;
+      if (!oldest) break;
+      this.seenCommandIds.delete(oldest);
+    }
   }
 
   private emit(event: string, data: any): void {

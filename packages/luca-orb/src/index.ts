@@ -11,6 +11,7 @@ export { LIQUID_SKSL } from "./shaders/liquid";
 export { LivingOrb } from "./living-orb/LivingOrb";
 export { OrbController } from "./living-orb/OrbController";
 export { OrbLab } from "./living-orb/OrbLab";
+export { OrbMaterialLabV2, type OrbMaterialLabV2Props, type OrbMaterialLabTier, type OrbMaterialLabView } from "./living-orb/OrbMaterialLabV2";
 export { OrbShowcase } from "./living-orb/OrbShowcase";
 export { OrbDirector as LivingOrbDirector } from "./living-orb/OrbDirector";
 export { OrbRenderer as LivingOrbRenderer } from "./living-orb/OrbRenderer";

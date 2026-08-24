@@ -3,6 +3,7 @@ import {
   getLucaSkinPresenceVariables,
   type LucaSkinPresenceOptions,
 } from "../../styles/lucaSkinPresence";
+import { LivingOrb } from "@luca/orb";
 
 /**
  * LucaPresence — the onboarding "three-state presence" component.
@@ -141,18 +142,12 @@ export const LucaPresence: React.FC<LucaPresenceProps> = ({
   if (state === "voice") {
     const orbSize = size ?? 128;
     return (
-      <div
-        data-luca-presence="voice"
-        role="img"
-        aria-label={label ?? "Luca presence"}
+      <LivingOrb
+        profile="idle"
+        size={orbSize}
         className={className}
         style={{
-          width: `${orbSize}px`,
-          height: `${orbSize}px`,
           borderRadius: "50%",
-          background: "var(--luca-skin-presence-orb)",
-          boxShadow:
-            "0 24px 56px rgba(0,0,0,.35), inset 0 0 48px rgba(255,255,255,.22), inset 0 -22px 44px rgba(40,70,130,.32)",
           ...rootStyle,
         }}
       />

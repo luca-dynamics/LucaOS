@@ -16,7 +16,7 @@ import {
 } from "./deviceCapabilityService";
 import { settingsService } from "./settingsService";
 import { harnessService } from "./harnessService";
-import { modelManagerService } from "./ModelManagerService";
+import { localModelLibrary as modelManagerService } from "./local-models/LocalModelLibrary";
 import { maintenancePolicy } from "./selfMaintenancePolicy";
 import { mentalStateService } from "./mentalStateService";
 import { thoughtStreamService } from "./thoughtStreamService";

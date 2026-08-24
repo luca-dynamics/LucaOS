@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@luca/audio": ["packages/audio/src/index.ts"],
+      "@luca/config": ["packages/config/src/index.ts"],
+      "@luca/contracts": ["packages/contracts/src/index.ts"],
+      "@luca/conversation-engine": ["packages/conversation-engine/src/index.ts"],
+      "@luca/devtools": ["packages/devtools/src/index.ts"],
+      "@luca/orb": ["packages/luca-orb/src/index.ts"],
+      "@luca/orb/*": ["packages/luca-orb/src/*"],
+      "@luca/orb-design": ["packages/luca-orb-design/src/index.ts"],
+      "@luca/orb-design/*": ["packages/luca-orb-design/src/*"],
+      "@luca/performance": ["packages/performance/src/index.ts"],
+      "@luca/platform-runtime": ["packages/platform-runtime/src/index.ts"],
+      "@luca/presence-engine": ["packages/presence-engine/src/index.ts"],
+      "@luca/presentation": ["packages/presentation/src/index.ts"],
+      "@luca/protocol": ["packages/protocol/src/index.ts"],
+      "@luca/voice-engine": ["packages/voice-engine/src/index.ts"]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*",
+    "packages/*/tests/**/*",
+    "apps/*/src/**/*"
+  ]
+}

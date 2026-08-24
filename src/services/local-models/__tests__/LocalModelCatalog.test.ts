@@ -8,34 +8,33 @@ import {
 } from "../LocalModelCatalog";
 
 describe("LocalModelCatalog", () => {
-  it("contains seed models for every planned runtime kind", () => {
+  it("contains only runtime kinds registered by the default runtime", () => {
     expect(getLocalModelsByRuntime("ollama").length).toBeGreaterThan(0);
     expect(getLocalModelsByRuntime("cortex").length).toBeGreaterThan(0);
-    expect(getLocalModelsByRuntime("webllm").length).toBeGreaterThan(0);
-    expect(getLocalModelsByRuntime("mediapipe").length).toBeGreaterThan(0);
+    expect(getLocalModelsByRuntime("webllm")).toEqual([]);
+    expect(getLocalModelsByRuntime("mediapipe")).toEqual([]);
   });
 
   it("finds models by canonical id or runtime model id", () => {
-    expect(findLocalModelDescriptor("ollama:llama3.2:3b")?.runtime).toBe(
+    expect(findLocalModelDescriptor("ollama:llama3.2:1b")?.runtime).toBe(
       "ollama",
     );
-    expect(findLocalModelDescriptor("llama3.2:3b")?.id).toBe(
-      "ollama:llama3.2:3b",
+    expect(findLocalModelDescriptor("llama3.2:1b")?.id).toBe(
+      "ollama:llama3.2:1b",
     );
-    expect(findLocalModelDescriptor("lfm2.5-230m")?.id).toBe(
-      "cortex:lfm2.5-230m",
+    expect(findLocalModelDescriptor("phi-3-mini")?.id).toBe(
+      "cortex:phi-3-mini",
     );
   });
 
-  it("includes Liquid LFM2.5 230M in the Cortex local model lane", () => {
-    const model = findLocalModelDescriptor("cortex:lfm2.5-230m");
+  it("derives Cortex descriptors from the canonical lifecycle catalog", () => {
+    const model = findLocalModelDescriptor("cortex:phi-3-mini");
 
     expect(model).toMatchObject({
-      displayName: "Liquid LFM2.5 230M GGUF",
+      displayName: "Phi-3 Mini 3.8B",
       runtime: "cortex",
-      runtimeModelId: "lfm2.5-230m",
-      contextWindow: 32768,
-      install: { strategy: "manual", ref: "LiquidAI/LFM2.5-230M-GGUF" },
+      runtimeModelId: "phi-3-mini",
+      install: { strategy: "cortex-download", ref: "phi-3-mini" },
     });
     expect(model?.features).toEqual(expect.arrayContaining(["chat", "streaming"]));
   });

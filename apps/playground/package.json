@@ -15,6 +15,12 @@
   ],
   "author": "LucaOS Architecture",
   "license": "MIT",
+  "dependencies": {
+    "@luca/conversation-engine": "*",
+    "@luca/devtools": "*",
+    "@luca/performance": "*",
+    "@luca/platform-runtime": "*"
+  },
   "devDependencies": {
     "typescript": "^5.0.0"
   }

@@ -106,12 +106,12 @@ export function evaluateEmbodimentState(
     bloomIntensity: rig.bloom,
     bloomRadius: rig.bloomRadius * OrbDimensions.bloomRadius,
 
-    coreIntensity: 0.85,
+    coreIntensity: 0.58,
     coreRadius: OrbDimensions.coreGlowRatio,
-    coronaIntensity: 0.30,
+    coronaIntensity: 0.20,
     coronaRadius: OrbDimensions.coreGlowRatio * 1.8,
 
-    keyHighlightSize: OrbDimensions.keyHighlightRatio * 1.4,
+    keyHighlightSize: OrbDimensions.keyHighlightRatio * 1.1,
     secondaryHighlightSize: OrbDimensions.secondaryHighlightRatio,
     secondaryHighlightIntensity: rig.key.intensity * 0.25,
 

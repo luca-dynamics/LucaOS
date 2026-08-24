@@ -17,8 +17,13 @@ export const LivingOrb: React.FC<LivingOrbEmbodimentProps> = ({
   profile    = 'idle',
   size       = 200,
   audioEnergy = 0,
+  renderMode = 'material',
+  structureStudy = 'front',
+  structureYaw = 0,
+  structurePitch = 0,
   dna,
   layers     = {},
+  background,
   debug      = false,
   className,
   style,
@@ -39,6 +44,11 @@ export const LivingOrb: React.FC<LivingOrbEmbodimentProps> = ({
         dna,
         layers: { ...DEFAULT_LAYER_VISIBILITY, ...layers, debug },
         devicePixelRatio: window.devicePixelRatio,
+        background,
+        renderMode,
+        structureStudy,
+        structureYaw,
+        structurePitch,
       });
       renderer.resize(size, size);
       renderer.start();
@@ -92,6 +102,15 @@ export const LivingOrb: React.FC<LivingOrbEmbodimentProps> = ({
   useEffect(() => {
     rendererRef.current?.setAudioInput(audioEnergy);
   }, [audioEnergy]);
+
+  useEffect(() => {
+    rendererRef.current?.setStructureView(structureStudy, structureYaw, structurePitch);
+  }, [structureStudy, structureYaw, structurePitch]);
+
+  // The host owns the scene capture; replacing it updates refraction without recreating WebGL.
+  useEffect(() => {
+    rendererRef.current?.setBackground(background);
+  }, [background]);
 
   return (
     <div

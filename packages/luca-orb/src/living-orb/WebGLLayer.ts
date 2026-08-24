@@ -124,6 +124,15 @@ export class WebGLLayer {
     if (location !== null) this.gl.uniform1i(location, value);
   }
 
+  /** Bind a texture and connect it to a sampler uniform. */
+  bindTexture(name: string, texture: WebGLTexture, unit: number): void {
+    const location = this.loc(name);
+    if (location === null) return;
+    this.gl.activeTexture(this.gl.TEXTURE0 + unit);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+    this.gl.uniform1i(location, unit);
+  }
+
   /** Draw the fullscreen quad */
   draw(): void {
     const gl = this.gl;

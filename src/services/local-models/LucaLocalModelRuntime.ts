@@ -18,6 +18,7 @@ import type {
   LocalModelDescriptor,
   LocalRuntimeEvent,
 } from "./LocalModelTypes";
+import { nativeGgufModelRegistry } from "./NativeGgufModelRegistry";
 
 interface LucaLocalModelRuntimeOptions {
   registry?: RuntimeRegistry;
@@ -109,7 +110,35 @@ export class LucaLocalModelRuntime {
         (model) => model.id === modelId || model.runtimeModelId === modelId,
       ) ?? findLocalModelDescriptor(modelId);
 
-    if (!descriptor) throw new Error(`Unknown local model: ${modelId}`);
+    if (!descriptor) {
+      if (modelId.startsWith("native-gguf:")) {
+        const runtimeModelId = modelId.slice("native-gguf:".length).trim();
+        if (!runtimeModelId) throw new Error("Native GGUF model id is empty.");
+        return {
+          id: modelId,
+          displayName: runtimeModelId,
+          runtime: "native-gguf",
+          runtimeModelId,
+          features: ["chat", "streaming"],
+        };
+      }
+      const native = nativeGgufModelRegistry
+        .list()
+        .find((model) => model.id === modelId);
+      if (native) {
+        return {
+          id: native.id,
+          displayName: native.displayName ?? native.id,
+          runtime: "native-gguf",
+          runtimeModelId: native.id,
+          contextWindow: native.contextWindow,
+          features: ["chat", "streaming"],
+          install: { strategy: "native-gguf-file", ref: native.modelPath },
+          artifact: native.artifact,
+        };
+      }
+      throw new Error(`Unknown local model: ${modelId}`);
+    }
     return descriptor;
   }
 }

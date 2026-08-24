@@ -1,3 +1,5 @@
+import { CANONICAL_VOLUME_GLSL } from './canonical-volume.glsl';
+
 /**
  * Highlight layer shader — key and secondary specular highlights.
  *
@@ -42,6 +44,8 @@ uniform vec2  u_secondaryHighlightOffset;
 // Orb mask radius (approximate — not full SDF, just radius check)
 uniform float u_maskSoftness;
 
+${CANONICAL_VOLUME_GLSL}
+
 void main() {
   vec2 uv = v_uv;
   float aspect = u_resolution.x / u_resolution.y;
@@ -54,8 +58,7 @@ void main() {
 
   // ── Orb mask (approximate sphere — highlights only appear inside orb) ─────
 
-  float distFromCenter = length(localP);
-  float orbMask = 1.0 - smoothstep(0.9, 1.05, distFromCenter);
+  float orbMask = 1.0 - smoothstep(-u_maskSoftness, u_maskSoftness, lucaCanonicalVolumeField(localP));
   if (orbMask < 0.001) {
     fragColor = vec4(0.0);
     return;
@@ -69,7 +72,7 @@ void main() {
 
   // ── Key highlight ─────────────────────────────────────────────────────────
 
-  vec2 keyCenter = u_keyHighlightOffset + vec2(driftX, driftY);
+  vec2 keyCenter = vec2(-0.18, 0.16) + u_keyHighlightOffset * 0.22 + vec2(driftX, driftY) * 0.22;
   vec2 dKey = localP - keyCenter;
   // Elliptical: tilted slightly to match Apple's painterly highlight vector
   float angle = 0.35;
@@ -84,7 +87,12 @@ void main() {
   // Painterly dual-falloff (bright core + soft ambient spread)
   float coreSpot = exp(-pow(keyDist / (keyR * 0.45), 2.2));
   float softHalo = exp(-pow(keyDist / keyR, 1.4)) * 0.55;
-  float keyGlow  = coreSpot + softHalo;
+  float interiorVeil = (coreSpot + softHalo) * 0.12;
+  float signedField = lucaCanonicalVolumeField(localP);
+  float shellRibbon = exp(-pow((signedField + 0.075) / 0.070, 2.0));
+  vec2 shellDirection = normalize(localP - LUCA_OUTER_CENTER);
+  float upperLeftLight = smoothstep(-0.36, 0.88, dot(shellDirection, normalize(vec2(-0.72, 0.69))));
+  float keyGlow = shellRibbon * mix(0.16, 1.0, upperLeftLight) + interiorVeil;
 
   // ── Secondary highlight (smaller, rounder, different position) ────────────
 
@@ -95,10 +103,11 @@ void main() {
 
   // ── Composite ─────────────────────────────────────────────────────────────
 
-  vec3 color = u_keyHighlightColor * keyGlow * u_keyHighlightIntensity
-             + u_secondaryHighlightColor * secGlow * u_secondaryHighlightIntensity;
+  vec3 heroSilver = mix(u_keyHighlightColor, vec3(0.94, 0.95, 0.97), 0.64);
+  vec3 color = heroSilver * keyGlow * u_keyHighlightIntensity * 0.68
+             + u_secondaryHighlightColor * secGlow * u_secondaryHighlightIntensity * 0.42;
 
-  float alpha = (keyGlow * u_keyHighlightIntensity + secGlow * u_secondaryHighlightIntensity * 0.4);
+  float alpha = (keyGlow * u_keyHighlightIntensity * 0.62 + secGlow * u_secondaryHighlightIntensity * 0.18);
   alpha *= orbMask;
   alpha = clamp(alpha, 0.0, 1.0);
 

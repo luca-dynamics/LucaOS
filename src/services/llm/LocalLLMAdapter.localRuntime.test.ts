@@ -14,9 +14,22 @@ vi.mock("../settingsService", () => ({
   },
 }));
 
-vi.mock("../ModelManagerService", () => ({
+vi.mock("../local-models/LocalModelLibrary", () => ({
   LOCAL_BRAIN_MODEL_IDS: ["gemma-4b", "gemma-2b", "llama-3.2-1b"],
-  modelManager: {
+  LOCAL_MODEL_DEFINITIONS: [
+    {
+      id: "llama-3.2-1b",
+      name: "Llama 3.2 1B",
+      description: "test model",
+      size: 1_000_000_000,
+      sizeFormatted: "1.0 GB",
+      category: "brain",
+      platforms: ["desktop"],
+      runtime: "ollama",
+      ollamaTag: "llama3.2:1b",
+    },
+  ],
+  localModelLibrary: {
     ensureOllamaRunning: mocks.ensureOllamaRunning,
     getModelSpecs: mocks.getModelSpecs,
   },

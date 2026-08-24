@@ -8,9 +8,9 @@ import { Icon } from "./ui/Icon";
 import { LucaButton, LucaDialog, LucaDialogOverlay, LucaInput, LucaSwitch } from "./ui/luca";
 import { resolveLocalCatalogMetadata } from "../services/llm/lucaLocalCatalogBridge";
 import {
-  modelManagerService,
+  localModelLibrary as modelManagerService,
   LocalModel,
-} from "../services/ModelManagerService";
+} from "../services/local-models/LocalModelLibrary";
 import { settingsService } from "../services/settingsService";
 import { modelReadinessResolver } from "../services/models/ModelReadinessResolver";
 import type { ModelRouteDecision } from "../types/modelRouting";
@@ -789,11 +789,11 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
     try {
       if (model.runtime === "ollama") {
         setOllamaSetupStatus({ modelId, step: "Initializing..." });
-        await modelManagerService.downloadModel(modelId, (step: string, p: number) => {
+        await modelManagerService.install(modelId, (step: string, p: number) => {
           setOllamaSetupStatus(s => ({ ...s, step, progress: p }));
         });
       } else {
-        await modelManagerService.downloadModel(modelId);
+        await modelManagerService.install(modelId);
       }
     } catch (e) {
       console.error("[UI] Download failed:", e);
@@ -808,7 +808,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
     if (!model) return;
     const confirmed = window.confirm(`Irreversibly purge ${model.name} from local storage?`);
     if (!confirmed) return;
-    await modelManagerService.deleteModel(modelId);
+    await modelManagerService.remove(modelId);
   }, [models]);
 
   const handleSetActive = useCallback(async (modelId: string) => {

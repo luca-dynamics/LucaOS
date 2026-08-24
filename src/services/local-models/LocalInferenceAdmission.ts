@@ -19,6 +19,7 @@ export interface LocalInferenceAdmissionToken {
 const DEFAULT_RUNTIME_LIMITS: Record<LocalRuntimeKind, number> = {
   ollama: 1,
   cortex: 1,
+  "native-gguf": 1,
   "openai-compatible": 2,
   webllm: 1,
   mediapipe: 1,

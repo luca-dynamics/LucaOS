@@ -1,4 +1,4 @@
-import { modelManager, LocalModel } from "./ModelManagerService";
+import { localModelLibrary as modelManager, LocalModel } from "./local-models/LocalModelLibrary";
 import { Intention } from "./mentalStateService";
 import { modelReadinessResolver } from "./models/ModelReadinessResolver";
 import type { ModelRouteDecision } from "../types/modelRouting";

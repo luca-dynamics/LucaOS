@@ -1,7 +1,7 @@
 import { MemoryNode } from "../types";
 import { settingsService } from "./settingsService";
 import { apiUrl, cortexUrl } from "../config/api";
-import { LOCAL_EMBEDDING_MODEL_IDS } from "./ModelManagerService";
+import { LOCAL_EMBEDDING_MODEL_IDS } from "./local-models/LocalModelLibrary";
 import { BRAIN_CONFIG } from "../config/brain.config";
 import { eventBus } from "./eventBus";
 import { creditService } from "./creditService";
@@ -418,7 +418,7 @@ export const memoryService = {
       return [];
     }
 
-    // Check if using local embedding model (IDs from ModelManagerService - single source of truth)
+    // Check if using a local embedding model from Luca's local model library.
     const isLocalModel = route.mode === "local" || LOCAL_EMBEDDING_MODEL_IDS.some(
       (id: string) =>
         normalizedMemoryModel === id || normalizedMemoryModel.includes(id),

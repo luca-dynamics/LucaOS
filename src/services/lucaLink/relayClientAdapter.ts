@@ -12,6 +12,7 @@ import { cortexUrl, RELAY_SERVER_URL } from "../../config/api";
 import { sessionManager } from "./sessionManager";
 import { CryptoService } from "./crypto";
 import type { EncryptedMessage } from "./types";
+import { authorizeLucaLinkInbound } from "./lucaLinkInboundAuthorization";
 import { legacyDevicesToManifests } from "./lucaLinkLegacyAdapter";
 import { createDefaultHostManifest } from "./capabilityRegistry";
 import {
@@ -169,6 +170,25 @@ export interface LucaLinkMessage {
   };
 }
 
+type LucaLinkInboundMessageClass =
+  | "relay-registry"
+  | "peer-message"
+  | "mission-sync"
+  | "sensor-pulse"
+  | "live-handoff";
+
+interface LucaLinkInboundAuthorizationResult {
+  allowed: boolean;
+  messageClass: LucaLinkInboundMessageClass;
+  reason: string;
+}
+
+export function getDefaultLucaLinkRuntimeEnforcementMode(
+  production: boolean,
+): LucaLinkRuntimeEnforcementMode {
+  return production ? "full-outbound" : "disabled";
+}
+
 export interface LucaLinkDevice {
   deviceId: string;
   type: string;
@@ -213,6 +233,14 @@ class LucaLinkService {
     mode: "observe-only",
   };
   private localHostRole: "primary" | "guest" = "primary";
+
+  constructor() {
+    const production = import.meta.env?.PROD === true;
+    const defaultMode = getDefaultLucaLinkRuntimeEnforcementMode(production);
+    if (defaultMode !== "disabled") {
+      this.runtimeStore.enableEnforcement(defaultMode);
+    }
+  }
 
   // Persistent storage keys
   private readonly DEVICE_ID_KEY = "luca_link_device_id";
@@ -601,6 +629,10 @@ class LucaLinkService {
             targetDeviceId: message.target,
           });
 
+          // A secure flag is not authentication by itself. It becomes trusted
+          // only after decryption succeeds with the source device's session.
+          let authenticatedSecureSession = false;
+
           // --- NEURAL HARDENING: Decrypt secure messages ---
           if (message.secure && message.payload) {
             try {
@@ -615,6 +647,7 @@ class LucaLinkService {
                   message.payload as EncryptedMessage,
                   sessionData.sharedSecret,
                 );
+                authenticatedSecureSession = true;
 
                 // --- VISUAL FEEDBACK: Express Thinking on thought arrival ---
                 import("../iot/CognitiveExpressor").then(
@@ -635,6 +668,17 @@ class LucaLinkService {
               );
               return; // Drop corrupted packet
             }
+          }
+
+          const inboundAuthorization = this.authorizeInboundMessage(
+            message,
+            authenticatedSecureSession,
+          );
+          if (!inboundAuthorization.allowed) {
+            console.warn(
+              `[LucaLink] Dropped unauthorized ${inboundAuthorization.messageClass} from ${message.source || "unknown"}: ${inboundAuthorization.reason}`,
+            );
+            return;
           }
 
           // Handle device sync
@@ -1301,6 +1345,57 @@ class LucaLinkService {
       default:
         return "untrusted";
     }
+  }
+
+  /** Mandatory authorization boundary for relay-delivered peer messages. */
+  private authorizeInboundMessage(
+    message: LucaLinkMessage,
+    authenticatedSecureSession: boolean,
+  ): LucaLinkInboundAuthorizationResult {
+    const messageClass: LucaLinkInboundMessageClass =
+      message.type === "sync" && message.sync?.type === "registry"
+        ? "relay-registry"
+        : message.type === "sync" && message.sync?.type === "mission"
+          ? "mission-sync"
+          : message.type === "SENSOR_PULSE"
+            ? "sensor-pulse"
+            : message.type === LUCA_LINK_HANDOFF_MESSAGE_TYPE
+              ? "live-handoff"
+              : "peer-message";
+
+    // Registry snapshots are relay control-plane data and do not dispatch a
+    // peer payload. They are needed to establish the local peer trust records.
+    if (messageClass === "relay-registry") {
+      return {
+        allowed: true,
+        messageClass,
+        reason: "Relay registry control-plane snapshot.",
+      };
+    }
+
+    const sensitive = messageClass !== "peer-message";
+    const source = message.source
+      ? this.deviceTrustStore.get(message.source)
+      : undefined;
+    const decision = authorizeLucaLinkInbound({
+      sourceId: message.source,
+      targetId: message.target,
+      localDeviceId: this.state.deviceId,
+      sourceKnown: !!source,
+      sourceActive:
+        !!source && source.status === "connected",
+      sourceTrust: source?.trustLevel ?? "unknown",
+      requiresTrustedSource: sensitive,
+      requiresAuthenticatedSession: sensitive,
+      hasAuthenticatedSession: authenticatedSecureSession,
+      allowBroadcast: true,
+    });
+
+    return {
+      allowed: decision.allowed,
+      messageClass,
+      reason: decision.reason,
+    };
   }
 
   private currentTransportChannel(): LucaLinkTransportChannel {
@@ -2659,6 +2754,12 @@ class LucaLinkService {
     try {
       const sessionData =
         await sessionManager.recoverSessionByDevice(targetDeviceId);
+      if (!sessionData) {
+        return {
+          success: false,
+          error: `No secure session for ${targetDeviceId}. LucaLink beams never fall back to plaintext.`,
+        };
+      }
       if (sessionData) {
         console.log(`[LucaLink] 🔐 Vaulting Neural Packet with AES-256-GCM...`);
         finalPayload = await CryptoService.createSecureMessage(

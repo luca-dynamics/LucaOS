@@ -40,6 +40,29 @@ interface LucaDesktopBridge {
   clickMouse(button: string): Promise<void>;
   openScreenPermissions(): Promise<void>;
   triggerScreenPermission(): Promise<any[]>;
+  nativeGguf?: {
+    list(): Promise<any[]>;
+    register(input: any): Promise<any>;
+    remove(id: string): Promise<boolean>;
+    health(): Promise<any>;
+    chat(request: any): Promise<string>;
+    streamStart(requestId: string, request: any, callback: (event: any) => void): Promise<void>;
+    streamCancel(requestId: string): Promise<boolean>;
+    unload(): Promise<void>;
+    apiStart(port?: number): Promise<any>;
+    apiStop(): Promise<any>;
+    apiStatus(): Promise<any>;
+  };
+  localDocs?: {
+    list(): Promise<any[]>;
+    register(input: { folderPath: string; displayName?: string }): Promise<any>;
+    rescan(id: string): Promise<any>;
+    remove(id: string): Promise<boolean>;
+    embed(id: string, modelId: string): Promise<any>;
+    search(request: { query: string; modelId: string; limit?: number; minScore?: number }): Promise<any[]>;
+    watchStart(id: string): Promise<any>;
+    watchStop(id: string): Promise<boolean>;
+  };
   /** Electron sandbox broker IPC (preload). Used by ElectronSandboxBrowserDriver. */
   sandbox?: {
     probe: () => Promise<unknown>;

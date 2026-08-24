@@ -2,7 +2,7 @@ import { ToolRegistry } from "../../services/toolRegistry";
 import * as Definitions from "../definitions/configuration.tools";
 import { settingsService } from "../../services/settingsService";
 import { voiceCloneService } from "../../services/VoiceCloneService";
-import { modelManager } from "../../services/ModelManagerService";
+import { localModelLibrary as modelManager } from "../../services/local-models/LocalModelLibrary";
 import { lucaLinkManager } from "../../services/lucaLink/manager";
 import { initializeToolRegistry } from "../../services/toolInitialization";
 import { memoryService } from "../../services/memoryService";

@@ -5,7 +5,7 @@
  * - Chat: admission + CortexRuntime.chat
  * - Non-chat HTTP: shared base URL + fetchCortexViaRuntimeFacade
  *
- * Install/download lifecycle still uses ModelManagerService Cortex HTTP
+ * Install/download lifecycle still uses LocalModelLibrary Cortex HTTP
  * (model status/download paths).
  */
 

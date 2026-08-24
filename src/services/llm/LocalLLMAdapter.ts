@@ -1,6 +1,6 @@
 import { LLMProvider, ChatMessage, LLMResponse } from "./LLMProvider";
 import { settingsService } from "../settingsService";
-import { modelManager, LOCAL_BRAIN_MODEL_IDS } from "../ModelManagerService";
+import { localModelLibrary as modelManager, LOCAL_BRAIN_MODEL_IDS } from "../local-models/LocalModelLibrary";
 import { lucaLocalModelRuntime } from "../local-models/LucaLocalModelRuntime";
 import type { LocalChatMessage, LocalToolDefinition } from "../local-models/LocalModelTypes";
 import { probeOllamaViaRuntimeFacade } from "../local-models/ollamaRuntimeProbe";
@@ -314,6 +314,7 @@ function toLocalChatMessage(message: Record<string, any>): LocalChatMessage {
   return {
     role: message.role as LocalChatMessage["role"],
     content: message.content || " ",
+    images: Array.isArray(message.images) ? message.images : undefined,
     toolCallId: message.tool_call_id,
   };
 }

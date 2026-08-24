@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { LocalModel } from "../ModelManagerService";
-import { modelManager } from "../ModelManagerService";
+import type { LocalModel } from "../local-models/LocalModelLibrary";
+import { localModelLibrary as modelManager } from "../local-models/LocalModelLibrary";
 import { settingsService } from "../settingsService";
 
 export interface ProvisionTarget {

@@ -6,7 +6,7 @@
 import { nativeControl } from "../../services/nativeControlService";
 import { onvifCameraHandler } from "../../services/substrateHandlers/OnvifCameraHandler";
 import { settingsService } from "../../services/settingsService";
-import { modelManagerService } from "../../services/ModelManagerService";
+import { localModelLibrary as modelManagerService } from "../../services/local-models/LocalModelLibrary";
 import { maintenancePolicy } from "../../services/selfMaintenancePolicy";
 
 export async function dispatchInlineTools(

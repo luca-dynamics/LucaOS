@@ -1,6 +1,7 @@
 export type LocalRuntimeKind =
   | "ollama"
   | "cortex"
+  | "native-gguf"
   | "openai-compatible"
   | "webllm"
   | "mediapipe";
@@ -18,11 +19,24 @@ export type LocalModelInstallStrategy =
   | "cortex-download"
   | "webllm-cache"
   | "mediapipe-download"
+  | "native-gguf-file"
   | "manual";
 
 export interface LocalModelInstallPlan {
   strategy: LocalModelInstallStrategy;
   ref?: string;
+}
+
+export interface LocalModelArtifact {
+  url?: string;
+  sha256?: string;
+  filename?: string;
+  quantization?: string;
+  architecture?: string;
+  chatTemplate?: string;
+  license?: string;
+  provenance?: string;
+  minimumRuntimeVersion?: string;
 }
 
 export interface LocalModelDescriptor {
@@ -36,11 +50,14 @@ export interface LocalModelDescriptor {
   features: LocalModelFeature[];
   recommended?: boolean;
   install?: LocalModelInstallPlan;
+  artifact?: LocalModelArtifact;
 }
 
 export interface LocalChatMessage {
   role: "system" | "user" | "assistant" | "tool";
   content: string;
+  /** Base64 payloads or data URLs understood by multimodal runtime adapters. */
+  images?: string[];
   toolCallId?: string;
 }
 

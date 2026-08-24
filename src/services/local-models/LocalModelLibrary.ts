@@ -1,17 +1,14 @@
 /**
- * Model Manager Service
- * Unified management of all local AI models (Desktop).
+ * Luca local model library.
+ * Owns the catalog, installed state, lifecycle operations, activation, and
+ * hardware policy for local models. Inference execution is delegated to the
+ * runtime adapters in this directory.
  */
 
-import { CORTEX_URL } from "../config/api";
-import { settingsService } from "./settingsService";
-import { maintenancePolicy } from "./selfMaintenancePolicy";
-import { probeOllamaViaRuntimeFacade } from "./local-models/ollamaRuntimeProbe";
-import { probeCortexViaRuntimeFacade } from "./local-models/cortexRuntimeProbe";
-import {
-  canaryChatViaRuntimeFacade,
-  deleteOllamaModelViaRuntimeFacade,
-} from "./local-models/ollamaRuntimeOps";
+import { CORTEX_URL } from "../../config/api";
+import { settingsService } from "../settingsService";
+import { maintenancePolicy } from "../selfMaintenancePolicy";
+import { localModelLease } from "./LocalModelLease";
 
 export interface LocalModel {
   id: string;
@@ -94,7 +91,10 @@ function catalogWarningFor(
   return `${def.name} has unknown distribution readiness.`;
 }
 
-const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
+export const LOCAL_MODEL_DEFINITIONS: Omit<
+  LocalModel,
+  "status" | "downloadProgress"
+>[] = [
   // ===== BRAIN MODELS (Chat & Reasoning) =====
   {
     id: "gemma-4b",
@@ -542,27 +542,27 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   },
 ];
 
-export const LOCAL_BRAIN_MODEL_IDS = MODEL_DEFINITIONS.filter(
+export const LOCAL_BRAIN_MODEL_IDS = LOCAL_MODEL_DEFINITIONS.filter(
   (m) => m.category === "brain",
 ).map((m) => m.id);
-export const LOCAL_VISION_MODEL_IDS = MODEL_DEFINITIONS.filter(
+export const LOCAL_VISION_MODEL_IDS = LOCAL_MODEL_DEFINITIONS.filter(
   (m) => m.category === "vision",
 ).map((m) => m.id);
-export const LOCAL_TTS_MODEL_IDS = MODEL_DEFINITIONS.filter(
+export const LOCAL_TTS_MODEL_IDS = LOCAL_MODEL_DEFINITIONS.filter(
   (m) => m.category === "tts",
 ).map((m) => m.id);
-export const LOCAL_STT_MODEL_IDS = MODEL_DEFINITIONS.filter(
+export const LOCAL_STT_MODEL_IDS = LOCAL_MODEL_DEFINITIONS.filter(
   (m) => m.category === "stt",
 ).map((m) => m.id);
-export const LOCAL_EMBEDDING_MODEL_IDS = MODEL_DEFINITIONS.filter(
+export const LOCAL_EMBEDDING_MODEL_IDS = LOCAL_MODEL_DEFINITIONS.filter(
   (m) => m.category === "embedding",
 ).map((m) => m.id);
 
 export function isLocalModelId(modelId: string): boolean {
-  return MODEL_DEFINITIONS.some((m) => m.id === modelId);
+  return LOCAL_MODEL_DEFINITIONS.some((m) => m.id === modelId);
 }
 
-class ModelManagerService {
+class LocalModelLibrary {
   private _cortexBaseUrl: string = CORTEX_URL;
   private _isConfigured: boolean = false;
   private models: Map<string, LocalModel> = new Map();
@@ -570,7 +570,7 @@ class ModelManagerService {
   private _systemSpecs: any = null;
 
   constructor() {
-    MODEL_DEFINITIONS.forEach((def) => {
+    LOCAL_MODEL_DEFINITIONS.forEach((def) => {
       const catalogStatus = inferCatalogStatus(def);
       this.models.set(def.id, {
         ...def,
@@ -621,6 +621,11 @@ class ModelManagerService {
     return Array.from(this.models.values());
   }
 
+  async refresh(): Promise<LocalModel[]> {
+    await this.refreshStatus();
+    return this.getAllModels();
+  }
+
   public getModelSpecs(id: string): LocalModel | undefined {
     return this.models.get(id);
   }
@@ -659,6 +664,9 @@ class ModelManagerService {
 
       let ollamaNames: string[] = [];
       try {
+        const { probeOllamaViaRuntimeFacade } = await import(
+          "./ollamaRuntimeProbe"
+        );
         const probe = await probeOllamaViaRuntimeFacade({ force: true });
         if (probe.available) {
           ollamaNames = probe.models;
@@ -919,13 +927,35 @@ class ModelManagerService {
     }
   }
 
+  async install(
+    id: string,
+    onProgress?: (step: string, progress: number) => void,
+  ): Promise<boolean> {
+    return this.downloadModel(id, onProgress);
+  }
+
   async deleteModel(id: string): Promise<boolean> {
     const model = this.models.get(id);
     if (!model) return false;
 
+    const runtimeModelId =
+      model.runtime === "ollama" ? this.getOllamaTagForModel(id) : id;
+    const idle = await Promise.all([
+      localModelLease.waitForZero(id, 30_000),
+      localModelLease.waitForZero(runtimeModelId, 30_000),
+    ]);
+    if (idle.some((ready) => !ready)) {
+      model.unsupportedReason = `${model.name} is still serving a local request. Try again when inference finishes.`;
+      this.notifyListeners();
+      return false;
+    }
+
     try {
       if (model.runtime === "ollama") {
         const tag = this.getOllamaTagForModel(id);
+        const { deleteOllamaModelViaRuntimeFacade } = await import(
+          "./ollamaRuntimeOps"
+        );
         const deleted = await deleteOllamaModelViaRuntimeFacade(tag);
         if (deleted.ok) {
           model.status = "not_downloaded";
@@ -951,6 +981,10 @@ class ModelManagerService {
       console.error(`[ModelManager] Purge failed for ${id}:`, e);
     }
     return false;
+  }
+
+  async remove(id: string): Promise<boolean> {
+    return this.deleteModel(id);
   }
 
   async setupOllamaForModel(
@@ -1008,6 +1042,9 @@ class ModelManagerService {
     force?: boolean;
   }): Promise<{ available: boolean; models: Array<{ name: string }> }> {
     try {
+      const { probeOllamaViaRuntimeFacade } = await import(
+        "./ollamaRuntimeProbe"
+      );
       const probe = await probeOllamaViaRuntimeFacade({
         force: options?.force,
       });
@@ -1034,6 +1071,9 @@ class ModelManagerService {
     activeGenerations?: number;
   }> {
     try {
+      const { probeCortexViaRuntimeFacade } = await import(
+        "./cortexRuntimeProbe"
+      );
       const probe = await probeCortexViaRuntimeFacade({
         force: options?.force,
       });
@@ -1139,6 +1179,9 @@ class ModelManagerService {
       if (model.runtime === "ollama") {
         // Canary via runtime facade (OpenAI-compatible chat path).
         const tag = model.ollamaTag || id;
+        const { canaryChatViaRuntimeFacade } = await import(
+          "./ollamaRuntimeOps"
+        );
         const canary = await canaryChatViaRuntimeFacade({ model: tag });
         model.canary = {
           passed: canary.ok,
@@ -1269,5 +1312,4 @@ class ModelManagerService {
   }
 }
 
-export const modelManagerService = new ModelManagerService();
-export const modelManager = modelManagerService; // Backward compatibility alias
+export const localModelLibrary = new LocalModelLibrary();

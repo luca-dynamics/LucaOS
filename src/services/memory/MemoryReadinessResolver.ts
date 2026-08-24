@@ -3,7 +3,7 @@ import {
   LOCAL_EMBEDDING_MODEL_IDS,
   modelManager,
   type LocalModel,
-} from "../ModelManagerService";
+} from "../local-models/LocalModelLibrary";
 import { modelReadinessResolver } from "../models/ModelReadinessResolver";
 import { settingsService, type LucaSettings } from "../settingsService";
 import type { ModelRouteDecision } from "../../types/modelRouting";

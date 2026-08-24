@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { LucaSelect } from "../ui/luca";
 import { LucaSettings } from "../../services/settingsService";
-import { modelManager, LocalModel } from "../../services/ModelManagerService";
+import { localModelLibrary as modelManager, LocalModel } from "../../services/local-models/LocalModelLibrary";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,

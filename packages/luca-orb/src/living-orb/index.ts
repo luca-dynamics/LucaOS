@@ -4,6 +4,8 @@
 export { LivingOrb }       from './LivingOrb';
 export { OrbController }   from './OrbController';
 export { OrbLab }          from './OrbLab';
+export { OrbMaterialLabV2 } from './OrbMaterialLabV2';
+export type { OrbMaterialLabV2Props, OrbMaterialLabTier, OrbMaterialLabView } from './OrbMaterialLabV2';
 export { OrbRenderer }     from './OrbRenderer';
 export { OrbDirector }     from './OrbDirector';
 export { OrbAnimator }     from './OrbAnimator';

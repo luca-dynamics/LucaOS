@@ -16,6 +16,9 @@
   ],
   "author": "LucaOS Architecture",
   "license": "MIT",
+  "dependencies": {
+    "@luca/performance": "*"
+  },
   "devDependencies": {
     "typescript": "^5.0.0"
   }

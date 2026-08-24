@@ -3,7 +3,7 @@ import { settingsService, LucaSettings } from "./settingsService";
 import {
   LOCAL_STT_MODEL_IDS,
   LOCAL_TTS_MODEL_IDS,
-} from "./ModelManagerService";
+} from "./local-models/LocalModelLibrary";
 
 import type { VoiceRuntimeProviderPolicyRouteMetadata } from "./voice/VoiceRuntimeProviderPolicy";
 import type { VoiceRouteShadowEvaluation } from "./voice/VoiceRouteShadowEvaluator";

@@ -1,10 +1,11 @@
-// ─── Automated Golden Master Certification Verification Pipeline ───────────────
-// Executable certification harness validating the 64 snapshot targets and 8 motion replays.
+// Legacy V1 parameter-envelope check.
+// This renders no pixels and cannot certify a visual Golden Master.
 
 import { DEFAULT_LUCA_IDENTITY_DNA, evaluateEmbodimentState } from '../src';
 
 export interface VerificationResult {
   passed: boolean;
+  certificationStatus: 'invalidated';
   totalSnapshots: number;
   totalProfiles: number;
   errors: string[];
@@ -38,7 +39,8 @@ export function verifyGoldenMaster(): VerificationResult {
   }
 
   return {
-    passed: errors.length === 0,
+    passed: false,
+    certificationStatus: 'invalidated',
     totalSnapshots: snapshotCount,
     totalProfiles: profiles.length,
     errors,
@@ -49,13 +51,14 @@ export function verifyGoldenMaster(): VerificationResult {
 if (require.main === module) {
   const res = verifyGoldenMaster();
   console.log(`\n======================================================`);
-  console.log(`  LUCA EMBODIMENT GOLDEN MASTER CERTIFICATION HARNESS `);
+  console.log(`  LUCA EMBODIMENT V1 PARAMETER CHECK (NOT CERTIFICATION) `);
   console.log(`======================================================`);
   console.log(`  Snapshots Validated: ${res.totalSnapshots} (64 Targets)`);
   console.log(`  Behavior Profiles:   ${res.totalProfiles} Profiles`);
-  console.log(`  Verification Result: ${res.passed ? 'PASSED ✅' : 'FAILED ❌'}`);
+  console.log(`  Certification:       INVALIDATED`);
+  console.log(`  Parameter Errors:    ${res.errors.length}`);
   if (res.errors.length > 0) {
     console.error(`  Errors:`, res.errors);
-    process.exit(1);
   }
+  process.exit(1);
 }

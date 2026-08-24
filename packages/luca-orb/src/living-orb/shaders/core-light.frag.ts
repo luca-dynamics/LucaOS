@@ -1,4 +1,4 @@
-import { NOISE_GLSL } from './noise';
+import { ORB_SHAPE_GLSL } from './orb-shape.glsl';
 
 /**
  * Core light layer — volumetric inner glow.
@@ -45,23 +45,20 @@ uniform float u_audioOnset;
 // Profile
 uniform float u_profile;        // 0–6
 
-${NOISE_GLSL}
+${ORB_SHAPE_GLSL}
 
 // Blob SDF (must match glass.frag.ts exactly for correct masking)
 uniform float u_lowFreqAmp;
 uniform float u_midFreqAmp;
+uniform float u_highFreqAmp;
+uniform float u_microJitter;
+uniform sampler2D u_pearlDepthMap;
 
 float blobSDF(vec2 p) {
-  float sag = max(0.0, -p.y) * 0.08;
-  vec2 sagP = vec2(p.x, p.y + sag * 0.15);
-  float dist = length(sagP);
-
-  vec2 noisePos = sagP * 1.8 + vec2(u_noiseTime * 0.7, u_noiseTime * 0.5);
-  float n1 = noise2(noisePos * u_lowFreqAmp * 28.0) * 2.0 - 1.0;
-  vec2 noisePos2 = sagP * 2.8 + vec2(u_noiseTime * 1.1, u_noiseTime * 0.8 + 2.3);
-  float n2 = noise2(noisePos2 * u_midFreqAmp * 120.0 + vec2(3.3, 1.7)) * 2.0 - 1.0;
-  float deformedRadius = 1.0 + sag * 0.10 + n1 * u_lowFreqAmp + n2 * u_midFreqAmp;
-  return dist - deformedRadius;
+  return lucaAnimatedVolumeField(
+    p, u_noiseTime, u_time, u_lowFreqAmp, u_midFreqAmp,
+    u_highFreqAmp, u_microJitter, u_audioEnergy, u_audioOnset
+  );
 }
 
 void main() {
@@ -88,12 +85,26 @@ void main() {
 
   // Center the glow slightly above the geometric center
   // (gives it a "looking up" quality — more alive)
-  vec2 glowCenter = vec2(0.0, 0.06);
-  float distFromGlow = length(localP - glowCenter);
+  vec4 pearlSample = texture(u_pearlDepthMap, uv);
+  float pearlThickness = max(pearlSample.r - pearlSample.g, 0.0)
+    * min(pearlSample.b, pearlSample.a);
+  float innerLobeMask = smoothstep(0.005, 0.055, pearlThickness);
+  vec2 pearlCenter = vec2(-0.08, -0.10);
+  vec2 coreDelta = (localP - pearlCenter) / vec2(0.73, 0.62);
+  float coreAngle = -0.20;
+  coreDelta = mat2(
+    cos(coreAngle), -sin(coreAngle),
+    sin(coreAngle), cos(coreAngle)
+  ) * coreDelta;
+  coreDelta.x *= 2.45;
+  coreDelta.y *= 0.58;
+  float distFromGlow = length(coreDelta);
 
   // Gaussian core
   float coreR = u_coreRadius;
   float coreGlow = exp(-distFromGlow * distFromGlow / (coreR * coreR));
+  float lobeVolume = pow(clamp(pearlThickness / 0.62, 0.0, 1.0), 1.08);
+  coreGlow = (coreGlow * 0.42 + lobeVolume * 0.10) * innerLobeMask;
 
   // Audio pulse: immediate brightness spike on onset
   float audioPulse = 1.0 + u_audioEnergy * 0.35 + u_audioOnset * 0.50;
@@ -106,7 +117,7 @@ void main() {
   // ── Secondary corona ──────────────────────────────────────────────────────
 
   float coronaR = u_coronaRadius;
-  float corona = exp(-distFromGlow * distFromGlow / (coronaR * coronaR));
+  float corona = exp(-distFromGlow * distFromGlow / (coronaR * coronaR)) * innerLobeMask;
   // Corona is the wider, dimmer halo around the core
   corona = max(corona - coreGlow * 0.6, 0.0);
 

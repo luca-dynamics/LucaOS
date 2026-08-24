@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Icon } from "../ui/Icon";
 import { LucaPopover } from "../ui/luca";
 import { settingsService, LucaSettings } from "../../services/settingsService";
-import { modelManager, LocalModel } from "../../services/ModelManagerService";
+import { localModelLibrary as modelManager, LocalModel } from "../../services/local-models/LocalModelLibrary";
 import {
   ANTHROPIC_CLAUDE_MODELS,
   DEEPSEEK_MODELS,

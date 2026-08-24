@@ -1,9 +1,9 @@
 import { llmService } from "../llmService";
 import {
   modelManager,
-  modelManagerService,
+  localModelLibrary as modelManagerService,
   type LocalModel,
-} from "../ModelManagerService";
+} from "../local-models/LocalModelLibrary";
 import { memoryService } from "../memoryService";
 import {
   memoryReadinessResolver,

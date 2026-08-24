@@ -13,6 +13,12 @@ export type OrbProfile =
   | 'error'
   | 'sleeping';
 
+/** Diagnostic structure mode deliberately bypasses every material effect. */
+export type OrbRenderMode = 'material' | 'structure';
+
+/** Structure Lab studies: exact front trace, closed shell, or exposed anatomy. */
+export type OrbStructureStudy = 'front' | 'turntable' | 'anatomy';
+
 /** Which rendering layers are active. All true by default. */
 export interface OrbLayerVisibility {
   /** Ripple rings + ambient bloom */
@@ -66,8 +72,16 @@ export interface LivingOrbProps {
   size?: number;
   /** Audio energy 0–1 for audio-reactive surface */
   audioEnergy?: number;
+  /** Structure mode renders frozen neutral anatomy for geometry approval. */
+  renderMode?: OrbRenderMode;
+  /** Structure-only camera/study controls; ignored by the material renderer. */
+  structureStudy?: OrbStructureStudy;
+  structureYaw?: number;
+  structurePitch?: number;
   /** Layer visibility overrides */
   layers?: Partial<OrbLayerVisibility>;
+  /** Pixel-matched source for refraction. Omit for the honest non-refractive fallback. */
+  background?: TexImageSource;
   /** Show debug overlay */
   debug?: boolean;
   className?: string;

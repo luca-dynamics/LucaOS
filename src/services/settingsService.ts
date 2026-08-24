@@ -962,7 +962,7 @@ class SettingsService extends EventEmitter {
     try {
       // 1. Check if this is a local model (Full Privacy Trigger)
       const { isLocalModelId, LOCAL_EMBEDDING_MODEL_IDS } =
-        await import("./ModelManagerService");
+        await import("./local-models/LocalModelLibrary");
       const normalizedModel = model.startsWith("local/")
         ? model.split("/")[1] || model
         : model;

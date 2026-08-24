@@ -1,4 +1,4 @@
-import { NOISE_GLSL } from './noise';
+import { ORB_SHAPE_GLSL } from './orb-shape.glsl';
 
 /**
  * Glass body fragment shader — the main orb surface.
@@ -7,9 +7,9 @@ import { NOISE_GLSL } from './noise';
  *  1. Evaluate a domain-warped SDF to get the organic blob shape
  *  2. Compute the surface normal from the SDF gradient
  *  3. Apply Fresnel rim lighting
- *  4. Fake refraction (UV offset by normal)
- *  5. Subsurface scatter approximation (light falls off from center)
- *  6. Chromatic aberration at edges
+ *  4. Sample the matched host scene through the optical-thickness field
+ *  5. Apply Beer-Lambert absorption and suspended-volume scatter
+ *  6. Apply restrained chromatic dispersion at the refracted edge
  *  7. Soft edge anti-aliasing
  *
  * All parameters are passed as uniforms — the shader has no hardcoded
@@ -47,6 +47,15 @@ uniform float u_specularIntensity;   // Specular brightness
 uniform float u_subsurfaceDepth;     // Internal scatter depth
 uniform float u_edgeSoftness;        // Silhouette AA width
 uniform float u_chromaticAberration; // Chromatic split at edges
+uniform sampler2D u_thicknessMap;
+uniform sampler2D u_sceneTexture;
+uniform bool u_hasSceneTexture;
+uniform vec3 u_absorption;
+uniform float u_opticalDensity;
+uniform float u_scattering;
+uniform float u_causticStrength;
+uniform float u_sceneTransmission;
+uniform float u_shellReflectivity;
 
 // Colors
 uniform vec3  u_glassColor;
@@ -68,7 +77,7 @@ uniform float u_fillLightIntensity;
 uniform vec3  u_fillLightColor;
 
 // ─── Noise ────────────────────────────────────────────────────────────────────
-${NOISE_GLSL}
+${ORB_SHAPE_GLSL}
 
 // ─── Blob SDF ────────────────────────────────────────────────────────────────
 
@@ -78,36 +87,10 @@ ${NOISE_GLSL}
  * p: point in orb-local space (orb center = origin, orb radius = 1.0)
  */
 float blobSDF(vec2 p) {
-  // Gravitational sag: subtle teardrop/sag near the bottom
-  float sag = max(0.0, -p.y) * 0.08;
-  vec2 sagP = vec2(p.x, p.y + sag * 0.15);
-  float dist = length(sagP);
-
-  // Domain warp: apply noise in object space
-  vec2 noisePos = sagP * 1.8 + vec2(u_noiseTime * 0.7, u_noiseTime * 0.5);
-
-  // Low frequency: organic bumps
-  float n1 = noise2(noisePos * u_lowFreqAmp * 28.0) * 2.0 - 1.0;
-
-  // Medium frequency: surface detail
-  vec2 noisePos2 = sagP * 2.8 + vec2(u_noiseTime * 1.1, u_noiseTime * 0.8 + 2.3);
-  float n2 = noise2(noisePos2 * u_midFreqAmp * 120.0 + vec2(3.3, 1.7)) * 2.0 - 1.0;
-
-  // High frequency: surface tension ripple
-  float n3 = noise2(sagP * 8.0 + u_time * 3.7 + vec2(1.1, 2.2)) * 2.0 - 1.0;
-
-  // Audio-reactive surface deformation
-  float audioDeform = u_audioEnergy * 0.04 + u_audioOnset * 0.06;
-
-  float deformedRadius = 1.0
-    + sag * 0.10
-    + n1 * u_lowFreqAmp
-    + n2 * u_midFreqAmp
-    + n3 * u_highFreqAmp
-    + audioDeform
-    + u_microJitter * (noise2(sagP * 12.0 + u_time * 4.2) * 2.0 - 1.0);
-
-  return dist - deformedRadius;
+  return lucaAnimatedVolumeField(
+    p, u_noiseTime, u_time, u_lowFreqAmp, u_midFreqAmp,
+    u_highFreqAmp, u_microJitter, u_audioEnergy, u_audioOnset
+  );
 }
 
 // ─── Compute SDF gradient (surface normal) ────────────────────────────────────
@@ -154,14 +137,33 @@ void main() {
 
   // ── Surface normal ────────────────────────────────────────────────────────
 
-  vec2 normal2D = blobNormal(localP);
-  float normalZ = 0.65;
-  vec3 normal = normalize(vec3(normal2D, normalZ));
-  vec3 viewDir = vec3(0.0, 0.0, 1.0);
+  vec2 contourNormal2D = blobNormal(localP);
 
   // ── Depth inside orb ──────────────────────────────────────────────────────
 
-  float depth = clamp(-sdf, 0.0, 1.0);
+  vec4 opticalSample = texture(u_thicknessMap, uv);
+  float frontDepth = opticalSample.r;
+  float rearDepth = opticalSample.g;
+  float meshCoverage = min(opticalSample.b, opticalSample.a);
+  float thickness = max(frontDepth - rearDepth, 0.0) * meshCoverage;
+  float depth = thickness;
+
+  // The rasterized front surface supplies a true depth gradient. Blend it
+  // with the authored contour normal to keep the antialiased rim stable.
+  vec2 depthTexel = 2.0 / u_resolution;
+  vec2 depthGradient = vec2(
+    texture(u_thicknessMap, uv + vec2(depthTexel.x, 0.0)).r
+      - texture(u_thicknessMap, uv - vec2(depthTexel.x, 0.0)).r,
+    texture(u_thicknessMap, uv + vec2(0.0, depthTexel.y)).r
+      - texture(u_thicknessMap, uv - vec2(0.0, depthTexel.y)).r
+  ) * 0.25;
+  vec3 depthNormal = normalize(vec3(-depthGradient * vec2(aspect, 1.0) * 52.0, 1.0));
+  vec2 depthNormal2D = length(depthNormal.xy) > 0.001 ? normalize(depthNormal.xy) : contourNormal2D;
+  vec2 normal2D = normalize(mix(contourNormal2D, depthNormal2D, 0.68));
+  float normalZ = mix(0.10, 1.0, clamp(thickness, 0.0, 1.0));
+  vec3 contourNormal = normalize(vec3(normal2D * mix(1.0, 0.28, thickness), normalZ));
+  vec3 normal = normalize(mix(contourNormal, depthNormal, 0.72));
+  vec3 viewDir = vec3(0.0, 0.0, 1.0);
 
   // ── Asymmetrical Fresnel rim (Upper-Left Brighter, Lower-Right Softer) ─────
 
@@ -170,7 +172,16 @@ void main() {
   float rimAsymmetry = mix(0.45, 1.30, rimAngle * 0.5 + 0.5);
 
   float fresnelF = fresnel(normal, viewDir, u_fresnelExponent) * u_fresnelStrength * rimAsymmetry;
-  vec3 rimLight = u_rimColor * fresnelF;
+  // The master reads as a broad silver wall, not a neon contour. These two
+  // overlapping lobes turn the depth field into a soft nested glass band.
+  float outerWall = exp(-pow((thickness - 0.13) / 0.165, 2.0)) * edgeFade;
+  float innerWall = exp(-pow((thickness - 0.31) / 0.175, 2.0)) * edgeFade;
+  float lowerWall = smoothstep(-0.15, 0.72, dot(normal2D, normalize(vec2(-0.30, -0.95))));
+  vec3 silverOuter = vec3(0.78, 0.82, 0.86) * outerWall * rimAsymmetry;
+  vec3 silverInner = mix(vec3(0.42, 0.47, 0.54), vec3(0.82, 0.85, 0.88), lowerWall)
+    * innerWall * (0.46 + lowerWall * 0.46);
+  vec3 rimLight = u_rimColor * fresnelF * 0.46
+    + (silverOuter * 0.72 + silverInner * 0.62) * u_shellReflectivity;
 
   // ── Key light specular (Blinn-Phong) ─────────────────────────────────────
 
@@ -179,7 +190,8 @@ void main() {
   vec3 keyDir = normalize(vec3(keyLightLocal - p, 1.5));
   vec3 halfDir = normalize(keyDir + viewDir);
   float spec = pow(max(dot(normal, halfDir), 0.0), u_specularExponent) * u_specularIntensity;
-  vec3 keySpecular = u_keyLightColor * spec * u_keyLightIntensity;
+  vec3 keySpecular = mix(u_keyLightColor, vec3(0.92, 0.94, 0.97), 0.58)
+    * spec * u_keyLightIntensity * 0.18;
 
   // ── Fill light diffuse ────────────────────────────────────────────────────
 
@@ -191,39 +203,52 @@ void main() {
 
   // ── Subsurface / inner glow ───────────────────────────────────────────────
 
-  float distFromCenter = length(localP);
-  float subsurface = exp(-distFromCenter * distFromCenter / (u_subsurfaceDepth * u_subsurfaceDepth + 0.01));
-  vec3 innerGlow = u_innerGlowColor * subsurface * u_innerGlowIntensity * (1.0 + u_audioEnergy * 0.3);
-
   // ── Chromatic aberration at edges ─────────────────────────────────────────
 
-  // At the edge (high fresnel), split RGB channels slightly
-  float chromaticScale = fresnelF * u_chromaticAberration;
-  // We apply this to the final color rather than re-sampling (approximation)
-  vec3 chromaticShift = vec3(
-    chromaticScale * 0.8,
-    0.0,
-    -chromaticScale * 0.5
+  float refractionDepth = mix(0.08, 0.24, thickness);
+  vec2 refractionOffset = -normal2D * u_refractionStrength * refractionDepth;
+  float dispersion = u_chromaticAberration * (0.45 + fresnelF);
+  vec2 uvR = clamp(uv + refractionOffset * (1.0 + dispersion), vec2(0.001), vec2(0.999));
+  vec2 uvG = clamp(uv + refractionOffset, vec2(0.001), vec2(0.999));
+  vec2 uvB = clamp(uv + refractionOffset * (1.0 - dispersion), vec2(0.001), vec2(0.999));
+  vec3 refractedScene = vec3(
+    texture(u_sceneTexture, uvR).r,
+    texture(u_sceneTexture, uvG).g,
+    texture(u_sceneTexture, uvB).b
   );
+  vec3 transmittance = exp(-u_absorption * thickness * u_opticalDensity);
+  vec3 transmittedScene = refractedScene * transmittance;
+  vec3 volumeScatter = u_glassColor * (vec3(1.0) - transmittance)
+    * u_scattering * (0.35 + thickness * 0.65);
+  float silverVeil = smoothstep(0.07, 0.62, thickness)
+    * (0.68 + 0.32 * max(dot(normal, normalize(vec3(-0.42, 0.52, 1.0))), 0.0));
+  volumeScatter += vec3(0.25, 0.29, 0.34) * silverVeil * 0.24;
+  float causticBand = exp(-pow((thickness - 0.34) / 0.13, 2.0))
+    * max(dot(normal2D, normalize(vec2(-0.7, 0.5))), 0.0);
+  vec3 innerCaustic = u_rimColor * causticBand * u_causticStrength;
 
   // ── Glass body color ──────────────────────────────────────────────────────
 
   // Glass transparency varies with angle: more transparent at center, less at edge
   float angleTransparency = u_transparency - fresnelF * 0.3;
-  vec3 glassBody = u_glassColor * (1.0 - angleTransparency) * (0.5 + depth * 0.5);
+  vec3 glassBody = u_glassColor * (1.0 - angleTransparency) * (0.28 + depth * 0.52);
 
   // ── Composite ─────────────────────────────────────────────────────────────
 
-  vec3 color = vec3(0.0);
-  color += glassBody;
-  color += innerGlow;
+  float sceneMix = u_hasSceneTexture ? u_sceneTransmission : 0.0;
+  vec3 color = mix(glassBody, transmittedScene, sceneMix);
+  color += volumeScatter;
+  color += innerCaustic;
   color += rimLight;
   color += keySpecular;
   color += fillLight;
-  color += chromaticShift;
 
-  // Glass alpha: rim is more opaque, center is more transparent
-  float alpha = mix(angleTransparency * 0.6, 1.0, fresnelF * 0.8 + spec * 0.5);
+  float absorptionOpacity = 1.0 - dot(transmittance, vec3(0.2126, 0.7152, 0.0722));
+  float bodyOpacity = u_hasSceneTexture
+    ? 0.16 + absorptionOpacity * 0.52
+    : 0.34 + absorptionOpacity * 0.38;
+  bodyOpacity += outerWall * 0.15 + innerWall * 0.08;
+  float alpha = mix(bodyOpacity, 0.96, clamp(fresnelF * 0.75 + spec * 0.45, 0.0, 1.0));
   alpha = clamp(alpha, 0.0, 1.0);
 
   // Apply edge anti-aliasing

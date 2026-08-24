@@ -2805,7 +2805,15 @@ function AppContent() {
               supportsLocalProvisioning={isElectron}
               localEndpointStatus={localEndpointStatus}
               systemRamBytes={systemRamBytes}
-              style={{ minHeight: "100dvh" }}
+              // A DEFINITE height, not just a minimum. Onboarding is a
+              // full-viewport surface whose face is sized in `vh`, and every
+              // layer inside it sizes on `100%` — percentages resolve against a
+              // specified height, so `minHeight` alone left the whole column
+              // computing to `auto` and collapsing to text height while the
+              // shell still painted the full window (the half-screen seam).
+              // Taller screens still scroll: the shell's content layer owns
+              // `overflowY: auto`.
+              style={{ minHeight: "100dvh", height: "100dvh" }}
               onComplete={(flow) => {
                 const { setupComplete, preferredMode, premiumPreferences } =
                   mapLucaOnboardingFlowToDesktopCompletion(flow);
