@@ -11,6 +11,7 @@ import {
   summarizeProviderHubRegistry,
   type LucaProviderHubId,
 } from "./providerHubRegistry";
+import { CANONICAL_PROVIDER_IDS } from "../shared/llm/providerIds.js";
 
 const expectedProviderIds: readonly LucaProviderHubId[] = [
   "luca_prime",
@@ -138,5 +139,100 @@ describe("providerHubRegistry", () => {
     expect(firstEntries).toBe(secondEntries);
     expect(getProviderHubEntriesRequiringUserKey()).toHaveLength(12);
     expect(summarizeProviderHubRegistry()).toEqual(before);
+  });
+});
+
+describe("providerHubRegistry → the core's provider vocabulary", () => {
+  const canonicalById = Object.fromEntries(
+    getProviderHubEntries().map((entry) => [
+      entry.providerId,
+      entry.canonicalProviderId,
+    ]),
+  );
+
+  it("maps every display id, so the mapping cannot be partial", () => {
+    // Golden and total: these display ids are the UI's vocabulary and the values
+    // are the core's. Written out rather than derived because the whole point of
+    // the field is that a reader can see which selections reach a provider.
+    expect(canonicalById).toEqual({
+      luca_prime: "gemini",
+      openai: "openai",
+      anthropic: "anthropic",
+      google_gemini: "gemini",
+      xai_grok: "xai",
+      openrouter: "openrouter",
+      mistral: "mistral",
+      deepseek: "deepseek",
+      groq: "groq",
+      together: null,
+      fireworks: null,
+      perplexity: null,
+      ollama: "ollama",
+      lm_studio: null,
+      custom_openai_compatible: null,
+      local_runtime: "cortex",
+      disabled: null,
+      unknown: null,
+    });
+    expect(Object.keys(canonicalById)).toEqual(expectedProviderIds);
+  });
+
+  it("names only providers the core can actually route to", () => {
+    for (const entry of getProviderHubEntries()) {
+      if (entry.canonicalProviderId === null) continue;
+      expect(
+        CANONICAL_PROVIDER_IDS,
+        `${entry.providerId} → ${entry.canonicalProviderId}`,
+      ).toContain(entry.canonicalProviderId);
+    }
+  });
+
+  it("offers every provider the core can route to somewhere in the UI", () => {
+    // Surjective today. A canonical id absent from the hub would be a provider
+    // the core can reach that no user can select.
+    const offered = new Set(
+      Object.values(canonicalById).filter(
+        (id): id is NonNullable<typeof id> => id !== null,
+      ),
+    );
+    expect([...CANONICAL_PROVIDER_IDS].filter((id) => !offered.has(id))).toEqual(
+      [],
+    );
+  });
+
+  it("distinguishes 'the core cannot reach it' from 'not a provider'", () => {
+    // Both are null, for different reasons, and the difference decides what the
+    // UI owes the user: a Together AI selection is a gap to close, a `disabled`
+    // one is working as intended.
+    const unreachable = getProviderHubEntries()
+      .filter(
+        (entry) =>
+          entry.canonicalProviderId === null && entry.category !== "disabled",
+      )
+      .map((entry) => entry.providerId);
+    expect(unreachable).toEqual([
+      "together",
+      "fireworks",
+      "perplexity",
+      "lm_studio",
+      "custom_openai_compatible",
+    ]);
+
+    const notProviders = getProviderHubEntries()
+      .filter((entry) => entry.category === "disabled")
+      .map((entry) => entry.providerId);
+    expect(notProviders).toEqual(["disabled", "unknown"]);
+    for (const id of notProviders) {
+      expect(canonicalById[id]).toBeNull();
+    }
+  });
+
+  it("lets two display ids share one core provider", () => {
+    // Not injective, deliberately: Luca Prime is Gemini-backed today, which is an
+    // implementation detail the UI keeps to itself. A test that asserted a
+    // one-to-one map would force that detail into the open to stay green.
+    expect(canonicalById.luca_prime).toBe(canonicalById.google_gemini);
+    expect(getProviderHubEntry("luca_prime").requiresUserKey).toBe(false);
+    expect(getProviderHubEntry("google_gemini").requiresUserKey).toBe(true);
   });
 });
