@@ -145,6 +145,41 @@ describe("detectProvider", () => {
     expect(detectProvider("local/whatever-new")).toBe("cortex");
   });
 
+  // The prefix has to beat every branch below it, because OpenRouter model ids
+  // are *made of* the vendor they forward to. Each pair below is the same id with
+  // and without the prefix: without it the substring ladder claims the id for a
+  // vendor whose key the user may not even have, and the call goes straight to
+  // that vendor. Two rows are worse than that. 'gemma-2b' is a LOCAL_MODELS
+  // entry, so that cloud id would have been posted to the Cortex runtime on
+  // localhost:8000; and the llama id matches nothing at all, so it lands on
+  // detectProvider's `return 'gemini'` fallback and is answered by a different
+  // vendor entirely.
+  it.each([
+    ["openrouter/anthropic/claude-3.5-sonnet", "anthropic"],
+    ["openrouter/google/gemini-2.0-flash", "gemini"],
+    ["openrouter/openai/gpt-4o", "openai"],
+    ["openrouter/x-ai/grok-2", "xai"],
+    ["openrouter/deepseek/deepseek-chat", "deepseek"],
+    ["openrouter/mistralai/mistral-large", "openai-compat"],
+    ["openrouter/google/gemma-2b-it", "cortex"],
+    ["openrouter/meta-llama/llama-3.3-70b-instruct", "gemini"],
+  ])(
+    "routes %s to openrouter, where without the prefix it would go to %s",
+    (prefixed, providerWithout) => {
+      expect(detectProvider(prefixed)).toBe("openrouter");
+      expect(detectProvider(prefixed.replace("openrouter/", ""))).toBe(
+        providerWithout,
+      );
+    },
+  );
+
+  it("claims the prefix only at the start of an id, not anywhere in it", () => {
+    // A vendor could ship a model whose own name contains the word; the prefix
+    // is a routing instruction, and an instruction in the middle of an id is not
+    // one. This falls through to the ladder like any other unprefixed id.
+    expect(detectProvider("some-openrouter/thing")).not.toBe("openrouter");
+  });
+
   it("falls back to gemini for an unrecognised or absent id", () => {
     expect(detectProvider("something-unfamiliar")).toBe("gemini");
     expect(detectProvider()).toBe("gemini");
@@ -158,14 +193,45 @@ describe("normalizeModelId", () => {
     expect(normalizeModelId("gpt-4o")).toBe("gpt-4o");
     expect(normalizeModelId()).toBe("");
   });
+
+  it("strips only the openrouter/ prefix and keeps the vendor path behind it", () => {
+    // The remainder is the id OpenRouter itself expects as `model`, inner slash
+    // and all. Stripping more, or globally, would send it a model it has never
+    // heard of.
+    expect(normalizeModelId("openrouter/anthropic/claude-3.5-sonnet")).toBe(
+      "anthropic/claude-3.5-sonnet",
+    );
+    expect(normalizeModelId("openrouter/google/gemma-2b-it")).toBe(
+      "google/gemma-2b-it",
+    );
+    expect(normalizeModelId("openrouter/openrouter/auto")).toBe(
+      "openrouter/auto",
+    );
+  });
+
+  it("leaves the prefix alone anywhere but the start", () => {
+    expect(normalizeModelId("vendor/openrouter/x")).toBe("vendor/openrouter/x");
+  });
+
+  it("is case-sensitive, like the prefixes beside it", () => {
+    // Documented, not endorsed: detectProvider lowercases the id and this does
+    // not, so 'OpenRouter/x' routes to openrouter but reaches the vendor with the
+    // prefix still attached. That asymmetry is pre-existing — 'Ollama:llama3'
+    // behaves the same way — and model ids are lowercase everywhere in this repo.
+    // Fixing it means changing how the existing prefixes behave, which does not
+    // belong in the commit that adds one.
+    expect(normalizeModelId("OpenRouter/x")).toBe("OpenRouter/x");
+    expect(normalizeModelId("Ollama:llama3")).toBe("Ollama:llama3");
+  });
 });
 
 describe("isOpenAICompatible", () => {
-  it("covers exactly the six providers that share the OpenAI wire", () => {
+  it("covers exactly the seven providers that share the OpenAI wire", () => {
     expect([...OPENAI_COMPATIBLE_PROVIDERS]).toEqual([
       "openai",
       "xai",
       "deepseek",
+      "openrouter",
       "cortex",
       "ollama",
       "openai-compat",
@@ -247,6 +313,58 @@ describe("createAdapter — endpoint and credential resolution", () => {
 
     expect(getApiKey).toHaveBeenCalledWith("mistral");
     expect(adapter.baseURL).toBe("https://api.mistral.ai/v1");
+  });
+
+  it("sends OpenRouter to its endpoint under the openrouter key", async () => {
+    const adapter = await createAdapter("openrouter/anthropic/claude-3.5-sonnet");
+
+    expect(getApiKey).toHaveBeenCalledWith("openrouter");
+    // The prefix is a routing instruction for us; the vendor path behind it is
+    // the model OpenRouter is being asked for.
+    expect(adapter.modelName).toBe("anthropic/claude-3.5-sonnet");
+    expect(openAIConstructor).toHaveBeenCalledWith({
+      apiKey: "test-key",
+      baseURL: "https://openrouter.ai/api/v1",
+    });
+    // One key, one wire, any vendor behind it — and never the vendor's own SDK.
+    expect(anthropicConstructor).not.toHaveBeenCalled();
+    expect(googleGenAIConstructor).not.toHaveBeenCalled();
+  });
+
+  it("reaches every vendor through the one OpenRouter client", async () => {
+    for (const modelId of [
+      "openrouter/google/gemini-2.0-flash",
+      "openrouter/openai/gpt-4o",
+      "openrouter/google/gemma-2b-it",
+      "openrouter/meta-llama/llama-3.3-70b-instruct",
+    ]) {
+      const adapter = await createAdapter(modelId);
+      expect(adapter.modelName).toBe(modelId.replace("openrouter/", ""));
+    }
+
+    // Not Google's SDK, not localhost:8000 — the two places these ids went before.
+    expect(googleGenAIConstructor).not.toHaveBeenCalled();
+    expect(
+      openAIConstructor.mock.calls.map(([config]) => (config as { baseURL: string }).baseURL),
+    ).toEqual(Array(4).fill("https://openrouter.ai/api/v1"));
+  });
+
+  it("does not send an OpenRouter id to the alias heuristic", async () => {
+    // 'mistralai' inside the id would resolve to mistral's own endpoint under
+    // whatever key the alias found. The prefix has to win before that runs.
+    getApiKey.mockImplementation(async (provider: string) =>
+      provider === "openrouter" ? "or-key" : "wrong-key",
+    );
+
+    const adapter = await createAdapter("openrouter/mistralai/mistral-large");
+
+    expect(getApiKey).toHaveBeenCalledWith("openrouter");
+    expect(getApiKey).not.toHaveBeenCalledWith("mistral");
+    expect(adapter.modelName).toBe("mistralai/mistral-large");
+    expect(openAIConstructor).toHaveBeenCalledWith({
+      apiKey: "or-key",
+      baseURL: "https://openrouter.ai/api/v1",
+    });
   });
 
   it("falls back to the OpenAI key when the alias has none of its own", async () => {
@@ -387,6 +505,10 @@ describe("createAdapter — failing closed", () => {
     ["grok-beta", "X.AI (Grok) API key not found in settings"],
     ["deepseek-chat", "DeepSeek API key not found in settings"],
     ["mistral-large-latest", "API key for mistral not found in settings"],
+    [
+      "openrouter/anthropic/claude-3.5-sonnet",
+      "OpenRouter API key not found in settings",
+    ],
   ])(
     "refuses %s with no key, and constructs no client",
     async (modelId, message) => {
@@ -398,10 +520,38 @@ describe("createAdapter — failing closed", () => {
     },
   );
 
+  it("gives each credential path a message of its own", async () => {
+    // These strings are the only evidence available that a call was routed
+    // correctly when no key is configured — Change 3 proved vision was routed by
+    // the difference between Gemini's message and Anthropic's, and nothing else.
+    // A shared "API key not found" would have proven nothing then, and would
+    // erase this provider's proof now. Distinctness is the assertion.
+    getApiKey.mockResolvedValue(null);
+
+    const messages = await Promise.all(
+      [
+        "gemini-2.0-flash",
+        "claude-3-5-sonnet-20240620",
+        "gpt-4o",
+        "grok-beta",
+        "deepseek-chat",
+        "openrouter/anthropic/claude-3.5-sonnet",
+      ].map((modelId) =>
+        createAdapter(modelId).then(
+          () => "resolved",
+          (error: Error) => error.message,
+        ),
+      ),
+    );
+
+    expect(new Set(messages).size).toBe(messages.length);
+    expect(messages).toContain("OpenRouter API key not found in settings");
+  });
+
   it("keeps a guard for a provider with no adapter behind it", () => {
     // No model id can reach this today: every provider `detectProvider` returns
     // now has an adapter, and its fallback is gemini. That is the point — the
-    // guard is what a *seventh* provider hits if someone adds it to
+    // guard is what the *next* provider hits if someone adds it to
     // `detectProvider` and forgets the adapter, rather than that id silently
     // being answered by Gemini.
     const error = new UnsupportedProviderError("bedrock", "bedrock.titan");
@@ -581,6 +731,31 @@ describe("gateway.chat — one routed call, three vendor wires", () => {
     ]);
   });
 
+  it("routes an OpenRouter id over the OpenAI wire, image and all", async () => {
+    // A fourth route, not a fourth wire: the vendor behind the prefix is Google,
+    // and the request still leaves as chat-completions with an image_url part.
+    // This is the shape a real screenshot travels in.
+    createCompletion.mockResolvedValue(textResponse("a login form"));
+
+    await expect(
+      gatewayChat({
+        modelId: "openrouter/google/gemini-2.0-flash",
+        messages: [{ role: "user", content: "what is on screen?" }],
+        images: [PNG],
+      }),
+    ).resolves.toEqual({ text: "a login form", toolCalls: undefined });
+
+    const request = createCompletion.mock.calls[0][0];
+    expect(request.model).toBe("google/gemini-2.0-flash");
+    expect(request.messages[0].content).toEqual([
+      { type: "text", text: "what is on screen?" },
+      { type: "image_url", image_url: { url: PNG } },
+    ]);
+    // Google's own SDK is not involved, even though the model is Google's.
+    expect(googleGenAIConstructor).not.toHaveBeenCalled();
+    expect(anthropicConstructor).not.toHaveBeenCalled();
+  });
+
   it("passes an explicit token budget through to Gemini's config", async () => {
     await gatewayChat({
       modelId: "gemini-2.0-flash",
@@ -615,6 +790,26 @@ describe("canRouteModel — named unavailability before the attempt", () => {
       true,
     );
     await expect(canRouteModel("gpt-4o")).resolves.toBe(true);
+    await expect(
+      canRouteModel("openrouter/anthropic/claude-3.5-sonnet"),
+    ).resolves.toBe(true);
+  });
+
+  it("answers for an OpenRouter id by the openrouter key alone", async () => {
+    // The vendor named in the id is irrelevant to reachability: one key reaches
+    // all of them, and an Anthropic key reaches none of them through this route.
+    // A surface asking "can I run this" must not be told yes because a *different*
+    // vendor's key happens to be configured.
+    getApiKey.mockImplementation(async (provider: string) =>
+      provider === "anthropic" ? "anthropic-key" : null,
+    );
+
+    await expect(
+      canRouteModel("openrouter/anthropic/claude-3.5-sonnet"),
+    ).resolves.toBe(false);
+    await expect(canRouteModel("claude-3-5-sonnet-20240620")).resolves.toBe(
+      true,
+    );
   });
 
   it("is false when no credential resolves, without throwing", async () => {

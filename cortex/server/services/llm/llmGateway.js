@@ -7,7 +7,9 @@
  * on vendor (Invariant 4).
  *
  * RFC-0006 Stage 2: every provider the core can call routes here — the
- * OpenAI-compatible family (Change 1) plus Gemini and Anthropic (Change 2).
+ * OpenAI-compatible family (Change 1) plus Gemini and Anthropic (Change 2), and
+ * OpenRouter (Change 4), which reaches many vendors over the one wire the core
+ * already speaks.
  */
 
 import { getApiKey } from './credentialResolver.js';
@@ -31,6 +33,7 @@ export const OPENAI_COMPATIBLE_PROVIDERS = Object.freeze([
   'openai',
   'xai',
   'deepseek',
+  'openrouter',
   'cortex',
   'ollama',
   'openai-compat'
@@ -53,10 +56,21 @@ export class UnsupportedProviderError extends Error {
 
 /**
  * Detect which provider handles this modelId.
- * Returns: 'gemini' | 'openai' | 'anthropic' | 'xai' | 'deepseek' | 'cortex' | 'ollama' | 'openai-compat'
+ * Returns: 'gemini' | 'openai' | 'anthropic' | 'xai' | 'deepseek' | 'openrouter'
+ *        | 'cortex' | 'ollama' | 'openai-compat'
  */
 export function detectProvider(modelId = '') {
   const m = modelId.toLowerCase();
+
+  // 0. OpenRouter, by explicit prefix and ahead of everything else.
+  //
+  // OpenRouter ids name the vendor they forward to — 'anthropic/claude-3.5-sonnet',
+  // 'google/gemini-2.0-flash' — so every branch below would claim them for that
+  // vendor and call it directly with a key it does not have. Worse,
+  // 'google/gemma-2b-it' contains a LOCAL_MODELS entry, so it would be posted to
+  // the Cortex runtime on localhost:8000. Routing through a router is a choice the
+  // caller spells out; it is never inferred from the id.
+  if (m.startsWith('openrouter/')) return 'openrouter';
 
   // 1. Local Luca / Cortex Models
   if (LOCAL_MODELS.some(lm => m.includes(lm)) || m.startsWith('local/')) return 'cortex';
@@ -79,9 +93,14 @@ export function detectProvider(modelId = '') {
 
 /**
  * Strip the routing prefixes a model id may carry before it reaches a vendor.
+ *
+ * `openrouter/` is anchored and only the first match is replaced, so the rest of
+ * the id survives intact — 'openrouter/anthropic/claude-3.5-sonnet' becomes
+ * 'anthropic/claude-3.5-sonnet', which is exactly the string OpenRouter expects
+ * as `model`. `local/` stays unanchored, as it has always been.
  */
 export function normalizeModelId(modelId = '') {
-  return modelId.replace(/^ollama:|local\//, '');
+  return modelId.replace(/^(?:ollama:|openrouter\/)|local\//, '');
 }
 
 export function isOpenAICompatible(provider) {
@@ -120,6 +139,16 @@ async function resolveOpenAICompatibleTarget(provider, cleanModelId) {
       const apiKey = await getApiKey('deepseek');
       if (!apiKey) throw new Error('DeepSeek API key not found in settings');
       return { apiKey, baseURL: resolveOpenAICompatibleEndpoint('deepseek', { env }) };
+    }
+
+    case 'openrouter': {
+      const apiKey = await getApiKey('openrouter');
+      if (!apiKey) throw new Error('OpenRouter API key not found in settings');
+      // OpenRouter's optional HTTP-Referer / X-Title attribution headers are
+      // deliberately not sent: they affect a public leaderboard and nothing else,
+      // and the adapter takes { apiKey, modelName, baseURL } with no header
+      // channel. Adding one with no caller that needs it is speculative.
+      return { apiKey, baseURL: resolveOpenAICompatibleEndpoint('openrouter', { env }) };
     }
 
     case 'openai-compat': {

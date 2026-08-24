@@ -31,6 +31,9 @@ describe("resolveOpenAICompatibleEndpoint", () => {
     expect(resolveOpenAICompatibleEndpoint("groq")).toBe(
       "https://api.groq.com/openai/v1",
     );
+    expect(resolveOpenAICompatibleEndpoint("openrouter")).toBe(
+      "https://openrouter.ai/api/v1",
+    );
   });
 
   it("leaves OpenAI itself undefined, so the SDK uses its own default", () => {
@@ -103,5 +106,21 @@ describe("resolveOpenAICompatibleAlias", () => {
     for (const alias of OPENAI_COMPATIBLE_ALIASES) {
       expect(resolveOpenAICompatibleAlias(`model-${alias}-v1`)).toBe(alias);
     }
+  });
+
+  it("is not the route to OpenRouter, whose ids name another vendor", () => {
+    // OpenRouter has an endpoint but deliberately no alias. Its ids carry the
+    // vendor it forwards to, so this heuristic can only ever get them wrong —
+    // and does, loudly, here: 'deepseek/deepseek-chat' resolves to deepseek and
+    // 'mistralai/mistral-large' to mistral, which would send an OpenRouter key
+    // to a vendor's own endpoint. The gateway's `openrouter/` prefix check runs
+    // first for exactly this reason, so no such id reaches this function.
+    expect(OPENAI_COMPATIBLE_ALIASES).not.toContain("openrouter");
+    expect(resolveOpenAICompatibleAlias("openrouter/anthropic/claude-3.5-sonnet")).toBe(
+      "deepseek",
+    );
+    expect(resolveOpenAICompatibleAlias("openrouter/mistralai/mistral-large")).toBe(
+      "mistral",
+    );
   });
 });

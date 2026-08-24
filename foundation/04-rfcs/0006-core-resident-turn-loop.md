@@ -185,6 +185,22 @@ environment variables. That is character-for-character the namespace the rendere
 writes in `src/services/settingsService.ts`. No key migration, no key on the wire, no
 new secret store.
 
+> **Update, Change 4 — this section was wrong, and it is the reason Change 4 exists.**
+> The namespace matched; nothing else did. Traced end to end, the path from a key typed
+> in Settings to the core's vault was severed in five independent places — the renderer
+> discarded the vault write's result and then redacted the field anyway (destroying the
+> key on the next reload), the Electron proxies sent no `X-LUCA-TOKEN`, the
+> `/api/credentials/*` routes they called did not exist, the core's `store()` built a
+> filename NTFS rejects, and a wrong-length token was answered with a 500 and a stack
+> trace. So **only `getApiKey`'s environment branch had ever resolved a credential, for
+> any provider**, and `vision.routes.js`'s advice to "add an API key in Settings (stored
+> in the Secure Vault)" could not be followed. What made this hard to see is exactly what
+> `foundation/CLAUDE.md` §4 warns about: the settings *surface* is elaborate — 18
+> providers in a registry, a key service, a connection tester — and none of it was
+> connected to the thing that reads keys. The claim above was made from the shape of the
+> code rather than from a live trace. [ADR-0018](../05-adrs/0018-credential-bridge.md)
+> records the repair and what it costs.
+
 That same file is also an existing **Invariant 4 gap in the core**: it imports
 `@google/genai`, `openai`, and `@anthropic-ai/sdk` directly, with no adapter beneath it,
 which is exactly what
@@ -323,7 +339,9 @@ What landed: **Change 1** — the OpenAI-compatible family (six providers) behin
 `tradingDebateService.js` reduced to one `llmGateway.completeText` call, with ~190 lines
 of duplicated mapping removed from the renderer's two adapters. **Change 3** — `chat()`
 on all three core adapters and on `llmGateway`, vision routed through it, `cortex/agent/`
-deleted, and the boundary test taught to catch a wire that imports nothing.
+deleted, and the boundary test taught to catch a wire that imports nothing. **Change 4** —
+the credential bridge from the Settings field to the gateway, and OpenRouter as the
+seventh OpenAI-compatible provider.
 
 **The criterion is now met, and it had to be rewritten to be worth meeting.** Change 3
 was scoped as "move `cortex/agent/lifeLoop.js` behind the adapter" — the one file left
@@ -396,6 +414,93 @@ renderer has its own outstanding wire surface (`src/services/llmService.ts`,
 `src/services/visionManager.ts`, and ~45 files importing Google's types for tool
 declarations). Neither is in Stage 2's scope; both are real, and Stage 3 will meet the
 first of them when the turn loop moves.
+
+**Change 4 was scoped as a routing change and became a repair.** It was planned as "add
+OpenRouter", and the question asked while planning it was whether the model-settings system
+was already solid — a settings screen, a provider registry, connection tests, a vault
+service and an IPC bridge all exist. The answer was no, and the reason was specific rather
+than vague: the one wire that must work — **a key typed in Settings reaches the code that
+makes the provider call** — was severed in five independent places, so only `getApiKey`'s
+`process.env` branch had ever resolved a credential, for any provider. The vault branch had
+never returned a value in this repository's history.
+
+The five, each verified rather than inferred. **(1)** `settingsService.saveSettings`
+ignored `secureVault.store`'s result and then redacted the localStorage copy to
+`"[SECURED]"` unconditionally; the load path clears a sentinel it cannot resolve, so a key
+entered in Settings worked until the next reload and was then gone. **(2)** All five vault
+proxies in `main.cjs` sent only `Content-Type`, and `authMiddleware` 401s a missing
+`X-LUCA-TOKEN` — while the main process was already reading the token from disk two hundred
+lines away, for a different handler. **(3)** `/api/credentials/*` **did not exist**; the
+renderer had been POSTing to a route that was never in `ROUTE_GROUPS`. **(4)** The core
+vault built its filename by interpolating the key straight into `path.join`, and on NTFS a
+key like `setting:brain:geminiApiKey` is not a legal filename — `:` is the
+alternate-data-stream separator, and two of them is invalid syntax. **(5)** OpenRouter had
+no endpoint, no environment key, and no way to be addressed. Corroborating the whole
+picture: `~/.luca/security` held exactly one file, `luca_secret.key`, and no `.enc` file had
+ever been written there. Change 3's own live run read that empty directory as "no keys are
+configured on this machine"; the real cause was that the write could not have succeeded.
+
+**The fix is a bridge, and it is recorded in
+[ADR-0018](../05-adrs/0018-credential-bridge.md).** A logical key is now percent-encoded
+into a filename and decoded back in `list()` — a byte-for-byte no-op for every key in use
+today, so nothing was migrated and no existing file was renamed. Five routes under
+`/api/credentials` serve exactly the operations `preload.cjs` already exposed, at tier 1
+because settings load during boot, and none of their paths ends in `/status`, `/health` or
+`/handshake` — `authMiddleware` matches its public list with `endsWith`, so a route named
+`/api/credentials/status` would have been world-readable. `main.cjs` reads the token per
+call through one helper rather than five copies. And `saveSettings` now returns which keys
+it could not secure instead of silently claiming success. One deviation from the plan is
+worth naming: the plan said to leave the field untouched on a failed write, but the object
+in question is the one being persisted, so "untouched" would mean writing a plaintext
+secret to disk. The saved copy is set to `""` instead, and the migration path deliberately
+takes the opposite branch.
+
+**Three bugs were found while proving the bridge, not while writing it.**
+`securityManager.validateToken` passed both buffers to `crypto.timingSafeEqual`, which
+throws `RangeError` on a length mismatch rather than returning false — and nothing on the
+`/api` path catches it, so a token of the wrong *length* reached express's default error
+handler and returned 500 with a stack trace and absolute paths to an unauthenticated
+caller. A wrong length is simply a wrong token; it now answers like one. The `vault-has`
+proxy returned the parsed response body unchanged, and a 401 body is a truthy object, so
+it reported "yes, a key exists" precisely when the caller was not allowed to ask. And
+`list()`'s `f.replace('.enc', '')` cut the first occurrence anywhere in the name, so a key
+named `x.enclosure` came back as `xlosure`. Two throwaway scripts became the standing
+checks `npm run verify:vault` and `npm run verify:auth`; run against the pre-fix
+`validateToken`, the latter fails 22 of its 33 assertions, which is what makes the passing
+number mean anything.
+
+**OpenRouter then cost five small edits and no new wire**, because it speaks the
+chat-completions format `openaiWire.js` already encodes and the adapter's constructor
+already accepts a `baseURL`. The interesting part is that it cannot be routed by the
+substring ladder the other providers use: an OpenRouter id *names the vendor it forwards
+to*, so `anthropic/claude-3.5-sonnet` resolves to Anthropic, `openai/gpt-4o` to OpenAI, and
+— worst — `google/gemma-2b-it` contains a `LOCAL_MODELS` entry and would have posted a
+cloud call to the Cortex runtime on `localhost:8000`, while `meta-llama/llama-3.3-70b`
+matches nothing and lands on `detectProvider`'s `return 'gemini'` fallback. So routing
+through a router is spelled with an explicit `openrouter/` prefix, checked ahead of
+everything else, and never inferred from an id. It is deliberately absent from
+`OPENAI_COMPATIBLE_ALIASES` for the same reason. Adding one line to the endpoint table also
+made `openrouter.ai` a host no file under `cortex/` may name, because
+`vendorSdkBoundary.test.ts` derives its forbidden hosts from that table — the guard landed
+green and started protecting immediately.
+
+**What the keyless proof shows, and what it still cannot.** A core was started twice on a
+spare port with an isolated `HOME` and every provider environment variable deleted, one
+`LUCA_VISION_ACTION_FALLBACK_MODEL` apart. `openrouter/google/gemini-2.0-flash` produced
+`is not routable: OpenRouter API key not found in settings`; `gemini-2.0-flash` produced
+`Gemini API key not found in settings or environment`. That is a third distinct credential
+path — the same technique Change 3 used, extended to prove the new prefix reaches the new
+branch rather than `api.openai.com` or a local port. Separately, over HTTP with an isolated
+home, a key stored through `/api/credentials/store` produced
+`setting%3Abrain%3AopenaiApiKey.enc` — **the first `.enc` file this application has ever
+written** — and a second process with no environment keys resolved it through
+`getApiKey('openai')` while `getApiKey('anthropic')` correctly returned null. Two things
+remain unproven and are not claimed. The **renderer half** of the bridge — Settings field →
+IPC → main-process proxy → route — has only unit coverage plus a proof of everything from
+the route inwards; the window will not start in a worktree, so the click-through belongs to
+the main checkout. And the criterion's first clause, *the core completes a non-streaming
+provider call*, is **still unproven against a real vendor**: the path that would carry a
+key now works, which is a different sentence from a key having travelled it.
 
 ## Invariants and the Four Questions
 
