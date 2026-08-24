@@ -22,4 +22,7 @@ export declare function resolveOpenAICompatibleEndpoint(
   options?: ResolveEndpointOptions,
 ): string | undefined;
 
-export declare function resolveOpenAICompatibleAlias(modelId?: string): string;
+/** The vendor named inside a model id, or `null` when the id names none. */
+export declare function resolveOpenAICompatibleAlias(
+  modelId?: string,
+): string | null;

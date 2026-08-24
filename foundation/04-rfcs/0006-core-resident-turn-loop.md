@@ -502,6 +502,50 @@ the main checkout. And the criterion's first clause, *the core completes a non-s
 provider call*, is **still unproven against a real vendor**: the path that would carry a
 key now works, which is a different sentence from a key having travelled it.
 
+**Change 5 gave the two processes one provider vocabulary, because Stage 3 would otherwise
+carry five across the seam.** Five existed, each read rather than inferred: the gateway's
+routing ids, the core resolver's environment table, `ModelProviderKind`, `ProviderKeyName`,
+and the hub registry's snake_case display ids — plus a sixth in Python. Change 4b had
+already papered over one seam with a hand-written `VAULT_KEYS` override, because the vault
+key is `openRouterApiKey` while the provider id is `openrouter`; that override is now a
+table row. [`src/shared/llm/providerIds.js`](../../src/shared/llm/providerIds.js) says, for
+each provider, where its key is stored and which environment names carry it, and both the
+core resolver and `ProviderKeyService` read it instead of declaring their own — the same
+plain-`.js`-plus-`.d.ts` shape ADR-0017 set for the wire layer, so no build step joins the
+two processes. Each of the hub's 18 entries gained a `canonicalProviderId`, which makes the
+five the core cannot address today — `together`, `fireworks`, `perplexity`, `lm_studio`,
+`custom_openai_compatible` — `null` in the type system rather than something a reader has to
+discover; a test asserts that map is total over all 18 and surjective onto the canonical
+set, and that the two non-providers (`disabled`, `unknown`) are null for a different reason
+than the five. `cortex/python/cortex.py` is now **guarded rather than merely named**: a test
+reads its environment lookups out of the source and fails if it grows a provider key the
+table does not know, so the paragraph above should be read as "open, and unable to drift
+further". One real gap is flagged rather than smuggled in: `mistral` has no Settings field,
+so its row forward-declares the path and the test pins it as the *only* provider missing
+one.
+
+**The disagreement had already produced a live credential leak, and closing it is what the
+change is for.** `detectProvider('groq-llama-70b')` answers `openai-compat` — Groq and
+Mistral have no case of their own — and that bucket resolved the vendor from the model id,
+asked `getApiKey('groq')`, got null because the core's environment table had no `groq` row,
+and then read `|| await getApiKey('openai')`. So a user with only an OpenAI key who selected
+a Groq model had their OpenAI secret handed to an adapter pointed at Groq's endpoint. Three
+faults composed into it, and each is fixed separately: the table's `groq` and `mistral` rows
+close the invisibility half, so a key the renderer could always read now resolves in the
+core; the cross-vendor fallback is deleted, because "no key" is the correct answer there and
+not "some key"; and `resolveOpenAICompatibleAlias` returns `null` instead of guessing
+`deepseek` for an id it does not recognise, which was the same fault a third time and would
+have sent the same secret to a third vendor. Proven by inversion rather than by argument.
+The two new refusal tests assert at the *mocked SDK constructor* that no client is built —
+the previous tests mocked `getApiKey` wholesale and checked which id went in, never what
+came out, which is why the leak had passing coverage. Run against `HEAD`'s source by file
+copy, exactly those tests fail, and the failure prints the leak itself:
+`baseURL: "https://api.groq.com/openai/v1"` with the OpenAI key in the adapter. The
+`!alias` throw in the bucket is a drift guard, not a live path — `detectProvider` only
+routes ids containing `mistral` or `groq` there and both are aliases — but the two lists
+live in different files, so a test keeps them agreeing. No authenticated call was made to
+any vendor to prove any of this.
+
 ## Invariants and the Four Questions
 
 | Invariant | Effect | Note |

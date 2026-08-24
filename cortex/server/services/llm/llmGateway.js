@@ -152,8 +152,28 @@ async function resolveOpenAICompatibleTarget(provider, cleanModelId) {
     }
 
     case 'openai-compat': {
+      // Groq and Mistral have no case of their own: they arrive in this bucket and
+      // the vendor named inside the model id is what picks between them.
+      //
+      // A null alias is unreachable through `detectProvider` today — it only sends
+      // an id here when the id contains 'mistral' or 'groq', both of which are
+      // aliases. It is guarded anyway because the two lists live in different
+      // files and nothing but `providerIds.test.ts` makes them agree; adding a
+      // vendor to one and not the other must not resolve to some other vendor's
+      // endpoint.
       const alias = resolveOpenAICompatibleAlias(cleanModelId);
-      const apiKey = await getApiKey(alias) || await getApiKey('openai');
+      if (!alias) {
+        throw new Error(
+          `[LLMGateway] Model '${cleanModelId}' routed to the OpenAI-compatible bucket but names no known vendor; refusing rather than guessing one.`
+        );
+      }
+
+      // No cross-vendor fallback. This read
+      // `await getApiKey(alias) || await getApiKey('openai')`, so a user with only
+      // an OpenAI key who selected a Groq model had their OpenAI secret posted to
+      // Groq's endpoint under a Groq baseURL. One vendor's credential is never
+      // another's, and "no key" is the correct answer here, not "some key".
+      const apiKey = await getApiKey(alias);
       if (!apiKey) throw new Error(`API key for ${alias} not found in settings`);
       return { apiKey, baseURL: resolveOpenAICompatibleEndpoint(alias, { env }) };
     }

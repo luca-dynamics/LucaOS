@@ -310,6 +310,29 @@ describe("every canonical provider is reachable by an adapter", () => {
     );
     expect(unknown).toEqual([]);
   });
+
+  it("sends nothing to the openai-compat bucket that has no alias", () => {
+    // `detectProvider` decides what lands in the bucket; `OPENAI_COMPATIBLE_ALIASES`
+    // decides what can be resolved out of it. They are two lists in two files, and
+    // this is the only thing that makes them agree — add a vendor to the first
+    // without the second and the gateway can only refuse the call.
+    const bucketLine = gateway
+      .split("\n")
+      .find((line) => line.includes(`return '${OPENAI_COMPATIBLE_BUCKET_ID}'`));
+
+    expect(bucketLine, "detectProvider's openai-compat branch").toBeDefined();
+
+    const substrings = [
+      ...(bucketLine ?? "").matchAll(/includes\('([^']+)'\)/g),
+    ].map((match) => match[1]);
+
+    expect(substrings.length).toBeGreaterThan(0);
+    for (const substring of substrings) {
+      expect(OPENAI_COMPATIBLE_ALIASES, `m.includes('${substring}')`).toContain(
+        substring,
+      );
+    }
+  });
 });
 
 // --- agreement with Settings -------------------------------------------------

@@ -97,9 +97,13 @@ describe("resolveOpenAICompatibleAlias", () => {
     expect(resolveOpenAICompatibleAlias("llama-3.1-70b-groq")).toBe("groq");
   });
 
-  it("defaults to deepseek, matching the pre-Stage-2 behaviour", () => {
-    expect(resolveOpenAICompatibleAlias("something-unfamiliar")).toBe("deepseek");
-    expect(resolveOpenAICompatibleAlias()).toBe("deepseek");
+  it("answers null for an id that names no vendor, rather than picking one", () => {
+    // It used to answer 'deepseek' here, inherited from the pre-Stage-2 debate
+    // service. The gateway believed it: an unfamiliar id resolved DeepSeek's
+    // credential and was posted to api.deepseek.com. Not knowing is now sayable.
+    expect(resolveOpenAICompatibleAlias("something-unfamiliar")).toBeNull();
+    expect(resolveOpenAICompatibleAlias()).toBeNull();
+    expect(resolveOpenAICompatibleAlias("")).toBeNull();
   });
 
   it("resolves every declared alias to itself", () => {
@@ -111,16 +115,18 @@ describe("resolveOpenAICompatibleAlias", () => {
   it("is not the route to OpenRouter, whose ids name another vendor", () => {
     // OpenRouter has an endpoint but deliberately no alias. Its ids carry the
     // vendor it forwards to, so this heuristic can only ever get them wrong —
-    // and does, loudly, here: 'deepseek/deepseek-chat' resolves to deepseek and
-    // 'mistralai/mistral-large' to mistral, which would send an OpenRouter key
-    // to a vendor's own endpoint. The gateway's `openrouter/` prefix check runs
-    // first for exactly this reason, so no such id reaches this function.
+    // and does, loudly, here: 'mistralai/mistral-large' resolves to mistral,
+    // which would send an OpenRouter key to a vendor's own endpoint. The
+    // gateway's `openrouter/` prefix check runs first for exactly this reason,
+    // so no such id reaches this function.
     expect(OPENAI_COMPATIBLE_ALIASES).not.toContain("openrouter");
-    expect(resolveOpenAICompatibleAlias("openrouter/anthropic/claude-3.5-sonnet")).toBe(
-      "deepseek",
-    );
-    expect(resolveOpenAICompatibleAlias("openrouter/mistralai/mistral-large")).toBe(
-      "mistral",
-    );
+    expect(
+      resolveOpenAICompatibleAlias("openrouter/mistralai/mistral-large"),
+    ).toBe("mistral");
+    // Null now, where it used to be a confident 'deepseek' — the ids that name
+    // no vendor at all are the ones the old default was most wrong about.
+    expect(
+      resolveOpenAICompatibleAlias("openrouter/anthropic/claude-3.5-sonnet"),
+    ).toBeNull();
   });
 });
