@@ -7,39 +7,42 @@
  *
  * Secure Vault first, environment second. Returns null when neither has a key;
  * callers fail closed on null rather than falling back to an unauthenticated
- * call.
+ * call — or, worse, to another vendor's key.
+ *
+ * Both lookups come from `src/shared/llm/providerIds.js`, the one table the
+ * renderer reads too. This file used to keep its own pair of maps and derive the
+ * vault key as `setting:brain:${provider}ApiKey`, which was wrong twice over: it
+ * needed a hand-written override the moment a Settings field was spelled
+ * `openRouterApiKey`, and its environment list had no `groq` or `mistral` entry,
+ * so a `GROQ_API_KEY` the renderer could see was invisible here.
  */
 
 import secureVault from '../secureVault.js';
-
-const ENV_KEYS = {
-  gemini: ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
-  openai: ['OPENAI_API_KEY'],
-  anthropic: ['ANTHROPIC_API_KEY'],
-  xai: ['XAI_API_KEY', 'GROK_API_KEY'],
-  deepseek: ['DEEPSEEK_API_KEY'],
-  openrouter: ['OPENROUTER_API_KEY']
-};
-
-/**
- * Vault keys, where the settings field is not `${provider}ApiKey`.
- *
- * A vault key is the renderer's settings path, not a lowercase provider id, and
- * the two are only accidentally the same. The Settings field is
- * `brain.openRouterApiKey` with a capital R, so the derived key below would look
- * for `setting:brain:openrouterApiKey` and miss a key the user really did save.
- * Spelled out rather than case-munged: a rule inferred from two examples is a
- * rule the next provider breaks silently.
- */
-const VAULT_KEYS = {
-  openrouter: 'setting:brain:openRouterApiKey'
-};
+import {
+  getProviderEnvNames,
+  getProviderVaultKey,
+  isKeylessProvider
+} from '../../../../src/shared/llm/providerIds.js';
 
 /**
  * Fetch an API key for a provider from the Secure Vault, with an env fallback.
+ *
+ * Returns null for an unknown provider id, and says so: an id with no row in the
+ * table has no vault key and no environment name, so silently returning null
+ * would be indistinguishable from "the user has not set one yet".
  */
 export async function getApiKey(provider) {
-  const vaultKey = VAULT_KEYS[provider] ?? `setting:brain:${provider}ApiKey`;
+  const vaultKey = getProviderVaultKey(provider);
+
+  if (!vaultKey) {
+    if (!isKeylessProvider(provider)) {
+      console.warn(
+        `[CredentialResolver] '${provider}' has no entry in PROVIDER_CREDENTIALS; no key can resolve for it.`
+      );
+    }
+    return null;
+  }
+
   try {
     const secured = await secureVault.retrieve(vaultKey);
     // vault.retrieve returns the raw value if stored as a string, or an object if JSON
@@ -51,8 +54,7 @@ export async function getApiKey(provider) {
     console.debug(`[CredentialResolver] Vault lookup failed for ${provider}:`, e.message);
   }
 
-  const envKeys = ENV_KEYS[provider] || [];
-  for (const key of envKeys) {
+  for (const key of getProviderEnvNames(provider)) {
     if (process.env[key]) return process.env[key];
   }
 

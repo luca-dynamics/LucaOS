@@ -367,17 +367,41 @@ describe("createAdapter — endpoint and credential resolution", () => {
     });
   });
 
-  it("falls back to the OpenAI key when the alias has none of its own", async () => {
+  it.each(["groq-llama-70b", "mistral-large-latest"])(
+    "refuses %s rather than paying for it with the OpenAI key",
+    async (modelId) => {
+      // This is the assertion that used to run the other way round: the gateway
+      // read `getApiKey(alias) || getApiKey('openai')`, so a user whose only key
+      // was OPENAI_API_KEY had that secret posted to api.groq.com under a Groq
+      // baseURL. The vendor changes; the credential does not follow it.
+      getApiKey.mockImplementation(async (provider: string) =>
+        provider === "openai" ? "openai-key" : null,
+      );
+
+      const alias = modelId.startsWith("groq") ? "groq" : "mistral";
+      await expect(createAdapter(modelId)).rejects.toThrow(
+        `API key for ${alias} not found in settings`,
+      );
+
+      expect(getApiKey).toHaveBeenCalledWith(alias);
+      // Not asked for, let alone sent: the fallback is gone, not merely unused.
+      expect(getApiKey).not.toHaveBeenCalledWith("openai");
+      expectNoClientConstructed();
+      expect(createCompletion).not.toHaveBeenCalled();
+    },
+  );
+
+  it("still resolves an alias that does have its own key", async () => {
+    // The other half of failing closed: refusing when there is no key must not
+    // become refusing when there is one.
     getApiKey.mockImplementation(async (provider: string) =>
-      provider === "openai" ? "openai-key" : null,
+      provider === "groq" ? "groq-key" : null,
     );
 
     await createAdapter("groq-llama-70b");
 
-    expect(getApiKey).toHaveBeenCalledWith("groq");
-    expect(getApiKey).toHaveBeenCalledWith("openai");
     expect(openAIConstructor).toHaveBeenCalledWith({
-      apiKey: "openai-key",
+      apiKey: "groq-key",
       baseURL: "https://api.groq.com/openai/v1",
     });
   });

@@ -38,9 +38,17 @@ export function resolveOpenAICompatibleEndpoint(providerId, options = {}) {
   return OPENAI_COMPATIBLE_ENDPOINTS[providerId];
 }
 
+/**
+ * The vendor named inside a model id, or `null` when the id names none of them.
+ *
+ * This used to answer `deepseek` for an unrecognised id — a guess dressed as an
+ * answer. The gateway took it at face value, resolved DeepSeek's credential and
+ * pointed the call at `api.deepseek.com`. "I cannot tell which vendor this is"
+ * and "this is DeepSeek" are different answers, and only one of them is safe to
+ * invent, so the caller now decides what to do about not knowing.
+ */
 export function resolveOpenAICompatibleAlias(modelId = "") {
   return (
-    OPENAI_COMPATIBLE_ALIASES.find((alias) => modelId.includes(alias)) ??
-    "deepseek"
+    OPENAI_COMPATIBLE_ALIASES.find((alias) => modelId.includes(alias)) ?? null
   );
 }

@@ -4,17 +4,38 @@ import {
   isRedactedSecret,
   type ModelProviderKind,
 } from "../../types/modelRouting";
+import {
+  PROVIDER_CREDENTIALS,
+  getProviderEnvNames,
+  getProviderVaultKey,
+  type ProviderCredentialId,
+} from "../../shared/llm/providerIds.js";
 
-export type ProviderKeyName =
-  | "gemini"
-  | "openai"
-  | "anthropic"
-  | "groq"
-  | "deepseek"
-  | "xai"
-  | "openrouter"
-  | "deepgram"
-  | "google";
+/**
+ * The providers this service resolves a key for.
+ *
+ * A subset of `ProviderCredentialId`, and `satisfies` proves it: every name here
+ * has a row in the shared table, so a typo cannot compile. The table also carries
+ * `mistral`, which the core routes to but which has no Settings field for the
+ * renderer to read yet.
+ *
+ * The settings paths and environment names themselves come from that table — this
+ * file used to declare its own copies, and the core declared a third set that
+ * disagreed with both.
+ */
+export const PROVIDER_KEY_NAMES = [
+  "gemini",
+  "openai",
+  "anthropic",
+  "groq",
+  "deepseek",
+  "xai",
+  "openrouter",
+  "deepgram",
+  "google",
+] as const satisfies readonly ProviderCredentialId[];
+
+export type ProviderKeyName = (typeof PROVIDER_KEY_NAMES)[number];
 
 export interface ProviderKeyState {
   provider: ProviderKeyName;
@@ -23,34 +44,7 @@ export interface ProviderKeyState {
   redactedDisplay: string;
 }
 
-const PROVIDER_SETTING_PATH: Record<
-  ProviderKeyName,
-  { section: string; key: string }
-> = {
-  gemini: { section: "brain", key: "geminiApiKey" },
-  openai: { section: "brain", key: "openaiApiKey" },
-  anthropic: { section: "brain", key: "anthropicApiKey" },
-  groq: { section: "brain", key: "groqApiKey" },
-  deepseek: { section: "brain", key: "deepseekApiKey" },
-  xai: { section: "brain", key: "xaiApiKey" },
-  openrouter: { section: "brain", key: "openRouterApiKey" },
-  deepgram: { section: "voice", key: "deepgramApiKey" },
-  google: { section: "voice", key: "googleApiKey" },
-};
-
-const ENV_NAMES: Record<ProviderKeyName, string[]> = {
-  gemini: ["VITE_API_KEY", "VITE_GEMINI_API_KEY", "API_KEY", "GEMINI_API_KEY"],
-  openai: ["VITE_OPENAI_API_KEY", "OPENAI_API_KEY"],
-  anthropic: ["VITE_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY"],
-  groq: ["VITE_GROQ_API_KEY", "GROQ_API_KEY"],
-  deepseek: ["VITE_DEEPSEEK_API_KEY", "DEEPSEEK_API_KEY"],
-  xai: ["VITE_XAI_API_KEY", "XAI_API_KEY"],
-  openrouter: ["VITE_OPENROUTER_API_KEY", "OPENROUTER_API_KEY"],
-  deepgram: ["VITE_DEEPGRAM_API_KEY", "DEEPGRAM_API_KEY"],
-  google: ["VITE_GOOGLE_API_KEY", "GOOGLE_API_KEY"],
-};
-
-function readEnv(names: string[]): string {
+function readEnv(names: readonly string[]): string {
   for (const name of names) {
     const viteValue =
       typeof import.meta !== "undefined"
@@ -72,35 +66,25 @@ function readEnv(names: string[]): string {
 export function providerKindToKeyName(
   provider: ModelProviderKind,
 ): ProviderKeyName | null {
+  // Luca Prime is Gemini-backed today. That is an implementation detail the rest
+  // of the app must not learn, which is why the mapping lives here and not in a
+  // caller.
   if (provider === "luca-prime") return "gemini";
-  if (
-    [
-      "gemini",
-      "openai",
-      "anthropic",
-      "groq",
-      "deepseek",
-      "xai",
-      "openrouter",
-      "deepgram",
-      "google",
-    ].includes(provider)
-  ) {
+  if ((PROVIDER_KEY_NAMES as readonly string[]).includes(provider)) {
     return provider as ProviderKeyName;
   }
   return null;
 }
 
 export function getVaultKey(provider: ProviderKeyName): string {
-  const path = PROVIDER_SETTING_PATH[provider];
-  return `setting:${path.section}:${path.key}`;
+  return getProviderVaultKey(provider);
 }
 
 export function getPlainSettingsKey(
   settings: any,
   provider: ProviderKeyName,
 ): string {
-  const path = PROVIDER_SETTING_PATH[provider];
+  const path = PROVIDER_CREDENTIALS[provider].settings;
   return settings?.[path.section]?.[path.key] || "";
 }
 
@@ -142,7 +126,9 @@ export async function getProviderKeyState(
   }
 
   if (options.allowEnvironmentFallback) {
-    const envValue = readEnv(ENV_NAMES[provider]);
+    const envValue = readEnv(
+      getProviderEnvNames(provider, { surface: "renderer" }),
+    );
     if (hasUsableSecret(envValue)) {
       return {
         provider,
@@ -185,7 +171,7 @@ export async function getProviderApiKey(
   }
 
   if (!hasUsableSecret(rawKey) && options.allowEnvironmentFallback) {
-    rawKey = readEnv(ENV_NAMES[provider]);
+    rawKey = readEnv(getProviderEnvNames(provider, { surface: "renderer" }));
   }
 
   return credentialPoolService.getActiveKey(provider, rawKey) || rawKey || "";
