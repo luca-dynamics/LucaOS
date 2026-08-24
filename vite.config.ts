@@ -93,6 +93,14 @@ export default defineConfig(({ mode }) => {
           __dirname,
           "src/mocks/browser_eventsource.ts",
         ),
+        // packages/luca-orb's barrel re-exports two skia modules, so every
+        // `@luca/orb` import reaches React Native code that cannot be installed
+        // here. Unaliased, Vite serves 500 for them and the renderer's entry
+        // never loads. See the shim for why null is the correct shader.
+        "@shopify/react-native-skia": path.resolve(
+          __dirname,
+          "src/mocks/react_native_skia.ts",
+        ),
         three: "three",
         child_process: path.resolve(__dirname, "src/mocks/child_process.js"),
         "cross-spawn": path.resolve(__dirname, "src/mocks/child_process.js"),
