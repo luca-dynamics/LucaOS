@@ -17,10 +17,12 @@
  *
  * - **Nothing here logs a request or response body.** These carry plaintext
  *   secrets. Log the operation and the key name, never the value.
- * - **No path may end in `/status`, `/health` or `/handshake`.** `authMiddleware`
- *   decides what is public with `req.path.endsWith(p)`, so a route named
- *   `/api/credentials/status` would be reachable with no token at all. There is a
- *   test asserting this file never grows one.
+ * - **No path may be, or end in, `/status`, `/health` or `/handshake`.**
+ *   `authMiddleware` now matches its public list exactly, so only the first of
+ *   those is a live hazard — but it decided by `req.path.endsWith(p)` until that
+ *   matcher was tightened, which made twenty-five routes anonymous. These five hand
+ *   out credentials, so they stay clear of the suffixes as well as the exact names.
+ *   There are tests asserting both.
  * - **Fail closed.** A vault error answers `{ success: false }` with a generic
  *   message — never a path, never a stack.
  */

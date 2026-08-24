@@ -400,28 +400,45 @@ describe("credentials.routes source", () => {
 
   /**
    * authMiddleware's own public list, read from its source rather than copied.
-   * If someone adds a suffix there, this test starts checking it immediately.
+   * If someone adds a path there, this test starts checking it immediately.
    */
-  const publicSuffixes = [
-    ...(authSource.match(/const isPublic = \[([\s\S]*?)\]/)?.[1] ?? "").matchAll(/'([^']+)'/g),
+  const publicPaths = [
+    ...(authSource.match(/const PUBLIC_PATHS = new Set\(\[([\s\S]*?)\]\)/)?.[1] ?? "")
+      .matchAll(/'([^']+)'/g),
   ].map((m) => m[1]);
 
   it("read both files (a vacuous pass here would hide everything below)", () => {
     expect(registeredPaths).toHaveLength(5);
-    expect(publicSuffixes.length).toBeGreaterThanOrEqual(6);
-    expect(publicSuffixes).toContain("/status");
+    expect(publicPaths.length).toBeGreaterThanOrEqual(6);
+    expect(publicPaths).toContain("/status");
   });
 
-  it("registers no path that authMiddleware would treat as public", () => {
-    // The matcher is `req.path.endsWith(p)`, so ANY route ending in '/status',
-    // '/health' or '/handshake' is reachable with no token at all — and these
-    // five hand out credentials.
+  it("registers no path that authMiddleware treats as public", () => {
+    // authMiddleware matches its public list exactly, so this is the check that
+    // corresponds to how it actually decides.
+    for (const p of registeredPaths) {
+      for (const mounted of [`/api/credentials${p}`, p]) {
+        expect(
+          publicPaths.includes(mounted),
+          `${mounted} is in authMiddleware's public list`,
+        ).toBe(false);
+      }
+    }
+  });
+
+  it("registers no path that would be public under a suffix matcher either", () => {
+    // Defence in depth rather than a live hazard. authMiddleware matched with
+    // `req.path.endsWith(p)` until the matcher was tightened, which made every route
+    // ending in '/status', '/health' or '/handshake' anonymous -- 27 registrations
+    // exist, two of them intentionally public, so 25 routes across the graph. These
+    // five hand out credentials, so they stay clear of those suffixes whatever the
+    // matcher goes back to doing.
     for (const p of registeredPaths) {
       const mounted = `/api/credentials${p}`;
-      for (const suffix of publicSuffixes) {
+      for (const suffix of publicPaths) {
         expect(
           mounted.endsWith(suffix),
-          `${mounted} would be public via authMiddleware's '${suffix}'`,
+          `${mounted} would be public if authMiddleware matched '${suffix}' by suffix`,
         ).toBe(false);
       }
     }
