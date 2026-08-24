@@ -43,10 +43,15 @@ export type LocalCatalogOrigin =
   | "runtime_facade"
   | "offline_registry";
 
+// Must cover every LocalRuntimeKind a descriptor can carry, because the view
+// copies `descriptor.runtime` through verbatim -- see the note in
+// mapDescriptorToUnified: `source` is a lossy projection for typing, and
+// view.runtime is the field that carries the real kind.
 export type LocalCatalogRuntime =
   | LucaModelSource
   | "cortex"
   | "mediapipe"
+  | "native-gguf"
   | "onnx";
 
 export interface LocalCatalogViewEntry {
