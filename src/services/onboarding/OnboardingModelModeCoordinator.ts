@@ -42,7 +42,10 @@ export interface OnboardingModelReadiness {
 interface SettingsPort {
   getSettings(): LucaSettings;
   get<K extends keyof LucaSettings>(section: K): LucaSettings[K];
-  saveSettings(settings: Partial<LucaSettings>): Promise<void> | void;
+  // The result is deliberately unconsumed here: `saveSettings` reports which keys
+  // it could not write to the Secure Vault, and onboarding writes no secrets. The
+  // port stays loose so that reporting can grow without every consumer re-typing.
+  saveSettings(settings: Partial<LucaSettings>): Promise<unknown> | void;
   setLocalDiscoveryOverride(enabled: boolean): void;
 }
 
