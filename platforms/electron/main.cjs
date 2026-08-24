@@ -15,6 +15,9 @@ Menu.setApplicationMenu(null);
 require('dotenv').config(); // Load environment variables for Main process (and Medic)
 const path = require('path');
 const fs = require('fs');
+const { createNativeGgufHost } = require('./nativeGgufHost.cjs');
+const { createNativeGgufApiServer } = require('./nativeGgufApiServer.cjs');
+const { createLocalDocsHost } = require('./localDocsHost.cjs');
 const { findAvailableExecutable, getPythonCandidates } = require('../shared/platform.cjs');
 const {
     createMiniChatWindow: createMiniChatWindowFactory,
@@ -488,17 +491,32 @@ async function bootSequence(isSilent = false) {
     log(`Spawning Luca Cortex...`, 'warn', 40);
     await startCortex();
 
-    // 3. Wait Loop
+    // 3. Readiness.
+    //
+    // The window is created and starts loading as soon as the CORE answers.
+    // Nothing waits on Cortex. Python's import graph takes minutes on a cold
+    // disk and dev still has to cold-compile the renderer through Vite; running
+    // those in series is what made boot look hung, because until
+    // launchInterface() runs there is no window, no URL loading, and no reveal
+    // watchdog armed — the splash is all there is.
+    //
+    // The core is the only subsystem the renderer depends on for its own boot
+    // checks, so it is the only one the window waits for. Cortex is reported as
+    // a subsystem coming online, never a gate: local models and RAG light up
+    // when it lands and everything else is usable before that.
     let serverReady = false;
     let cortexReady = false;
+    let interfaceLaunched = false;
     let attempts = 0;
-    const maxAttempts = app.isPackaged ? 180 : 420; // Dev first boot can spend several minutes loading the Node core.
+    const maxAttempts = app.isPackaged ? 180 : 420; // Budget for the CORE. Cortex is not on this clock.
 
     const checkInterval = setInterval(async () => {
         attempts++;
-        
-        // Don't check if we are rebooting/cleaning up
-        if (!bootWindow) {
+
+        // Abandon the poll only if boot was torn down before the interface got
+        // going (reboot/cleanup). Once the window exists the splash is free to
+        // close, and this loop keeps reporting Cortex without it.
+        if (!bootWindow && !interfaceLaunched) {
             clearInterval(checkInterval);
             return;
         }
@@ -509,22 +527,35 @@ async function bootSequence(isSilent = false) {
         if (!serverReady) serverReady = serverPort ? await checkPort(serverPort) : false;
         if (!cortexReady) cortexReady = await checkPort(cortexPort);
 
-        if (serverReady && !cortexReady) {
-            log(`[WAIT] Logic Core Ready. Waiting for Cortex Graph DB... (${attempts}s)`, 'info', 50 + Math.floor(attempts/2));
-        } else if (!serverReady && cortexReady) {
-             log(`[WAIT] Cortex Ready. Waiting for Logic Core... (${attempts}s)`, 'info', 50 + Math.floor(attempts/2));
+        if (serverReady && !interfaceLaunched) {
+            interfaceLaunched = true;
+            rebootAttempts = 0; // The core came up; this is not a crash loop.
+            log("Logic Core ready. Opening LucaOS.", 'success', 70);
+            if (bootWindow) bootWindow.webContents.send('boot-status', 'APP READY');
+            launchInterface(isSilent);
         }
 
-        if (serverReady && cortexReady) {
+        if (cortexReady) {
             clearInterval(checkInterval);
-            rebootAttempts = 0; // Reset on success
-            log("Core services ready. Opening LucaOS.", 'success', 100);
-            if (bootWindow) bootWindow.webContents.send('boot-status', 'APP READY');
-            
-            setTimeout(() => {
-                launchInterface(isSilent);
-            }, 1000); 
-        } else if (attempts >= maxAttempts) {
+            log("Cortex ready. Local intelligence online.", 'success', 100);
+            return;
+        }
+
+        if (interfaceLaunched) {
+            // The window is up and usable; Cortex is still loading. Report at a
+            // calm cadence and NEVER reboot over it — tearing down a working
+            // window because a Python import is slow is the worse failure.
+            if (attempts % 15 === 0) {
+                log(`Cortex still loading (${attempts}s). Local models arrive when it lands.`, 'info');
+            }
+            if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                log("Cortex did not come up. Local models and RAG stay offline; the rest of LucaOS is unaffected.", 'warn');
+            }
+            return;
+        }
+
+        if (attempts >= maxAttempts) {
             clearInterval(checkInterval);
             handleBootFailure("TIMEOUT", log);
         }
@@ -605,14 +636,32 @@ function launchInterface(isSilent = false) {
         // trigger that means "the destination UI has actually painted"; the
         // timeout below is the safety net if that signal never arrives.
         ipcMain.once('renderer-ready', () => show('renderer-ready'));
-        // Hard fallback so the window can never get stuck hidden if boot ever
-        // stalls. It must be long enough to NEVER fire during a normal boot,
-        // or it reveals a still-booting (blank) window and closes the splash
-        // early. Dev cold-compiles the whole app through Vite before React even
-        // mounts (tens of seconds), so dev gets a much longer net than a
-        // packaged build where React paints in a second or two.
-        const revealTimeoutMs = app.isPackaged ? 20000 : 90000;
+
+        // Safety net, armed from the moment the renderer starts loading — which
+        // is now, because nothing gates window creation on a subsystem.
+        //
+        // It must be longer than the slowest legitimate first paint or it
+        // reveals a still-blank window and closes the splash early. In dev that
+        // slowest case is a cold Vite compile of ~1,900 modules, measured at
+        // ~185s on a Defender-scanned disk; the old 90s net fired mid-compile
+        // and showed exactly that empty frame. 300s covers it with margin and
+        // still bounds the "stuck hidden" case. Packaged builds load prebuilt
+        // assets and paint in a second or two, so they keep a tight net.
+        //
+        // A slow *renderer* is now the only thing this can trip on: Cortex can
+        // no longer hold the window shut, because launchInterface() is called
+        // as soon as the core is up.
+        const revealTimeoutMs = app.isPackaged ? 20000 : 300000;
         fallbackTimer = setTimeout(() => show('timeout'), revealTimeoutMs);
+
+        // A renderer that fails to load will never send 'renderer-ready' and
+        // would otherwise sit behind the splash until the net above. Reveal
+        // immediately so the failure is visible in the app instead of looking
+        // like an indefinite hang.
+        mainWindow.webContents.once('did-fail-load', (_event, errorCode, errorDescription) => {
+            console.error(`[MAIN] Renderer failed to load (${errorCode}): ${errorDescription}`);
+            show('did-fail-load');
+        });
     } else {
         if (bootWindow) bootWindow.close();
     }
@@ -1402,6 +1451,90 @@ app.on('ready', () => {
     // Standardize userData path — must happen inside ready, not at module load time
     app.setPath('userData', paths.ELECTRON_DATA_DIR);
     console.log(`[MAIN] Architecture Sync: UserData standardized to ${paths.ELECTRON_DATA_DIR}`);
+
+    // Local intelligence hosts are constructed *after* the line above and read
+    // paths.ELECTRON_DATA_DIR directly. Deriving a state root from
+    // app.getPath('userData') before the standardization put native-gguf state
+    // outside Luca's data dir and split it from local-docs, which is one store
+    // in two places — the shared-memory invariant does not survive that.
+    const nativeGgufHost = createNativeGgufHost({
+        stateRoot: path.join(paths.ELECTRON_DATA_DIR, 'native-gguf')
+    });
+    const nativeGgufApiServer = createNativeGgufApiServer({ host: nativeGgufHost });
+    const localDocsHost = createLocalDocsHost({
+        stateRoot: path.join(paths.ELECTRON_DATA_DIR, 'local-docs')
+    });
+    ipcMain.handle('native-gguf:list', () => nativeGgufHost.list());
+    ipcMain.handle('native-gguf:register', (_event, input) => nativeGgufHost.register(input));
+    ipcMain.handle('native-gguf:consent', (_event, id) => nativeGgufHost.consent(id));
+    ipcMain.handle('native-gguf:remove', (_event, id) => nativeGgufHost.remove(id));
+    ipcMain.handle('native-gguf:health', () => nativeGgufHost.health());
+    ipcMain.handle('native-gguf:chat', (_event, request) => nativeGgufHost.chat(request));
+    const nativeGgufStreams = new Map();
+    ipcMain.handle('native-gguf:stream-start', async (event, { requestId, request }) => {
+        if (!requestId || nativeGgufStreams.has(requestId)) throw new Error('Invalid or duplicate native stream id.');
+        const controller = new AbortController();
+        nativeGgufStreams.set(requestId, controller);
+        try {
+            await nativeGgufHost.stream({
+                ...request,
+                signal: controller.signal,
+                onToken: text => event.sender.send('native-gguf:stream-event', { requestId, type: 'token', text })
+            });
+            event.sender.send('native-gguf:stream-event', { requestId, type: 'done' });
+        } catch (error) {
+            event.sender.send('native-gguf:stream-event', {
+                requestId,
+                type: controller.signal.aborted ? 'done' : 'error',
+                error: error?.message || String(error)
+            });
+        } finally {
+            nativeGgufStreams.delete(requestId);
+        }
+    });
+    ipcMain.handle('native-gguf:stream-cancel', (_event, requestId) => {
+        const controller = nativeGgufStreams.get(requestId);
+        if (!controller) return false;
+        controller.abort();
+        return true;
+    });
+    ipcMain.handle('native-gguf:unload', () => nativeGgufHost.unload());
+    // Opening a listener that runs local models is a side effect on the user's
+    // machine, so it is gated by the OS dialog rather than by the renderer alone:
+    // any code running in the window can reach this channel, and a compromised
+    // renderer must not be able to publish local inference by itself. Consent
+    // lasts for the app session and stopping the API revokes the listener.
+    let localApiConsented = false;
+    ipcMain.handle('native-gguf:api-start', async (_event, port) => {
+        if (!localApiConsented) {
+            const { response } = await dialog.showMessageBox(mainWindow, {
+                type: 'warning',
+                buttons: ['Cancel', 'Start the local API'],
+                defaultId: 0,
+                cancelId: 0,
+                title: 'Start the local inference API?',
+                message: 'Programs on this computer will be able to run your local models through Luca.',
+                detail: 'The API listens on 127.0.0.1 only, so nothing outside this computer can reach it, and every request must carry the access token Luca shows you once. You can stop it at any time in Settings.'
+            });
+            if (response !== 1) throw new Error('Starting the local inference API was declined.');
+            localApiConsented = true;
+        }
+        return nativeGgufApiServer.start(port);
+    });
+    ipcMain.handle('native-gguf:api-stop', () => nativeGgufApiServer.stop());
+    ipcMain.handle('native-gguf:api-status', () => nativeGgufApiServer.status());
+    ipcMain.handle('local-docs:list', () => localDocsHost.list());
+    ipcMain.handle('local-docs:register', (_event, input) => localDocsHost.register(input));
+    ipcMain.handle('local-docs:rescan', (_event, id) => localDocsHost.rescan(id));
+    ipcMain.handle('local-docs:remove', (_event, id) => localDocsHost.remove(id));
+    ipcMain.handle('local-docs:embed', (_event, { id, modelId }) =>
+        localDocsHost.embedFolder(id, modelId, texts => nativeGgufHost.embed({ model: modelId, texts }))
+    );
+    ipcMain.handle('local-docs:search', (_event, request) =>
+        localDocsHost.search(request, texts => nativeGgufHost.embed({ model: request.modelId, texts }))
+    );
+    ipcMain.handle('local-docs:watch-start', (_event, id) => localDocsHost.startWatching(id));
+    ipcMain.handle('local-docs:watch-stop', (_event, id) => localDocsHost.stopWatching(id));
 
     // --- IPC HANDLERS ---
     console.log("[MAIN] Registering IPC Handlers...");

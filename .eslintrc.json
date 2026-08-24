@@ -21,6 +21,47 @@
     "rules": {
         "react/react-in-jsx-scope": "off",
         "@typescript-eslint/no-explicit-any": "off",
-        "@typescript-eslint/no-unused-vars": "warn"
-    }
+        "@typescript-eslint/no-unused-vars": "warn",
+        "no-restricted-syntax": [
+            "error",
+            {
+                "selector": "JSXAttribute[name.name='role'][value.value='menu']",
+                "message": "Hand-rolled menus are closed. A surface that announces the menu role must honour the ARIA menu keyboard contract (one tab stop, arrow navigation, roving focus, typeahead) — use LucaMenu from src/components/ui/luca, which owns that behaviour once. If the surface hosts arbitrary interactive controls rather than menu items, it is a popover: use LucaPopover and drop the menu role."
+            }
+        ]
+    },
+    "overrides": [
+        {
+            // Tracked debt: the last hand-rolled menus. Each is fenced out for a
+            // stated reason, not by default — and the list is finite, so it can
+            // only shrink.
+            //
+            // ChatModelSwitcher, Header and IntentRoutingModeSelector are pinned
+            // by tests that assert on their source as text (see
+            // lucaIndustrialMigration.test.ts:74-82). Radix emits the right roles
+            // at runtime, but the literal strings leave the source, so migrating
+            // them rewrites those assertions — reviewable work of its own.
+            //
+            // ChatWidgetInput is a command palette, not a menu: it is the one
+            // surface that already implements the full keyboard contract, and it
+            // belongs to the combobox step.
+            //
+            // WorkspaceEnvironmentControls is different in kind. It nests
+            // AlwaysOnControls — a real button — inside its menu, and Radix
+            // preventDefaults Tab for every descendant of menu content
+            // (@radix-ui/react-menu content onKeyDown), so migrating it as-is
+            // would make that button keyboard-unreachable. It needs a non-modal
+            // popover, or AlwaysOnControls has to become menu items.
+            "files": [
+                "src/components/ChatWidgetInput.tsx",
+                "src/components/chat/ChatModelSwitcher.tsx",
+                "src/components/layout/Header.tsx",
+                "src/components/runtime/IntentRoutingModeSelector.tsx",
+                "src/components/shell/WorkspaceEnvironmentControls.tsx"
+            ],
+            "rules": {
+                "no-restricted-syntax": "off"
+            }
+        }
+    ]
 }

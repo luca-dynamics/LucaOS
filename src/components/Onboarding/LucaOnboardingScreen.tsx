@@ -213,6 +213,13 @@ function WelcomeHero({
       style={{
         position: "relative",
         width: "100%",
+        // Definite, not just a minimum -- the interior column centres itself on
+        // `height: 100%` + `justifyContent: center`, and a percentage needs a
+        // SPECIFIED height to divide into, so a min-height-only parent left the
+        // content top-aligned in a half-empty screen. A taller screen still
+        // grows (the flex chain above grows with it) and the shell's content
+        // layer scrolls.
+        height: "100%",
         minHeight: "100%",
         overflow: "hidden",
         background: LUCA_ONBOARDING_LIGHT_BACKGROUND,
@@ -229,8 +236,18 @@ function WelcomeHero({
         style={{
           position: "absolute",
           right: "clamp(-80px, -4vw, -20px)",
-          top: "50%",
-          transform: "translateY(-50%)",
+          // Centre with auto margins, NOT `top: 50%` + `translateY(-50%)`.
+          // The breathe animation below sets `transform` itself, and an
+          // animation beats an inline style -- so the centring transform was
+          // discarded for the animation's whole duration and the face hung
+          // FROM the midline rather than straddling it, running off the bottom
+          // of the window. Auto margins centre without a transform, leaving
+          // `transform` entirely to the animation. (An oversized face keeps
+          // straddling: the equal margins simply go negative.)
+          top: 0,
+          bottom: 0,
+          marginTop: "auto",
+          marginBottom: "auto",
           height: "min(96vh, 760px)",
           width: "auto",
           maxWidth: "58%",
@@ -487,6 +504,13 @@ function HeroFrame({
       style={{
         position: "relative",
         width: "100%",
+        // Definite, not just a minimum -- the interior column centres itself on
+        // `height: 100%` + `justifyContent: center`, and a percentage needs a
+        // SPECIFIED height to divide into, so a min-height-only parent left the
+        // content top-aligned in a half-empty screen. A taller screen still
+        // grows (the flex chain above grows with it) and the shell's content
+        // layer scrolls.
+        height: "100%",
         minHeight: "100%",
         overflow: "hidden",
         background: LUCA_ONBOARDING_LIGHT_BACKGROUND,
@@ -997,6 +1021,13 @@ function PresenceHero({
       style={{
         position: "relative",
         width: "100%",
+        // Definite, not just a minimum -- the interior column centres itself on
+        // `height: 100%` + `justifyContent: center`, and a percentage needs a
+        // SPECIFIED height to divide into, so a min-height-only parent left the
+        // content top-aligned in a half-empty screen. A taller screen still
+        // grows (the flex chain above grows with it) and the shell's content
+        // layer scrolls.
+        height: "100%",
         minHeight: "100%",
         overflow: "hidden",
         background: LUCA_ONBOARDING_LIGHT_BACKGROUND,
@@ -1012,8 +1043,12 @@ function PresenceHero({
         style={{
           position: "absolute",
           right: "clamp(-70px, -3vw, -14px)",
-          top: "50%",
-          transform: "translateY(-50%)",
+          // Auto-margin centring, not a transform — the breathe animation owns
+          // `transform` and would otherwise discard it (see the welcome hero).
+          top: 0,
+          bottom: 0,
+          marginTop: "auto",
+          marginBottom: "auto",
           height: "min(88vh, 700px)",
           width: "auto",
           maxWidth: "50%",
@@ -1695,6 +1730,13 @@ function FinishHero({
       style={{
         position: "relative",
         width: "100%",
+        // Definite, not just a minimum -- the interior column centres itself on
+        // `height: 100%` + `justifyContent: center`, and a percentage needs a
+        // SPECIFIED height to divide into, so a min-height-only parent left the
+        // content top-aligned in a half-empty screen. A taller screen still
+        // grows (the flex chain above grows with it) and the shell's content
+        // layer scrolls.
+        height: "100%",
         minHeight: "100%",
         overflow: "hidden",
         background: LUCA_ONBOARDING_LIGHT_BACKGROUND,
@@ -1710,8 +1752,12 @@ function FinishHero({
         style={{
           position: "absolute",
           right: "clamp(-80px, -4vw, -20px)",
-          top: "50%",
-          transform: "translateY(-50%)",
+          // Auto-margin centring, not a transform — the breathe animation owns
+          // `transform` and would otherwise discard it (see the welcome hero).
+          top: 0,
+          bottom: 0,
+          marginTop: "auto",
+          marginBottom: "auto",
           height: "min(96vh, 760px)",
           width: "auto",
           maxWidth: "56%",

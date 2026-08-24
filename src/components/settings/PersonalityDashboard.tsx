@@ -9,8 +9,6 @@ import { buildIdentityCoreInputFromOperatorProfile } from "../../services/person
 import { personaDisplayLabel } from "../../config/personaDisplay";
 import {
   SettingsAdvancedDisclosure,
-  SettingsCard,
-  SettingsRow,
   SettingsSection,
   SettingsStatList,
 } from "./SettingsLayout";
@@ -194,7 +192,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
       {settingsService.get("general").experienceMode !== "basic" && (
         <SettingsSection
           title="Personal Intelligence Preview"
-          description="Inspect how the current personality surface could map into Identity Core without saving or applying it."
+          description="Preview how this surface maps into Identity Core. Nothing is saved."
           icon="Eye"
           accentColor={theme.hex}
           isMobile={isMobile}
@@ -208,7 +206,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
 
       <SettingsSection
         title="Luca Personality"
-        description="Tune Luca's personality mode, tone, formality, and response style."
+        description="The role lens Luca answers with, and your global tuning."
         icon="Sparkles"
         accentColor={theme.hex}
         isMobile={isMobile}
@@ -216,86 +214,27 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
         <SettingsStatList
           items={[
             {
-              label: "Personality mode",
-              value: selectedPersona || "Choose mode",
-              detail:
-                "Everyday companion, copilot, researcher, operator, and creator modes stay role-based.",
+              label: "Active persona",
+              value: personaDisplayLabel(selectedPersona),
+              detail: currentPersona?.description || "No description set.",
             },
             {
-              label: "Tone",
-              value: "Editable",
-              detail: "Tone and warmth remain user-facing preferences.",
+              label: "Available personas",
+              value: `${availablePersonas.length}`,
+              detail: "Role lenses defined in your persona config.",
             },
             {
-              label: "Formality",
-              value: "Configurable",
-              detail: "Response style is controlled by the selected role profile.",
-            },
-            {
-              label: "Response style",
-              value: "Guided",
-              detail: "Raw persona logic is kept under Advanced / Origin-only.",
+              label: "Behavior rules",
+              value: globalInstructions.trim() ? "Custom" : "Default",
+              detail: "Global tuning applied on top of every persona.",
             },
           ]}
         />
       </SettingsSection>
 
-      <SettingsSection
-        title="Behavior Preferences"
-        description="Proactive/passive behavior, concise/detailed responses, risk tolerance, autonomy comfort, and warmth."
-        icon="Sliders"
-        accentColor={theme.hex}
-        isMobile={isMobile}
-      >
-        <SettingsRow
-          label="Proactive or passive"
-          description="Choose whether Luca waits, suggests, or gets ahead of routine work."
-        />
-        <SettingsRow
-          label="Concise or detailed"
-          description="Keep response length preferences product-focused."
-        />
-        <SettingsRow
-          label="Risk tolerance and autonomy comfort"
-          description="Safety behavior remains explicit before raw prompt controls."
-        />
-      </SettingsSection>
-
-      <SettingsSection
-        title="Role Profiles"
-        description="Everyday companion, developer copilot, researcher, business operator, and creator mode stay framed as roles."
-        icon="Users"
-        accentColor={theme.hex}
-        isMobile={isMobile}
-      >
-        <SettingsCard>
-          <p className="text-sm font-semibold">Selected role profile</p>
-          <p className="mt-1 text-xs opacity-70">
-            Use the role selector below to choose Luca&apos;s behavior profile.
-          </p>
-        </SettingsCard>
-      </SettingsSection>
-
-      <SettingsSection
-        title="Boundaries"
-        description="What Luca should avoid, sensitive topics, confirmation preferences, and safety behavior."
-        icon="ShieldCheck"
-        accentColor={theme.hex}
-        isMobile={isMobile}
-      >
-        <SettingsRow
-          label="Confirmation preferences"
-          description="Sensitive actions should remain explicitly confirmed."
-        />
-        <SettingsRow
-          label="Safety behavior"
-          description="Boundaries are user-facing; internal persona logic is advanced-only."
-        />
-      </SettingsSection>
-
       <SettingsAdvancedDisclosure
         title="Advanced / Origin-only"
-        description="Raw system blueprint, system rules, internal persona logic, and creator/admin override are not normal user controls."
+        description="Raw behavior rules and persona blueprints. Not everyday controls."
       >
         {/* 1. UNIFIED CONSCIOUSNESS (The Global Mind) */}
         <div className="flex flex-col space-y-2 shrink-0">

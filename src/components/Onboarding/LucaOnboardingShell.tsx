@@ -80,6 +80,24 @@ export const LucaOnboardingShell: React.FC<LucaOnboardingShellProps> = ({
     ...(boundary.presenceVariables as React.CSSProperties),
     position: "relative",
     overflow: "hidden",
+    // Fill the host, and hand that height DOWN as a definite size.
+    //
+    // Callers stretch this element with `minHeight: 100dvh`. That gives it a
+    // used height of one viewport but leaves its *specified* height `auto`, and
+    // a percentage height only resolves against a specified one -- so the
+    // content layer's `height: 100%` computed to `auto`, and the whole column
+    // collapsed to text height (~326px of a 608px window) while this root kept
+    // painting the full window. The welcome hero clips (`overflow: hidden`)
+    // around a 96vh face, so the face was guillotined and the two backgrounds
+    // met in a hard seam mid-window.
+    //
+    // Flex is the fix rather than more percentages: a flex item's main size,
+    // once resolved by flex layout, IS definite (CSS Flexbox 9.8), so `flex: 1`
+    // on the content layer below fills this box AND lets the percentages
+    // further down resolve -- whether or not our own parent is definite.
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
     ...style,
   };
 
@@ -105,7 +123,17 @@ export const LucaOnboardingShell: React.FC<LucaOnboardingShellProps> = ({
         style={{
           position: "relative",
           zIndex: 1,
-          height: "100%",
+          // Take the root's whole height as a FLEX ITEM, not as a percentage.
+          // `height: 100%` here resolved against a root that is stretched by
+          // `minHeight` alone, so it computed to `auto` and this box collapsed
+          // to text height. Flex fills the root's used height and -- unlike a
+          // percentage -- gives this box a definite size of its own, which is
+          // what lets the screens below resolve THEIR `minHeight: 100%`.
+          flex: "1 1 auto",
+          // Flex items floor at their content size unless told otherwise, so a
+          // tall screen would push this box past the window instead of
+          // scrolling inside it.
+          minHeight: 0,
           // The shell root clips overflow (to bound the ambient presence); the
           // content layer must therefore scroll on its own when a screen's
           // cards exceed the viewport, or the lower options become unreachable.

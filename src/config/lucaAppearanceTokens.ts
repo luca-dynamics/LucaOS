@@ -50,6 +50,15 @@ export interface LucaAppearanceTokens {
   textTertiary: string;
   accentPrimary: string;
   accentSoft: string;
+  /**
+   * Switch/checkbox "on" fill and knob. A control role, deliberately NOT
+   * accentPrimary: skin accents are tuned to sit quietly behind content, and a
+   * quiet accent cannot signal binary state — an "on" switch that reads the
+   * same as an "off" one is the defect this pair exists to prevent. Platform
+   * switches behave the same way (iOS uses system green whatever the app tint).
+   */
+  controlOn: string;
+  controlKnob: string;
   danger: string;
   success: string;
   warning: string;
@@ -272,6 +281,8 @@ const buildProductTokens = ({
       textTertiary: "rgba(203, 213, 225, 0.56)",
       accentPrimary,
       accentSoft: accentSet.soft,
+      controlOn: highContrast ? "#5aa0ff" : "#3b82f6",
+      controlKnob: "#ffffff",
       shadowSoft: `0 24px 80px rgba(0, 0, 0, ${0.22 + backgroundOpacity * 0.24})`,
       shadowGlow: `0 0 ${Math.round(18 + backgroundBlur * 0.45)}px color-mix(in srgb, ${accentSet.glow} ${Math.round(36 * glowMultiplier)}%, transparent)`,
     };
@@ -321,6 +332,8 @@ const buildProductTokens = ({
     textTertiary: "rgba(52, 61, 72, 0.64)",
     accentPrimary,
     accentSoft: accentSet.soft,
+    controlOn: highContrast ? "#1d4ed8" : "#2563eb",
+    controlKnob: "#ffffff",
     shadowSoft: `0 2px 5px rgba(45, 56, 66, ${0.12 + backgroundOpacity * 0.08}), 0 24px 70px rgba(56, 68, 78, ${0.12 + backgroundOpacity * 0.16})`,
     shadowGlow: `0 0 ${Math.round(14 + backgroundBlur * 0.35)}px color-mix(in srgb, ${accentSet.glow} ${Math.round(24 * glowMultiplier)}%, transparent)`,
   };
@@ -386,6 +399,8 @@ export const getLucaAppearanceCssVariables = (
   "--luca-text-tertiary": tokens.textTertiary,
   "--luca-accent-primary": tokens.accentPrimary,
   "--luca-accent-soft": tokens.accentSoft,
+  "--luca-control-on": tokens.controlOn,
+  "--luca-control-knob": tokens.controlKnob,
   "--luca-danger": tokens.danger,
   "--luca-success": tokens.success,
   "--luca-warning": tokens.warning,

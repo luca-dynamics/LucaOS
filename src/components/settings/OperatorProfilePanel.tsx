@@ -580,19 +580,34 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
 
       <SettingsSection
         title="Recent insights"
-        description="The latest things Luca has learned about you. Everything stays user-reviewed."
+        description="The latest things Luca has learned about you."
         icon="Sparkles"
         accentColor={theme.hex}
         isMobile={isMobile}
       >
         {insights.length > 0 ? (
-          insights.map((insight) => (
-            <SettingsRow
-              key={insight.id}
-              label={insight.key.replace(/_/g, " ")}
-              description={insight.value}
-            />
-          ))
+          <div className="space-y-0">
+            {insights.map((insight) => (
+              <div
+                key={insight.id}
+                className="flex items-start gap-4 border-b py-3 last:border-b-0"
+                style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+              >
+                <span
+                  className="w-32 shrink-0 text-[12.5px] capitalize"
+                  style={{ color: settingsSurfaceTokens.textTertiary }}
+                >
+                  {insight.key.replace(/_/g, " ")}
+                </span>
+                <span
+                  className="text-[12.5px] leading-relaxed"
+                  style={{ color: settingsSurfaceTokens.textSecondary }}
+                >
+                  {insight.value}
+                </span>
+              </div>
+            ))}
+          </div>
         ) : (
           <p
             className="py-3.5 text-[12.5px]"
@@ -709,40 +724,72 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
 
       <SettingsSection
         title="Identity Lock"
-        description="Verify identity, trusted devices, lock profile changes, and recovery stay grouped as safety controls."
+        description="Enroll a reference image so Luca can recognise you on camera."
         icon="ShieldCheck"
         accentColor={theme.hex}
         isMobile={isMobile}
       >
         <SettingsRow
-          label="Verify identity"
-          description="Use the existing enrollment and verification controls below when available."
-        />
-        <SettingsRow
-          label="Trusted device"
-          description="Device trust remains part of Luca's existing identity services."
-        />
-        <SettingsRow
-          label="Lock profile changes"
-          description="Profile edit controls remain explicit and user initiated."
+          label="Reference image"
+          description={
+            referenceImage
+              ? "Enrolled. Re-enroll to replace the stored image."
+              : "Not enrolled. Luca cannot verify you on camera."
+          }
+          control={
+            <button
+              onClick={() => setShowEnrollModal(true)}
+              className="rounded-xl border px-3 py-2 text-sm"
+              style={settingsControlInlineStyle}
+            >
+              {referenceImage ? "Re-enroll" : "Enroll"}
+            </button>
+          }
         />
       </SettingsSection>
 
       <SettingsAdvancedDisclosure
         title="Advanced Details"
-        description="Profile export/import, raw profile JSON, and profile diagnostics."
+        description="Profile metadata as Luca stores it."
       >
-        <SettingsRow
-          label="Profile export/import"
-          description="Export and import remain future or existing profile maintenance flows."
-        />
-        <SettingsRow
-          label="Raw profile JSON"
-          description="Raw profile data is diagnostic-only and not a primary user control."
-        />
-        <SettingsRow
-          label="Profile diagnostics"
-          description="Synchronization metadata stays in Advanced Details."
+        <SettingsStatList
+          columns={2}
+          items={[
+            {
+              label: "Profile created",
+              value: profile
+                ? new Date(profile.metadata.profileCreated).toLocaleDateString()
+                : "No profile",
+              detail: "First time Luca wrote an operator profile.",
+            },
+            {
+              label: "Last updated",
+              value: profile
+                ? new Date(profile.metadata.lastUpdated).toLocaleDateString()
+                : "No profile",
+              detail: "Most recent profile write.",
+            },
+            {
+              label: "Conversations",
+              value: `${profile?.metadata.conversationCount ?? 0}`,
+              detail: "Conversations this profile was extracted from.",
+            },
+            {
+              label: "Privacy level",
+              value: profile?.metadata.privacyLevel ?? "Unknown",
+              detail: "How much Luca is allowed to extract.",
+            },
+            {
+              label: "Confidence",
+              value: `${profile?.metadata.confidence ?? 0}%`,
+              detail: "How sure Luca is about the extracted fields.",
+            },
+            {
+              label: "Reference image",
+              value: referenceImage ? "Enrolled" : "None",
+              detail: "Stored on the core server, not in this profile.",
+            },
+          ]}
         />
       </SettingsAdvancedDisclosure>
 

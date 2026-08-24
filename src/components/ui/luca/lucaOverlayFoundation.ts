@@ -141,6 +141,31 @@ export function useLucaModalLayer({
   ]);
 }
 
+/**
+ * Claims the top of the shared modal stack while `open` — and nothing else. No
+ * scroll lock, no focus trap, no listener of its own.
+ *
+ * This is the arbitration hook for a surface that already owns its keyboard
+ * handling but still has to take its turn: a Radix menu, for instance. Radix's
+ * dismissable layer and {@link useLucaModalLayer} both listen for Escape on
+ * `document` in the **capture** phase, so registration order decides the winner
+ * — and the layer underneath registered first. A menu opened on top of a
+ * `LucaDialog` would close the dialog. Pushing the same token stack
+ * `useLucaModalLayer` consults makes that dialog defer, so Escape reaches the
+ * topmost surface. One stack, one owner.
+ */
+export function useLucaEscapePriority(open = true): void {
+  useEffect(() => {
+    if (!open || typeof document === "undefined") return;
+    const token = Symbol("luca-escape-priority");
+    modalStack.push(token);
+    return () => {
+      const stackIndex = modalStack.lastIndexOf(token);
+      if (stackIndex >= 0) modalStack.splice(stackIndex, 1);
+    };
+  }, [open]);
+}
+
 export interface LucaDismissableLayerOptions {
   open?: boolean;
   containerRef: RefObject<HTMLElement>;

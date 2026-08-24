@@ -1,148 +1,134 @@
+/**
+ * Local Model Catalog
+ * -------------------
+ * A *projection* of `LOCAL_MODEL_DEFINITIONS` into the `LocalModelDescriptor`
+ * shape the runtime adapters consume. It holds no model data of its own — there
+ * used to be a second, hand-typed list here, and the two drifted (context
+ * windows in particular). Adding a model now means editing exactly one file.
+ *
+ * The projection is deliberately narrow. It emits a descriptor only where a
+ * `LocalRuntimeAdapter` exists to execute it, so every descriptor returned from
+ * this module can actually be run. Definitions for `webllm` and `mediapipe`
+ * models — which have no adapter — are therefore absent rather than listed and
+ * unusable.
+ */
+
+import {
+  LOCAL_MODEL_DEFINITIONS,
+  type LocalModel,
+} from "./LocalModelDefinitions";
 import type {
   LocalModelDescriptor,
   LocalModelFeature,
+  LocalModelInstallPlan,
   LocalRuntimeKind,
 } from "./LocalModelTypes";
 
-export const LOCAL_MODEL_CATALOG: LocalModelDescriptor[] = [
-  {
-    id: "ollama:llama3.2:1b",
-    displayName: "Llama 3.2 1B",
-    runtime: "ollama",
-    runtimeModelId: "llama3.2:1b",
-    contextWindow: 8192,
-    features: ["chat", "streaming", "tools"],
-    recommended: true,
-    install: { strategy: "ollama-pull", ref: "llama3.2:1b" },
-  },
-  {
-    id: "ollama:llama3.2:3b",
-    displayName: "Llama 3.2 3B",
-    runtime: "ollama",
-    runtimeModelId: "llama3.2:3b",
-    contextWindow: 8192,
-    features: ["chat", "streaming", "tools"],
-    recommended: true,
-    install: { strategy: "ollama-pull", ref: "llama3.2:3b" },
-  },
-  {
-    id: "ollama:qwen2.5:7b",
-    displayName: "Qwen 2.5 7B",
-    runtime: "ollama",
-    runtimeModelId: "qwen2.5:7b",
-    contextWindow: 32768,
-    features: ["chat", "streaming", "tools"],
-    install: { strategy: "ollama-pull", ref: "qwen2.5:7b" },
-  },
-  {
-    id: "ollama:gemma4:4b",
-    displayName: "Gemma 4B",
-    runtime: "ollama",
-    runtimeModelId: "gemma4:4b",
-    sizeBytes: 4_200_000_000,
-    contextWindow: 8192,
-    features: ["chat", "streaming", "tools"],
-    install: { strategy: "ollama-pull", ref: "gemma4:4b" },
-  },
-  {
-    id: "ollama:gemma3:4b",
-    displayName: "Gemma 3 4B",
-    runtime: "ollama",
-    runtimeModelId: "gemma3:4b",
-    contextWindow: 8192,
-    features: ["chat", "streaming", "tools", "vision"],
-    install: { strategy: "ollama-pull", ref: "gemma3:4b" },
-  },
-  {
-    id: "cortex:gemma-2b",
-    displayName: "Gemma 2B GGUF",
-    runtime: "cortex",
-    runtimeModelId: "gemma-2b",
-    sizeBytes: 1_700_000_000,
-    contextWindow: 8192,
-    features: ["chat"],
-    install: { strategy: "cortex-download", ref: "gemma-2b" },
-  },
-  {
-    id: "cortex:llama-3.2-1b",
-    displayName: "Llama 3.2 1B GGUF",
-    runtime: "cortex",
-    runtimeModelId: "llama-3.2-1b",
-    sizeBytes: 1_100_000_000,
-    contextWindow: 8192,
-    features: ["chat"],
-    install: { strategy: "cortex-download", ref: "llama-3.2-1b" },
-  },
-  {
-    id: "cortex:lfm2.5-230m",
-    displayName: "Liquid LFM2.5 230M GGUF",
-    runtime: "cortex",
-    runtimeModelId: "lfm2.5-230m",
-    sizeBytes: 459_401_112,
-    minRamBytes: 1_000_000_000,
-    contextWindow: 32768,
-    features: ["chat", "streaming"],
-    recommended: true,
-    install: { strategy: "manual", ref: "LiquidAI/LFM2.5-230M-GGUF" },
-  },
-  {
-    id: "cortex:phi-3-mini",
-    displayName: "Phi-3 Mini GGUF",
-    runtime: "cortex",
-    runtimeModelId: "phi-3-mini",
-    sizeBytes: 2_300_000_000,
-    contextWindow: 8192,
-    features: ["chat"],
-    install: { strategy: "cortex-download", ref: "phi-3-mini" },
-  },
-  {
-    id: "cortex:smollm2-1.7b",
-    displayName: "SmolLM2 1.7B GGUF",
-    runtime: "cortex",
-    runtimeModelId: "smollm2-1.7b",
-    sizeBytes: 1_200_000_000,
-    contextWindow: 8192,
-    features: ["chat"],
-    install: { strategy: "cortex-download", ref: "smollm2-1.7b" },
-  },
-  {
-    id: "mediapipe:gemma-2b-it",
-    displayName: "Gemma 2B MediaPipe",
-    runtime: "mediapipe",
-    runtimeModelId: "gemma-2b-it",
-    sizeBytes: 1_400_000_000,
-    features: ["chat"],
-    recommended: true,
-    install: { strategy: "mediapipe-download", ref: "gemma-2b-it" },
-  },
-  {
-    id: "webllm:Phi-3-mini-4k-instruct-q4f16_1-MLC",
-    displayName: "Phi-3 Mini WebLLM",
-    runtime: "webllm",
-    runtimeModelId: "Phi-3-mini-4k-instruct-q4f16_1-MLC",
-    sizeBytes: 2_300_000_000,
-    features: ["chat"],
-    install: { strategy: "webllm-cache" },
-  },
-  {
-    id: "webllm:Llama-3.2-1B-Instruct-q4f16_1-MLC",
-    displayName: "Llama 3.2 1B WebLLM",
-    runtime: "webllm",
-    runtimeModelId: "Llama-3.2-1B-Instruct-q4f16_1-MLC",
-    sizeBytes: 1_000_000_000,
-    features: ["chat"],
-    install: { strategy: "webllm-cache" },
-  },
-  {
-    id: "webllm:SmolLM2-1.7B-Instruct-q4f16_1-MLC",
-    displayName: "SmolLM2 1.7B WebLLM",
-    runtime: "webllm",
-    runtimeModelId: "SmolLM2-1.7B-Instruct-q4f16_1-MLC",
-    sizeBytes: 1_200_000_000,
-    features: ["chat"],
-    install: { strategy: "webllm-cache" },
-  },
-];
+type ModelDefinition = Omit<LocalModel, "status" | "downloadProgress">;
+
+/** The `LocalModel.runtime` values that name a runtime with a real adapter. */
+type ExecutableRuntime = "ollama" | "internal";
+
+/**
+ * `LocalModel.runtime` speaks in Luca's own terms ("internal" = models Luca runs
+ * itself rather than handing to Ollama); `LocalRuntimeKind` names the adapter.
+ */
+const RUNTIME_KIND: Record<ExecutableRuntime, LocalRuntimeKind> = {
+  ollama: "ollama",
+  internal: "cortex",
+};
+
+/**
+ * Context window used when a definition does not state one. Deliberately the
+ * smallest window any model in the catalog actually has, so a missing value
+ * truncates early rather than overflowing a model's real limit. Definitions
+ * should state the real number; this is a floor, not a default.
+ */
+const CONTEXT_WINDOW_FLOOR = 4096;
+
+/**
+ * Both `OllamaRuntime` and `CortexRuntime` implement `stream()` and both forward
+ * and parse `tool_calls`, so these three hold for every descriptor either one
+ * produces. `vision` is per-model and comes from the definition.
+ */
+const RUNTIME_FEATURES: LocalModelFeature[] = ["chat", "streaming", "tools"];
+
+function installPlanFor(
+  def: ModelDefinition,
+  runtime: ExecutableRuntime,
+): LocalModelInstallPlan {
+  // A model the user has to fetch themselves cannot be described as a pull.
+  if (def.manualArtifactRef) {
+    return { strategy: "manual", ref: def.manualArtifactRef };
+  }
+  return runtime === "ollama"
+    ? { strategy: "ollama-pull", ref: def.ollamaTag ?? def.id }
+    : { strategy: "cortex-download", ref: def.id };
+}
+
+function featuresFor(def: ModelDefinition): LocalModelFeature[] {
+  const features = [...RUNTIME_FEATURES];
+  if (def.visionCapable) features.push("vision");
+  return features;
+}
+
+function projectDescriptor(
+  def: ModelDefinition,
+  runtime: ExecutableRuntime,
+  isPrimaryRuntime: boolean,
+): LocalModelDescriptor {
+  const runtimeModelId =
+    runtime === "ollama" ? (def.ollamaTag ?? def.id) : def.id;
+  const kind = RUNTIME_KIND[runtime];
+
+  return {
+    id: `${kind}:${runtimeModelId}`,
+    displayName: def.name,
+    runtime: kind,
+    runtimeModelId,
+    sizeBytes: def.size,
+    minRamBytes: def.memoryRequirement,
+    contextWindow: def.contextWindow ?? CONTEXT_WINDOW_FLOOR,
+    features: featuresFor(def),
+    // A recommendation is for the model as Luca delivers it, so it rides only
+    // the primary runtime's descriptor — not every runtime that could run it.
+    ...(isPrimaryRuntime && def.recommendedDefault ? { recommended: true } : {}),
+    install: installPlanFor(def, runtime),
+  };
+}
+
+function projectCatalog(
+  definitions: readonly ModelDefinition[],
+): LocalModelDescriptor[] {
+  const descriptors: LocalModelDescriptor[] = [];
+  const seen = new Set<string>();
+
+  for (const def of definitions) {
+    // Chat models only. Speech, vision-encoder, and embedding models are
+    // installed and run through their own paths, not through a chat adapter.
+    if (def.category !== "brain") continue;
+
+    const runtimes: ExecutableRuntime[] = [
+      def.runtime,
+      ...(def.additionalRuntimes ?? []),
+    ];
+
+    for (const [index, runtime] of runtimes.entries()) {
+      const descriptor = projectDescriptor(def, runtime, index === 0);
+      // Two definitions naming the same runtime model would silently shadow one
+      // another in every lookup below; keep the first and drop the duplicate.
+      if (seen.has(descriptor.id)) continue;
+      seen.add(descriptor.id);
+      descriptors.push(descriptor);
+    }
+  }
+
+  return descriptors;
+}
+
+export const LOCAL_MODEL_CATALOG: LocalModelDescriptor[] = projectCatalog(
+  LOCAL_MODEL_DEFINITIONS,
+);
 
 export function findLocalModelDescriptor(
   id: string,

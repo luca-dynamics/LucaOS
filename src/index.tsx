@@ -18,6 +18,16 @@ declare global {
     __LUCA_BOOT_ERROR_LISTENERS_REGISTERED__?: boolean;
     __LUCA_CAPTURED_BOOT_ERRORS__?: string[];
     __LUCA_SHOW_BOOT_FAILURE__?: (message?: string, error?: unknown) => void;
+    /**
+     * Provided by the pre-React loader (index.html). Returns true when it has
+     * taken ownership of a *transient* load failure (a bounded reload is
+     * scheduled) — the caller must then not paint the failure screen. Lives in
+     * the inline script rather than here because this module is itself fetched
+     * over the transport that fails, so it cannot be relied on to run.
+     */
+    __LUCA_TRY_BOOT_RECOVERY__?: (error?: unknown) => boolean;
+    /** Resets the reload budget once the app is actually up. */
+    __LUCA_CLEAR_BOOT_RECOVERY__?: () => void;
     __LUCA_SET_BOOT_STATUS__?: (
       message: string,
       progress?: number,
@@ -115,10 +125,21 @@ const entryMount =
       });
 
 entryMount
+  .then(() => {
+    // The app is up, so give this window its full reload budget back — a blip
+    // three hours from now should not be judged against one at startup.
+    window.__LUCA_CLEAR_BOOT_RECOVERY__?.();
+  })
   .catch((error: unknown) => {
     const description = describeBootError(error);
     window.__LUCA_REACT_BOOTSTRAP_ERROR__ = description;
     captureBootError(error);
+    // A dev-server module fetch killed mid-flight by a network change (Wi-Fi
+    // flip, VPN, sleep/wake) rejects this import even though the app is fine.
+    // The loader can recover from that with a bounded reload — the module map
+    // only clears with a new document, so a retry here would refetch nothing.
+    // Only report a real failure once recovery has declined to handle it.
+    if (window.__LUCA_TRY_BOOT_RECOVERY__?.(error) === true) return;
     console.error("[LucaOS web boot] React app import failed", error);
     window.dispatchEvent(new CustomEvent("luca-react-bootstrap-error"));
   });

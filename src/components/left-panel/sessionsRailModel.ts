@@ -75,3 +75,78 @@ export function buildSessionsRailRows(
       };
     });
 }
+
+// ── Conversation threads ────────────────────────────────────────────────────
+
+/**
+ * The shape `buildThreadRailRows` needs, stated structurally rather than
+ * imported. `ConversationThread` satisfies it, but this module stays a model —
+ * it must not pull a localStorage-backed service into a pure function's
+ * dependency graph, and a test must be able to pass three plain objects.
+ */
+export interface ThreadRailThread {
+  id: string;
+  title: string;
+  /** ISO timestamp. */
+  updatedAt: string;
+  messages: readonly unknown[];
+}
+
+export interface ThreadRailRow {
+  id: string;
+  title: string;
+  /** Short, dim, right-aligned: a time today, a weekday this week, else a date. */
+  when: string;
+  bucket: "today" | "earlier";
+  /** The thread you are in. Carries the filled dot; everything else is hollow. */
+  active: boolean;
+}
+
+const MS_PER_DAY = 86_400_000;
+
+/** A time today, a weekday within the week, otherwise a short date. */
+function formatThreadWhen(updatedAt: string, now: number): string {
+  const then = new Date(updatedAt).getTime();
+  if (!Number.isFinite(then)) return "";
+  if (bucketSessionRow(updatedAt, now) === "today") {
+    return new Date(then).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  if (now - then < 7 * MS_PER_DAY) {
+    return new Date(then).toLocaleDateString([], { weekday: "short" });
+  }
+  return new Date(then).toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+/**
+ * Conversation threads as left-rail rows: newest first, bucketed Today /
+ * Earlier, capped at the same `SESSIONS_RAIL_MAX_ROWS` the agent rail uses so
+ * the two lists can never disagree about how long a calm rail is.
+ *
+ * Empty threads are dropped EXCEPT the active one. Otherwise pressing "New chat"
+ * three times and typing nothing would leave three identical "New chat" rows —
+ * and hiding the one you are currently in would be worse still, because then the
+ * rail would not show you where you are.
+ */
+export function buildThreadRailRows(
+  threads: readonly ThreadRailThread[],
+  activeId?: string,
+  now: number = Date.now(),
+): ThreadRailRow[] {
+  return threads
+    .filter(
+      (thread) => thread.messages.length > 0 || thread.id === activeId,
+    )
+    .slice()
+    .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))
+    .slice(0, SESSIONS_RAIL_MAX_ROWS)
+    .map((thread) => ({
+      id: thread.id,
+      title: thread.title,
+      when: formatThreadWhen(thread.updatedAt, now),
+      bucket: bucketSessionRow(thread.updatedAt, now),
+      active: thread.id === activeId,
+    }));
+}

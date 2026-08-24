@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LucaOS — Panel Edges (flush vs. inset vs. hybrid)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* same material values as panel-interiors-target.html, so this is apples-to-apples */
+    --recess:#0a0c0e;                 /* the surface panels sit ON when inset */
+    --base:#101317;                   /* a panel */
+    --chrome:#111417;                 /* a card inside a panel */
+    --canvas:#1b2025;
+    --hair:rgba(255,255,255,.07); --hair-soft:rgba(255,255,255,.045);
+    --hover:rgba(255,255,255,.06);
+    --t1:#e9edf2; --t2:#9aa4b2; --t3:#69737f;
+    --accent:#7aa2ff; --ok:#4fbf7a; --warn:#e0b15a;
+    --r-panel:12px;                   /* workspaceRadius.panel — defined, never used */
+    --r-card:9px; --r-row:7px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:#06080a;color:var(--t1);
+    font:400 13px/1.5 "Inter","Segoe UI",ui-sans-serif,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;letter-spacing:-.008em;font-variant-numeric:tabular-nums;
+    display:flex;flex-direction:column;align-items:center;gap:14px;padding:34px 20px 60px}
+  button{font:inherit;letter-spacing:inherit;color:inherit;background:none;border:0;cursor:default;text-align:left}
+
+  .lede{width:min(1080px,100%);margin-bottom:12px}
+  .lede h1{font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .lede p{font-size:12.5px;color:var(--t2);margin-top:6px;max-width:70ch}
+
+  .caption{width:min(1080px,100%);display:flex;align-items:baseline;gap:10px;margin-top:24px}
+  .caption .k{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
+  .caption .v{font-size:12.5px;color:var(--t1);font-weight:500}
+  .caption .tag{margin-left:auto;font-size:10.5px;color:var(--t3)}
+  .note{width:min(1080px,100%);font-size:12px;color:var(--t2);margin-top:9px;max-width:78ch}
+  .note b{color:var(--t1);font-weight:500}
+
+  /* ── the window: Windows 11 rounds this corner for us, in every variant ── */
+  .win{width:min(1080px,100%);height:330px;border-radius:10px;overflow:hidden;
+    border:1px solid rgba(255,255,255,.09);box-shadow:0 26px 70px rgba(0,0,0,.55);position:relative}
+
+  /* A — FLUSH (what ships today): grid gap of 1px painted with the hairline */
+  .flush{display:grid;grid-template-columns:210px 1fr 250px;grid-template-rows:minmax(0,1fr);
+    gap:1px;background:var(--hair);height:100%}
+  .flush > .col{background:var(--base);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+
+  /* B — INSET: real gutters, each panel a rounded card on a recessed ground */
+  .inset{display:grid;grid-template-columns:210px 1fr 250px;grid-template-rows:minmax(0,1fr);
+    gap:8px;padding:8px;background:var(--recess);height:100%}
+  .inset > .col{background:var(--base);border:1px solid var(--hair);border-radius:var(--r-panel);
+    overflow:hidden;display:flex;flex-direction:column;min-width:0;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+
+  /* C — HYBRID: frame flush; only transient surfaces are rounded cards */
+  .hybrid{display:grid;grid-template-columns:210px 1fr 250px;grid-template-rows:minmax(0,1fr);
+    gap:1px;background:var(--hair);height:100%}
+  .hybrid > .col{background:var(--base);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+  .overlay{position:absolute;inset:34px 262px 26px 220px;background:var(--base);
+    border:1px solid rgba(255,255,255,.12);border-radius:14px;z-index:5;overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.04)}
+  .overlay .obar{display:flex;align-items:center;gap:8px;padding:10px 12px;
+    border-bottom:1px solid var(--hair-soft);font-size:12.5px;font-weight:500}
+  .overlay .obar .x{margin-left:auto;color:var(--t3);font-size:12px}
+  .overlay .find{margin:10px 12px;padding:7px 10px;border:1px solid var(--hair);
+    border-radius:var(--r-row);font-size:12px;color:var(--t3);background:rgba(0,0,0,.25)}
+
+  /* ── panel furniture, identical in all three so ONLY the edges differ ── */
+  .brand{display:flex;align-items:center;gap:8px;padding:11px 12px;font-size:12.5px;font-weight:600}
+  .brand .mark{width:16px;height:16px;border-radius:4px;background:var(--accent);opacity:.85;flex:none}
+  .brand .sp{margin-left:auto;color:var(--t3);font-size:12px;letter-spacing:.14em}
+  .whisper{padding:13px 13px 5px;font-size:11px;color:var(--t3)}
+  .rowi{display:flex;align-items:center;gap:8px;width:calc(100% - 10px);margin:0 5px;
+    padding:6px 8px;border-radius:var(--r-row);color:var(--t2);font-size:12.5px}
+  .rowi.active{background:var(--hover);color:var(--t1)}
+  .rowi .dot{width:5px;height:5px;border-radius:50%;flex:none;background:rgba(255,255,255,.18)}
+  .rowi .dot.on{background:var(--ok)} .rowi .dot.warn{background:var(--warn)}
+  .rowi .when{margin-left:auto;font-size:10.5px;color:var(--t3);flex:none}
+  .new{display:flex;align-items:center;gap:8px;width:calc(100% - 10px);margin:4px 5px 2px;
+    padding:7px 8px;border-radius:var(--r-row);border:1px solid var(--hair);color:var(--t2);font-size:12.5px}
+  .more{padding:5px 13px 0;font-size:11.5px;color:var(--t3)}
+  .foot{margin-top:auto;padding:10px 13px;font-size:11.5px;color:var(--t3);
+    border-top:1px solid var(--hair-soft)}
+  .topbar{display:flex;align-items:center;justify-content:flex-end;gap:7px;
+    min-height:38px;padding:5px 11px;flex:none}
+  .chip{padding:4px 9px;border:1px solid var(--hair);border-radius:999px;font-size:10.5px;color:var(--t3)}
+  .centre-body{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:11px;padding:14px}
+  .greet{font-size:15px;color:var(--t1);font-weight:500;letter-spacing:-.01em}
+  .composer{width:min(400px,100%);padding:11px 13px;border:1px solid var(--hair);
+    border-radius:15px;background:rgba(0,0,0,.28);font-size:12.5px;color:var(--t3)}
+  .phead{display:flex;align-items:center;gap:8px;padding:11px 13px;font-size:12.5px;font-weight:600;flex:none}
+  .phead .wc{margin-left:auto;color:var(--t3);font-size:11px;letter-spacing:.22em}
+  .tabs{display:flex;border-bottom:1px solid var(--hair-soft);flex:none}
+  .tabs button{flex:1;padding:9px 0;text-align:center;font-size:12px;color:var(--t3);position:relative}
+  .tabs button.on{color:var(--t1)}
+  .tabs button.on::after{content:"";position:absolute;left:24%;right:24%;bottom:-1px;height:2px;
+    border-radius:2px;background:var(--accent)}
+  .status{display:flex;align-items:center;gap:8px;padding:11px 13px;font-size:12px;color:var(--t2)}
+  .card{margin:2px 11px 0;border:1px solid rgba(224,177,90,.34);border-radius:var(--r-card);
+    padding:10px 11px;background:var(--chrome)}
+  .card .k{font-size:12.5px;color:var(--t1);font-weight:500;display:flex;align-items:center;gap:7px}
+  .card .k .w{margin-left:auto;font-size:10.5px;color:var(--warn);font-weight:400}
+  .card .b{font-size:12px;color:var(--t2);margin-top:4px}
+  .card .acts{display:flex;gap:7px;margin-top:9px}
+  .card .acts span{padding:4px 10px;border:1px solid var(--hair);border-radius:var(--r-row);font-size:11.5px;color:var(--t2)}
+  .card .trust{font-size:10.5px;color:var(--t3);margin-top:8px}
+</style>
+</head>
+<body>
+
+<div class="lede">
+  <h1>Panel edges — three readings of the same reference</h1>
+  <p>Identical furniture in all three frames. The <em>only</em> difference is how a panel meets its
+     neighbour and the window. <code>workspaceRadius.panel = 12</code> already exists in
+     <code>workspaceShellTokens.ts</code> and is currently used by nothing.</p>
+</div>
+
+<!-- ─────────────────────────── A — FLUSH (today) ─────────────────────────── -->
+<div class="caption">
+  <span class="k">A</span><span class="v">Flush — what ships today</span>
+  <span class="tag">gap 1px · hairline · radius 0 · bled to the window edge</span>
+</div>
+<div class="win">
+  <div class="flush">
+    <div class="col">
+      <div class="brand"><span class="mark"></span>LucaOS<span class="sp">☰ ⊟</span></div>
+      <div class="new">＋ New chat</div>
+      <div class="whisper">today</div>
+      <div class="rowi active"><span class="dot on"></span>Q3 investor update<span class="when">14:20</span></div>
+      <div class="rowi"><span class="dot"></span>Deploy script fix<span class="when">11:05</span></div>
+      <div class="whisper">earlier</div>
+      <div class="rowi"><span class="dot"></span>Trip planning<span class="when">Tue</span></div>
+      <div class="whisper">tools</div>
+      <div class="rowi"><span class="dot on"></span>Code editor<span class="when">running</span></div>
+      <div class="rowi"><span class="dot"></span>Browser</div>
+      <div class="more">All tools…</div>
+      <div class="foot">⚙ Settings</div>
+    </div>
+    <div class="col">
+      <div class="topbar"><span class="chip">local core</span><span class="chip">◐</span></div>
+      <div class="centre-body">
+        <div class="greet">Good evening.</div>
+        <div class="composer">Ask Luca anything…</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="phead">Operation Center<span class="wc">⊟ ⨯</span></div>
+      <div class="tabs"><button class="on">Now</button><button>Timeline</button><button>Memory</button></div>
+      <div class="status"><span class="dot" style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>All systems operational</div>
+      <div class="card">
+        <div class="k">Mail agent<span class="w">waiting</span></div>
+        <div class="b">Send the draft to Dana</div>
+        <div class="acts"><span>Review</span><span>Not now</span></div>
+        <div class="trust">Nothing runs until you decide.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="note">Reads as one continuous slab. Nothing is wasted, and the seam is honest — but every
+  boundary carries the same weight, so the frame never tells you which surface is the
+  <b>persistent structure</b> and which is <b>something that arrived</b>.</div>
+
+<!-- ─────────────────────────── B — INSET CARDS ─────────────────────────── -->
+<div class="caption">
+  <span class="k">B</span><span class="v">Inset cards — every panel edged</span>
+  <span class="tag">gap 8px · padding 8px · radius 12 · recessed ground</span>
+</div>
+<div class="win">
+  <div class="inset">
+    <div class="col">
+      <div class="brand"><span class="mark"></span>LucaOS<span class="sp">☰ ⊟</span></div>
+      <div class="new">＋ New chat</div>
+      <div class="whisper">today</div>
+      <div class="rowi active"><span class="dot on"></span>Q3 investor update<span class="when">14:20</span></div>
+      <div class="rowi"><span class="dot"></span>Deploy script fix<span class="when">11:05</span></div>
+      <div class="whisper">earlier</div>
+      <div class="rowi"><span class="dot"></span>Trip planning<span class="when">Tue</span></div>
+      <div class="whisper">tools</div>
+      <div class="rowi"><span class="dot on"></span>Code editor<span class="when">running</span></div>
+      <div class="rowi"><span class="dot"></span>Browser</div>
+      <div class="more">All tools…</div>
+      <div class="foot">⚙ Settings</div>
+    </div>
+    <div class="col">
+      <div class="topbar"><span class="chip">local core</span><span class="chip">◐</span></div>
+      <div class="centre-body">
+        <div class="greet">Good evening.</div>
+        <div class="composer">Ask Luca anything…</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="phead">Operation Center<span class="wc">⊟ ⨯</span></div>
+      <div class="tabs"><button class="on">Now</button><button>Timeline</button><button>Memory</button></div>
+      <div class="status"><span class="dot" style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>All systems operational</div>
+      <div class="card">
+        <div class="k">Mail agent<span class="w">waiting</span></div>
+        <div class="b">Send the draft to Dana</div>
+        <div class="acts"><span>Review</span><span>Not now</span></div>
+        <div class="trust">Nothing runs until you decide.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="note">Each panel becomes an object you could pick up, and the window's own rounded corner
+  finally nests with something instead of clipping a square. <b>Costs 32px of width</b> (2 gutters +
+  2 edges) and asks the recessed ground to carry real contrast — on Luca Light there is less room
+  below the panel colour, so the gutter can read as a grey stripe rather than as depth.</div>
+
+<!-- ─────────────────────────── C — HYBRID ─────────────────────────── -->
+<div class="caption">
+  <span class="k">C</span><span class="v">Hybrid — flush frame, edged arrivals</span>
+  <span class="tag">frame as today · radius 14 only on transient surfaces</span>
+</div>
+<div class="win">
+  <div class="hybrid">
+    <div class="col">
+      <div class="brand"><span class="mark"></span>LucaOS<span class="sp">☰ ⊟</span></div>
+      <div class="new">＋ New chat</div>
+      <div class="whisper">today</div>
+      <div class="rowi active"><span class="dot on"></span>Q3 investor update<span class="when">14:20</span></div>
+      <div class="rowi"><span class="dot"></span>Deploy script fix<span class="when">11:05</span></div>
+      <div class="whisper">earlier</div>
+      <div class="rowi"><span class="dot"></span>Trip planning<span class="when">Tue</span></div>
+      <div class="whisper">tools</div>
+      <div class="rowi"><span class="dot on"></span>Code editor<span class="when">running</span></div>
+      <div class="rowi"><span class="dot"></span>Browser</div>
+      <div class="more">All tools…</div>
+      <div class="foot">⚙ Settings</div>
+    </div>
+    <div class="col">
+      <div class="topbar"><span class="chip">local core</span><span class="chip">◐</span></div>
+      <div class="centre-body"></div>
+    </div>
+    <div class="col">
+      <div class="phead">Operation Center<span class="wc">⊟ ⨯</span></div>
+      <div class="tabs"><button class="on">Now</button><button>Timeline</button><button>Memory</button></div>
+      <div class="status"><span class="dot" style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>All systems operational</div>
+      <div class="card">
+        <div class="k">Mail agent<span class="w">waiting</span></div>
+        <div class="b">Send the draft to Dana</div>
+        <div class="acts"><span>Review</span><span>Not now</span></div>
+        <div class="trust">Nothing runs until you decide.</div>
+      </div>
+    </div>
+  </div>
+  <!-- the arrival: All tools…, edged the way the reference edges its File panel -->
+  <div class="overlay">
+    <div class="obar">All tools<span class="x">⤢ ⨯</span></div>
+    <div class="find">Find a tool…</div>
+    <div class="whisper">intelligence</div>
+    <div class="rowi"><span class="dot"></span>Cognitive<span class="when">❋</span></div>
+    <div class="rowi"><span class="dot"></span>Reports<span class="when">❑</span></div>
+    <div class="whisper">operator · pro</div>
+    <div class="rowi"><span class="dot"></span>OSINT<span class="when">◉</span></div>
+  </div>
+</div>
+<div class="note">This is what the reference actually does: its left rail and centre sit flush, and the
+  <b>rounded, bordered, shadowed card is the thing that arrived</b> — a file inspector floating over
+  the conversation. Radius becomes <b>meaning</b> rather than decoration: square is structure that
+  was always there, rounded is something summoned that Escape will dismiss. Costs no width at rest,
+  and it is the treatment <code>WorkspaceToolsSurface</code> needs anyway.</div>
+
+</body>
+</html>

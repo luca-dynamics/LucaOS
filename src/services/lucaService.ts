@@ -49,7 +49,7 @@ import {
   getCapabilitiesRegistry,
 } from "../config/protocols";
 import { thoughtStreamService } from "./thoughtStreamService";
-import { modelManager, LocalModel } from "./ModelManagerService";
+import { modelManager, LocalModel } from "./local-models/LocalModelLibrary";
 import { mentalStateService } from "./mentalStateService";
 import { cognitiveDeliberator } from "./cognitiveDeliberator";
 import { sovereignAuditor } from "./sovereignAuditor";

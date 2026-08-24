@@ -9,8 +9,17 @@ import { memoryService } from "../../services/memoryService";
 import conversationService from "../../services/conversationService";
 import { awarenessService } from "../../services/awarenessService";
 import { lucaWorkforce } from "../../services/agent/LucaWorkforce";
+import {
+  conversationThreadService,
+  type ConversationThread,
+} from "../../services/conversation/conversationThreadService";
 
-const CHAT_STORAGE_KEY = "LUCA_CHAT_HISTORY_V1";
+/**
+ * Per THREAD, not per app. This used to be the ceiling on everything the user
+ * had ever said: one flat array, and message 51 silently deleted message 1.
+ * Threads make the window local — a long conversation still rolls, but starting
+ * a new one no longer costs you the old one.
+ */
 const MAX_HISTORY_LIMIT = 50;
 
 interface UseChatControllerProps {
@@ -57,24 +66,25 @@ export function useChatController({
   turnLogsRef,
   visualData,
 }: UseChatControllerProps) {
-  // --- PERSISTENT CHAT STATE ---
-  const [messages, setMessages] = useState<Message[]>(() => {
-    try {
-      const saved = localStorage.getItem(CHAT_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          console.log(
-            `[STORAGE] Loaded ${parsed.length} messages from history.`,
-          );
-          return parsed;
-        }
-      }
-    } catch (e: any) {
-      console.warn("[STORAGE] Failed to load chat history:", e);
-    }
-    return [];
-  });
+  // --- PERSISTENT CHAT STATE, SCOPED TO A THREAD ---
+  // `ensureActiveThread` is the whole reason this is not a bare localStorage
+  // read any more: on a fresh install it opens one, and on an upgrade it adopts
+  // the old single conversation, so there is never a "no thread yet" state to
+  // handle here.
+  const [activeThread, setActiveThread] = useState<ConversationThread>(() =>
+    conversationThreadService.ensureActiveThread(),
+  );
+  const [threads, setThreads] = useState<ConversationThread[]>(() =>
+    conversationThreadService.listThreads(),
+  );
+  const [messages, setMessages] = useState<Message[]>(
+    () => activeThread.messages,
+  );
+
+  const activeThreadId = activeThread.id;
+  // Read inside callbacks without making them depend on the current thread.
+  const activeThreadIdRef = useRef(activeThreadId);
+  activeThreadIdRef.current = activeThreadId;
 
   // Track messages for stable refs
   const messagesRef = useRef(messages);
@@ -91,8 +101,10 @@ export function useChatController({
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastMessageSourceRef = useRef<"desktop" | "mobile" | null>(null);
 
-  // Refs for ingestion batching
-  const lastIngestedIndexRef = useRef<number>(-1);
+  // Refs for ingestion batching. Seeded to the end of the thread we opened with:
+  // those messages were ingested into LightRAG when they were first sent, so a
+  // reload — or a switch back to an older thread — must not ingest them again.
+  const lastIngestedIndexRef = useRef<number>(activeThread.messages.length - 1);
   const ingestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // --- ROBUST PERSISTENCE EFFECT WITH PRUNING ---
@@ -120,8 +132,31 @@ export function useChatController({
         optimizedMessages = optimizedMessages.slice(-MAX_HISTORY_LIMIT);
       }
 
-      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(optimizedMessages));
+      // Write into the ACTIVE thread. `saveMessages` re-derives the thread's
+      // title from the first user message unless the user renamed it, which is
+      // what makes the left rail name itself.
+      const saved = conversationThreadService.saveMessages(
+        activeThreadIdRef.current,
+        optimizedMessages,
+      );
+      if (saved) setThreads(conversationThreadService.listThreads());
 
+      // The service keeps the thread in memory and shouts on a failed write
+      // rather than throwing, so quota is checked here instead of caught below.
+      // Saving the last 10 is still better than saving nothing.
+      if (conversationThreadService.isDegraded()) {
+        conversationThreadService.saveMessages(
+          activeThreadIdRef.current,
+          optimizedMessages.slice(-10).map((msg) => ({
+            ...msg,
+            attachment: undefined,
+            generatedImage: undefined,
+          })),
+        );
+        if (!conversationThreadService.isDegraded()) {
+          console.log("[STORAGE] Saved truncated history (last 10) as fallback.");
+        }
+      }
       // --- AUTOMATIC CONVERSATION INGESTION INTO LIGHTRAG (Batched) ---
       const newMessages = optimizedMessages.slice(
         lastIngestedIndexRef.current + 1,
@@ -186,24 +221,12 @@ export function useChatController({
         }
       }
     } catch (e: any) {
-      console.warn(
-        "[STORAGE] Failed to save chat history (likely quota exceeded):",
-        e,
-      );
-      // Emergency fallback
-      try {
-        const shortHistory = messages.slice(-10).map((msg) => ({
-          ...msg,
-          attachment: undefined,
-          generatedImage: undefined,
-        }));
-        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(shortHistory));
-        console.log("[STORAGE] Saved truncated history (last 10) as fallback.");
-      } catch (e2) {
-        console.error("[STORAGE] Critical storage failure.", e2);
-      }
+      // The thread service handles its own storage failures loudly (see the
+      // degraded check above), so reaching here means the pruning or the
+      // ingestion pass itself threw — a bug, not a full disk.
+      console.error("[STORAGE] Failed to persist the active thread:", e);
     }
-  }, [messages]);
+  }, [messages, activeThreadId]);
 
   // --- SCROLL HANDLING ---
   // Scroll to bottom when messages change
@@ -519,15 +542,71 @@ export function useChatController({
     soundService.play("KEYSTROKE");
   }, []);
 
+  // --- THREADS ---
+  // Each of these sets the thread and its messages in ONE batch, so the
+  // persistence effect never runs with a new thread id and the old messages.
+
+  /**
+   * What "New chat" now means. It used to be `handleClearChat` — a confirm and
+   * a purge — so the only way to start a fresh thought was to destroy the last
+   * one. Starting a thread costs nothing and takes nothing away.
+   */
+  const newThread = useCallback(() => {
+    const thread = conversationThreadService.createThread();
+    lastIngestedIndexRef.current = -1;
+    setActiveThread(thread);
+    setMessages([]);
+    setThreads(conversationThreadService.listThreads());
+    soundService.play("KEYSTROKE");
+  }, []);
+
+  const switchThread = useCallback((id: string) => {
+    const thread = conversationThreadService.setActiveThreadId(id);
+    if (!thread) return;
+    // Everything already in this thread reached LightRAG when it was sent.
+    lastIngestedIndexRef.current = thread.messages.length - 1;
+    setActiveThread(thread);
+    setMessages(thread.messages);
+  }, []);
+
+  const renameThread = useCallback((id: string, title: string) => {
+    const thread = conversationThreadService.renameThread(id, title);
+    setThreads(conversationThreadService.listThreads());
+    if (thread && thread.id === activeThreadIdRef.current) setActiveThread(thread);
+  }, []);
+
+  /**
+   * Delete one thread. The service decides what is active afterwards — the next
+   * thread, or a fresh one if that was the last — so the composer is never left
+   * pointing at nothing.
+   */
+  const deleteThread = useCallback((id: string) => {
+    const nextActiveId = conversationThreadService.deleteThread(id);
+    const next = conversationThreadService.getThread(nextActiveId);
+    setThreads(conversationThreadService.listThreads());
+    if (!next) return;
+    lastIngestedIndexRef.current = next.messages.length - 1;
+    setActiveThread(next);
+    setMessages(next.messages);
+  }, []);
+
   // --- CLEAR CHAT ---
+  // Still a purge, still confirmed, still separately labelled — but it is no
+  // longer what "New chat" does, and it now clears the whole archive rather than
+  // one key, so the wipe cannot be undone by a reload resurrecting the legacy
+  // conversation.
   const handleClearChat = useCallback(() => {
     soundService.play("ALERT");
     const confirm = window.confirm(
       "WARNING: PURGE LUCA LOGS? This cannot be undone.",
     );
     if (confirm) {
+      conversationThreadService.clearAllThreads();
+      const fresh = conversationThreadService.ensureActiveThread();
+      lastIngestedIndexRef.current = -1;
+      setActiveThread(fresh);
       setMessages([]);
-      localStorage.removeItem(CHAT_STORAGE_KEY);
+      setThreads(conversationThreadService.listThreads());
       lucaWorkforce.clearAllWorkflows();
       awarenessService.reset("dashboard");
     }
@@ -553,5 +632,12 @@ export function useChatController({
     handleStop,
     handleClearChat,
     lastMessageSourceRef,
+    // The archive the left rail renders.
+    threads,
+    activeThreadId,
+    newThread,
+    switchThread,
+    renameThread,
+    deleteThread,
   };
 }

@@ -4,6 +4,7 @@ import { LucaInput, LucaSelect } from "../ui/luca";
 import { memoryService } from "../../services/memoryService";
 import { settingsService } from "../../services/settingsService";
 import { memoryProposalService } from "../../services/memory/MemoryProposalService";
+import { conversationThreadService } from "../../services/conversation/conversationThreadService";
 import {
   buildBundleFromPendingProposals,
   buildBundleFromProposalId,
@@ -26,6 +27,7 @@ import {
   settingsSelectClassName,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import KnowledgeBridgeTab from "./KnowledgeBridgeTab";
 
 import { PersonalIntelligencePersistencePreview } from "./PersonalIntelligencePersistencePreview";
 import { PersonalIntelligenceMemoryApprovalPilot } from "./PersonalIntelligenceMemoryApprovalPilot";
@@ -85,6 +87,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
   memoryStats,
   loadMemoryStats,
   isMobile,
+  theme,
 }) => {
   const [memories, setMemories] = useState<MemoryNode[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -198,7 +201,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
       {showGovernancePreviews && (
         <SettingsSection
           title="Personal Intelligence Preview"
-          description="Review privacy, learning, and persistence boundaries without changing current memory behavior."
+          description="Inspect privacy, learning, and persistence boundaries. Nothing is written."
           icon="Eye"
           isMobile={isMobile}
         >
@@ -214,34 +217,33 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
 
       <SettingsSection
         title="Memory Status"
-        description="View and control what Luca remembers. This trust surface keeps memory clear and calm."
+        description="What Luca currently remembers, and where it is kept."
         icon="Database"
         isMobile={isMobile}
       >
         <SettingsStatList
           items={[
             {
-              label: "Memory",
+              label: "Storage",
               value: "On-device",
-              detail: "Local memory is loaded from Luca's archive.",
+              detail: "Memory is read from the local archive first.",
             },
             {
               label: "Total facts",
               value: `${memoryStats.count}`,
-              detail:
-                "Personal details, preferences, projects, devices, and work context.",
+              detail: "Details, preferences, projects, devices, work context.",
             },
             {
               label: "Last updated",
               value: memories[0]
                 ? new Date(memories[0].timestamp).toLocaleDateString()
                 : "No memories",
-              detail: "Sorted by most recent memory.",
+              detail: "Timestamp of the most recent memory.",
             },
             {
-              label: "Sync status",
-              value: "Local first",
-              detail: "Backend save is attempted when memory changes.",
+              label: "Write approval",
+              value: memoryWriteApproval ? "Required" : "Automatic",
+              detail: "Set under Privacy below.",
             },
           ]}
         />
@@ -250,7 +252,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
       {showGovernancePreviews && (
         <SettingsSection
           title="Personal Intelligence Persistence"
-          description="Review the governed memory adapter status and persistence prerequisites without triggering a write."
+          description="Governed memory adapter status and write prerequisites."
           icon="Shield"
           isMobile={isMobile}
         >
@@ -273,7 +275,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
       {showGovernancePreviews && (
         <SettingsSection
           title="Mission Center"
-          description="Unified control for the active MissionControl mission: goals, verification tape, and gated complete. Workforce and computer-use share this completion path. Mission Profile advisory (above) stays read-only alignment context."
+          description="Goals, verification tape, and gated completion for the active mission."
           icon="Flag"
           isMobile={isMobile}
         >
@@ -284,7 +286,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
       {showGovernancePreviews && (
         <SettingsSection
           title="Memory Vault"
-          description="Absorb Phase 2: readable and editable local archive with export/import. Complements the archive list below and PI governed write pilots."
+          description="Read and edit the local archive, with export and import."
           icon="Database"
           isMobile={isMobile}
         >
@@ -295,7 +297,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
       {showGovernancePreviews && (
         <SettingsSection
           title="Skill Marketplace"
-          description="Absorb Phase 3: import OpenClaw / Claude tools / MCP catalogs, manage skill lifecycle, dry-run gates. Auto-execution remains disabled."
+          description="Import tool catalogs and manage skills. Auto-execution stays off."
           icon="Package"
           isMobile={isMobile}
         >
@@ -439,24 +441,13 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
 
       <SettingsSection
         title="Memory Controls"
-        description="Update memory visibility, refresh the archive, and forget selected memories from the cards above."
+        description="Refresh Luca's local memory archive."
         icon="Sliders"
         isMobile={isMobile}
       >
         <SettingsRow
-          label="Approve what Luca remembers"
-          description="Hold memories Luca proposes about you for review instead of saving them straight away. Pending items appear in Memory Control and the chat approval strip."
-          control={
-            <SettingsToggle
-              checked={memoryWriteApproval}
-              onChange={toggleMemoryWriteApproval}
-              ariaLabel="Require approval before Luca saves a memory"
-            />
-          }
-        />
-        <SettingsRow
           label="Update memory"
-          description="Refresh Luca's local memory archive and backend snapshot when available."
+          description="Reload the local archive and backend snapshot."
           control={
             <button
               onClick={loadAllMemories}
@@ -467,19 +458,11 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
             </button>
           }
         />
-        <SettingsRow
-          label="Forget selected memory"
-          description="Use the delete control on an individual memory card."
-        />
-        <SettingsRow
-          label="Memory visibility"
-          description="Search and category filters determine which memories are visible here."
-        />
       </SettingsSection>
 
       <SettingsSection
         title="Data Export"
-        description="Export memory and future conversation/context bundles without changing storage behavior."
+        description="Take a copy of what Luca remembers about you."
         icon="Download"
         isMobile={isMobile}
       >
@@ -505,33 +488,34 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
             </button>
           }
         />
-        <SettingsRow
-          label="Import memory"
-          description="Import and migration flows remain available where the existing product exposes them."
-        />
       </SettingsSection>
 
       <SettingsSection
         title="Privacy"
-        description="Local-only memory, cloud sync, encryption, and sensitive-memory rules stay easy to review."
+        description="Decide what Luca is allowed to remember about you."
         icon="ShieldCheck"
         isMobile={isMobile}
       >
         <SettingsRow
-          label="Local-only memory"
-          description="Luca reads the local archive first."
-        />
-        <SettingsRow
-          label="Cloud sync"
-          description="Backend save is attempted only through the existing memory endpoint."
-        />
-        <SettingsRow
-          label="Sensitive memory rules"
-          description="Review and delete individual memories from What Luca Remembers."
+          label="Approve what Luca remembers"
+          description="Hold proposed memories for review instead of saving them."
+          control={
+            <SettingsToggle
+              checked={memoryWriteApproval}
+              onChange={toggleMemoryWriteApproval}
+              ariaLabel="Require approval before Luca saves a memory"
+            />
+          }
         />
       </SettingsSection>
 
-      <SettingsDangerZone description="Delete memory, reset Luca profile, clear sessions, or wipe local data only after confirmation.">
+      {/* What Luca is given to read and what Luca remembers are one question.
+          Knowledge Base was its own destination and made neither answerable. */}
+      <div data-settings-anchor="knowledge-bridge">
+        <KnowledgeBridgeTab theme={theme} isMobile={isMobile} />
+      </div>
+
+      <SettingsDangerZone description="Irreversible. Both actions ask for confirmation first.">
         <SettingsRow
           label="Delete memory"
           description="Wipe everything Luca has learned from the local memory store."
@@ -555,24 +539,27 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
           }
         />
         <SettingsRow
-          label="Clear sessions"
-          description="Clear active chat history while preserving long-term memory."
+          label="Clear conversations"
+          description="Delete every conversation thread. Long-term memory is preserved."
           control={
             <button
               onClick={() => {
                 if (
                   confirm(
-                    "Clear active chat session? (Long-term memory will be preserved)",
+                    "Delete all conversation threads? (Long-term memory will be preserved)",
                   )
                 ) {
-                  localStorage.removeItem("LUCA_CHAT_HISTORY_V1");
+                  // Goes through the service so the pre-threads key is removed
+                  // too — otherwise the migration would read it on the next
+                  // launch and resurrect exactly what was just cleared.
+                  conversationThreadService.clearAllThreads();
                   window.location.reload();
                 }
               }}
               className="rounded-xl border px-3 py-2 text-sm"
               style={settingsControlInlineStyle}
             >
-              Reset Session
+              Clear conversations
             </button>
           }
         />

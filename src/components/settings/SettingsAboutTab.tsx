@@ -2,14 +2,16 @@ import React, { useEffect, useState } from "react";
 import pkg from "../../../package.json";
 import { LucaSettings } from "../../services/settingsService";
 import { memoryService } from "../../services/memoryService";
-import { modelManagerService } from "../../services/ModelManagerService";
+import { modelManagerService } from "../../services/local-models/LocalModelLibrary";
 import {
   SettingsAdvancedDisclosure,
-  SettingsCard,
-  SettingsRow,
   SettingsSection,
   SettingsStatList,
 } from "./SettingsLayout";
+import {
+  buildAboutHardwareStats,
+  type AboutSystemSpecs,
+} from "./settingsAboutHardware";
 
 interface SettingsAboutTabProps {
   theme?: any;
@@ -25,23 +27,22 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
   const version = pkg?.version || "1.0.0";
   const [memoryCount, setMemoryCount] = useState(0);
   const [cortexOnline, setCortexOnline] = useState(false);
-  const [systemSpecs, setSystemSpecs] = useState<any>({
-    cpu: "...",
-    gpu: "...",
-    memory: { total: 0 },
-  });
+  const [systemSpecs, setSystemSpecs] = useState<AboutSystemSpecs>({});
 
   useEffect(() => {
     const mems = memoryService.getAllMemories();
     setMemoryCount(mems.length);
     memoryService.checkCortexHealth().then(setCortexOnline);
-    modelManagerService.getSystemSpecs().then(setSystemSpecs);
+    modelManagerService.getSystemSpecs().then((specs) => {
+      if (specs) setSystemSpecs(specs);
+    });
   }, []);
 
-  const electronVersion =
-    typeof process !== "undefined" && process.versions?.electron
-      ? `v${process.versions.electron}`
-      : "Web Relay";
+  const isDesktop =
+    typeof process !== "undefined" && Boolean(process.versions?.electron);
+  const electronVersion = isDesktop
+    ? `v${process.versions.electron}`
+    : "Web Relay";
 
   const activeModel = settings.brain.model;
   const architecture =
@@ -55,7 +56,7 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
     <div className={`space-y-6 py-2 ${isMobile ? "px-0" : ""}`}>
       <SettingsSection
         title="LucaOS Version"
-        description="Simple version, channel, update, and release-note information."
+        description="Version and release channel for this install."
         icon="Info"
         accentColor={theme?.hex}
         isMobile={isMobile}
@@ -69,13 +70,15 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
             },
             {
               label: "Build channel",
-              value: "Local / Web",
-              detail: "Runtime is detected by the current shell.",
+              value: isDesktop ? "Desktop" : "Web relay",
+              detail: isDesktop
+                ? `Electron shell ${electronVersion}.`
+                : "Running in a browser against a remote core.",
             },
             {
-              label: "Update status",
+              label: "Updates",
               value: "Manual",
-              detail: "Release notes remain available through project updates.",
+              detail: "This build does not self-update.",
             },
           ]}
         />
@@ -83,75 +86,48 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
 
       <SettingsSection
         title="System Info"
-        description="Platform, runtime, device compatibility, and diagnostics summary without over-carding About."
+        description="Runtime, active brain, and local intelligence status."
         icon="Monitor"
         accentColor={theme?.hex}
         isMobile={isMobile}
       >
-        <SettingsCard>
-          <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
-            <div>
-              <p className="font-semibold">Runtime</p>
-              <p className="text-xs opacity-70">{electronVersion}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Active brain</p>
-              <p className="text-xs opacity-70">{architecture}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Cortex</p>
-              <p className="text-xs opacity-70">
-                {cortexOnline ? "Online" : "Offline"}
-              </p>
-            </div>
-            <div>
-              <p className="font-semibold">Memory facts</p>
-              <p className="text-xs opacity-70">{memoryCount}</p>
-            </div>
-          </div>
-        </SettingsCard>
-      </SettingsSection>
-
-      <SettingsSection
-        title="Legal & Trust"
-        description="Privacy policy, terms, licenses, and acknowledgements."
-        icon="ShieldCheck"
-        accentColor={theme?.hex}
-        isMobile={isMobile}
-      >
-        <SettingsRow
-          label="Privacy policy"
-          description="Review how Luca handles local and connected data."
-        />
-        <SettingsRow
-          label="Terms"
-          description="Project terms and usage boundaries."
-        />
-        <SettingsRow
-          label="Licenses"
-          description="Open-source licenses and third-party acknowledgements."
-        />
-        <SettingsRow
-          label="Acknowledgements"
-          description="Credits for LucaOS dependencies and contributors."
+        <SettingsStatList
+          columns={2}
+          items={[
+            {
+              label: "Runtime",
+              value: electronVersion,
+              detail: "Shell hosting the renderer.",
+            },
+            {
+              label: "Active brain",
+              value: architecture,
+              detail: activeModel,
+            },
+            {
+              label: "Cortex",
+              value: cortexOnline ? "Online" : "Offline",
+              detail: "Local Python intelligence service.",
+            },
+            {
+              label: "Memory facts",
+              value: memoryCount,
+              detail: "Facts Luca currently remembers about you.",
+            },
+          ]}
         />
       </SettingsSection>
 
       <SettingsAdvancedDisclosure
         title="Advanced Details"
-        description="Copy diagnostics, export logs, and build metadata."
+        description="Hardware and build metadata for diagnostics."
       >
-        <SettingsRow
-          label="Copy diagnostics"
-          description={`CPU: ${systemSpecs.cpu || "unknown"} • GPU: ${systemSpecs.gpu || "unknown"}`}
-        />
-        <SettingsRow
-          label="Export logs"
-          description="Log export continues through the existing diagnostics surfaces."
-        />
-        <SettingsRow
-          label="Build metadata"
-          description={`Version ${version} • Runtime ${electronVersion}`}
+        <SettingsStatList
+          columns={2}
+          items={buildAboutHardwareStats(systemSpecs, {
+            version,
+            runtime: electronVersion,
+          })}
         />
       </SettingsAdvancedDisclosure>
     </div>

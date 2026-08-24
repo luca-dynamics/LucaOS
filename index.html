@@ -681,6 +681,35 @@
         text-align: left;
         white-space: pre-wrap;
       }
+      /* The only way out of the failure screen. A dev-server module fetch that
+         dies mid-boot (see __LUCA_TRY_BOOT_RECOVERY__ below) is usually fixed by
+         one reload, but the module map only clears with a new document — so
+         without this button the window is a dead end and the app has to be
+         killed and relaunched. Hidden unless the loader actually failed. */
+      .loader-recover {
+        display: none;
+        margin-top: 4px;
+        padding: 9px 20px;
+        border: 1px solid rgba(43, 48, 58, 0.16);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.7);
+        color: #4b535f;
+        font-family: inherit;
+        font-size: 13px;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        transition:
+          background 160ms ease,
+          border-color 160ms ease;
+      }
+      .loader-recover:hover {
+        background: rgba(255, 255, 255, 0.94);
+        border-color: rgba(43, 48, 58, 0.28);
+      }
+      .loader-recover:focus-visible {
+        outline: 2px solid rgba(127, 169, 216, 0.75);
+        outline-offset: 2px;
+      }
       .loader-progress {
         position: relative;
         width: 100%;
@@ -745,6 +774,9 @@
       #root-loader[data-state="failed"] .loader-failure-details {
         position: static;
         display: block;
+      }
+      #root-loader[data-state="failed"] .loader-recover {
+        display: inline-block;
       }
       @media (prefers-reduced-motion: reduce) {
         .loader-spinner {
@@ -923,6 +955,9 @@
              light. (id kept as loader-checklist for the boot hooks.) -->
         <div class="loader-summary" id="loader-checklist"></div>
         <div id="loader-healthpill"></div>
+        <button class="loader-recover" id="loader-recover" type="button">
+          Reload LucaOS
+        </button>
         <div class="loader-failure-details" aria-live="polite"></div>
       </div>
     </div>
@@ -1202,9 +1237,162 @@
           paintProgress();
         }, 900);
 
+        // ---- Transient boot-failure recovery -------------------------------
+        //
+        // THE FAILURE: in dev, Vite serves the renderer as ~1,900 separate ES
+        // modules over HTTP from 127.0.0.1. When Chromium's network service sees
+        // a network change -- Wi-Fi flip, VPN up/down, a virtual adapter
+        // appearing, sleep/wake -- it tears down every socket it owns, loopback
+        // included, and fails the requests in flight with ERR_NETWORK_CHANGED.
+        // A single one of those ~1,900 fetches failing rejects the dynamic
+        // `import()` of the app entry, and the app "failed to start" even though
+        // nothing is wrong with it. Packaged builds load from file:// and cannot
+        // hit this; the dev loop hits it regularly, which is where the app is
+        // actually used day to day.
+        //
+        // WHY THE FIX IS A RELOAD AND NOT A RETRY: per the HTML spec a module
+        // whose fetch failed is recorded in the document's module map as failed,
+        // and re-importing that URL returns the same failure without going back
+        // to the network. The requests that die are the entry's *dependencies*,
+        // whose URLs are baked into the served entry text -- so even re-importing
+        // the entry with a fresh query string re-resolves the same poisoned URLs.
+        // The module map is per-document, so only a new document clears it.
+        //
+        // WHY IT IS BOUNDED: a syntax error or a throw in app code fails
+        // identically on every reload. Auto-reloading that would replace a dead
+        // end with an infinite flicker loop, which is worse. So only transport
+        // failures qualify, the budget is small, and it lives in sessionStorage
+        // -- which survives the reload but dies with the window, so a fresh
+        // launch always starts with the full budget rather than staying poisoned.
+        const BOOT_RETRY_KEY = "LUCA_BOOT_RECOVERY_ATTEMPTS";
+        const BOOT_RETRY_LIMIT = 3;
+        // Let the network settle before trying again; an instant reload tends to
+        // land on the same torn-down sockets.
+        const BOOT_RETRY_BACKOFF_MS = [400, 1200, 2500];
+        // Transport interrupted mid-flight. The distinction that matters is
+        // "the socket was yanked" (a reload can fix it) versus "nothing is
+        // listening" -- ERR_CONNECTION_REFUSED is deliberately NOT here: the
+        // core server and Cortex are routinely not up yet during boot, the app
+        // is designed to start without them, and reloading cannot conjure a
+        // listener. Retry what was interrupted, never what was refused.
+        const MODULE_LOAD_FAILURES = [
+          "Failed to fetch dynamically imported module",
+          "error loading dynamically imported module",
+          "Importing a module script failed",
+          "NetworkError",
+          "Load failed",
+        ];
+        // Only ever supporting evidence -- see the note in the recovery hook.
+        const INTERRUPTED_TRANSPORT_CODES = [
+          "ERR_NETWORK_CHANGED",
+          "ERR_NETWORK_IO_SUSPENDED",
+          "ERR_CONNECTION_RESET",
+          "ERR_CONNECTION_CLOSED",
+          "ERR_CONNECTION_ABORTED",
+          "ERR_EMPTY_RESPONSE",
+        ];
+
+        const readBootRetryCount = () => {
+          try {
+            return Number(window.sessionStorage.getItem(BOOT_RETRY_KEY)) || 0;
+          } catch {
+            // Private mode / storage disabled. Report the budget as spent rather
+            // than reloading forever with no way to count.
+            return BOOT_RETRY_LIMIT;
+          }
+        };
+
+        window.__LUCA_CLEAR_BOOT_RECOVERY__ = () => {
+          try {
+            window.sessionStorage.removeItem(BOOT_RETRY_KEY);
+          } catch {
+            /* nothing to clear if storage is unavailable */
+          }
+        };
+
+        // Returns true when it has taken ownership of the failure (a reload is
+        // scheduled), so the caller must NOT paint the failure screen.
+        window.__LUCA_TRY_BOOT_RECOVERY__ = (error) => {
+          if (window.__LUCA_REACT_MOUNTED__ === true) return false;
+          // Two callers can report the same failure: the entry's own catch, and
+          // the 5s sweeper below that reads __LUCA_REACT_BOOTSTRAP_ERROR__. With
+          // today's sub-5s backoff the navigation always wins the race, but a
+          // longer backoff would silently spend two attempts on one failure.
+          if (window.__LUCA_BOOT_RECOVERY_SCHEDULED__ === true) return true;
+
+          const description =
+            error instanceof Error
+              ? `${error.name}: ${error.message}`
+              : error
+                ? String(error)
+                : "";
+
+          // The PRIMARY signal must be the module load itself failing. Chromium
+          // reports the per-request ERR_* code only to the console, so the
+          // captured-error list is consulted as backup -- but only when we have
+          // no description of our own. Widening the primary test to include
+          // whatever the listeners happened to capture would let unrelated
+          // network noise (a backend fetch failing while core is still starting)
+          // make a genuine app-code error look transient, and we would reload
+          // three times over a real bug before showing it.
+          const isModuleLoadFailure = MODULE_LOAD_FAILURES.some((signature) =>
+            description.includes(signature),
+          );
+          const capturedOnly = [
+            window.__LUCA_BOOT_ERROR__ || "",
+            (window.__LUCA_CAPTURED_BOOT_ERRORS__ || []).join(" | "),
+          ].join(" | ");
+          const isInterruptedTransport =
+            !description &&
+            INTERRUPTED_TRANSPORT_CODES.some((code) =>
+              capturedOnly.includes(code),
+            );
+          if (!isModuleLoadFailure && !isInterruptedTransport) return false;
+
+          const attempts = readBootRetryCount();
+          if (attempts >= BOOT_RETRY_LIMIT) return false;
+
+          try {
+            window.sessionStorage.setItem(BOOT_RETRY_KEY, String(attempts + 1));
+          } catch {
+            return false;
+          }
+
+          const delay =
+            BOOT_RETRY_BACKOFF_MS[attempts] ??
+            BOOT_RETRY_BACKOFF_MS[BOOT_RETRY_BACKOFF_MS.length - 1];
+          console.warn(
+            `[LucaOS boot] transient load failure, reloading (${attempts + 1}/${BOOT_RETRY_LIMIT}) in ${delay}ms:`,
+            description || "(no message)",
+          );
+          const status = document.getElementById("root-loader")?.querySelector(
+            ".loader-status",
+          );
+          if (status) {
+            status.textContent = "Connection interrupted — reconnecting…";
+          }
+          window.__LUCA_BOOT_RECOVERY_SCHEDULED__ = true;
+          window.setTimeout(() => window.location.reload(), delay);
+          return true;
+        };
+
+        document
+          .getElementById("loader-recover")
+          ?.addEventListener("click", () => {
+            // An explicit click is the user overriding the budget, so clear it:
+            // whatever they fixed in the meantime deserves a full set of
+            // automatic retries again.
+            window.__LUCA_CLEAR_BOOT_RECOVERY__();
+            window.location.reload();
+          });
+
         window.__LUCA_SHOW_BOOT_FAILURE__ = (message, error) => {
           const loader = document.getElementById("root-loader");
           if (!loader || window.__LUCA_REACT_MOUNTED__ === true) return;
+          // Self-heal first. Painting the failure screen is the last resort,
+          // reached only when the error is not a transport blip or the retry
+          // budget for this window is spent.
+          if (window.__LUCA_TRY_BOOT_RECOVERY__(error)) return;
           window.__LUCA_CLEAR_BOOT_STATUS_LOOP__?.();
 
           const mainScript = document.querySelector(
@@ -1233,6 +1421,10 @@
             `Hostname: ${window.location.hostname || "(none)"}`,
             `Path: ${window.location.pathname}${window.location.search}`,
             `Main script tag: ${mainScript ? "present" : "missing"}`,
+            // Say so when the automatic recovery above already tried and gave
+            // up, otherwise this screen looks like a first failure and the
+            // reloads it did are invisible.
+            `Automatic reloads used: ${readBootRetryCount()}/${BOOT_RETRY_LIMIT}`,
           ];
           if (debugEnabled) {
             diagnostics.push(

@@ -30,25 +30,21 @@ import SettingsGeneralTab from "./settings/SettingsGeneralTab";
 import SettingsAppearanceTab from "./settings/SettingsAppearanceTab";
 import SettingsBrainTab from "./settings/SettingsBrainTab";
 import SettingsVoiceTab from "./settings/SettingsVoiceTab";
-import SettingsVisionTab from "./settings/SettingsVisionTab";
 import SettingsModelManagerTab from "./settings/SettingsModelManagerTab";
-import SettingsIoTTab from "./settings/SettingsIoTTab";
-import SettingsConnectorsTab from "./settings/SettingsConnectorsTab";
+import SettingsIntegrationsTab from "./settings/SettingsIntegrationsTab";
 import SettingsLucaLinkTab from "./settings/SettingsLucaLinkTab";
 import SettingsDataTab from "./settings/SettingsDataTab";
-import SettingsMCPBridgeTab from "./settings/SettingsMCPBridgeTab";
-import SettingsAboutTab from "./settings/SettingsAboutTab";
-import OperatorProfilePanel from "./settings/OperatorProfilePanel";
-import PersonalityDashboard from "./settings/PersonalityDashboard";
-import KnowledgeBridgeTab from "./settings/KnowledgeBridgeTab";
+import SettingsIdentityTab from "./settings/SettingsIdentityTab";
 import SettingsAutonomyTab from "./settings/SettingsAutonomyTab";
 import {
   isMobileAdvancedSettingsTab,
   mobileAvailableAdvancedSettingsTabs,
   mobileSettingsNavigationTabs,
+  resolveSettingsTabId,
   settingsAdvancedGroup,
   settingsDesktopTabs,
   settingsNavigationGroups,
+  settingsTabAnchorForId,
 } from "./settings/settingsNavigationModel";
 
 interface SettingsModalProps {
@@ -72,7 +68,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   themePreviewTargetRef,
   theme,
 }) => {
-  const [activeTab, setActiveTab] = useState(initialTab || "general");
+  // Retired tab ids still arrive from menus, the chat input, and services.
+  // Resolve them here so a stale id opens the pane that absorbed it instead of
+  // rendering nothing.
+  const [activeTab, setActiveTab] = useState<string>(() =>
+    resolveSettingsTabId(initialTab),
+  );
   const [settings, setSettings] = useState<LucaSettings>(
     settingsService.getSettings(),
   );
@@ -127,6 +128,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     ...group,
     tabs: group.tabs.filter((tab) => tab.platforms.includes("desktop")),
   }));
+
+  // A link to a merged-away destination — Help → About, the chat input's MCP
+  // pill — should land on the group that absorbed it, not the top of a long pane.
+  useEffect(() => {
+    const anchor = settingsTabAnchorForId(initialTab);
+    if (!anchor) return;
+    const frame = requestAnimationFrame(() => {
+      const target = document.querySelector<HTMLElement>(
+        `[data-settings-anchor="${anchor}"]`,
+      );
+      target?.scrollIntoView({ block: "start" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [initialTab]);
 
   useEffect(() => {
     // Load initial data
@@ -636,7 +651,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               />
             )}
             {activeTab === "personality" && (
-              <PersonalityDashboard
+              <SettingsIdentityTab
                 theme={liveTheme}
                 config={personaConfig}
                 onUpdate={updatePersonaConfig}
@@ -659,31 +674,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 isMobile={isMobile}
               />
             )}
-            {activeTab === "vision" && (
-              <SettingsVisionTab
-                settings={settings}
-                onUpdate={updateSetting}
-                theme={liveTheme}
-                isMobile={isMobile}
-              />
-            )}
             {activeTab === "model-manager" && (
               <SettingsModelManagerTab theme={liveTheme} isMobile={isMobile} />
             )}
-            {activeTab === "profile" && (
-              <OperatorProfilePanel theme={liveTheme} isMobile={isMobile} />
-            )}
-            {activeTab === "iot" && (
-              <SettingsIoTTab
+            {activeTab === "integrations" && (
+              <SettingsIntegrationsTab
                 settings={settings}
                 onUpdate={updateSetting}
-                theme={liveTheme}
-                isMobile={isMobile}
-              />
-            )}
-            {activeTab === "connectors" && (
-              <SettingsConnectorsTab
-                settings={settings}
                 theme={liveTheme}
                 setStatusMsg={setStatusMsg}
                 isMobile={isMobile}
@@ -697,31 +694,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 isMobile={isMobile}
               />
             )}
-            {activeTab === "mcp-bridge" && (
-              <SettingsMCPBridgeTab
-                settings={settings}
-                theme={liveTheme}
-                onUpdate={updateSetting}
-                setStatusMsg={setStatusMsg}
-                isMobile={isMobile}
-              />
-            )}
             {activeTab === "data" && (
               <SettingsDataTab
                 memoryStats={memoryStats}
                 loadMemoryStats={loadMemoryStats}
                 theme={liveTheme}
-                isMobile={isMobile}
-              />
-            )}
-            {activeTab === "knowledge-bridge" && (
-              <KnowledgeBridgeTab theme={liveTheme} isMobile={isMobile} />
-            )}
-
-            {activeTab === "about" && (
-              <SettingsAboutTab
-                theme={liveTheme}
-                settings={settings}
                 isMobile={isMobile}
               />
             )}

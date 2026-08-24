@@ -73,6 +73,14 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
+        "@luca/orb": path.resolve(
+          __dirname,
+          "packages/luca-orb/src/index.ts",
+        ),
+        "@luca/orb-design": path.resolve(
+          __dirname,
+          "packages/luca-orb-design/src/index.ts",
+        ),
         "onnxruntime-web/wasm": path.resolve(
           __dirname,
           "node_modules/onnxruntime-web/dist/ort.wasm.min.mjs",
@@ -198,6 +206,12 @@ export default defineConfig(({ mode }) => {
         "**/.claude/**",
         "**/.codex/**",
         "**/.agents/**",
+        // Electron main-process and ops tests use Node's own runner, because
+        // they need the real `fs`/`path`/`crypto` that the aliases above swap
+        // for browser polyfills. Vitest's default `include` matches `.test.cjs`,
+        // so without this it collects them, finds no vitest suite, and reports
+        // every one as a failure. `npm run test:node` runs them.
+        "**/*.test.cjs",
       ],
     },
   });

@@ -14,7 +14,7 @@ vi.mock("../settingsService", () => ({
   },
 }));
 
-vi.mock("../ModelManagerService", () => ({
+vi.mock("../local-models/LocalModelLibrary", () => ({
   LOCAL_BRAIN_MODEL_IDS: ["gemma-4b", "gemma-2b", "llama-3.2-1b"],
   modelManager: {
     ensureOllamaRunning: mocks.ensureOllamaRunning,

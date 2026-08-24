@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { LucaSelect } from "../ui/luca";
 import { LucaSettings } from "../../services/settingsService";
-import { modelManager, LocalModel } from "../../services/ModelManagerService";
+import { modelManager, LocalModel } from "../../services/local-models/LocalModelLibrary";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
@@ -15,10 +15,10 @@ import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 interface SettingsVisionTabProps {
   settings: LucaSettings;
   onUpdate: (section: keyof LucaSettings, key: string, value: any) => void;
+  // Only the accent is read. Narrowed so Brain, which now hosts this panel, can
+  // forward its own theme without inventing fields this pane never uses.
   theme: {
-    primary: string;
     hex: string;
-    themeName: string;
   };
   isMobile?: boolean;
 }

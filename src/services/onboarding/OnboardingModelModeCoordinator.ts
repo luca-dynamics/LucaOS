@@ -14,7 +14,7 @@ import {
   LOCAL_TTS_MODEL_IDS,
   type LocalModel,
   modelManager,
-} from "../ModelManagerService";
+} from "../local-models/LocalModelLibrary";
 import { modelReadinessResolver } from "../models/ModelReadinessResolver";
 import { settingsService, type LucaSettings } from "../settingsService";
 import type { OnboardingByokProvider } from "./OnboardingSetupService";

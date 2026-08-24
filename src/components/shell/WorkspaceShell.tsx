@@ -3,6 +3,7 @@ import {
   WORKSPACE_DURATION_MS,
   WORKSPACE_EASE,
   workspaceColor,
+  workspaceRadius,
   workspaceType,
 } from "./workspaceShellTokens";
 import { WORKSPACE_INTERACTION_CSS } from "./WorkspacePrimitives";
@@ -30,6 +31,12 @@ import { useWorkspacePanels } from "./useWorkspacePanels";
  * leaves entirely, because "give me room" should mean it, and returns via a
  * handle that carries its pending count — hiding a panel must never hide the
  * fact that something needs you.
+ *
+ * Edges are grammar, not decoration. The frame is FLUSH — panels meet on a
+ * hairline seam with no gutter and no radius — and only two things are rounded:
+ * the shell's own outer boundary, which nests with the window, and surfaces that
+ * ARRIVED (the tools overlay). Square therefore means structure that was always
+ * there; rounded means something summoned, that Escape will dismiss.
  */
 
 const SIDEBAR_WIDTH = 232;
@@ -82,6 +89,12 @@ export interface WorkspaceShellProps {
   centreHeader?: React.ReactNode;
   /** Frameless-window controls, seated in the top-right panel. */
   windowControls?: React.ReactNode;
+  /**
+   * Where the operation centre starts for someone who has never collapsed it.
+   * Forwarded verbatim to `useWorkspacePanels`, so a stored preference always
+   * wins — see its own doc comment.
+   */
+  defaultOpsCollapsed?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -94,11 +107,12 @@ export const WorkspaceShell: React.FC<WorkspaceShellProps> = ({
   pendingCount = 0,
   centreHeader,
   windowControls,
+  defaultOpsCollapsed = false,
   className,
   style,
 }) => {
   const { sidebarCollapsed, opsCollapsed, compact, toggleSidebar, toggleOps } =
-    useWorkspacePanels();
+    useWorkspacePanels({ defaultOpsCollapsed });
 
   const hasCanvas = Boolean(canvas);
   const hasOps = Boolean(operationCenter);
@@ -187,6 +201,28 @@ export const WorkspaceShell: React.FC<WorkspaceShellProps> = ({
         height: "100%",
         minHeight: 0,
         overflow: "hidden",
+        // Nested corners on a flush frame. Inside, nothing changes: no gutters,
+        // no per-panel inset, seams still the grid's own 1px hairline gap. Only
+        // the shell's OUTER boundary curves, so the outermost panels arc with
+        // the window instead of running square into it. The columns clip to it
+        // for free — the grid already owns `overflow: hidden`. This is the first
+        // use of `workspaceRadius.panel`, which was defined for exactly this and
+        // never adopted; `src/index.css` gives inline `border-radius: 12px`
+        // continuous curvature, so the arc is a squircle, not a circle.
+        //
+        // The spread shadow is structure, not decoration: it fills the crescent
+        // between the arc and the square border box with the app's own ground.
+        // Nothing else would. On Electron `documentElement`/`body` are set to
+        // `transparent` (App.tsx), the dashboard container is `transparent` by
+        // platform policy, and the only layer behind is LiquidBackground, which
+        // paints base at `--app-bg-opacity` (0.3 by default) — so the corners
+        // would otherwise drift with the transparency slider toward the frameless
+        // window's own light `#e2edf2`. A 0-offset/0-blur spread follows the
+        // radius outward, painting exactly that crescent; the rest of the ring
+        // falls outside the window and is clipped away. `overflow: hidden` clips
+        // descendants, never the element's own shadow.
+        borderRadius: workspaceRadius.panel,
+        boxShadow: `0 0 0 ${workspaceRadius.panel}px var(--luca-background-base, transparent)`,
         // While dragging a seam the columns must track the pointer 1:1, so the
         // easing transition is suspended for the duration of the drag.
         transition: resizing

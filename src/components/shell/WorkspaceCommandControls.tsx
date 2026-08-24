@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { settingsService, type LucaSettings } from "../../services/settingsService";
-import { modelManager, type LocalModel } from "../../services/ModelManagerService";
+import { modelManager, type LocalModel } from "../../services/local-models/LocalModelLibrary";
 import {
   ANTHROPIC_CLAUDE_MODELS,
   DEEPSEEK_MODELS,
@@ -14,6 +14,14 @@ import {
   LUCA_ROUTING_MODES,
   ROUTING_MODE_SHORT_LABELS,
 } from "../../types/intentRouting";
+import {
+  LucaMenu,
+  LucaMenuContent,
+  LucaMenuLabel,
+  LucaMenuRadioGroup,
+  LucaMenuRadioItem,
+  LucaMenuTrigger,
+} from "../ui/luca";
 import { workspaceColor, workspaceRadius, workspaceType } from "./workspaceShellTokens";
 
 /**
@@ -28,7 +36,9 @@ import { workspaceColor, workspaceRadius, workspaceType } from "./workspaceShell
  * One behaviour, two skins; this is the skin the shell wears.
  *
  * Both open UPWARD: the command bar lives at the bottom of the canvas, so a
- * downward menu would fall off-screen. Click-outside and Escape close them.
+ * downward menu would fall off-screen. Keyboard, focus, dismissal, portalling
+ * and layer all come from {@link LucaMenu}; these are radio menus, so the checked
+ * item is Radix's to track and the hand-written `aria-checked` is gone.
  */
 
 /* ── Model catalogue — the same composition Settings and the legacy switcher use,
@@ -54,25 +64,6 @@ const ADVANCED_MODELS: ModelEntry[] = [
 
 const ALL_CLOUD_MODELS = [...CLOUD_MODELS, ...ADVANCED_MODELS];
 
-/** Close on outside-click and Escape while the menu is open. */
-const useDismiss = (open: boolean, close: () => void, ref: React.RefObject<HTMLElement>) => {
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (event: MouseEvent) => {
-      if (!ref.current?.contains(event.target as Node)) close();
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close();
-    };
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open, close, ref]);
-};
-
 /* ── Shared presentation ──────────────────────────────────────────────────── */
 
 const triggerStyle: React.CSSProperties = {
@@ -90,37 +81,31 @@ const triggerStyle: React.CSSProperties = {
   cursor: "pointer",
 };
 
-const Menu: React.FC<{ children: React.ReactNode; align?: "left" | "right"; width?: number }> = ({
-  children,
-  align = "left",
-  width = 224,
-}) => (
-  <div
-    role="menu"
-    style={{
-      position: "absolute",
-      bottom: "calc(100% + 6px)",
-      [align]: 0,
-      width,
-      maxHeight: 320,
-      overflowY: "auto",
-      padding: 6,
-      borderRadius: 12,
-      border: `1px solid ${workspaceColor.hairline}`,
-      background:
-        "color-mix(in srgb, var(--luca-surface-glass, var(--luca-background-elevated, #161d27)) 92%, transparent)",
-      backdropFilter: "blur(18px) saturate(1.2)",
-      WebkitBackdropFilter: "blur(18px) saturate(1.2)",
-      boxShadow: "0 18px 48px rgba(0, 0, 0, 0.4)",
-      zIndex: 60,
-    }}
-  >
-    {children}
-  </div>
-);
+/**
+ * The menu surface, minus placement.
+ *
+ * LucaMenu portals the content and Floating UI positions it, so `side`/`align`/
+ * `sideOffset` at the call site replace the old `bottom: calc(100% + 6px)`
+ * anchor — and the layer comes from the primitive (`popover`, 300) instead of
+ * the raw `zIndex: 60` this used to set, which sat *below* `LUCA_LAYER.panel`
+ * and made these menus draw behind floating panels.
+ */
+const menuSurfaceStyle = (width: number): React.CSSProperties => ({
+  width,
+  maxHeight: 320,
+  overflowY: "auto",
+  padding: 6,
+  borderRadius: 12,
+  border: `1px solid ${workspaceColor.hairline}`,
+  background:
+    "color-mix(in srgb, var(--luca-surface-glass, var(--luca-background-elevated, #161d27)) 92%, transparent)",
+  backdropFilter: "blur(18px) saturate(1.2)",
+  WebkitBackdropFilter: "blur(18px) saturate(1.2)",
+  boxShadow: "0 18px 48px rgba(0, 0, 0, 0.4)",
+});
 
 const GroupLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div
+  <LucaMenuLabel
     style={{
       padding: "8px 8px 4px",
       fontSize: "9.5px",
@@ -131,57 +116,58 @@ const GroupLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     }}
   >
     {children}
-  </div>
+  </LucaMenuLabel>
 );
 
 const MenuItem: React.FC<{
+  value: string;
   active: boolean;
-  onClick: () => void;
   children: React.ReactNode;
   sub?: string;
-}> = ({ active, onClick, children, sub }) => (
-  <button
-    type="button"
-    role="menuitemradio"
-    aria-checked={active}
-    onClick={onClick}
-    className="luca-workspace-toggle"
-    style={{
-      display: "flex",
-      alignItems: sub ? "flex-start" : "center",
-      gap: 8,
-      width: "100%",
-      padding: "7px 8px",
-      border: 0,
-      borderRadius: workspaceRadius.row,
-      background: active ? workspaceColor.accentSoft : "transparent",
-      color: active ? workspaceColor.ink : workspaceColor.ink2,
-      font: "inherit",
-      fontSize: workspaceType.meta,
-      textAlign: "left",
-      cursor: "pointer",
-    }}
-  >
-    <span style={{ flex: 1, minWidth: 0 }}>
-      <span
-        style={{
-          display: "block",
-          fontWeight: active ? 600 : 500,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {children}
-      </span>
-      {sub ? (
-        <span style={{ display: "block", marginTop: 2, fontSize: "10.5px", color: workspaceColor.ink3, whiteSpace: "normal", lineHeight: 1.4 }}>
-          {sub}
+}> = ({ value, active, children, sub }) => (
+  // asChild keeps this exact button: Radix supplies role="menuitemradio",
+  // aria-checked, roving focus and typeahead; the appearance is untouched.
+  <LucaMenuRadioItem value={value} asChild>
+    <button
+      type="button"
+      className="luca-workspace-toggle"
+      style={{
+        display: "flex",
+        alignItems: sub ? "flex-start" : "center",
+        gap: 8,
+        width: "100%",
+        padding: "7px 8px",
+        border: 0,
+        borderRadius: workspaceRadius.row,
+        background: active ? workspaceColor.accentSoft : "transparent",
+        color: active ? workspaceColor.ink : workspaceColor.ink2,
+        font: "inherit",
+        fontSize: workspaceType.meta,
+        textAlign: "left",
+        cursor: "pointer",
+      }}
+    >
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span
+          style={{
+            display: "block",
+            fontWeight: active ? 600 : 500,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {children}
         </span>
-      ) : null}
-    </span>
-    {active ? <Check /> : null}
-  </button>
+        {sub ? (
+          <span style={{ display: "block", marginTop: 2, fontSize: "10.5px", color: workspaceColor.ink3, whiteSpace: "normal", lineHeight: 1.4 }}>
+            {sub}
+          </span>
+        ) : null}
+      </span>
+      {active ? <Check /> : null}
+    </button>
+  </LucaMenuRadioItem>
 );
 
 const Chevron: React.FC = () => (
@@ -219,8 +205,6 @@ export const WorkspaceModelPicker: React.FC = () => {
     }
   });
   const [localModels, setLocalModels] = useState<LocalModel[]>([]);
-  const rootRef = useRef<HTMLDivElement>(null);
-  useDismiss(open, () => setOpen(false), rootRef);
 
   useEffect(() => {
     const onSettings = (next: LucaSettings) => setCurrentModel(next.brain.model);
@@ -259,29 +243,36 @@ export const WorkspaceModelPicker: React.FC = () => {
   };
 
   return (
-    <div ref={rootRef} style={{ position: "relative", display: "inline-flex" }}>
-      <button
-        type="button"
-        data-luca-command-bar-model
-        aria-haspopup="menu"
-        aria-expanded={open}
-        title="Change intelligence model"
-        onClick={() => setOpen((v) => !v)}
-        className="luca-workspace-toggle"
-        style={triggerStyle}
-      >
-        <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: workspaceColor.accent, flex: "none" }} />
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {resolveModelName(currentModel, localModels)}
-        </span>
-        <Chevron />
-      </button>
+    <LucaMenu open={open} onOpenChange={setOpen}>
+      <div style={{ display: "inline-flex" }}>
+        <LucaMenuTrigger>
+          <button
+            type="button"
+            data-luca-command-bar-model
+            title="Change intelligence model"
+            className="luca-workspace-toggle"
+            style={triggerStyle}
+          >
+            <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: workspaceColor.accent, flex: "none" }} />
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {resolveModelName(currentModel, localModels)}
+            </span>
+            <Chevron />
+          </button>
+        </LucaMenuTrigger>
+      </div>
 
-      {open && (
-        <Menu align="left" width={244}>
+      <LucaMenuContent
+        aria-label="Intelligence models"
+        side="top"
+        align="start"
+        sideOffset={6}
+        style={menuSurfaceStyle(244)}
+      >
+        <LucaMenuRadioGroup value={currentModel} onValueChange={select}>
           <GroupLabel>Cloud intelligence</GroupLabel>
           {CLOUD_MODELS.map((m) => (
-            <MenuItem key={m.id} active={m.id === currentModel} onClick={() => select(m.id)}>
+            <MenuItem key={m.id} value={m.id} active={m.id === currentModel}>
               {m.name}
             </MenuItem>
           ))}
@@ -290,7 +281,7 @@ export const WorkspaceModelPicker: React.FC = () => {
             <>
               <GroupLabel>Local models</GroupLabel>
               {localModels.map((m) => (
-                <MenuItem key={m.id} active={m.id === currentModel} onClick={() => select(m.id)}>
+                <MenuItem key={m.id} value={m.id} active={m.id === currentModel}>
                   {m.name}
                 </MenuItem>
               ))}
@@ -299,13 +290,13 @@ export const WorkspaceModelPicker: React.FC = () => {
 
           <GroupLabel>Advanced</GroupLabel>
           {ADVANCED_MODELS.map((m) => (
-            <MenuItem key={m.id} active={m.id === currentModel} onClick={() => select(m.id)}>
+            <MenuItem key={m.id} value={m.id} active={m.id === currentModel}>
               {m.name}
             </MenuItem>
           ))}
-        </Menu>
-      )}
-    </div>
+        </LucaMenuRadioGroup>
+      </LucaMenuContent>
+    </LucaMenu>
   );
 };
 
@@ -320,8 +311,6 @@ export const WorkspaceModeSelector: React.FC = () => {
       return "auto";
     }
   });
-  const rootRef = useRef<HTMLDivElement>(null);
-  useDismiss(open, () => setOpen(false), rootRef);
 
   useEffect(() => intentRoutingModeService.subscribe(setMode), []);
 
@@ -330,31 +319,45 @@ export const WorkspaceModeSelector: React.FC = () => {
     setOpen(false);
   };
 
-  return (
-    <div ref={rootRef} style={{ position: "relative", display: "inline-flex" }}>
-      <button
-        type="button"
-        data-luca-command-bar-mode
-        aria-haspopup="menu"
-        aria-expanded={open}
-        title="Response mode"
-        onClick={() => setOpen((v) => !v)}
-        className="luca-workspace-toggle"
-        style={{ ...triggerStyle, fontWeight: 600, color: workspaceColor.ink }}
-      >
-        {ROUTING_MODE_SHORT_LABELS[mode]}
-        <Chevron />
-      </button>
+  // Radix hands back the raw value string; narrow it through the mode list
+  // rather than casting, so an unknown value is ignored instead of written.
+  const selectValue = (value: string) => {
+    const next = LUCA_ROUTING_MODES.find((m) => m === value);
+    if (next) select(next);
+  };
 
-      {open && (
-        <Menu align="right" width={148}>
+  return (
+    <LucaMenu open={open} onOpenChange={setOpen}>
+      <div style={{ display: "inline-flex" }}>
+        <LucaMenuTrigger>
+          <button
+            type="button"
+            data-luca-command-bar-mode
+            title="Response mode"
+            className="luca-workspace-toggle"
+            style={{ ...triggerStyle, fontWeight: 600, color: workspaceColor.ink }}
+          >
+            {ROUTING_MODE_SHORT_LABELS[mode]}
+            <Chevron />
+          </button>
+        </LucaMenuTrigger>
+      </div>
+
+      <LucaMenuContent
+        aria-label="Response modes"
+        side="top"
+        align="end"
+        sideOffset={6}
+        style={menuSurfaceStyle(148)}
+      >
+        <LucaMenuRadioGroup value={mode} onValueChange={selectValue}>
           {LUCA_ROUTING_MODES.map((m) => (
-            <MenuItem key={m} active={m === mode} onClick={() => select(m)}>
+            <MenuItem key={m} value={m} active={m === mode}>
               {ROUTING_MODE_SHORT_LABELS[m]}
             </MenuItem>
           ))}
-        </Menu>
-      )}
-    </div>
+        </LucaMenuRadioGroup>
+      </LucaMenuContent>
+    </LucaMenu>
   );
 };

@@ -14,6 +14,38 @@ export { LucaMotionSheet } from "./LucaMotionSheet";
 export type { LucaMotionSheetProps } from "./LucaMotionSheet";
 export { LucaPopover } from "./LucaPopover";
 export type { LucaPopoverProps } from "./LucaPopover";
+export {
+  LucaMenu,
+  LucaMenuTrigger,
+  LucaMenuContent,
+  LucaMenuItem,
+  LucaMenuGroup,
+  LucaMenuLabel,
+  LucaMenuSeparator,
+  LucaMenuSub,
+  LucaMenuSubTrigger,
+  LucaMenuSubContent,
+  LucaMenuRadioGroup,
+  LucaMenuRadioItem,
+  LucaMenuCheckboxItem,
+  LucaMenuItemIndicator,
+} from "./LucaMenu";
+export type {
+  LucaMenuProps,
+  LucaMenuTriggerProps,
+  LucaMenuContentProps,
+  LucaMenuItemProps,
+  LucaMenuGroupProps,
+  LucaMenuLabelProps,
+  LucaMenuSeparatorProps,
+  LucaMenuSubProps,
+  LucaMenuSubTriggerProps,
+  LucaMenuSubContentProps,
+  LucaMenuRadioGroupProps,
+  LucaMenuRadioItemProps,
+  LucaMenuCheckboxItemProps,
+  LucaMenuItemIndicatorProps,
+} from "./LucaMenu";
 export { LucaMotionPopover } from "./LucaMotionPopover";
 export type { LucaMotionPopoverProps } from "./LucaMotionPopover";
 export { LucaDialog } from "./LucaDialog";
@@ -37,5 +69,5 @@ export { LucaFieldGroup, LucaField, LucaFieldLabel, LucaFieldDescription, LucaFi
 export type { LucaSwitchProps } from "./LucaField";
 export { LucaAlert, LucaBadge, LucaEmpty, LucaEmptyDescription, LucaEmptyTitle, LucaSeparator } from "./LucaFeedback";
 export type { LucaAlertProps, LucaBadgeProps, LucaBadgeVariant } from "./LucaFeedback";
-export { LUCA_LAYER, lucaLayerStyle, useLucaModalLayer, useLucaDismissableLayer } from "./lucaOverlayFoundation";
+export { LUCA_LAYER, lucaLayerStyle, useLucaModalLayer, useLucaDismissableLayer, useLucaEscapePriority } from "./lucaOverlayFoundation";
 export type { LucaLayer, LucaModalLayerOptions, LucaDismissableLayerOptions } from "./lucaOverlayFoundation";

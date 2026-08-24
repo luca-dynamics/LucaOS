@@ -1,55 +1,44 @@
-import React, { useState } from "react";
+import React from "react";
 import { NavRow, SectionLabel, CollapseToggle } from "./WorkspacePrimitives";
 import AppMenu from "../layout/AppMenu";
+import {
+  buildThreadRailRows,
+  type ThreadRailRow,
+  type ThreadRailThread,
+} from "../left-panel/sessionsRailModel";
+import { selectSidebarToolRows, type WorkspaceNavGroup } from "./workspaceNavGroups";
 import { workspaceColor, workspaceRadius, workspaceType } from "./workspaceShellTokens";
 
 /**
- * WorkspaceSidebar — where you are, and everything Luca can reach from here.
+ * WorkspaceSidebar — what you were doing, and the few things you reach for.
  *
- * Structure follows the target design: a Spaces header, then grouped tool
- * sections (Intelligence / Connections / Tools), and finally an ADVANCED group
- * that folds shut by default — the operator-tier surfaces (offensive security,
- * markets, sovereignty, system control) live behind one disclosure so the
- * everyday sidebar stays quiet and the power is one click away, not fifteen
- * tabs deep.
+ * This was a capability pad: 21 tools in a two-up grid across four sections,
+ * thirteen behind a PRO disclosure, and a `● Personal` row that was styled as the
+ * active navigation item and had no click handler at all. Twelve rows at rest
+ * against a budget of six.
  *
- * Within a section the tools are laid out as a GRID of tiles, not a vertical
- * list — a category of eight surfaces reads as a compact pad rather than a long
- * scroll, and the one-word rule keeps every tile legible. Hover carries the
- * sentence; the panel behind the tile carries the rest. Groups are DATA —
- * App.tsx owns which surface maps to which handler and passes them in, so this
- * component never hard-codes a feature that might not be wired.
+ * It is now HISTORY FIRST, which is the one structural thing a desktop AI rail
+ * has to be. Conversations are the content — today / earlier, quiet rows, dim
+ * times — and beneath them sit only the tools that are pinned or actually
+ * running. The other seventeen moved to `WorkspaceToolsSurface` behind
+ * `All tools…`: relocated, not deleted, which is the direction's own guardrail.
  *
- * In rail mode (collapsed) the grid folds back to single-column marks so the
- * icons stay reachable without labels.
+ * Six primary items at rest: New chat · three tool rows · All tools… · Settings.
+ * Thread rows are content and cap themselves at SESSIONS_RAIL_MAX_ROWS.
+ *
+ * Section labels are lowercase whispers rather than tracked-out capitals. A rail
+ * that shouts SPACES / INTELLIGENCE / TOOLS at you is reading itself aloud; the
+ * label is scaffolding for the content, so it should sit under it.
+ *
+ * Groups remain DATA — `App.tsx` owns which surface maps to which handler (see
+ * workspaceNavGroups) so this component never hard-codes a feature that might
+ * not be wired.
  *
  * The brand row is the window-drag region on frameless Windows; index.css
  * already exempts buttons inside a drag region, so the toggles stay clickable.
  */
 
-const GRID_COLUMNS = 2;
-
-export interface WorkspaceToolLink {
-  id: string;
-  /** One word wherever possible. The tooltip may be a sentence; the tile may not. */
-  label: string;
-  glyph: string;
-  hint?: string;
-  /** Optional trailing count (e.g. pending items on that surface). */
-  count?: number;
-  onOpen: () => void;
-}
-
-export interface WorkspaceNavGroup {
-  id: string;
-  label: string;
-  /**
-   * Operator/pro-tier group: rendered behind a disclosure, folded shut by
-   * default. Keeps the heavy surfaces out of the everyday eyeline.
-   */
-  advanced?: boolean;
-  items: WorkspaceToolLink[];
-}
+export type { WorkspaceNavGroup, WorkspaceToolLink } from "./workspaceNavGroups";
 
 export interface WorkspaceSidebarProps {
   /** Supplied by WorkspaceShell. */
@@ -57,198 +46,176 @@ export interface WorkspaceSidebarProps {
   onToggleCollapsed?: () => void;
   /** Toggle the Operation Center — wired by WorkspaceShell for the App menu. */
   onToggleOps?: () => void;
-  /** The active context's name — today, the session; later, the Space. */
-  contextLabel?: string;
-  /** Count of today's threads/tasks, surfaced on the Spaces row. */
-  todayCount?: number;
-  onNewTask?: () => void;
-  /** New session (App menu → File → New session). */
+
+  // ── Conversations ─────────────────────────────────────────────────────────
+  /** The archive, newest-first order not required — the model sorts. */
+  threads?: readonly ThreadRailThread[];
+  activeThreadId?: string;
+  onSelectThread?: (id: string) => void;
+  /** Deleting one thread. Confirmed here, at the affordance. */
+  onDeleteThread?: (id: string) => void;
+  /** Start a fresh thread. Destroys nothing — see conversationThreadService. */
   onNewSession?: () => void;
-  /** Grouped navigation. Preferred over `tools`. */
+  /** Put the caret in the composer, so "New chat" lands ready to type. */
+  onNewTask?: () => void;
+
+  // ── Tools ─────────────────────────────────────────────────────────────────
+  /** Every surface, grouped. The rail renders only running-or-pinned. */
   groups?: WorkspaceNavGroup[];
-  /** Back-compat flat list — wrapped into a single "Tools" group when no groups are given. */
-  tools?: WorkspaceToolLink[];
+  /** Opens WorkspaceToolsSurface with the full set. */
+  onOpenAllTools?: () => void;
+  /** So Escape can return focus to the link that opened the tools surface. */
+  allToolsRef?: React.RefObject<HTMLButtonElement>;
+
   onOpenSettings?: () => void;
 }
 
 /**
- * One tool, keeping the normal row form — glyph beside a one-word label — but
- * sized to sit two-up in the grid. Not a big square tile; the same horizontal
- * structure as a NavRow, just packed to halve the vertical run.
+ * One conversation. Not a NavRow, because the row carries a second control (the
+ * forget ⨯) and a button cannot contain a button — so this composes the same
+ * visual grammar around a flex container instead.
  */
-const ToolTile: React.FC<{ tool: WorkspaceToolLink }> = ({ tool }) => (
-  <button
-    type="button"
-    onClick={tool.onOpen}
-    title={tool.hint ?? tool.label}
-    className="luca-workspace-nav"
+const ThreadRow: React.FC<{
+  row: ThreadRailRow;
+  onSelect?: (id: string) => void;
+  onDelete?: (id: string) => void;
+}> = ({ row, onSelect, onDelete }) => (
+  <div
+    className="luca-reveal-row"
     style={{
-      position: "relative",
       display: "flex",
       alignItems: "center",
-      gap: 8,
-      minWidth: 0,
-      padding: "6px 8px",
-      border: 0,
+      width: "calc(100% - 16px)",
+      margin: "1px 8px",
       borderRadius: workspaceRadius.row,
-      background: "transparent",
-      font: "inherit",
-      fontSize: workspaceType.meta,
-      cursor: "pointer",
-      color: workspaceColor.ink2,
-      textAlign: "left",
+      background: row.active ? workspaceColor.accentSoft : "transparent",
     }}
   >
-    <span
-      aria-hidden="true"
-      style={{ flex: "none", width: 15, display: "grid", placeItems: "center", color: workspaceColor.ink3 }}
-    >
-      {tool.glyph}
-    </span>
-    <span
+    <button
+      type="button"
+      onClick={onSelect ? () => onSelect(row.id) : undefined}
+      aria-current={row.active ? "true" : undefined}
+      title={row.title}
+      className="luca-workspace-nav"
       style={{
+        flex: 1,
         minWidth: 0,
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
+        display: "flex",
+        alignItems: "center",
+        gap: 9,
+        padding: "6px 8px",
+        border: 0,
+        borderRadius: workspaceRadius.row,
+        background: "transparent",
+        font: "inherit",
+        fontSize: workspaceType.body,
+        fontWeight: row.active ? 500 : 400,
+        textAlign: "left",
+        color: row.active ? workspaceColor.ink : workspaceColor.ink2,
+        cursor: "pointer",
       }}
     >
-      {tool.label}
-    </span>
-    {typeof tool.count === "number" && tool.count > 0 ? (
+      {/* Filled for the thread you are in, hollow for the rest. The dot says
+          "here", not "alarm" — tone is the right panel's job. */}
       <span
         aria-hidden="true"
         style={{
           flex: "none",
-          marginLeft: "auto",
-          width: 6,
-          height: 6,
-          borderRadius: 999,
-          background: workspaceColor.warn,
+          width: 15,
+          display: "grid",
+          placeItems: "center",
+          fontSize: 9,
+          color: row.active ? workspaceColor.accent : workspaceColor.ink3,
         }}
-      />
-    ) : null}
-  </button>
-);
-
-/** The tile grid for one group; folds to single-column marks in rail mode. */
-const ToolGrid: React.FC<{ items: WorkspaceToolLink[]; collapsed: boolean }> = ({
-  items,
-  collapsed,
-}) => {
-  if (collapsed) {
-    return (
-      <>
-        {items.map((tool) => (
-          <NavRow
-            key={tool.id}
-            icon={<span aria-hidden="true">{tool.glyph}</span>}
-            collapsed
-            count={tool.count}
-            onClick={tool.onOpen}
-            title={tool.hint ?? tool.label}
-          >
-            {tool.label}
-          </NavRow>
-        ))}
-      </>
-    );
-  }
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`,
-        gap: 6,
-        padding: "2px 10px 6px",
-      }}
-    >
-      {items.map((tool) => (
-        <ToolTile key={tool.id} tool={tool} />
-      ))}
-    </div>
-  );
-};
-
-/** A collapsible operator-tier group. Folds shut by default. */
-const AdvancedGroup: React.FC<{ group: WorkspaceNavGroup; collapsed: boolean }> = ({
-  group,
-  collapsed,
-}) => {
-  const [open, setOpen] = useState(false);
-
-  // In rail mode there is no room for a disclosure; show the marks directly.
-  if (collapsed) {
-    return (
-      <>
-        <div style={{ height: 8 }} aria-hidden="true" />
-        <ToolGrid items={group.items} collapsed />
-      </>
-    );
-  }
-
-  return (
-    <>
+      >
+        {row.active ? "●" : "○"}
+      </span>
+      <span
+        style={{
+          flex: 1,
+          minWidth: 0,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {row.title}
+      </span>
+      <span
+        style={{
+          flex: "none",
+          fontSize: workspaceType.meta,
+          color: workspaceColor.ink3,
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {row.when}
+      </span>
+    </button>
+    {onDelete && (
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="luca-workspace-nav"
+        // Confirmed at the affordance rather than upstream: this deletes a
+        // conversation and there is no undo for it, so it fails closed here
+        // where the title is in hand and can be named back to the user.
+        onClick={() => {
+          if (window.confirm(`Delete “${row.title}”? This cannot be undone.`)) {
+            onDelete(row.id);
+          }
+        }}
+        aria-label={`Delete ${row.title}`}
+        title="Delete this conversation"
+        className="luca-reveal-action luca-workspace-toggle"
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          width: "calc(100% - 16px)",
-          margin: "8px 8px 2px",
-          padding: "4px 8px",
+          flex: "none",
+          width: 22,
+          height: 22,
+          marginRight: 4,
+          display: "grid",
+          placeItems: "center",
           border: 0,
+          borderRadius: 6,
           background: "transparent",
           font: "inherit",
-          fontSize: workspaceType.label,
-          fontWeight: 600,
-          letterSpacing: "0.09em",
-          textTransform: "uppercase",
+          fontSize: 12,
+          lineHeight: 1,
           color: workspaceColor.ink3,
           cursor: "pointer",
         }}
       >
-        <span
-          aria-hidden="true"
-          style={{
-            display: "inline-block",
-            transition: "transform 160ms ease",
-            transform: open ? "rotate(90deg)" : "none",
-            fontSize: 9,
-          }}
-        >
-          ▶
-        </span>
-        <span style={{ flex: 1, textAlign: "left" }}>{group.label}</span>
-        <span style={{ fontSize: 9, letterSpacing: 0, opacity: 0.7 }}>PRO</span>
+        ⨯
       </button>
-      {open && <ToolGrid items={group.items} collapsed={false} />}
-    </>
-  );
-};
+    )}
+  </div>
+);
 
 export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
   collapsed = false,
   onToggleCollapsed,
   onToggleOps,
-  contextLabel = "Personal",
-  todayCount,
-  onNewTask,
+  threads = [],
+  activeThreadId,
+  onSelectThread,
+  onDeleteThread,
   onNewSession,
-  groups,
-  tools = [],
+  onNewTask,
+  groups = [],
+  onOpenAllTools,
+  allToolsRef,
   onOpenSettings,
 }) => {
-  const resolvedGroups: WorkspaceNavGroup[] =
-    groups && groups.length > 0
-      ? groups
-      : tools.length > 0
-        ? [{ id: "tools", label: "Tools", items: tools }]
-        : [];
+  const rows = buildThreadRailRows(threads, activeThreadId);
+  const today = rows.filter((row) => row.bucket === "today");
+  const earlier = rows.filter((row) => row.bucket === "earlier");
+  const toolRows = selectSidebarToolRows(groups);
+
+  /** New chat, then the caret — one row does both, because that is one intent. */
+  const startNewChat = onNewSession
+    ? () => {
+        onNewSession();
+        onNewTask?.();
+      }
+    : undefined;
 
   return (
     <>
@@ -293,11 +260,11 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
           />
         </span>
         {!collapsed && <span style={{ flex: 1, minWidth: 0 }}>LucaOS</span>}
-        {!collapsed && onNewSession && (
+        {!collapsed && startNewChat && (
           /* The File · Edit · View · Window menu — the old native menu bar,
              beside the sidebar's own collapse control. */
           <AppMenu
-            onNewSession={onNewSession}
+            onNewSession={startNewChat}
             onOpenSettings={onOpenSettings ?? (() => {})}
             onToggleLeftPanel={onToggleCollapsed ?? (() => {})}
             onToggleRightPanel={onToggleOps ?? (() => {})}
@@ -325,43 +292,128 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
         </div>
       )}
 
-      {onNewTask && (
+      {startNewChat && (
         <NavRow
           icon={<span aria-hidden="true">＋</span>}
           collapsed={collapsed}
-          onClick={onNewTask}
-          title="Start a new task"
+          onClick={startNewChat}
+          title="Start a new conversation"
         >
-          New
+          New chat
         </NavRow>
       )}
 
       <div className="luca-workspace-scroll" style={{ flex: 1 }}>
-        {!collapsed && <SectionLabel>Spaces</SectionLabel>}
-        <NavRow
-          icon={<span aria-hidden="true">●</span>}
-          active
-          collapsed={collapsed}
-          count={todayCount}
-          title="Your current context"
-        >
-          {contextLabel}
-        </NavRow>
+        {/* Conversations. In rail mode only the active one survives, as a single
+            mark — you must still be able to see where you are at 58px. */}
+        {collapsed ? (
+          rows
+            .filter((row) => row.active)
+            .map((row) => (
+              <NavRow
+                key={row.id}
+                icon={<span aria-hidden="true">●</span>}
+                active
+                collapsed
+                title={row.title}
+              >
+                {row.title}
+              </NavRow>
+            ))
+        ) : (
+          <>
+            {today.length > 0 && <SectionLabel>today</SectionLabel>}
+            {today.map((row) => (
+              <ThreadRow
+                key={row.id}
+                row={row}
+                onSelect={onSelectThread}
+                onDelete={onDeleteThread}
+              />
+            ))}
+            {earlier.length > 0 && <SectionLabel>earlier</SectionLabel>}
+            {earlier.map((row) => (
+              <ThreadRow
+                key={row.id}
+                row={row}
+                onSelect={onSelectThread}
+                onDelete={onDeleteThread}
+              />
+            ))}
+          </>
+        )}
 
-        {resolvedGroups.map((group) =>
-          group.advanced ? (
-            <AdvancedGroup key={group.id} group={group} collapsed={collapsed} />
-          ) : (
-            <React.Fragment key={group.id}>
-              {!collapsed && group.items.length > 0 && (
-                <SectionLabel>{group.label}</SectionLabel>
-              )}
-              {collapsed && group.items.length > 0 && (
-                <div style={{ height: 10 }} aria-hidden="true" />
-              )}
-              <ToolGrid items={group.items} collapsed={collapsed} />
-            </React.Fragment>
-          ),
+        {/* Tools: running first, then pinned, capped. A tone dot appears only
+            when something is genuinely open — an always-on dot is decoration,
+            and decoration that looks like status is worse than none. */}
+        {toolRows.length > 0 && (
+          <>
+            {!collapsed && <SectionLabel>tools</SectionLabel>}
+            {collapsed && <div style={{ height: 10 }} aria-hidden="true" />}
+            {toolRows.map((tool) => (
+              <NavRow
+                key={tool.id}
+                icon={<span aria-hidden="true">{tool.glyph}</span>}
+                collapsed={collapsed}
+                count={tool.count}
+                onClick={tool.onOpen}
+                title={tool.hint ?? tool.label}
+              >
+                <span
+                  style={{ display: "inline-flex", alignItems: "center", gap: 7 }}
+                >
+                  {tool.label}
+                  {tool.running && (
+                    <span
+                      style={{
+                        fontSize: workspaceType.meta,
+                        color: workspaceColor.good,
+                      }}
+                    >
+                      running
+                    </span>
+                  )}
+                </span>
+              </NavRow>
+            ))}
+          </>
+        )}
+
+        {/* A quiet "more", not a nav row — it opens a surface rather than
+            navigating, and the seventeen relocated tools live behind it. */}
+        {onOpenAllTools && !collapsed && (
+          <button
+            ref={allToolsRef}
+            type="button"
+            onClick={onOpenAllTools}
+            className="luca-workspace-nav"
+            style={{
+              display: "block",
+              width: "calc(100% - 16px)",
+              margin: "2px 8px 8px",
+              padding: "5px 8px 5px 32px",
+              border: 0,
+              borderRadius: workspaceRadius.row,
+              background: "transparent",
+              font: "inherit",
+              fontSize: workspaceType.meta,
+              textAlign: "left",
+              color: workspaceColor.ink3,
+              cursor: "pointer",
+            }}
+          >
+            All tools…
+          </button>
+        )}
+        {onOpenAllTools && collapsed && (
+          <NavRow
+            icon={<span aria-hidden="true">⋯</span>}
+            collapsed
+            onClick={onOpenAllTools}
+            title="All tools"
+          >
+            All tools
+          </NavRow>
         )}
       </div>
 

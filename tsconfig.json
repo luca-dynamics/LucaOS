@@ -21,6 +21,13 @@
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "allowJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "@luca/orb": ["packages/luca-orb/src/index.ts"],
+      "@luca/orb/*": ["packages/luca-orb/src/*"],
+      "@luca/orb-design": ["packages/luca-orb-design/src/index.ts"],
+      "@luca/orb-design/*": ["packages/luca-orb-design/src/*"]
+    },
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": ["src/**/*"],

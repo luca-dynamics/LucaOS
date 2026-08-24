@@ -5,6 +5,7 @@
 
 import { chromaService } from "./chromaService";
 import { memoryService } from "./memoryService";
+import { conversationThreadService } from "./conversation/conversationThreadService";
 import type { Message } from "../types";
 import { Sender } from "../types";
 
@@ -291,19 +292,20 @@ class ConversationService {
    * Get recent conversations (for context)
    */
   async getRecentConversations(limit: number = 10): Promise<Message[]> {
-    // FALLBACK: Read from LocalStorage if Chroma is disabled or fails
+    // FALLBACK: Read from the local thread archive if Chroma is disabled or fails
     const getFromLocalStorage = (): Message[] => {
       try {
-        const stored = localStorage.getItem("LUCA_CHAT_HISTORY_V1");
-        if (stored) {
-          const parsed = JSON.parse(stored) as Message[];
-          // Sort by timestamp desc and take last 'limit'
-          return parsed
-            .sort((a, b) => b.timestamp - a.timestamp)
-            .slice(0, limit);
-        }
+        // The ACTIVE thread, not every thread ever: this feeds "recent context"
+        // for the current turn, and splicing in messages from an unrelated
+        // conversation is worse than having none. Reading the raw legacy key
+        // here would have frozen this at the pre-migration snapshot.
+        const parsed = conversationThreadService.ensureActiveThread().messages;
+        // Sort by timestamp desc and take last 'limit'
+        return [...parsed]
+          .sort((a, b) => b.timestamp - a.timestamp)
+          .slice(0, limit);
       } catch (e) {
-        console.warn("[CONVERSATION] Failed to read from localStorage:", e);
+        console.warn("[CONVERSATION] Failed to read the local thread:", e);
       }
       return [];
     };

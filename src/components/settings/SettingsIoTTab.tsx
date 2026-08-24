@@ -3,7 +3,6 @@ import { LucaSettings } from "../../services/settingsService";
 import { LucaInput, LucaTextarea } from "../ui/luca";
 import {
   SettingsAdvancedDisclosure,
-  SettingsCard,
   SettingsRow,
   SettingsSection,
   SettingsStatList,
@@ -18,19 +17,38 @@ interface SettingsIoTTabProps {
   isMobile?: boolean;
 }
 
+/** Split a Home Assistant base URL into transport + host without throwing. */
+const describeEndpoint = (
+  raw: string,
+): { transport: string; host: string } => {
+  if (!raw.trim()) return { transport: "Not set", host: "Not set" };
+  try {
+    const url = new URL(raw.trim());
+    return {
+      transport: url.protocol.replace(":", "").toUpperCase(),
+      host: url.host,
+    };
+  } catch {
+    return { transport: "Unparsed", host: raw.trim() };
+  }
+};
+
 const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
   settings,
   onUpdate,
   theme,
   isMobile,
 }) => {
-  const isConnected = Boolean(settings.iot.haUrl && settings.iot.haToken);
+  const haUrl = settings.iot.haUrl || "";
+  const haToken = settings.iot.haToken || "";
+  const isConnected = Boolean(haUrl && haToken);
+  const endpoint = describeEndpoint(haUrl);
 
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : "pr-2"}`}>
       <SettingsSection
         title="Home Status"
-        description="Connect Luca to your home with calm status, device, and permission summaries."
+        description="Connection state for your Home Assistant bridge."
         icon="Home"
         accentColor={theme?.hex}
         isMobile={isMobile}
@@ -38,109 +56,42 @@ const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
         <SettingsStatList
           items={[
             {
-              label: "Connected home",
-              value: isConnected ? "Configured" : "Not connected",
-              detail:
-                "Home Assistant connection details are kept under Advanced Details.",
+              label: "Connection",
+              value: isConnected ? "Configured" : "Needs setup",
+              detail: isConnected
+                ? "Server address and access token are both stored."
+                : "Add a server address and access token below.",
             },
             {
-              label: "Available devices",
-              value: "Ready to sync",
-              detail:
-                "Lights, climate, locks, cameras, speakers, and sensors sync through the existing integration.",
+              label: "Server",
+              value: endpoint.host,
+              detail: haUrl || "No server address stored yet.",
             },
             {
-              label: "Last sync",
-              value: "When connected",
-              detail: "Device sync logs stay in Advanced Details.",
-            },
-            {
-              label: "Connection health",
-              value: isConnected ? "Ready" : "Needs setup",
-              detail: "No runtime behavior changes in this migration.",
+              label: "Access token",
+              value: haToken ? "Stored" : "Missing",
+              detail: haToken
+                ? `${haToken.length} characters stored locally.`
+                : "Home control stays disabled without a token.",
             },
           ]}
         />
       </SettingsSection>
 
       <SettingsSection
-        title="Devices"
-        description="Review the home categories Luca can understand once your home integration is connected."
+        title="Home Assistant"
+        description="Server address and access token for your home bridge."
         icon="Devices"
         accentColor={theme?.hex}
         isMobile={isMobile}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          {["Lights", "Climate", "Locks", "Cameras", "Speakers", "Sensors"].map(
-            (label) => (
-              <SettingsCard key={label}>
-                <p className="text-sm font-semibold">{label}</p>
-                <p className="mt-1 text-xs opacity-70">
-                  Managed by the existing smart home bridge.
-                </p>
-              </SettingsCard>
-            ),
-          )}
-        </div>
-      </SettingsSection>
-
-      <SettingsSection
-        title="Permissions"
-        description="Keep home control safety-first, especially for security devices and presence rules."
-        icon="ShieldCheck"
-        accentColor={theme?.hex}
-        isMobile={isMobile}
-      >
         <SettingsRow
-          label="View device status"
-          description="Allow Luca to summarize device state when the integration is connected."
-        />
-        <SettingsRow
-          label="Control devices"
-          description="Device control continues through the existing smart home service."
-        />
-        <SettingsRow
-          label="Security devices approval required"
-          description="Locks, cameras, and presence-sensitive devices should require user review."
-        />
-        <SettingsRow
-          label="Location and home presence rules"
-          description="Presence behavior remains part of the existing integration policy."
-        />
-      </SettingsSection>
-
-      <SettingsSection
-        title="Automations"
-        description="Routines, scenes, approved automations, and automation history stay grouped here."
-        icon="Bolt"
-        accentColor={theme?.hex}
-        isMobile={isMobile}
-      >
-        <SettingsRow
-          label="Routines and scenes"
-          description="Use the current home integration to expose approved routines."
-        />
-        <SettingsRow
-          label="Approved automations"
-          description="Review automations before Luca uses them on your behalf."
-        />
-        <SettingsRow
-          label="Automation history"
-          description="Diagnostics and sync logs stay under Advanced Details."
-        />
-      </SettingsSection>
-
-      <SettingsAdvancedDisclosure
-        title="Advanced Details"
-        description="Home Assistant endpoint, access token, local network diagnostics, device sync logs, and reset integration."
-      >
-        <SettingsRow
-          label="Home Assistant endpoint"
-          description="The existing endpoint setting is preserved."
+          label="Server address"
+          description="Local or remote Home Assistant URL."
           control={
             <LucaInput
               type="text"
-              value={settings.iot.haUrl}
+              value={haUrl}
               onChange={(e) => onUpdate("iot", "haUrl", e.target.value)}
               placeholder="http://homeassistant.local:8123"
               className={settingsInputClassName}
@@ -151,20 +102,39 @@ const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
         <div className="space-y-2">
           <p className="text-sm font-medium">Access token</p>
           <LucaTextarea
-            value={settings.iot.haToken}
+            value={haToken}
             onChange={(e) => onUpdate("iot", "haToken", e.target.value)}
             placeholder="eyJhbGciOiJIUzI1NiIsInR5..."
-            className={`${settingsInputClassName} h-36 resize-none font-mono text-xs`}
+            className={`${settingsInputClassName} h-24 resize-none font-mono text-xs`}
             style={settingsControlInlineStyle}
           />
         </div>
-        <SettingsRow
-          label="Local network diagnostics"
-          description="Network checks are surfaced by the existing integration."
-        />
-        <SettingsRow
-          label="Device sync logs"
-          description="Sync logs stay grouped as technical details."
+      </SettingsSection>
+
+      <SettingsAdvancedDisclosure
+        title="Advanced Details"
+        description="Resolved endpoint, transport, and credential state."
+      >
+        <SettingsStatList
+          columns={2}
+          items={[
+            {
+              label: "Transport",
+              value: endpoint.transport,
+              detail: "Scheme parsed from the stored server address.",
+            },
+            { label: "Host", value: endpoint.host, detail: haUrl || "Not set" },
+            {
+              label: "Token length",
+              value: haToken ? `${haToken.length}` : "0",
+              detail: "Tokens are stored locally and never sent to Luca hosts.",
+            },
+            {
+              label: "Credential state",
+              value: isConnected ? "Complete" : "Incomplete",
+              detail: "Both fields are required before home control is offered.",
+            },
+          ]}
         />
       </SettingsAdvancedDisclosure>
     </div>

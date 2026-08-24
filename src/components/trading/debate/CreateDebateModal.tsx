@@ -4,7 +4,7 @@ import { Icon } from "../../ui/Icon";
 import { DebatePersonality, CreateDebateRequest } from "../../../types/trading";
 import { PERSONALITY_EMOJIS, PERSONALITY_COLORS } from "../../../types/trading";
 import { BRAIN_CONFIG } from "../../../config/brain.config";
-import { modelManager, LocalModel } from "../../../services/ModelManagerService";
+import { modelManager, LocalModel } from "../../../services/local-models/LocalModelLibrary";
 import { tradingService } from "../../../services/tradingService";
 import { getAgentLogo } from "../../../utils/tradingUI";
 
